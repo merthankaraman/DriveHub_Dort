@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="#0D1117"
+    android:padding="16dp">
+
+    <!-- SOL KOLON: Servis durumu ve binder -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginEnd="12dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MG4 Controller"
+            android:textSize="20sp"
+            android:textColor="#E6EDF3"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="EH32 · Android Automotive"
+            android:textSize="12sp"
+            android:textColor="#6E7681"
+            android:layout_marginBottom="16dp"/>
+
+        <Button
+            android:id="@+id/btnPermission"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="WRITE_SETTINGS Izni Ver"
+            android:backgroundTint="#DA3633"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hazirlanıyor..."
+            android:textSize="13sp"
+            android:textColor="#8B949E"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/btnService"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Servisi Baslat"
+            android:backgroundTint="#238636"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnTestBinder"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="Binder Test"
+            android:backgroundTint="#1F6FEB"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvBinderStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="12sp"
+            android:textColor="#7EE787"
+            android:fontFamily="monospace"/>
+
+    </LinearLayout>
+
+    <!-- SAG KOLON: Kontrol butonlari -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Suruş Modu -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SURUŞ MODU"
+            android:textSize="10sp"
+            android:textColor="#6E7681"
+            android:layout_marginBottom="6dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <Button
+                android:id="@+id/btnEco"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="Eco"
+                android:backgroundTint="#1A7F37"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:layout_marginEnd="4dp"/>
+
+            <Button
+                android:id="@+id/btnNormal"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="Normal"
+                android:backgroundTint="#1F6FEB"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:layout_marginEnd="4dp"/>
+
+            <Button
+                android:id="@+id/btnSport"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="Sport"
+                android:backgroundTint="#9E3333"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:layout_marginEnd="4dp"/>
+
+            <Button
+                android:id="@+id/btnSnow"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="Kar"
+                android:backgroundTint="#388BFD"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnDrive"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="Dongusel Mod Degistir"
+            android:backgroundTint="#30363D"
+            android:textColor="#C9D1D9"
+            android:textSize="12sp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Regen -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="REGEN"
+            android:textSize="10sp"
+            android:textColor="#6E7681"
+            android:layout_marginBottom="6dp"/>
+
+        <Button
+            android:id="@+id/btnRegen"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="Regen Seviyesi Degistir"
+            android:backgroundTint="#30363D"
+            android:textColor="#C9D1D9"
+            android:textSize="12sp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Tek Pedal ve Isitma -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnPedalOn"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="Tek Pedal Ac"
+                android:backgroundTint="#1A7F37"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:layout_marginEnd="4dp"/>
+
+            <Button
+                android:id="@+id/btnPedalOff"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="Tek Pedal Kapat"
+                android:backgroundTint="#6E7681"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:layout_marginEnd="4dp"/>
+
+            <Button
+                android:id="@+id/btnHeatOn"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="Direksiyon Isit"
+                android:backgroundTint="#9E3333"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
