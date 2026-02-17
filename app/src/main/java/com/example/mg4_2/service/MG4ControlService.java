@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+import androidx.core.content.ContextCompat;
 
 import androidx.core.app.NotificationCompat;
 
@@ -38,7 +39,7 @@ public class MG4ControlService extends Service {
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
-        startForeground(NOTIF_ID, buildNotification("Hazır", "Sürüş: " + mCurrentDriveMode.label));
+        startForeground(NOTIF_ID, buildNotification("Sürüş: " + mCurrentDriveMode.label));
         registerHardkeyReceiver();
 
         Log.i(TAG, "vehiclesetting: " + (MG4Hardware.isServiceAvailable(MG4Hardware.SERVICE_VEHICLE_SETTING) ? "✓" : "✗"));
@@ -83,11 +84,9 @@ public class MG4ControlService extends Service {
         };
 
         IntentFilter filter = new IntentFilter(HARDKEY_ACTION);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(mHardkeyReceiver, filter, RECEIVER_EXPORTED);
-        } else {
-            registerReceiver(mHardkeyReceiver, filter);
-        }
+        ContextCompat.registerReceiver(this, mHardkeyReceiver, filter, ContextCompat.RECEIVER_EXPORTED);
+
+
         Log.i(TAG, "Hardkey receiver kayıt edildi.");
     }
 
@@ -96,7 +95,7 @@ public class MG4ControlService extends Service {
         Log.i(TAG, "Hardkey 66 → " + mCurrentDriveMode.label + " → " + next.label);
         if (MG4Hardware.setDriveMode(next)) {
             mCurrentDriveMode = next;
-            updateNotification("Aktif", "Sürüş: " + mCurrentDriveMode.label);
+            updateNotification("Sürüş: " + mCurrentDriveMode.label);
         }
     }
 
@@ -105,18 +104,25 @@ public class MG4ControlService extends Service {
             case "DRIVE_CYCLE":
                 mCurrentDriveMode = mCurrentDriveMode.next();
                 MG4Hardware.setDriveMode(mCurrentDriveMode);
-                updateNotification("Aktif", "Sürüş: " + mCurrentDriveMode.label);
+                updateNotification("Sürüş: " + mCurrentDriveMode.label);
                 break;
             case "DRIVE_SET":
                 DriveMode dm = DriveMode.fromValue(intent.getIntExtra("driveValue", DriveMode.NORMAL.value));
                 MG4Hardware.setDriveMode(dm);
                 mCurrentDriveMode = dm;
-                updateNotification("Aktif", "Sürüş: " + dm.label);
+                updateNotification("Sürüş: " + mCurrentDriveMode.label);
                 break;
             case "REGEN_CYCLE":
                 mCurrentRegen = mCurrentRegen.next();
-                MG4Hardware.setRegenLevel(mCurrentRegen);
-                updateNotification("Aktif", "Regen: " + mCurrentRegen.label);
+                if (mCurrentRegen == RegenLevel.OFF) {
+                    MG4Hardware.setRegenSwitch(false);
+                    Log.i(TAG, "Regen: KAPALI");
+                } else {
+                    MG4Hardware.setRegenSwitch(true);
+                    MG4Hardware.setRegenLevel(mCurrentRegen);
+                    Log.i(TAG, "Regen: " + mCurrentRegen.label);
+                }
+                updateNotification("Regen: " + mCurrentRegen.label);
                 break;
             case "PEDAL_ON":  MG4Hardware.setOnePedal(true);   break;
             case "PEDAL_OFF": MG4Hardware.setOnePedal(false);  break;
@@ -132,16 +138,16 @@ public class MG4ControlService extends Service {
         if (nm != null) nm.createNotificationChannel(ch);
     }
 
-    private Notification buildNotification(String title, String text) {
+    private void updateNotification(String text) {
+        NotificationManager nm = getSystemService(NotificationManager.class);
+        if (nm != null) nm.notify(NOTIF_ID, buildNotification(text));
+    }
+
+    private Notification buildNotification(String text) {
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("MG4 — " + title)
+                .setContentTitle("MG4 Controller")
                 .setContentText(text)
                 .setSmallIcon(android.R.drawable.ic_menu_compass)
                 .setOngoing(true).setSilent(true).build();
-    }
-
-    private void updateNotification(String title, String text) {
-        NotificationManager nm = getSystemService(NotificationManager.class);
-        if (nm != null) nm.notify(NOTIF_ID, buildNotification(title, text));
     }
 }

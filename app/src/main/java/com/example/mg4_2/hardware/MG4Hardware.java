@@ -21,12 +21,13 @@ public class MG4Hardware {
     private static final String TOKEN_AIR_CONDITION =
             "com.saicmotor.sdk.vehiclesettings.IAirConditionService";
 
-    public static final int AREA_EH32 = 16777216; // 0x01000000
+    public static final int AREA_EH32 = 16777216;
 
     private static final int TX_SET_DRIVE_MODE    = 151;
     private static final int TX_SET_REGEN_LEVEL   = 180;
-    private static final int TX_SET_STEERING_HEAT = 52;
     private static final int TX_SET_ONE_PEDAL     = 181;
+    private static final int TX_SET_REGEN_SWITCH  = 182; // ← test edilecek
+    private static final int TX_SET_STEERING_HEAT = 52;
 
     public static boolean setDriveMode(DriveMode mode) {
         Log.i(TAG, "setDriveMode → " + mode.label + " (" + mode.value + ")");
@@ -36,6 +37,11 @@ public class MG4Hardware {
     public static boolean setRegenLevel(RegenLevel level) {
         Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
         return sendToVehicleSetting(TX_SET_REGEN_LEVEL, level.value);
+    }
+
+    public static boolean setRegenSwitch(boolean enabled) {
+        Log.i(TAG, "setRegenSwitch → " + (enabled ? "Açık" : "Kapalı"));
+        return sendToVehicleSetting(TX_SET_REGEN_SWITCH, enabled ? 1 : 0);
     }
 
     public static boolean setOnePedal(boolean enabled) {
@@ -63,8 +69,8 @@ public class MG4Hardware {
         Parcel reply = Parcel.obtain();
         try {
             data.writeInterfaceToken(TOKEN_VEHICLE_SETTING);
-            data.writeInt(AREA_EH32); // Alan ID — zorunlu
-            data.writeInt(1);          // Count — KRİTİK!
+            data.writeInt(AREA_EH32);
+            data.writeInt(1);
             data.writeInt(value);
             data.writeFloatArray(new float[0]);
             data.writeByteArray(new byte[0]);
@@ -107,7 +113,7 @@ public class MG4Hardware {
             reply.recycle();
         }
     }
-
+    @SuppressWarnings("DiscouragedPrivateApi")
     private static IBinder getService(String name) {
         try {
             Class<?> sm  = Class.forName("android.os.ServiceManager");
