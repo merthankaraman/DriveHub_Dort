@@ -1,10 +1,7 @@
 package com.example.mg4_2.ui;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -14,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.mg4_2.R;
 import com.example.mg4_2.hardware.MG4Hardware;
 import com.example.mg4_2.model.DriveMode;
+import com.example.mg4_2.model.RegenLevel;
 import com.example.mg4_2.service.MG4ControlService;
 
 public class MainActivity extends AppCompatActivity {
@@ -32,19 +30,13 @@ public class MainActivity extends AppCompatActivity {
         mTvBinder   = findViewById(R.id.tvBinderStatus);
         mBtnService = findViewById(R.id.btnService);
 
-        findViewById(R.id.btnPermission).setOnClickListener(v ->
-                startActivity(new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
-                        .setData(Uri.parse("package:" + getPackageName()))));
-
         mBtnService.setOnClickListener(v -> toggleService());
+        findViewById(R.id.btnTestBinder).setOnClickListener(v -> testCarProperty());
 
-        findViewById(R.id.btnTestBinder).setOnClickListener(v -> testBinder());
-
-        findViewById(R.id.btnDrive).setOnClickListener(v  -> sendCommand("DRIVE_CYCLE"));
-        findViewById(R.id.btnRegen).setOnClickListener(v  -> sendCommand("REGEN_CYCLE"));
+        findViewById(R.id.btnDrive).setOnClickListener(v   -> sendCommand("DRIVE_CYCLE"));
+        findViewById(R.id.btnRegen).setOnClickListener(v   -> sendCommand("REGEN_CYCLE"));
         findViewById(R.id.btnPedalOn).setOnClickListener(v  -> sendCommand("PEDAL_ON"));
         findViewById(R.id.btnPedalOff).setOnClickListener(v -> sendCommand("PEDAL_OFF"));
-        findViewById(R.id.btnHeatOn).setOnClickListener(v   -> sendCommand("HEAT_ON"));
 
         findViewById(R.id.btnEco).setOnClickListener(v    -> sendDriveMode(DriveMode.ECO));
         findViewById(R.id.btnNormal).setOnClickListener(v -> sendDriveMode(DriveMode.NORMAL));
@@ -55,9 +47,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        boolean canWrite = Settings.System.canWrite(this);
-        findViewById(R.id.btnPermission).setVisibility(canWrite ? View.GONE : View.VISIBLE);
-        mTvStatus.setText(canWrite ? "İzinler tamam ✓" : "⚠ WRITE_SETTINGS izni gerekli!");
+        mTvStatus.setText("MG4 Controller hazır");
     }
 
     private void toggleService() {
@@ -70,15 +60,25 @@ public class MainActivity extends AppCompatActivity {
             startForegroundService(new Intent(this, MG4ControlService.class));
             mServiceStarted = true;
             mBtnService.setText("Servisi Durdur");
-            mTvStatus.setText("✅ Servis çalışıyor. Hardkey 66 aktif.");
+            mTvStatus.setText("✅ Servis çalışıyor. ★ tuşu (keycode 17) aktif.");
         }
     }
 
-    private void testBinder() {
-        boolean vs = MG4Hardware.isServiceAvailable(MG4Hardware.SERVICE_VEHICLE_SETTING);
-        boolean ac = MG4Hardware.isServiceAvailable(MG4Hardware.SERVICE_AIR_CONDITION);
-        mTvBinder.setText("vehiclesetting : " + (vs ? "✅ BAĞLI" : "❌ YOK") + "\n"
-                + "aircondition   : " + (ac ? "✅ BAĞLI" : "❌ YOK"));
+    private void testCarProperty() {
+        MG4Hardware.init(this);
+        boolean ready = MG4Hardware.isReady();
+        String driveStr = "?";
+        String regenStr = "?";
+        if (ready) {
+            int dm = MG4Hardware.getDriveMode();
+            int rg = MG4Hardware.getRegenLevel();
+            driveStr = dm >= 0 ? DriveMode.fromValue(dm).label + " (" + dm + ")" : "okunamadı";
+            regenStr = rg >= 0 ? RegenLevel.fromValue(rg).label + " (" + rg + ")" : "okunamadı";
+        }
+        mTvBinder.setText(
+                "CarPropertyManager : " + (ready ? "✅ HAZIR" : "❌ YOK") + "\n"
+                + "Sürüş Modu        : " + driveStr + "\n"
+                + "Regen Seviyesi    : " + regenStr);
     }
 
     private void sendCommand(String action) {

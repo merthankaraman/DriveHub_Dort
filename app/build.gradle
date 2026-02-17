@@ -37,6 +37,8 @@ dependencies {
     implementation libs.material
     implementation libs.activity
     implementation libs.constraintlayout
+    // android.car — araçta sistem kütüphanesi olarak mevcut, sadece derleme için
+    compileOnly files('libs/android.car.jar')
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core

@@ -19,4 +19,11 @@ public enum RegenLevel {
         RegenLevel[] vals = values();
         return vals[(ordinal() + 1) % vals.length];
     }
+
+    public static RegenLevel fromValue(int value) {
+        for (RegenLevel r : values()) {
+            if (r.value == value) return r;
+        }
+        return MEDIUM;
+    }
 }

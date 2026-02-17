@@ -8,12 +8,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
-import androidx.core.content.ContextCompat;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import com.example.mg4_2.hardware.MG4Hardware;
 import com.example.mg4_2.model.DriveMode;
@@ -25,9 +24,12 @@ public class MG4ControlService extends Service {
     private static final String CHANNEL_ID = "mg4_channel";
     private static final int    NOTIF_ID   = 1001;
 
+    // Hardkey broadcast — logcat'ten doğrulandı:
+    //   action: com.saic.keyevent.hardkey.report
+    //   extras: "keycode" (int), "down" (boolean), "longpress" (boolean)
+    //   Sol direksiyon * tuşu = keycode 17
     private static final String HARDKEY_ACTION   = "com.saic.keyevent.hardkey.report";
-    private static final int    HARDKEY_FAVORITE = 66;
-    private static final int    KEY_DOWN         = 0;
+    private static final int    HARDKEY_STAR_KEY = 17;
     private static final long   DEBOUNCE_MS      = 500;
 
     private DriveMode  mCurrentDriveMode = DriveMode.NORMAL;
@@ -39,11 +41,14 @@ public class MG4ControlService extends Service {
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
-        startForeground(NOTIF_ID, buildNotification("Sürüş: " + mCurrentDriveMode.label));
-        registerHardkeyReceiver();
+        startForeground(NOTIF_ID, buildNotification("Başlatılıyor..."));
 
-        Log.i(TAG, "vehiclesetting: " + (MG4Hardware.isServiceAvailable(MG4Hardware.SERVICE_VEHICLE_SETTING) ? "✓" : "✗"));
-        Log.i(TAG, "aircondition  : " + (MG4Hardware.isServiceAvailable(MG4Hardware.SERVICE_AIR_CONDITION) ? "✓" : "✗"));
+        // CarPropertyManager başlat (Android 9: async, onServiceConnected'da hazır olur)
+        MG4Hardware.init(this);
+        Log.i(TAG, "Car.connect() çağrıldı");
+
+        updateNotification("Bağlanıyor...");
+        registerHardkeyReceiver();
     }
 
     @Override
@@ -60,6 +65,7 @@ public class MG4ControlService extends Service {
         if (mHardkeyReceiver != null) {
             try { unregisterReceiver(mHardkeyReceiver); } catch (Exception ignored) {}
         }
+        MG4Hardware.destroy();
     }
 
     @Override
@@ -69,33 +75,34 @@ public class MG4ControlService extends Service {
         mHardkeyReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                int keyCode   = intent.getIntExtra("keyCode",   -1);
-                int keyAction = intent.getIntExtra("keyAction", -1);
+                // logcat doğrulaması: extra adları "keycode" ve "down" (boolean)
+                int     keyCode = intent.getIntExtra("keycode", -1);
+                boolean isDown  = intent.getBooleanExtra("down", false);
 
-                Log.d(TAG, "Hardkey: code=" + keyCode + " action=" + keyAction);
+                Log.d(TAG, "Hardkey: keycode=" + keyCode + " down=" + isDown);
 
-                if (keyCode == HARDKEY_FAVORITE && keyAction == KEY_DOWN) {
+                if (keyCode == HARDKEY_STAR_KEY && isDown) {
                     long now = System.currentTimeMillis();
                     if (now - mLastKeyDownTime < DEBOUNCE_MS) return;
                     mLastKeyDownTime = now;
-                    onFavoriteKeyPressed();
+                    onStarKeyPressed();
                 }
             }
         };
 
         IntentFilter filter = new IntentFilter(HARDKEY_ACTION);
-        ContextCompat.registerReceiver(this, mHardkeyReceiver, filter, ContextCompat.RECEIVER_EXPORTED);
-
-
-        Log.i(TAG, "Hardkey receiver kayıt edildi.");
+        ContextCompat.registerReceiver(this, mHardkeyReceiver, filter,
+                ContextCompat.RECEIVER_EXPORTED);
+        Log.i(TAG, "Hardkey receiver kayıt edildi. keycode=" + HARDKEY_STAR_KEY);
     }
 
-    private void onFavoriteKeyPressed() {
+    private void onStarKeyPressed() {
         DriveMode next = mCurrentDriveMode.next();
-        Log.i(TAG, "Hardkey 66 → " + mCurrentDriveMode.label + " → " + next.label);
+        Log.i(TAG, "★ tuşu basıldı: " + mCurrentDriveMode.label + " → " + next.label);
         if (MG4Hardware.setDriveMode(next)) {
             mCurrentDriveMode = next;
-            updateNotification("Sürüş: " + mCurrentDriveMode.label);
+            updateNotification("Sürüş: " + mCurrentDriveMode.label
+                    + " | Regen: " + mCurrentRegen.label);
         }
     }
 
@@ -107,32 +114,31 @@ public class MG4ControlService extends Service {
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
                 break;
             case "DRIVE_SET":
-                DriveMode dm = DriveMode.fromValue(intent.getIntExtra("driveValue", DriveMode.NORMAL.value));
+                DriveMode dm = DriveMode.fromValue(
+                        intent.getIntExtra("driveValue", DriveMode.NORMAL.value));
                 MG4Hardware.setDriveMode(dm);
                 mCurrentDriveMode = dm;
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
                 break;
             case "REGEN_CYCLE":
                 mCurrentRegen = mCurrentRegen.next();
-                if (mCurrentRegen == RegenLevel.OFF) {
-                    MG4Hardware.setRegenSwitch(false);
-                    Log.i(TAG, "Regen: KAPALI");
-                } else {
-                    MG4Hardware.setRegenSwitch(true);
-                    MG4Hardware.setRegenLevel(mCurrentRegen);
-                    Log.i(TAG, "Regen: " + mCurrentRegen.label);
-                }
+                MG4Hardware.setRegenLevel(mCurrentRegen);
                 updateNotification("Regen: " + mCurrentRegen.label);
                 break;
-            case "PEDAL_ON":  MG4Hardware.setOnePedal(true);   break;
-            case "PEDAL_OFF": MG4Hardware.setOnePedal(false);  break;
-            case "HEAT_ON":   MG4Hardware.setSteeringHeat(true);  break;
-            case "HEAT_OFF":  MG4Hardware.setSteeringHeat(false); break;
+            case "PEDAL_ON":
+                MG4Hardware.setOnePedal(true);
+                updateNotification("OPD: Açık");
+                break;
+            case "PEDAL_OFF":
+                MG4Hardware.setOnePedal(false);
+                updateNotification("OPD: Kapalı");
+                break;
         }
     }
 
     private void createNotificationChannel() {
-        NotificationChannel ch = new NotificationChannel(CHANNEL_ID, "MG4 Kontrol", NotificationManager.IMPORTANCE_MIN);
+        NotificationChannel ch = new NotificationChannel(
+                CHANNEL_ID, "MG4 Kontrol", NotificationManager.IMPORTANCE_MIN);
         ch.setShowBadge(false);
         NotificationManager nm = getSystemService(NotificationManager.class);
         if (nm != null) nm.createNotificationChannel(ch);
