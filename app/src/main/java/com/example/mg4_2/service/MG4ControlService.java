@@ -50,10 +50,10 @@ public class MG4ControlService extends Service {
     private long mVolUpDownTime   = 0L;
     private long mVolDownDownTime = 0L;
 
-    // Regen döngüsü adımları (sırayla): Düşük → Orta → Yüksek → Adaptif → Tek Pedal → Düşük
-    // Tek Pedal adımında: regen KAPALI + onePedal AÇIK
-    // Diğer adımlarda: onePedal KAPALI + ilgili regen seviyesi
-    private static final int[] REGEN_CYCLE_VALUES = { 1, 2, 3, 4, -1 }; // -1 = Tek Pedal
+    // Regen döngüsü adımları — araçta doğrulanan değerler (log 1902260053):
+    //   Düşük=0, Orta=1, Yüksek=2, Adaptif=3, Tek Pedal=onePedal(0x2140a193)=1
+    // -1 = Tek Pedal adımı (regen property değil, onePedal property kullanılır)
+    private static final int[] REGEN_CYCLE_VALUES = { 0, 1, 2, 3, -1 }; // -1 = Tek Pedal
     private static final String[] REGEN_CYCLE_LABELS = { "Düşük", "Orta", "Yüksek", "Adaptif", "Tek Pedal" };
     private int mRegenStep = 2; // Başlangıç: Yüksek (index 2)
 

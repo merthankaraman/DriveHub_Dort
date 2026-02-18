@@ -1,11 +1,13 @@
 package com.example.mg4_2.model;
 
 public enum RegenLevel {
-    OFF(0,      "Kapalı"),
-    LOW(1,      "Düşük"),
-    MEDIUM(2,   "Orta"),
-    HIGH(3,     "Yüksek"),
-    ADAPTIVE(4, "Adaptif");
+    // Araçta doğrulanan değerler (log 1902260053):
+    // setProperty value:0 → Düşük, value:1 → Orta, value:2 → Yüksek, value:3 → Adaptif
+    LOW(0,      "Düşük"),
+    MEDIUM(1,   "Orta"),
+    HIGH(2,     "Yüksek"),
+    ADAPTIVE(3, "Adaptif"),
+    OFF(99,     "Kapalı"); // Kapalı için ayrı property (onePedal) kullanılıyor
 
     public final int    value;
     public final String label;
