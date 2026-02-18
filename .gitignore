@@ -66,6 +66,9 @@ fastlane/screenshots
 fastlane/test_output
 fastlane/readme.md
 
+# Claude Code
+.claude/
+
 # Version control
 .svn/
 
