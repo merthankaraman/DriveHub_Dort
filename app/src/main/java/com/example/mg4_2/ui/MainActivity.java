@@ -1,6 +1,7 @@
 package com.example.mg4_2.ui;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -30,6 +31,13 @@ public class MainActivity extends AppCompatActivity {
         mTvBinder   = findViewById(R.id.tvBinderStatus);
         mBtnService = findViewById(R.id.btnService);
 
+        // Versiyon numarasını göster
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            TextView tvVersion = findViewById(R.id.tvVersion);
+            tvVersion.setText("EH32 · Android Automotive · v" + pInfo.versionName);
+        } catch (Exception ignored) {}
+
         mBtnService.setOnClickListener(v -> toggleService());
         findViewById(R.id.btnTestBinder).setOnClickListener(v -> testCarProperty());
 
@@ -42,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnNormal).setOnClickListener(v -> sendDriveMode(DriveMode.NORMAL));
         findViewById(R.id.btnSport).setOnClickListener(v  -> sendDriveMode(DriveMode.SPORT));
         findViewById(R.id.btnSnow).setOnClickListener(v   -> sendDriveMode(DriveMode.SNOW));
+
+        findViewById(R.id.btnHeatOn).setOnClickListener(v -> sendCommand("HEAT_ON"));
     }
 
     @Override

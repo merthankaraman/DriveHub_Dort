@@ -3,15 +3,21 @@ setlocal EnableDelayedExpansion
 
 :: ============================================================
 ::  MG4 APK İmzalama ve Kurma Scripti
-::  Kullanım: Android Studio'da "assembleDebug" çalıştırdıktan
-::             sonra bu dosyayı çift tıkla veya CMD'den çalıştır.
+::
+::  Referans: adammcdonagh/MG4-Custom-Launcher/sign_apk.sh
+::  İmzalama: apksigner --key platform.pk8 --cert platform.x509.pem
+::  (p12 keystore değil — araç bu yöntemi kabul ediyor)
+::
+::  Kullanım: Android Studio'da assembleDebug yaptıktan sonra
+::             bu dosyayı çift tıkla.
 :: ============================================================
 
 set SCRIPT_DIR=%~dp0
 set PROJECT_DIR=%SCRIPT_DIR%..
 set APK_IN=%PROJECT_DIR%\app\build\outputs\apk\debug\app-debug.apk
-set APK_OUT=%PROJECT_DIR%\app\build\outputs\apk\debug\app-debug-platform-signed.apk
-set KEYSTORE=%PROJECT_DIR%\platform.p12
+set APK_OUT=%PROJECT_DIR%\app\build\outputs\apk\debug\app-debug-signed.apk
+set PLATFORM_PK8=%PROJECT_DIR%\platform.pk8
+set PLATFORM_PEM=%PROJECT_DIR%\platform.x509.pem
 
 :: apksigner.jar yolunu otomatik bul (en yüksek build-tools sürümü)
 set APKSIGNER_JAR=
@@ -25,27 +31,25 @@ for /d %%v in ("%BUILD_TOOLS_BASE%\*") do (
 if not exist "%APK_IN%" (
     echo.
     echo [HATA] APK bulunamadi: %APK_IN%
-    echo        Önce Android Studio'da Build ^> Make Project yapın.
+    echo        Android Studio'da Build ^> Make Project yapip tekrar dene.
     pause & exit /b 1
 )
 
-if not exist "%KEYSTORE%" (
+if not exist "%PLATFORM_PK8%" (
     echo.
-    echo [HATA] Keystore bulunamadi: %KEYSTORE%
-    echo        platform.p12 dosyası proje kökünde olmalı.
+    echo [HATA] platform.pk8 bulunamadi: %PLATFORM_PK8%
     pause & exit /b 1
 )
 
-if not defined APKSIGNER_JAR (
+if not exist "%PLATFORM_PEM%" (
     echo.
-    echo [HATA] apksigner.jar bulunamadi.
-    echo        Android SDK build-tools yüklü olmalı.
+    echo [HATA] platform.x509.pem bulunamadi: %PLATFORM_PEM%
     pause & exit /b 1
 )
 
 if not exist "%APKSIGNER_JAR%" (
     echo.
-    echo [HATA] apksigner.jar bulunamadi: %APKSIGNER_JAR%
+    echo [HATA] apksigner.jar bulunamadi. Android SDK build-tools yuklu olmali.
     pause & exit /b 1
 )
 
@@ -54,27 +58,24 @@ echo ============================================================
 echo  MG4 APK Imzalama ve Kurma
 echo ============================================================
 echo  Kaynak APK : %APK_IN%
-echo  Hedef  APK : %APK_OUT%
-echo  apksigner  : %APKSIGNER_JAR%
+echo  Cikti  APK : %APK_OUT%
+echo  Yontem     : --key platform.pk8 --cert platform.x509.pem
 echo.
 
-:: -------- APK kopyala --------
-copy /Y "%APK_IN%" "%APK_OUT%" >nul
-echo [1/3] APK kopyalandi.
-
-:: -------- İmzala --------
+:: -------- İmzala (referans projeyle aynı yöntem) --------
+echo [1/2] Imzalaniyor...
 java -jar "%APKSIGNER_JAR%" sign ^
-    --ks "%KEYSTORE%" ^
-    --ks-key-alias platform ^
-    --ks-pass pass:android ^
-    "%APK_OUT%"
+    --key "%PLATFORM_PK8%" ^
+    --cert "%PLATFORM_PEM%" ^
+    --out "%APK_OUT%" ^
+    "%APK_IN%"
 
 if errorlevel 1 (
     echo.
     echo [HATA] Imzalama basarisiz!
     pause & exit /b 1
 )
-echo [2/3] APK imzalandi.
+echo [1/2] Imzalama tamamlandi.
 
 :: -------- ADB kontrol --------
 adb devices 2>nul | findstr /v "List" | findstr "device" >nul
@@ -87,12 +88,14 @@ if errorlevel 1 (
 )
 
 :: -------- Yükle --------
-echo [3/3] Araca yukleniyor...
-adb install -r "%APK_OUT%"
+echo [2/2] Araca yukleniyor...
+echo        Once eski surum kaldiriliyor...
+adb uninstall com.example.mg4_2 >nul 2>&1
+adb install "%APK_OUT%"
 
 if errorlevel 1 (
     echo.
-    echo [HATA] Yukleme basarisiz! Yukarıdaki hataya bak.
+    echo [HATA] Yukleme basarisiz! Yukaridaki hataya bak.
 ) else (
     echo.
     echo ============================================================

@@ -82,52 +82,114 @@ MG4_2/
 ## 🚀 Kurulum
 
 ### Gereksinimler
-- Android Studio Panda (2025.3.1+)
+
+- Android Studio Meerkat (2025.1.1+)
+- JDK — Android Studio ile birlikte gelir (`jbr/` klasörü)
 - ADB bağlantısı (USB veya Wi-Fi)
 - MG4 EH32 aracı
+- Platform key dosyaları: `platform.pk8`, `platform.x509.pem` (proje kökünde mevcut)
 
-### APK Derleme
+---
 
-```bash
-# Android Studio'da
+### Adım 1 — Derleme
+
+Android Studio'da:
+
+```
 Build → Build Bundle(s) / APK(s) → Build APK(s)
-
-# veya terminal ile
-./gradlew assembleDebug
 ```
 
-### Araca Yükleme
+Çıktı: `app/build/outputs/apk/debug/app-debug.apk`
 
+---
+
+### Adım 2 — ADB Bağlantısı
+
+APK'yı araca göndermek için ADB bağlantısı gerekir.
+
+**USB ile:**
+```
+adb devices
+```
+Cihaz listede görünüyorsa hazırsın.
+
+**Wi-Fi ile (araç Wi-Fi'a bağlıyken):**
+```
+adb connect 192.168.x.x:5555
+adb devices
+```
+> Araç IP adresini araç ayarlarından öğren: Ayarlar → Ağ → Wi-Fi → Bağlı ağ detayı
+
+---
+
+### Adım 3 — İmzalama ve Araca Yükleme
+
+Proje kökündeki `tools/sign_and_install.bat` dosyasını **çift tıklayarak** çalıştır.
+
+Script otomatik olarak şunları yapar:
+1. `app-debug.apk` dosyasını `platform.pk8` + `platform.x509.pem` ile imzalar
+2. Çıktıyı `app-debug-signed.apk` olarak kaydeder
+3. ADB ile araçtaki eski sürümü kaldırır (`adb uninstall com.example.mg4_2`)
+4. Yeni imzalı APK'yı yükler (`adb install app-debug-signed.apk`)
+
+**Manuel yapmak istersen (script yerine):**
 ```bash
-# USB bağlantısı
-adb install app/build/outputs/apk/debug/app-debug.apk
+# 1. İmzala
+java -jar apksigner.jar sign ^
+    --key platform.pk8 --cert platform.x509.pem ^
+    --out app-debug-signed.apk ^
+    app-debug.apk
 
-# Wi-Fi ADB
-adb connect 192.168.x.x
-adb install app/build/outputs/apk/debug/app-debug.apk
+# 2. Eski sürümü kaldır (şifre değişikliği varsa zorunlu)
+adb uninstall com.example.mg4_2
+
+# 3. Yükle
+adb install app-debug-signed.apk
 ```
 
-### İzin Verme
+> **Önemli:** Normal `adb install app-debug.apk` (imzasız) ile yükleme yapma.
+> Araç servisleri platform key imzası olmayan APK'yı reddeder.
 
-Uygulama ilk açılışta **WRITE_SETTINGS** izni ister.  
+---
+
+### Neden Platform Key?
+
+MG4 EH32 araç servisleri (`vehiclesetting`, `aircondition`) SELinux politikası gereği
+sadece sistem uygulamalarına görünür. APK, araç firmware'iyle aynı AOSP platform test
+key'iyle imzalanmalıdır. Aksi hâlde `ServiceManager.getService()` `null` döner.
+
+Platform key bilgileri:
+- Seri: `b3998086d056cffa`
+- SHA-1: `27:19:6E:38:6B:87:5E:76:AD:F7:00:E7:EA:84:E4:C6:EE:E3:3D:FA`
+- Keystore: `platform.p12` (şifre: `android`)
+
+---
+
+### Adım 4 — İzin Verme
+
+Uygulama ilk açılışta **WRITE_SETTINGS** izni ister.
 Açılan ekranda uygulamayı bulup izni manuel olarak aktif edin.
 
 ---
 
 ## 🎮 Kullanım
 
-### Hardkey 66 (Direksiyon Favori Tuşu)
-Direksiyondaki yıldız/favori tuşuna her basışta sürüş modu döngüsel değişir:
+### Direksiyon Hardkey Kısayolları
 
-```
-ECO → NORMAL → SPORT → ECO → ...
-```
+| Tuş | Davranış |
+|---|---|
+| ★ Favori tuşu (keycode 17) | Sürüş modunu döngüsel değiştirir: ECO → NORMAL → SPORT → ECO |
+| Vol↑ + Vol↓ (300ms içinde) | Müziği oynat / duraklat |
+
+> **Not:** Volume tuş kodları (24/25) araç firmware'ine göre farklı olabilir.
+> Logcat'te `HARDKEY >>>` satırlarını izleyerek gerçek kodları öğren.
 
 ### Manuel Kontrol (Uygulama Ekranı)
+
 | Buton | İşlev |
 |---|---|
 | Eco / Normal / Sport / Kar | Direkt mod seçimi |
-| Döngüsel Mod Değiştir | Hardkey 66 ile aynı işlev |
+| Döngüsel Mod Değiştir | ★ tuşu ile aynı işlev |
 | Regen Seviyesi Değiştir | Düşük → Orta → Yüksek → Adaptif |
 | Tek Pedal Aç/Kapat | One-pedal modu |
 | Direksiyon Isıt | Direksiyon ısıtmayı açar |
