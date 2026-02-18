@@ -1,0 +1,59 @@
+--------- beginning of main
+--------- beginning of system
+---------------------------- PROCESS STARTED (22285) for package com.example.mg4_2 ----------------------------
+2026-02-19 00:12:58.714 22285-22285 MG4_HW                                   com.example.mg4_2                    I  ========================================
+2026-02-19 00:12:58.714 22285-22285 MG4_HW                                   com.example.mg4_2                    I  === MG4Hardware.init() ===
+2026-02-19 00:12:58.714 22285-22285 MG4_HW                                   com.example.mg4_2                    I    uid=10061 pid=22285
+2026-02-19 00:12:58.714 22285-22285 MG4_HW                                   com.example.mg4_2                    I    sdk=28 device=mt2712_saic_eh32
+2026-02-19 00:12:58.716 22285-22285 MG4_HW                                   com.example.mg4_2                    I    Katman1: bindService(com.android.car) → true
+2026-02-19 00:12:58.718 22285-22285 MG4_HW                                   com.example.mg4_2                    I  Servisler (vehicle/air/saic/setting içerenler):
+2026-02-19 00:12:58.719 22285-22285 MG4_HW                                   com.example.mg4_2                    W    ✗ Katman2: vehiclesetting null (SELinux — beklenen)
+2026-02-19 00:12:58.719 22285-22285 MG4_HW                                   com.example.mg4_2                    I  ========================================
+2026-02-19 00:12:58.719 22285-22285 MG4_SERVICE                              com.example.mg4_2                    I  MG4Hardware.init() çağrıldı
+2026-02-19 00:12:58.724 22285-22285 MG4_SERVICE                              com.example.mg4_2                    I  Hardkey receiver kayıt edildi — action=com.saic.keyevent.hardkey.report
+2026-02-19 00:12:58.724 22285-22285 MG4_SERVICE                              com.example.mg4_2                    I    ★ tuşu (keycode=17) → sürüş modu
+2026-02-19 00:12:58.724 22285-22285 MG4_SERVICE                              com.example.mg4_2                    I    Vol↑+24 + Vol↓+25 combo → müzik pause/play
+2026-02-19 00:12:58.724 22285-22285 MG4_SERVICE                              com.example.mg4_2                    I  === onCreate tamamlandı ===
+2026-02-19 00:12:58.754 22285-22285 MG4_HW                                   com.example.mg4_2                    I  Katman1: CarService bağlandı! ComponentInfo{com.android.car/com.android.car.CarService}
+2026-02-19 00:12:58.754 22285-22285 MG4_HW                                   com.example.mg4_2                    I    Katman1: android.car.Car sınıfı bulundu ✓
+2026-02-19 00:12:58.756 22285-22285 MG4_HW                                   com.example.mg4_2                    E    Katman1: CarPropertyManager alınamadı: InvocationTargetException: null
+2026-02-19 00:13:08.100 22285-22285 MG4_HW                                   com.example.mg4_2                    I  setDriveMode → Eco (2)
+2026-02-19 00:13:08.100 22285-22285 MG4_HW                                   com.example.mg4_2                    W    CPM setInt 0x2140a17c — CPM hazır değil
+2026-02-19 00:13:08.100 22285-22285 MG4_HW                                   com.example.mg4_2                    W    Binder TX=151 — binder null
+2026-02-19 00:13:14.534 22285-22285 MG4_HW                                   com.example.mg4_2                    I  setOnePedal → Açık
+2026-02-19 00:13:14.534 22285-22285 MG4_HW                                   com.example.mg4_2                    W    CPM setInt 0x2140a193 — CPM hazır değil
+2026-02-19 00:13:14.534 22285-22285 MG4_HW                                   com.example.mg4_2                    W    Binder TX=181 — binder null
+2026-02-19 00:13:15.636 22285-22285 MG4_HW                                   com.example.mg4_2                    I  setSteeringHeat → Açık
+2026-02-19 00:13:15.637 22285-22285 MG4_HW                                   com.example.mg4_2                    W    Binder TX=52 — binder null
+2026-02-19 00:13:41.845  2894-2916  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  getProperty, propId: 0x2140a10c, area: 0x0, class: class java.lang.Integer, val: 0
+2026-02-19 00:13:43.382  2894-2916  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  setProperty, propId: 0x2140a17c, class: class java.lang.Integer, value: 3
+2026-02-19 00:13:43.572  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883789_16777216_2
+2026-02-19 00:13:43.572  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883789_16777216_2
+2026-02-19 00:13:43.572  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883772_16777216_3
+2026-02-19 00:13:43.573  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883772_16777216_3
+2026-02-19 00:13:43.677  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883790_16777216_0
+2026-02-19 00:13:43.678  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883790_16777216_0
+2026-02-19 00:13:44.987  2894-2916  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  setProperty, propId: 0x2140a17c, class: class java.lang.Integer, value: 4
+2026-02-19 00:13:45.181  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883789_16777216_3
+2026-02-19 00:13:45.181  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883772_16777216_4
+2026-02-19 00:13:45.182  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883789_16777216_3
+2026-02-19 00:13:45.183  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883772_16777216_4
+2026-02-19 00:13:45.288  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883790_16777216_2
+2026-02-19 00:13:45.289  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883790_16777216_2
+2026-02-19 00:13:45.857  2894-2916  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  setProperty, propId: 0x2140a191, class: class java.lang.Integer, value: 2
+2026-02-19 00:13:46.372  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883793_16777216_2
+2026-02-19 00:13:46.373  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883793_16777216_2
+2026-02-19 00:13:46.644  2894-3467  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  setProperty, propId: 0x2140a193, class: class java.lang.Integer, value: 1
+2026-02-19 00:13:47.177  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883793_16777216_6
+2026-02-19 00:13:47.177  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883793_16777216_6
+2026-02-19 00:13:47.177  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883804_16777216_1
+2026-02-19 00:13:47.177  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883795_16777216_1
+2026-02-19 00:13:47.177  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883804_16777216_1
+2026-02-19 00:13:47.178  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883795_16777216_1
+2026-02-19 00:13:48.552  2894-3467  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  setProperty, propId: 0x2140a193, class: class java.lang.Integer, value: 0
+2026-02-19 00:13:49.064  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883793_16777216_2
+2026-02-19 00:13:49.064  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883804_16777216_0
+2026-02-19 00:13:49.064  2881-2881  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883795_16777216_0
+2026-02-19 00:13:49.064  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883793_16777216_2
+2026-02-19 00:13:49.064  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883804_16777216_0
+2026-02-19 00:13:49.064  2894-2894  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883795_16777216_0

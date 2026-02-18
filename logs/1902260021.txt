@@ -1,0 +1,112 @@
+--------- beginning of main
+--------- beginning of system
+2026-02-19 00:19:42.475  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 286,is down = true isLongPress:false
+2026-02-19 00:19:42.567  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 286,is down = false isLongPress:false
+2026-02-19 00:19:42.573  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  key event ignored code = 286 foreground:ComponentInfo{com.saicmotor.hmi.vehiclesettings/com.saicmotor.hmi.vehiclesettings.chargemanagement.ui.ChargeManagementActivity}custom steering wheel  value:0
+2026-02-19 00:19:42.574  2833-2833  CustomKeyHandler                         com.android.systemui                 I  Signal of * key is 0
+2026-02-19 00:19:42.577  2833-2833  CustomKeyHandler                         com.android.systemui                 I  ac mode... handle it by signal.
+2026-02-19 00:19:43.360  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 291,is down = true isLongPress:false
+2026-02-19 00:19:43.376  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  home or phone key event consumed
+2026-02-19 00:19:43.839  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 291,is down = true isLongPress:true
+2026-02-19 00:19:44.656  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 291,is down = false isLongPress:false
+2026-02-19 00:19:44.675  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  ignored KeyCode up:291
+---------------------------- PROCESS STARTED (24114) for package com.example.mg4_2 ----------------------------
+2026-02-19 00:20:02.076  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 25,is down = true isLongPress:false
+2026-02-19 00:20:02.177  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 25,is down = false isLongPress:false
+2026-02-19 00:20:02.223  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 25,is down = true isLongPress:false
+2026-02-19 00:20:06.759  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 25,is down = true isLongPress:false
+2026-02-19 00:20:06.761  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 24,is down = true isLongPress:false
+2026-02-19 00:20:06.910  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 25,is down = true isLongPress:false
+2026-02-19 00:20:06.913  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 25,is down = true isLongPress:false
+2026-02-19 00:20:06.917  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 24,is down = true isLongPress:false
+2026-02-19 00:20:06.980  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 25,is down = false isLongPress:false
+2026-02-19 00:20:06.982  2833-2833  PhysicalKeysBroadcastReceiver            com.android.systemui                 I  onReceive... event code = 24,is down = false isLongPress:false
+2026-02-19 00:20:10.168 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I  === onCreate başladı ===
+2026-02-19 00:20:10.168 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I    Android SDK: 28 (9)
+2026-02-19 00:20:10.168 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I    Cihaz: SAIC / mt2712_saic_eh32
+2026-02-19 00:20:10.187 24114-24114 MG4_HW                                   com.example.mg4_2                    I  ========================================
+2026-02-19 00:20:10.188 24114-24114 MG4_HW                                   com.example.mg4_2                    I  === MG4Hardware.init() ===
+2026-02-19 00:20:10.188 24114-24114 MG4_HW                                   com.example.mg4_2                    I    uid=10062 pid=24114
+2026-02-19 00:20:10.188 24114-24114 MG4_HW                                   com.example.mg4_2                    I    sdk=28 device=mt2712_saic_eh32
+2026-02-19 00:20:10.189 24114-24114 MG4_HW                                   com.example.mg4_2                    I    Katman1: bindService(com.android.car) → true
+2026-02-19 00:20:10.191 24114-24114 MG4_HW                                   com.example.mg4_2                    I  Servisler (vehicle/air/saic/setting içerenler):
+2026-02-19 00:20:10.192 24114-24114 MG4_HW                                   com.example.mg4_2                    W    ✗ Katman2: vehiclesetting null (SELinux — beklenen)
+2026-02-19 00:20:10.192 24114-24114 MG4_HW                                   com.example.mg4_2                    I  ========================================
+2026-02-19 00:20:10.192 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I  MG4Hardware.init() çağrıldı
+2026-02-19 00:20:10.197 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I  Hardkey receiver kayıt edildi — action=com.saic.keyevent.hardkey.report
+2026-02-19 00:20:10.197 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I    ★ tuşu (keycode=17) → sürüş modu
+2026-02-19 00:20:10.197 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I    Vol↑+24 + Vol↓+25 combo → müzik pause/play
+2026-02-19 00:20:10.197 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I  === onCreate tamamlandı ===
+2026-02-19 00:20:10.242 24114-24114 MG4_HW                                   com.example.mg4_2                    I  Katman1: CarService bağlandı! ComponentInfo{com.android.car/com.android.car.CarService}
+2026-02-19 00:20:10.242 24114-24114 MG4_HW                                   com.example.mg4_2                    I    Katman1: android.car.Car sınıfı bulundu ✓
+2026-02-19 00:20:10.244 24114-24114 MG4_HW                                   com.example.mg4_2                    E    Katman1: InvocationTargetException cause: java.lang.IllegalStateException: not connected
+2026-02-19 00:20:10.244 24114-24114 MG4_HW                                   com.example.mg4_2                    E      at android.car.Car.getICarOrThrow(Car.java:927)
+2026-02-19 00:20:24.285 24114-24114 MG4_HW                                   com.example.mg4_2                    I  setDriveMode → Sport (4)
+2026-02-19 00:20:24.285 24114-24114 MG4_HW                                   com.example.mg4_2                    W    CPM setInt 0x2140a17c — CPM hazır değil
+2026-02-19 00:20:24.285 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=151 — binder null
+2026-02-19 00:20:28.254 24114-24114 MG4_HW                                   com.example.mg4_2                    I  setDriveMode → Eco (2)
+2026-02-19 00:20:28.254 24114-24114 MG4_HW                                   com.example.mg4_2                    W    CPM setInt 0x2140a17c — CPM hazır değil
+2026-02-19 00:20:28.254 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=151 — binder null
+2026-02-19 00:20:29.689 24114-24114 MG4_HW                                   com.example.mg4_2                    I  setDriveMode → Kar (6)
+2026-02-19 00:20:29.690 24114-24114 MG4_HW                                   com.example.mg4_2                    W    CPM setInt 0x2140a17c — CPM hazır değil
+2026-02-19 00:20:29.690 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=151 — binder null
+2026-02-19 00:20:31.115 24114-24114 MG4_HW                                   com.example.mg4_2                    I  setOnePedal → Açık
+2026-02-19 00:20:31.115 24114-24114 MG4_HW                                   com.example.mg4_2                    W    CPM setInt 0x2140a193 — CPM hazır değil
+2026-02-19 00:20:31.115 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=181 — binder null
+2026-02-19 00:20:32.579 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I  cycleRegen → step=3 label=Adaptif value=4
+2026-02-19 00:20:32.579 24114-24114 MG4_HW                                   com.example.mg4_2                    I  setOnePedal → Kapalı
+2026-02-19 00:20:32.579 24114-24114 MG4_HW                                   com.example.mg4_2                    W    CPM setInt 0x2140a193 — CPM hazır değil
+2026-02-19 00:20:32.579 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=181 — binder null
+2026-02-19 00:20:32.580 24114-24114 MG4_HW                                   com.example.mg4_2                    I  setRegenLevel → Adaptif (4)
+2026-02-19 00:20:32.580 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=182 — binder null
+2026-02-19 00:20:32.580 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=180 — binder null
+2026-02-19 00:20:32.580 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I    → onePedal KAPALI, regen=Adaptif
+2026-02-19 00:20:33.189 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I  cycleRegen → step=4 label=Tek Pedal value=-1
+2026-02-19 00:20:33.189 24114-24114 MG4_HW                                   com.example.mg4_2                    I  setOnePedal → Açık
+2026-02-19 00:20:33.190 24114-24114 MG4_HW                                   com.example.mg4_2                    W    CPM setInt 0x2140a193 — CPM hazır değil
+2026-02-19 00:20:33.190 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=181 — binder null
+2026-02-19 00:20:33.190 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I    → Tek Pedal AÇIK, regen kapalı
+2026-02-19 00:20:33.714 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I  cycleRegen → step=0 label=Düşük value=1
+2026-02-19 00:20:33.714 24114-24114 MG4_HW                                   com.example.mg4_2                    I  setOnePedal → Kapalı
+2026-02-19 00:20:33.714 24114-24114 MG4_HW                                   com.example.mg4_2                    W    CPM setInt 0x2140a193 — CPM hazır değil
+2026-02-19 00:20:33.714 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=181 — binder null
+2026-02-19 00:20:33.714 24114-24114 MG4_HW                                   com.example.mg4_2                    I  setRegenLevel → Düşük (1)
+2026-02-19 00:20:33.714 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=182 — binder null
+2026-02-19 00:20:33.714 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=180 — binder null
+2026-02-19 00:20:33.714 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I    → onePedal KAPALI, regen=Düşük
+2026-02-19 00:20:34.217 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I  cycleRegen → step=1 label=Orta value=2
+2026-02-19 00:20:34.218 24114-24114 MG4_HW                                   com.example.mg4_2                    I  setOnePedal → Kapalı
+2026-02-19 00:20:34.218 24114-24114 MG4_HW                                   com.example.mg4_2                    W    CPM setInt 0x2140a193 — CPM hazır değil
+2026-02-19 00:20:34.218 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=181 — binder null
+2026-02-19 00:20:34.218 24114-24114 MG4_HW                                   com.example.mg4_2                    I  setRegenLevel → Orta (2)
+2026-02-19 00:20:34.218 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=182 — binder null
+2026-02-19 00:20:34.218 24114-24114 MG4_HW                                   com.example.mg4_2                    W    Binder TX=180 — binder null
+2026-02-19 00:20:34.218 24114-24114 MG4_SERVICE                              com.example.mg4_2                    I    → onePedal KAPALI, regen=Orta
+2026-02-19 00:20:37.574  2894-3265  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x1540253a, area: 0x75, val: 1
+2026-02-19 00:20:37.732  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525370_117_0
+2026-02-19 00:20:41.600  2894-3467  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x1540253a, area: 0x75, val: 1
+2026-02-19 00:20:41.815  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525370_117_3
+2026-02-19 00:20:42.695  2894-3265  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x1540253a, area: 0x75, val: 1
+2026-02-19 00:20:42.936  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525370_117_0
+2026-02-19 00:20:45.368  2894-3467  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x1540253a, area: 0x75, val: 1
+2026-02-19 00:20:45.623  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525370_117_3
+2026-02-19 00:20:47.421  2894-3265  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x15402513, area: 0x75, val: 1
+2026-02-19 00:20:47.617  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525331_117_0
+2026-02-19 00:20:50.706  2894-3467  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x15402513, area: 0x75, val: 1
+2026-02-19 00:20:50.906  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525331_117_3
+2026-02-19 00:20:52.688  2894-3265  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x15402513, area: 0x75, val: 1
+2026-02-19 00:20:52.899  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525331_117_2
+2026-02-19 00:20:54.321  2894-3265  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x15402513, area: 0x75, val: 1
+2026-02-19 00:20:54.611  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525331_117_1
+2026-02-19 00:20:57.168  2894-3467  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x1540253a, area: 0x75, val: 1
+2026-02-19 00:20:57.408  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525370_117_0
+2026-02-19 00:20:59.127  2894-3265  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x15402513, area: 0x75, val: 1
+2026-02-19 00:20:59.285  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525331_117_0
+2026-02-19 00:21:05.074  2894-3467  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x15402514, area: 0x75, val: 1
+2026-02-19 00:21:05.303  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525332_117_3
+2026-02-19 00:21:06.715  2894-3265  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x15402514, area: 0x75, val: 1
+2026-02-19 00:21:06.880  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525332_117_2
+2026-02-19 00:21:08.148  2894-3265  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x15402514, area: 0x75, val: 1
+2026-02-19 00:21:08.383  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525332_117_1
+2026-02-19 00:21:08.937  2894-3265  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x15402514, area: 0x75, val: 1
+2026-02-19 00:21:09.180  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525332_117_0

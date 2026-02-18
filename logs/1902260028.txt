@@ -1,0 +1,31 @@
+---------------------------- PROCESS STARTED (26036) for package com.example.mg4_2 ----------------------------
+2026-02-19 00:27:07.302 26036-26036 MG4_HW                                   com.example.mg4_2                    I  ========================================
+2026-02-19 00:27:07.302 26036-26036 MG4_HW                                   com.example.mg4_2                    I  === MG4Hardware.init() ===
+2026-02-19 00:27:07.302 26036-26036 MG4_HW                                   com.example.mg4_2                    I    uid=10063 pid=26036
+2026-02-19 00:27:07.302 26036-26036 MG4_HW                                   com.example.mg4_2                    I    sdk=28 device=mt2712_saic_eh32
+2026-02-19 00:27:07.303 26036-26036 MG4_HW                                   com.example.mg4_2                    I    Katman1: android.car.Car sınıfı bulundu ✓
+2026-02-19 00:27:07.304 26036-26036 MG4_HW                                   com.example.mg4_2                    I    Katman1: Car.createCar() başarılı, callback bekleniyor...
+2026-02-19 00:27:07.306 26036-26036 MG4_HW                                   com.example.mg4_2                    I  Servisler (vehicle/air/saic/setting içerenler):
+2026-02-19 00:27:07.308 26036-26036 MG4_HW                                   com.example.mg4_2                    W    ✗ Katman2: vehiclesetting null (SELinux — beklenen)
+2026-02-19 00:27:07.308 26036-26036 MG4_HW                                   com.example.mg4_2                    I  ========================================
+2026-02-19 00:27:07.308 26036-26036 MG4_SERVICE                              com.example.mg4_2                    I  MG4Hardware.init() çağrıldı
+2026-02-19 00:27:07.315 26036-26036 MG4_SERVICE                              com.example.mg4_2                    I  Hardkey receiver kayıt edildi — action=com.saic.keyevent.hardkey.report
+2026-02-19 00:27:07.315 26036-26036 MG4_SERVICE                              com.example.mg4_2                    I    ★ tuşu (keycode=17) → sürüş modu
+2026-02-19 00:27:07.316 26036-26036 MG4_SERVICE                              com.example.mg4_2                    I    Vol↑+24 + Vol↓+25 combo → müzik pause/play
+2026-02-19 00:27:07.316 26036-26036 MG4_SERVICE                              com.example.mg4_2                    I  === onCreate tamamlandı ===
+2026-02-19 00:27:18.960 26036-26036 MG4_HW                                   com.example.mg4_2                    I  setDriveMode → Eco (2)
+2026-02-19 00:27:18.960 26036-26036 MG4_HW                                   com.example.mg4_2                    W    CPM setInt 0x2140a17c — CPM hazır değil
+2026-02-19 00:27:18.960 26036-26036 MG4_HW                                   com.example.mg4_2                    W    Binder TX=151 — binder null
+2026-02-19 00:27:29.952 26036-26036 MG4_HW                                   com.example.mg4_2                    I  setSteeringHeat → Açık
+2026-02-19 00:27:29.952 26036-26036 MG4_HW                                   com.example.mg4_2                    W    CPM setInt 0x1540253a — CPM hazır değil
+2026-02-19 00:27:29.952 26036-26036 MG4_HW                                   com.example.mg4_2                    W    Binder TX=52 — binder null
+2026-02-19 00:27:37.990  2894-3265  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x1540253a, area: 0x75, val: 1
+2026-02-19 00:27:38.111  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525370_117_3
+2026-02-19 00:27:46.644  2894-3467  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x1540253a, area: 0x75, val: 1
+2026-02-19 00:27:46.915  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525370_117_0
+2026-02-19 00:27:51.407  2894-3265  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x1540250d, area: 0x75, val: 2
+2026-02-19 00:27:51.700  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525325_117_2
+2026-02-19 00:27:51.700  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525314_117_0
+2026-02-19 00:27:53.387  2894-3265  CarHvacManager                           com.saicmotor.service.vehicle        I  setIntProperty, propId: 0x15402502, area: 0x75, val: 1
+2026-02-19 00:27:53.587  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525325_117_15
+2026-02-19 00:27:53.588  2894-2894  CarHvacManager                           com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:356525314_117_1

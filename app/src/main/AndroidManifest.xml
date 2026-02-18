@@ -11,7 +11,10 @@
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.car.permission.CAR_ENERGY" />
     <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
-    <uses-permission android:name="android.car.permission.VENDOR_EXTENSION" />
+    <uses-permission android:name="android.car.permission.CAR_VENDOR_EXTENSION"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.car.permission.CONTROL_CAR_CLIMATE"
+        tools:ignore="ProtectedPermissions" />
 
     <uses-feature android:name="android.hardware.type.automotive" android:required="false" />
 

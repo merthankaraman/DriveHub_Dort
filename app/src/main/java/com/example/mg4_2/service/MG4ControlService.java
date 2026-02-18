@@ -29,19 +29,23 @@ public class MG4ControlService extends Service {
     private static final String CHANNEL_ID = "mg4_channel";
     private static final int    NOTIF_ID   = 1001;
 
-    // Hardkey broadcast — logcat'ten doğrulandı:
+    // Hardkey broadcast — logcat'ten doğrulandı (1902260031.txt):
     //   action: com.saic.keyevent.hardkey.report
-    //   extras: "keycode" (int), "down" (boolean), "longpress" (boolean)
-    //   Sol direksiyon * tuşu = keycode 17
-    private static final String HARDKEY_ACTION   = "com.saic.keyevent.hardkey.report";
-    private static final int    HARDKEY_STAR_KEY = 17;
-    private static final long   DEBOUNCE_MS      = 500;
+    //   extras: android.intent.extra.hardkey.keycode (int)
+    //           android.intent.extra.hardkey.down (boolean)
+    //           android.intent.extra.hardkey.longpress (boolean)
+    //
+    // ★ tuşu (event code 286) — SystemUI tüketiyor, broadcast GELMİYOR
+    // Vol↑ (24) ve Vol↓ (25) — broadcast GELİYOR ✓
+    //
+    // Kontrol şeması:
+    //   Vol↓ çift hızlı basış (400ms içinde) → sürüş modu döngüsü
+    //   Vol↑ + Vol↓ combo (300ms içinde)     → müzik pause/play
+    private static final String HARDKEY_ACTION      = "com.saic.keyevent.hardkey.report";
+    private static final int    KEYCODE_VOLUME_UP   = 24;
+    private static final int    KEYCODE_VOLUME_DOWN = 25;
 
-    // Volume tuş kodları (doğrulanacak — araçta farklı olabilir)
-    private static final int KEYCODE_VOLUME_UP   = 24;
-    private static final int KEYCODE_VOLUME_DOWN = 25;
-
-    // Volume combo: 300ms içinde ikisi de basılırsa müzik pause/play
+    // Vol↑+Vol↓ combo → müzik pause/play (300ms pencere)
     private static final long COMBO_WINDOW_MS = 300;
     private long mVolUpDownTime   = 0L;
     private long mVolDownDownTime = 0L;
@@ -54,7 +58,6 @@ public class MG4ControlService extends Service {
     private int mRegenStep = 2; // Başlangıç: Yüksek (index 2)
 
     private DriveMode mCurrentDriveMode = DriveMode.NORMAL;
-    private long      mLastKeyDownTime  = 0L;
     private BroadcastReceiver mHardkeyReceiver;
 
     @Override
@@ -104,24 +107,41 @@ public class MG4ControlService extends Service {
         mHardkeyReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                int     keyCode  = intent.getIntExtra("keycode", -1);
-                boolean isDown   = intent.getBooleanExtra("down", false);
-                boolean isLong   = intent.getBooleanExtra("longpress", false);
+                // Gelen TÜM extra'ları logla — hangi key adının kullanıldığını bulmak için
+                android.os.Bundle extras = intent.getExtras();
+                if (extras != null) {
+                    StringBuilder sb = new StringBuilder("HARDKEY extras: ");
+                    for (String key : extras.keySet()) {
+                        sb.append("[").append(key).append("=").append(extras.get(key)).append("] ");
+                    }
+                    Log.i(TAG, sb.toString());
+                }
 
-                // Tüm tuşları logla — tuş kodlarını keşfetmek için
+                // Logcat'te doğrulanan gerçek key adları (1902260031.txt):
+                //   android.intent.extra.hardkey.keycode
+                //   android.intent.extra.hardkey.down
+                //   android.intent.extra.hardkey.longpress
+                int keyCode = intent.getIntExtra("android.intent.extra.hardkey.keycode", -1);
+                if (keyCode == -1) keyCode = intent.getIntExtra("keycode", -1);
+                if (keyCode == -1) keyCode = intent.getIntExtra("keyCode", -1);
+
+                boolean isDown = intent.getBooleanExtra("android.intent.extra.hardkey.down", false);
+                if (!isDown) isDown = intent.getBooleanExtra("down", false);
+
+                boolean isLong = intent.getBooleanExtra("android.intent.extra.hardkey.longpress", false);
+                if (!isLong) isLong = intent.getBooleanExtra("longpress", false);
+
                 Log.i(TAG, "HARDKEY >>> keycode=" + keyCode
                         + " down=" + isDown
                         + " longpress=" + isLong
                         + " label=" + keycodeLabel(keyCode));
 
-                if (!isDown) return; // Sadece key-down olaylarını işle
+                if (!isDown) return;
 
-                if (keyCode == HARDKEY_STAR_KEY) {
-                    onStarKeyPressed();
-                } else if (keyCode == KEYCODE_VOLUME_UP) {
-                    onVolumeUpDown(true);
+                if (keyCode == KEYCODE_VOLUME_UP) {
+                    onVolumeUp();
                 } else if (keyCode == KEYCODE_VOLUME_DOWN) {
-                    onVolumeUpDown(false);
+                    onVolumeDown();
                 }
             }
         };
@@ -130,51 +150,26 @@ public class MG4ControlService extends Service {
         ContextCompat.registerReceiver(this, mHardkeyReceiver, filter,
                 ContextCompat.RECEIVER_EXPORTED);
         Log.i(TAG, "Hardkey receiver kayıt edildi — action=" + HARDKEY_ACTION);
-        Log.i(TAG, "  ★ tuşu (keycode=" + HARDKEY_STAR_KEY + ") → sürüş modu");
-        Log.i(TAG, "  Vol↑+" + KEYCODE_VOLUME_UP + " + Vol↓+" + KEYCODE_VOLUME_DOWN
-                + " combo → müzik pause/play");
+        Log.i(TAG, "  Vol↑+Vol↓ combo (300ms) → müzik pause/play");
     }
 
     // -------------------------------------------------------------------------
-    // ★ Tuşu — sürüş modu değiştir
+    // Volume tuşları
     // -------------------------------------------------------------------------
 
-    private void onStarKeyPressed() {
-        long now     = System.currentTimeMillis();
-        long elapsed = now - mLastKeyDownTime;
-        if (elapsed < DEBOUNCE_MS) {
-            Log.d(TAG, "  ★ debounce: " + elapsed + "ms < " + DEBOUNCE_MS + "ms, atlanıyor");
-            return;
-        }
-        mLastKeyDownTime = now;
-
-        DriveMode next = mCurrentDriveMode.next();
-        Log.i(TAG, "★ tuşu: " + mCurrentDriveMode.label + " → " + next.label
-                + " | HW hazır=" + MG4Hardware.isReady());
-        boolean ok = MG4Hardware.setDriveMode(next);
-        if (ok) {
-            mCurrentDriveMode = next;
-            updateNotification("Sürüş: " + mCurrentDriveMode.label
-                    + " | Regen: " + REGEN_CYCLE_LABELS[mRegenStep]);
-        }
+    private void onVolumeUp() {
+        mVolUpDownTime = System.currentTimeMillis();
+        Log.d(TAG, "Vol↑ down");
+        checkCombo();
     }
 
-    // -------------------------------------------------------------------------
-    // Volume combo — pause/play, uzun basış → önceki/sonraki şarkı
-    // -------------------------------------------------------------------------
+    private void onVolumeDown() {
+        mVolDownDownTime = System.currentTimeMillis();
+        Log.d(TAG, "Vol↓ down");
+        checkCombo();
+    }
 
-    private void onVolumeUpDown(boolean isUp) {
-        long now = System.currentTimeMillis();
-
-        if (isUp) {
-            mVolUpDownTime = now;
-            Log.d(TAG, "Vol↑ down — combo penceresi başladı");
-        } else {
-            mVolDownDownTime = now;
-            Log.d(TAG, "Vol↓ down — combo penceresi başladı");
-        }
-
-        // Combo kontrolü: ikisi de basılı mı?
+    private void checkCombo() {
         long gap = Math.abs(mVolUpDownTime - mVolDownDownTime);
         if (mVolUpDownTime > 0 && mVolDownDownTime > 0 && gap <= COMBO_WINDOW_MS) {
             Log.i(TAG, "Vol↑+Vol↓ COMBO tetiklendi (gap=" + gap + "ms) → toggleMusicPlayback");
