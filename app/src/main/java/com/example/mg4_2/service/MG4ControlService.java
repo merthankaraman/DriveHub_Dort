@@ -56,6 +56,7 @@ public class MG4ControlService extends Service {
     // Regen döngüsü adımları — araçta doğrulanan değerler (log 1902260053):
     //   Düşük=0, Orta=1, Yüksek=2, Adaptif=3, Tek Pedal=onePedal(0x2140a193)=1
     // -1 = Tek Pedal adımı (regen property değil, onePedal property kullanılır)
+    // NOT: Araç Adaptif modda regen=6 da dönebiliyor (Tek Pedal'dan çıkınca) — findNextStep'te normalize ediliyor
     private static final int[] REGEN_CYCLE_VALUES = { 0, 1, 2, 3, -1 }; // -1 = Tek Pedal
     private static final String[] REGEN_CYCLE_LABELS = { "Düşük", "Orta", "Yüksek", "Adaptif", "Tek Pedal" };
     private int mRegenStep = 2; // Başlangıç: Yüksek (index 2)
@@ -224,13 +225,19 @@ public class MG4ControlService extends Service {
      * current=3 (Adaptif) → nextStep=4 (Tek Pedal, value=-1)
      */
     private int findNextStep(int currentValue) {
-        // Önce mevcut değerin döngüdeki indeksini bul
+        // Araç bazı durumlarda Adaptif için 6 dönebiliyor (Tek Pedal'dan çıkınca) — 3'e normalize et
+        if (currentValue == 6) {
+            Log.d(TAG, "  findNextStep: regen=6 → Adaptif(3) olarak normalize edildi");
+            currentValue = 3;
+        }
+        // Mevcut değerin döngüdeki indeksini bul
         for (int i = 0; i < REGEN_CYCLE_VALUES.length; i++) {
             if (REGEN_CYCLE_VALUES[i] == currentValue) {
                 return (i + 1) % REGEN_CYCLE_VALUES.length;
             }
         }
         // Bulunamazsa mevcut iç sayacı ilerlet
+        Log.w(TAG, "  findNextStep: bilinmeyen regen=" + currentValue + " → iç sayaç kullanılıyor");
         return (mRegenStep + 1) % REGEN_CYCLE_VALUES.length;
     }
 
