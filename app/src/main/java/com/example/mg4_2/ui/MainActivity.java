@@ -3,7 +3,6 @@ package com.example.mg4_2.ui;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,17 +18,14 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView mTvStatus;
     private TextView mTvBinder;
-    private Button   mBtnService;
-    private boolean  mServiceStarted = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mTvStatus   = findViewById(R.id.tvStatus);
-        mTvBinder   = findViewById(R.id.tvBinderStatus);
-        mBtnService = findViewById(R.id.btnService);
+        mTvStatus = findViewById(R.id.tvStatus);
+        mTvBinder = findViewById(R.id.tvBinderStatus);
 
         // Versiyon numarasını göster
         try {
@@ -38,7 +34,10 @@ public class MainActivity extends AppCompatActivity {
             tvVersion.setText("EH32 · Android Automotive · v" + pInfo.versionName);
         } catch (Exception ignored) {}
 
-        mBtnService.setOnClickListener(v -> toggleService());
+        // Servisi otomatik başlat — kullanıcı müdahalesi gerektirmez
+        startForegroundService(new Intent(this, MG4ControlService.class));
+        mTvStatus.setText("✅ Servis çalışıyor. ★ tuşu aktif.");
+
         findViewById(R.id.btnTestBinder).setOnClickListener(v -> testCarProperty());
 
         findViewById(R.id.btnDrive).setOnClickListener(v   -> sendCommand("DRIVE_CYCLE"));
@@ -57,21 +56,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mTvStatus.setText("MG4 Controller hazır");
-    }
-
-    private void toggleService() {
-        if (mServiceStarted) {
-            stopService(new Intent(this, MG4ControlService.class));
-            mServiceStarted = false;
-            mBtnService.setText("Servisi Başlat");
-            mTvStatus.setText("Servis durduruldu.");
-        } else {
-            startForegroundService(new Intent(this, MG4ControlService.class));
-            mServiceStarted = true;
-            mBtnService.setText("Servisi Durdur");
-            mTvStatus.setText("✅ Servis çalışıyor. ★ tuşu (keycode 17) aktif.");
-        }
+        // Servis arka planda zaten çalışıyor (onCreate'de başlatıldı / BootReceiver ile başlatıldı)
+        mTvStatus.setText("✅ Servis çalışıyor. ★ tuşu aktif.");
     }
 
     private void testCarProperty() {

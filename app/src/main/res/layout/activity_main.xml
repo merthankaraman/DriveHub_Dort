@@ -58,16 +58,6 @@
             android:layout_marginBottom="10dp"/>
 
         <Button
-            android:id="@+id/btnService"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="Servisi Baslat"
-            android:backgroundTint="#238636"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:layout_marginBottom="8dp"/>
-
-        <Button
             android:id="@+id/btnTestBinder"
             android:layout_width="match_parent"
             android:layout_height="48dp"

@@ -1,0 +1,30 @@
+2026-02-19 01:26:12.812 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I  HARDKEY extras: [android.intent.extra.hardkey.keycode=17] [android.intent.extra.hardkey.down=true] [android.intent.extra.hardkey.longpress=false] 
+2026-02-19 01:26:12.812 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I  HARDKEY >>> keycode=17 down=true longpress=false label=STAR/FAV
+2026-02-19 01:26:12.812 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I  ★ tuşu → regen (SystemUI-aware: 150ms sonra mevcut değer okunacak)
+2026-02-19 01:26:12.902 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I  HARDKEY extras: [android.intent.extra.hardkey.keycode=17] [android.intent.extra.hardkey.down=false] [android.intent.extra.hardkey.longpress=false] 
+2026-02-19 01:26:12.902 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I  HARDKEY >>> keycode=17 down=false longpress=false label=STAR/FAV
+2026-02-19 01:26:12.965 10834-10834 MG4_HW                                   com.example.mg4_2                    I    CPM getInt 0x2140a191 → 2 ✓
+2026-02-19 01:26:12.968 10834-10834 MG4_HW                                   com.example.mg4_2                    I    CPM getInt 0x2140a193 → 0 ✓
+2026-02-19 01:26:12.968 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I    [150ms] current regen=2 onePedal=0
+2026-02-19 01:26:12.968 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I    → araç regen=2 → nextStep=3 label=Adaptif value=3
+2026-02-19 01:26:12.968 10834-10834 MG4_HW                                   com.example.mg4_2                    I  setOnePedal → Kapalı
+2026-02-19 01:26:12.970 10834-10834 MG4_HW                                   com.example.mg4_2                    I    CPM setInt 0x2140a193 area=0x1000000 value=0 ✓
+2026-02-19 01:26:12.970 10834-10834 MG4_HW                                   com.example.mg4_2                    I  setRegenLevel → Adaptif (3)
+2026-02-19 01:26:12.972 10834-10834 MG4_HW                                   com.example.mg4_2                    I    CPM setInt 0x2140a191 area=0x1000000 value=3 ✓
+2026-02-19 01:26:14.413 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I  HARDKEY extras: [android.intent.extra.hardkey.keycode=17] [android.intent.extra.hardkey.down=true] [android.intent.extra.hardkey.longpress=false] 
+2026-02-19 01:26:14.413 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I  HARDKEY >>> keycode=17 down=true longpress=false label=STAR/FAV
+2026-02-19 01:26:14.413 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I  ★ tuşu → regen (SystemUI-aware: 150ms sonra mevcut değer okunacak)
+2026-02-19 01:26:14.444 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I  HARDKEY extras: [android.intent.extra.hardkey.keycode=17] [android.intent.extra.hardkey.down=false] [android.intent.extra.hardkey.longpress=false] 
+2026-02-19 01:26:14.444 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I  HARDKEY >>> keycode=17 down=false longpress=false label=STAR/FAV
+2026-02-19 01:26:14.565 10834-10834 MG4_HW                                   com.example.mg4_2                    I    CPM getInt 0x2140a191 → 3 ✓
+2026-02-19 01:26:14.567 10834-10834 MG4_HW                                   com.example.mg4_2                    I    CPM getInt 0x2140a193 → 0 ✓
+2026-02-19 01:26:14.567 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I    [150ms] current regen=3 onePedal=0
+2026-02-19 01:26:14.567 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I    → araç regen=3 → nextStep=4 label=Tek Pedal value=-1
+2026-02-19 01:26:14.567 10834-10834 MG4_HW                                   com.example.mg4_2                    I  setOnePedal → Açık
+2026-02-19 01:26:14.569 10834-10834 MG4_HW                                   com.example.mg4_2                    I    CPM setInt 0x2140a193 area=0x1000000 value=1 ✓
+2026-02-19 01:26:14.569 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I    → Tek Pedal AÇIK (ilk set)
+2026-02-19 01:26:14.820 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I    → Tek Pedal AÇIK (takviye, 250ms)
+2026-02-19 01:26:14.820 10834-10834 MG4_HW                                   com.example.mg4_2                    I  setOnePedal → Açık
+2026-02-19 01:26:14.824 10834-10834 MG4_HW                                   com.example.mg4_2                    I    CPM setInt 0x2140a193 area=0x1000000 value=1 ✓
+2026-02-19 01:26:28.493 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I  HARDKEY extras: [android.intent.extra.hardkey.keycode=3] [android.intent.extra.hardkey.down=true] [android.intent.extra.hardkey.longpress=false] 
+2026-02-19 01:26:28.494 10834-10834 MG4_SERVICE                              com.example.mg4_2                    I  HARDKEY >>> keycode=3 down=true longpress=false label=HOME
