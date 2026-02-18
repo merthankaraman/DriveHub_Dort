@@ -275,10 +275,6 @@ intent.putExtra("keyAction", 0);     // 0=DOWN, 1=UP
 
 ## 🔗 Kaynaklar
 
-### Transcript Geçmişi
-- `/mnt/transcripts/2026-02-17-17-37-15-mg4-android-build-success-apk-analysis.txt`
-- Önceki tüm konuşma geçmişi ve debug detayları bu dosyada
-
 ### APK Analizi
 Decompile edilen APK'lar:
 - `vehiclesettingservice_eh32_tur_P.apk` — Transaction ID doğrulaması
