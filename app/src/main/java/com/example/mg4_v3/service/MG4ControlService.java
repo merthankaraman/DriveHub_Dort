@@ -258,55 +258,92 @@ public class MG4ControlService extends Service {
     // -------------------------------------------------------------------------
 
     private MediaController getActiveMediaController() {
-        try {
-            MediaSessionManager msm =
-                    (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
-            if (msm == null) {
-                Log.w(TAG, "MediaSessionManager null");
-                return null;
-            }
-            List<MediaController> controllers =
-                    msm.getActiveSessions(null);
-            if (controllers == null || controllers.isEmpty()) {
-                Log.w(TAG, "Aktif medya oturumu yok");
-                return null;
-            }
-            Log.d(TAG, "Aktif medya oturumu sayısı: " + controllers.size()
-                    + " — ilk=" + controllers.get(0).getPackageName());
-            return controllers.get(0);
-        } catch (SecurityException e) {
-            Log.w(TAG, "getActiveSessions izin yok (MEDIA_CONTENT_CONTROL gerekebilir): "
-                    + e.getMessage());
-            return null;
-        } catch (Exception e) {
-            Log.e(TAG, "getActiveMediaController hata: " + e.getMessage());
+        MediaSessionManager msm =
+                (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+        if (msm == null) {
+            Log.w(TAG, "MEDIA: MediaSessionManager null — sistem servisi bulunamadı");
             return null;
         }
+
+        // Yöntem 1: MEDIA_CONTENT_CONTROL izniyle getActiveSessions(null)
+        // android.uid.system ile bu genellikle çalışır
+        try {
+            List<MediaController> controllers = msm.getActiveSessions(null);
+            if (controllers != null && !controllers.isEmpty()) {
+                Log.i(TAG, "MEDIA: getActiveSessions(null) → " + controllers.size()
+                        + " oturum bulundu");
+                for (int i = 0; i < controllers.size(); i++) {
+                    MediaController mc = controllers.get(i);
+                    PlaybackState ps = mc.getPlaybackState();
+                    int st = (ps != null) ? ps.getState() : -1;
+                    Log.i(TAG, "  [" + i + "] pkg=" + mc.getPackageName()
+                            + " state=" + playbackStateLabel(st));
+                }
+                // Önce PLAYING durumundaki oturumu bul
+                for (MediaController mc : controllers) {
+                    PlaybackState ps = mc.getPlaybackState();
+                    if (ps != null && ps.getState() == PlaybackState.STATE_PLAYING) {
+                        Log.i(TAG, "MEDIA: PLAYING oturum seçildi → " + mc.getPackageName());
+                        return mc;
+                    }
+                }
+                // PLAYING yoksa ilkini döndür (pause → play için)
+                Log.i(TAG, "MEDIA: PLAYING yok, ilk oturum seçildi → "
+                        + controllers.get(0).getPackageName());
+                return controllers.get(0);
+            } else {
+                Log.w(TAG, "MEDIA: getActiveSessions(null) → boş liste döndü");
+            }
+        } catch (SecurityException e) {
+            Log.w(TAG, "MEDIA: getActiveSessions(null) SecurityException: " + e.getMessage()
+                    + " — MEDIA_CONTENT_CONTROL izni yeterli değil mi?");
+        } catch (Exception e) {
+            Log.e(TAG, "MEDIA: getActiveSessions(null) hata: " + e.getMessage());
+        }
+
+        Log.w(TAG, "MEDIA: Aktif medya oturumu bulunamadı");
+        return null;
     }
 
     private void toggleMusicPlayback() {
+        Log.i(TAG, "MEDIA: toggleMusicPlayback çağrıldı");
         MediaController mc = getActiveMediaController();
         if (mc == null) {
-            Log.w(TAG, "toggleMusicPlayback: medya kontrolcüsü yok");
+            Log.w(TAG, "MEDIA: medya kontrolcüsü yok → işlem iptal");
             updateNotification("Müzik: aktif oturum bulunamadı");
             return;
         }
         PlaybackState state = mc.getPlaybackState();
         if (state == null) {
-            Log.w(TAG, "toggleMusicPlayback: PlaybackState null");
+            Log.w(TAG, "MEDIA: PlaybackState null (pkg=" + mc.getPackageName()
+                    + ") — yine de play() gönderiliyor");
+            mc.getTransportControls().play();
+            updateNotification("Müzik: ▶ play gönderildi");
             return;
         }
         int ps = state.getState();
-        Log.i(TAG, "toggleMusicPlayback: playbackState=" + ps
-                + " package=" + mc.getPackageName());
+        Log.i(TAG, "MEDIA: playbackState=" + playbackStateLabel(ps)
+                + " (" + ps + ") pkg=" + mc.getPackageName());
         if (ps == PlaybackState.STATE_PLAYING) {
             mc.getTransportControls().pause();
-            Log.i(TAG, "  → pause gönderildi");
+            Log.i(TAG, "MEDIA: → pause() gönderildi");
             updateNotification("Müzik: ⏸ Durduruldu");
         } else {
             mc.getTransportControls().play();
-            Log.i(TAG, "  → play gönderildi");
+            Log.i(TAG, "MEDIA: → play() gönderildi");
             updateNotification("Müzik: ▶ Oynatılıyor");
+        }
+    }
+
+    private static String playbackStateLabel(int state) {
+        switch (state) {
+            case PlaybackState.STATE_PLAYING:    return "PLAYING";
+            case PlaybackState.STATE_PAUSED:     return "PAUSED";
+            case PlaybackState.STATE_STOPPED:    return "STOPPED";
+            case PlaybackState.STATE_BUFFERING:  return "BUFFERING";
+            case PlaybackState.STATE_NONE:       return "NONE";
+            case PlaybackState.STATE_ERROR:      return "ERROR";
+            default:                             return "UNKNOWN(" + state + ")";
         }
     }
 
