@@ -1,0 +1,1701 @@
+package com.saicmotor.service.vehicle.binder;
+
+import android.car.Car;
+import android.car.CarInfoManager;
+import android.car.CarNotConnectedException;
+import android.car.hardware.CarPropertyValue;
+import android.car.hardware.hvac.CarHvacManager;
+import android.content.Context;
+import android.os.RemoteException;
+import com.saicmotor.sdk.vehiclesettings.IAirConditionListener;
+import com.saicmotor.sdk.vehiclesettings.IAirConditionService;
+import com.saicmotor.sdk.vehiclesettings.LogUtil;
+import com.saicmotor.sdk.vehiclesettings.bean.AirConditionBean;
+import com.saicmotor.sdk.vehiclesettings.constant.AirConditionConst;
+import com.saicmotor.service.vehicle.BaseStateCallback;
+import com.saicmotor.service.vehicle.simulationtest.AirConditionSimulationTest;
+import com.saicmotor.service.vehicle.simulationtest.SimulationFlag;
+import com.saicmotor.service.vehicle.util.Utils;
+
+/* JADX INFO: loaded from: classes.dex */
+public class AirConditionBinder extends IAirConditionService.Stub {
+    private static final int AIR_QUALITY_ERROR = 255;
+    private static final int AIR_QUALITY_ZONE = 0;
+    private static final int AIR_VOLUME_CLOSE = 0;
+    private static final int AIR_VOLUME_LEVEL_AUTO = 15;
+    private static final int AIR_VOLUME_LEVEL_MAX = 11;
+    private static final int AIR_VOLUME_LEVEL_MIN = 1;
+    private static final float BLOW_LEFT_LIMIT = 0.0f;
+    private static final float BLOW_RIGHT_LIMIT = 101.0f;
+    private static final int BUTTON_OFF = 0;
+    private static final int BUTTON_ON = 1;
+    private static final int DATA_GET_ERROR = -1;
+    private static final int HVAC_ALL = 117;
+    private static final int HVAC_LEFT = 49;
+    private static final int HVAC_RIGHT = 68;
+    private static final int LOOP_MODE_AUTO = 2;
+    private static final int LOOP_MODE_INNER = 0;
+    private static final int LOOP_MODE_OUTSIDE = 1;
+    private static final int LOOP_MODE_RESERVED = 3;
+    private static final int MULTIPLE_FILTER = 3;
+    private static final int NORMAL_FILTER = 0;
+    private static final int NO_REQUEST = 0;
+    private static final int RESERVED = 3;
+    private static final int SEAT_CLOSE = 0;
+    private static final int SEAT_LEVEL_ONE = 1;
+    private static final int SEAT_LEVEL_THREE = 3;
+    private static final int SEAT_LEVEL_TWO = 2;
+    private static final int SHORT_PRESS = 1;
+    private static final int SIGNAL_ID_DEFAULT = 0;
+    private static final int SIGNAL_ID_INIT = 4000;
+    private static final int STEERING_WHEEL_HEAT_CLOSE = 0;
+    private static final int STEERING_WHEEL_HEAT_LEVEL_MAX = 3;
+    private static final String TAG = "AirConditionBinder";
+    private static final float TEMPERATURE_ERROR_CONST = -10000.0f;
+    private static final float TEMPERATURE_MAX = 32.5f;
+    private static final float TEMPERATURE_MAX_2 = 30.5f;
+    private static final float TEMPERATURE_MIN = 17.5f;
+    private static final float TEMPERATURE_MIN_2 = 15.5f;
+    private static final int TEMPERATURE_PICKER_HI = 33;
+    private static final int TEMPERATURE_PICKER_HI_2 = 31;
+    private static final int TEMPERATURE_PICKER_LO = 17;
+    private static final int TEMPERATURE_PICKER_LO_2 = 15;
+    private static final int TEMPERATURE_PICKER_MAX = 32;
+    private static final int TEMPERATURE_PICKER_MAX_2 = 30;
+    private static final int TEMPERATURE_PICKER_MIN = 18;
+    private static final int TEMPERATURE_PICKER_MIN_2 = 16;
+    private static final String TEMP_ODD_SIGN = "0";
+    private static final String TEMP_SPLITTER = "\\.";
+    private static final int WIND_MODE_ALL = 5;
+    private static final int WIND_MODE_AUTO = 7;
+    private static final int WIND_MODE_FACE = 0;
+    private static final int WIND_MODE_FACE_DEFROST = 6;
+    private static final int WIND_MODE_FACE_FOOT = 1;
+    private CarHvacManager mCarHvacManager;
+    private CarInfoManager mCarInfoManager;
+    private boolean mAirConditionChangeEventMatch = false;
+    private boolean mIsConnected = false;
+    int DEFAULT_NUMBER = -1;
+    private CarHvacManager.CarHvacEventCallback mCarHvacEventCallback = new CarHvacManager.CarHvacEventCallback() { // from class: com.saicmotor.service.vehicle.binder.AirConditionBinder.1
+        public void onChangeEvent(CarPropertyValue carPropertyValue) {
+            int propertyId = carPropertyValue.getPropertyId();
+            Object signalValue = carPropertyValue.getValue();
+            LogUtil.logD(AirConditionBinder.TAG, "onChangeEvent(): propertyId = " + propertyId + ", signalValue = " + signalValue);
+            if (AirConditionBinder.this.isBetweenAcAndEcon(propertyId)) {
+                AirConditionBinder.this.onChangeBetweenAcAndEcon(propertyId, signalValue);
+            } else if (AirConditionBinder.this.isBetweenLoopAndWindMode(propertyId)) {
+                AirConditionBinder.this.onChangeBetweenLoopAndWindMode(propertyId, signalValue);
+            } else if (AirConditionBinder.this.isBetweenAnionAndDefroster(propertyId)) {
+                AirConditionBinder.this.onChangeBetweenAnionAndDefroster(propertyId, signalValue);
+            } else if (AirConditionBinder.this.isBetweenWindOutletOffAndAvoidPerson(propertyId)) {
+                AirConditionBinder.this.onChangeBetweenWindOutletOffAndAvoidPerson(propertyId, signalValue);
+            } else if (AirConditionBinder.this.isBetweenWindOutletSwingAndSmart(propertyId)) {
+                AirConditionBinder.this.onChangeBetweenWindOutletSwingAndSmart(propertyId, signalValue);
+            } else if (AirConditionBinder.this.isSeatVentData(propertyId)) {
+                AirConditionBinder.this.onChangeSeatVentData(propertyId, signalValue);
+            } else if (AirConditionBinder.this.isTempData(propertyId)) {
+                AirConditionBinder.this.onChangeTempData(propertyId, signalValue);
+            } else if (AirConditionBinder.this.isWindAngleData(propertyId)) {
+                AirConditionBinder.this.onChangeWindAngleData(propertyId, signalValue);
+            } else if (AirConditionBinder.this.isSteeringWheelHeatData(propertyId)) {
+                AirConditionBinder.this.onChangeSteeringWheelHeatData(propertyId, signalValue);
+            } else {
+                LogUtil.logD(AirConditionBinder.TAG, "No longer monitoring! propertyId = " + propertyId);
+            }
+            if (AirConditionBinder.this.mAirConditionChangeEventMatch) {
+                AirConditionStateCallBack airConditionStateCallBack = AirConditionBinder.this.mRemoteCallback;
+                AirConditionBinder airConditionBinder = AirConditionBinder.this;
+                airConditionStateCallBack.broadcastChangeEvent(airConditionBinder.getChangedBean(airConditionBinder.mAirBean), 0);
+            }
+        }
+
+        public void onErrorEvent(int propertyId, int zone) {
+            LogUtil.logE(AirConditionBinder.TAG, "onErrorEvent(): signal (" + propertyId + ", zone) have an error event!");
+        }
+    };
+    private AirConditionStateCallBack mRemoteCallback = new AirConditionStateCallBack(TAG);
+    private AirConditionBean mAirBean = new AirConditionBean();
+    private SimulationFlag mSimulationFlag = SimulationFlag.getInstance();
+    private AirConditionSimulationTest mAirConditionSimulationTest = new AirConditionSimulationTest();
+
+    public AirConditionBinder(Context context) {
+    }
+
+    public void initBinder(Car car) {
+        LogUtil.logD(TAG, "initBinder() --- start");
+        try {
+            this.mCarHvacManager = (CarHvacManager) car.getCarManager("hvac");
+            this.mCarInfoManager = (CarInfoManager) car.getCarManager("info");
+            this.mCarHvacManager.registerCallback(this.mCarHvacEventCallback);
+            if (this.mCarHvacManager != null) {
+                this.mIsConnected = true;
+            }
+            LogUtil.logD(TAG, "initBinder(): mCarHvacManager= " + this.mCarHvacManager);
+            initAirConditionBean();
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mAirBean), 0);
+        } catch (CarNotConnectedException except) {
+            except.printStackTrace();
+        }
+    }
+
+    public void destroyBinder() {
+        CarHvacManager carHvacManager = this.mCarHvacManager;
+        if (carHvacManager != null) {
+            carHvacManager.unregisterCallback(this.mCarHvacEventCallback);
+        }
+        this.mRemoteCallback.kill();
+        this.mIsConnected = false;
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isBetweenAcAndEcon(int propertyId) {
+        return propertyId >= 356525312 && propertyId <= 356525316;
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isBetweenLoopAndWindMode(int propertyId) {
+        LogUtil.logD(TAG, "isBetweenLoopAndWindMode propertyId= " + propertyId);
+        return propertyId >= 356525319 && propertyId <= 356525326;
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isBetweenAnionAndDefroster(int propertyId) {
+        LogUtil.logD(TAG, "isBetweenAnionAndDefroster propertyId= " + propertyId);
+        return propertyId >= 356525328 && propertyId <= 356525334;
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isBetweenWindOutletOffAndAvoidPerson(int propertyId) {
+        LogUtil.logD(TAG, "isBetweenWindOutletOffAndAvoidPerson propertyId= " + propertyId);
+        return propertyId >= 356525336 && propertyId <= 356525341;
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isBetweenWindOutletSwingAndSmart(int propertyId) {
+        LogUtil.logD(TAG, "isBetweenWindOutletSwingAndSmart propertyId= " + propertyId);
+        return propertyId >= 356525346 && propertyId <= 356525348;
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isSeatVentData(int propertyId) {
+        LogUtil.logD(TAG, "isSeatVentData propertyId= " + propertyId);
+        return propertyId >= 356525349 && propertyId <= 356525353;
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isTempData(int propertyId) {
+        LogUtil.logD(TAG, "isTempData propertyId= " + propertyId);
+        return propertyId >= 358622475 && propertyId <= 358622481;
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isWindAngleData(int propertyId) {
+        LogUtil.logD(TAG, "isWindAngleData propertyId= " + propertyId);
+        return propertyId >= 358622494 && propertyId <= 358622497;
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isSteeringWheelHeatData(int propertyId) {
+        return propertyId == 356525370;
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void onChangeBetweenAcAndEcon(int propertyId, Object signalValue) {
+        if (getSwitchJudgment(((Integer) signalValue).intValue()) == -1) {
+        }
+        switch (propertyId) {
+            case 356525312:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_STATUS_AC);
+                this.mAirBean.setAcSwitch(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 356525313:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_STATUS_TEMP_DUAL);
+                this.mAirBean.setTempDualZoneOn(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 356525314:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_STATUS_AUTO);
+                this.mAirBean.setAutoStatus(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 356525315:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_STATUS_POWER);
+                this.mAirBean.setHvacPowerStatus(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 356525316:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_STATUS_ECON);
+                this.mAirBean.setEconStatus(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            default:
+                this.mAirConditionChangeEventMatch = false;
+                break;
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void onChangeBetweenLoopAndWindMode(int propertyId, Object signalValue) {
+        switch (propertyId) {
+            case 356525319:
+                if (getLoopModeJudgment(((Integer) signalValue).intValue()) != -1) {
+                    this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_MODE_LOOP);
+                    this.mAirBean.setLoopMode(((Integer) signalValue).intValue());
+                    this.mAirConditionChangeEventMatch = true;
+                    break;
+                }
+                break;
+            case 356525320:
+            case 356525323:
+            case 356525324:
+            default:
+                this.mAirConditionChangeEventMatch = false;
+                break;
+            case 356525321:
+                if (getAirQualityValue(((Integer) signalValue).intValue()) != -1) {
+                    this.mAirBean.setPm25Concentration(((Integer) signalValue).intValue());
+                    this.mAirConditionChangeEventMatch = true;
+                    break;
+                }
+                break;
+            case 356525322:
+                if (getAirQualityFilter(((Integer) signalValue).intValue()) != -1) {
+                    this.mAirBean.setPm25Filter(((Integer) signalValue).intValue());
+                    this.mAirConditionChangeEventMatch = true;
+                    break;
+                }
+                break;
+            case 356525325:
+                if (getAirVolumeLevelJudgment(((Integer) signalValue).intValue()) != -1) {
+                    this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_LEVEL_AIR_VOLUME);
+                    this.mAirBean.setAirVolumeLevel(((Integer) signalValue).intValue());
+                    this.mAirConditionChangeEventMatch = true;
+                    break;
+                }
+                break;
+            case 356525326:
+                if (getWindModeJudgment(((Integer) signalValue).intValue()) != -1) {
+                    if (this.mAirBean.getBlowerDirectionMode() != 7) {
+                        AirConditionBean airConditionBean = this.mAirBean;
+                        airConditionBean.setMemoryBlowerDirectionMode(airConditionBean.getBlowerDirectionMode());
+                    }
+                    this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_MODE_BLOWER_DIRECTION);
+                    this.mAirBean.setBlowerDirectionMode(((Integer) signalValue).intValue());
+                    this.mAirConditionChangeEventMatch = true;
+                    setWindOutletDisable();
+                    break;
+                }
+                break;
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void onChangeBetweenAnionAndDefroster(int propertyId, Object signalValue) {
+        switch (propertyId) {
+            case 356525328:
+                if (getSwitchJudgment(((Integer) signalValue).intValue()) != -1) {
+                    this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_MODE_BLOWER_DIRECTION);
+                    this.mAirBean.setAnionStatus(((Integer) signalValue).intValue());
+                    this.mAirConditionChangeEventMatch = true;
+                    break;
+                }
+                break;
+            case 356525329:
+            case 356525330:
+            default:
+                this.mAirConditionChangeEventMatch = false;
+                break;
+            case 356525331:
+                if (getSeatValueJudgment(((Integer) signalValue).intValue()) != -1) {
+                    this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_LEVEL_SEAT_HEAT_DRV);
+                    this.mAirBean.setDrvSeatHeatLevel(((Integer) signalValue).intValue());
+                    this.mAirConditionChangeEventMatch = true;
+                    break;
+                }
+                break;
+            case 356525332:
+                if (getSeatValueJudgment(((Integer) signalValue).intValue()) != -1) {
+                    this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_LEVEL_SEAT_HEAT_PSG);
+                    this.mAirBean.setPsgSeatHeatLevel(((Integer) signalValue).intValue());
+                    this.mAirConditionChangeEventMatch = true;
+                    break;
+                }
+                break;
+            case 356525333:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_FRONT_WINDOW_DEFROSTER);
+                this.mAirBean.setFrontWindowDefroster(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 356525334:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_BACK_WINDOW_DEFROSTER);
+                this.mAirBean.setBackWindowDefroster(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void onChangeBetweenWindOutletOffAndAvoidPerson(int propertyId, Object signalValue) {
+        if (getSwitchJudgment(((Integer) signalValue).intValue()) == -1) {
+        }
+        switch (propertyId) {
+            case 356525336:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_OUTLET_OFF_DRV);
+                this.mAirBean.setDrvWindOutletOffModeStatus(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 356525337:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_OUTLET_OFF_PSG);
+                this.mAirBean.setPsgWindOutletOffModeStatus(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 356525338:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_OUTLET_PERSON_DRV);
+                this.mAirBean.setDrvWindOutletBlowPersonModeStatus(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 356525339:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_OUTLET_PERSON_PSG);
+                this.mAirBean.setPsgWindOutletBlowPersonModeStatus(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 356525340:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_OUTLET_AVOID_PERSON_DRV);
+                this.mAirBean.setDrvWindOutletAvoidPersonModeStatus(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 356525341:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_OUTLET_AVOID_PERSON_PSG);
+                this.mAirBean.setPsgWindOutletAvoidPersonModeStatus(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            default:
+                this.mAirConditionChangeEventMatch = false;
+                break;
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void onChangeBetweenWindOutletSwingAndSmart(int propertyId, Object signalValue) {
+        switch (propertyId) {
+            case 356525346:
+                if (getSwitchJudgment(((Integer) signalValue).intValue()) != -1) {
+                    this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_OUTLET_SWING_DRV);
+                    this.mAirBean.setDrvWindOutletSwingModeStatus(((Integer) signalValue).intValue());
+                    this.mAirConditionChangeEventMatch = true;
+                    break;
+                }
+                break;
+            case 356525347:
+                if (getSwitchJudgment(((Integer) signalValue).intValue()) != -1) {
+                    this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_OUTLET_SWING_PSG);
+                    this.mAirBean.setPsgWindOutletSwingModeStatus(((Integer) signalValue).intValue());
+                    this.mAirConditionChangeEventMatch = true;
+                    break;
+                }
+                break;
+            case 356525348:
+                if (getSwitchJudgment(((Integer) signalValue).intValue()) != -1) {
+                    this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_STATUS_BLOWER_SMART);
+                    this.mAirBean.setSmartBlowerStatus(((Integer) signalValue).intValue());
+                    this.mAirConditionChangeEventMatch = true;
+                    break;
+                }
+                break;
+            default:
+                this.mAirConditionChangeEventMatch = false;
+                break;
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void onChangeSeatVentData(int propertyId, Object signalValue) {
+        if (getSeatValueJudgment(((Integer) signalValue).intValue()) == -1) {
+        }
+        switch (propertyId) {
+            case 356525349:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_LEVEL_SEAT_WIND_DRV);
+                this.mAirBean.setDrvSeatWindLevel(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 356525350:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_LEVEL_SEAT_WIND_PSG);
+                this.mAirBean.setPsgSeatWindLevel(((Integer) signalValue).intValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 356525351:
+            case 356525352:
+            default:
+                this.mAirConditionChangeEventMatch = false;
+                break;
+            case 356525353:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_OUTLET_CAN_STATUS);
+                LogUtil.logD(TAG, "getWindOutletCanStatus:" + signalValue);
+                this.mAirBean.setWindOutletCanStatus(((Integer) signalValue).intValue());
+                LogUtil.logD(TAG, "getWindOutletCanStatus:" + this.mAirBean.getWindOutletCanStatus());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void onChangeTempData(int propertyId, Object signalValue) {
+        switch (propertyId) {
+            case 358622475:
+                if (convertPickerTemp(((Float) signalValue).floatValue()) != -1) {
+                    this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_TEMP_DRV);
+                    this.mAirBean.setDrvTemp(convertPickerTemp(((Float) signalValue).floatValue()));
+                    this.mAirConditionChangeEventMatch = true;
+                    break;
+                }
+                break;
+            case 358622476:
+                if (convertPickerTemp(((Float) signalValue).floatValue()) != -1) {
+                    this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_AIR_TEMP_PSG);
+                    this.mAirBean.setPsgTemp(convertPickerTemp(((Float) signalValue).floatValue()));
+                    this.mAirConditionChangeEventMatch = true;
+                    break;
+                }
+                break;
+            case 358622481:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_TEMPERATURE_OUT_CAR);
+                this.mAirBean.setOutCarTemp(((Float) signalValue).floatValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            default:
+                this.mAirConditionChangeEventMatch = false;
+                break;
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void onChangeWindAngleData(int propertyId, Object signalValue) {
+        if (getWindAngleJudgment(((Float) signalValue).floatValue()) == -1.0f) {
+        }
+        switch (propertyId) {
+            case 358622494:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_ANGLE_LEFT_DRV);
+                this.mAirBean.setDrvLeftWindOutletAngle(((Float) signalValue).floatValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 358622495:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_ANGLE_LEFT_MID_DRV);
+                this.mAirBean.setDrvLeftMiddleWindOutletAngle(((Float) signalValue).floatValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 358622496:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_ANGLE_RIGHT_PSG);
+                this.mAirBean.setPsgRightWindOutletAngle(((Float) signalValue).floatValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            case 358622497:
+                this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_WIND_ANGLE_RIGHT_MID_PSG);
+                this.mAirBean.setPsgRightMiddleWindOutletAngle(((Float) signalValue).floatValue());
+                this.mAirConditionChangeEventMatch = true;
+                break;
+            default:
+                this.mAirConditionChangeEventMatch = false;
+                break;
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void onChangeSteeringWheelHeatData(int propertyId, Object signalValue) {
+        if (propertyId == 356525370) {
+            if (getSteeringWheelHeatValueJudgment(((Integer) signalValue).intValue()) == -1) {
+                return;
+            }
+            this.mAirBean.setMarkedSignalId(AirConditionConst.SIGNAL_STEERING_WHEEL_HEAT);
+            this.mAirBean.setSteeringWheelHeat(((Integer) signalValue).intValue());
+            this.mAirConditionChangeEventMatch = true;
+            return;
+        }
+        this.mAirConditionChangeEventMatch = false;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void addAirConditionListener(IAirConditionListener listener) {
+        this.mRemoteCallback.register(listener);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void removeAirConditionListener(IAirConditionListener listener) {
+        this.mRemoteCallback.unregister(listener);
+    }
+
+    private void initAirConditionBean() {
+        LogUtil.logD(TAG, "initAirConditionBean() --- start");
+        this.mAirBean.setHvacPowerStatus(getHvacPowerStatus());
+        this.mAirBean.setAutoStatus(getAutoStatus());
+        this.mAirBean.setAcSwitch(getAcSwitch());
+        this.mAirBean.setLoopMode(getLoopMode());
+        this.mAirBean.setEconStatus(getEconStatus());
+        this.mAirBean.setBlowerDirectionMode(getBlowerDirectionMode());
+        this.mAirBean.setAirVolumeLevel(getAirVolumeLevel());
+        this.mAirBean.setDrvWindOutletBlowPersonModeStatus(getDrvWindOutletBlowPersonModeStatus());
+        this.mAirBean.setDrvWindOutletAvoidPersonModeStatus(getDrvWindOutletAvoidPersonModeStatus());
+        this.mAirBean.setDrvWindOutletSwingModeStatus(getDrvWindOutletSwingModeStatus());
+        this.mAirBean.setDrvWindOutletOffModeStatus(getDrvWindOutletOffModeStatus());
+        this.mAirBean.setDrvLeftWindOutletAngle(getDrvLeftWindOutletAngle());
+        this.mAirBean.setDrvLeftMiddleWindOutletAngle(getDrvLeftMiddleWindOutletAngle());
+        this.mAirBean.setPsgWindOutletBlowPersonModeStatus(getPsgWindOutletBlowPersonModeStatus());
+        this.mAirBean.setPsgWindOutletAvoidPersonModeStatus(getPsgWindOutletAvoidPersonModeStatus());
+        this.mAirBean.setPsgWindOutletSwingModeStatus(getPsgWindOutletSwingModeStatus());
+        this.mAirBean.setPsgWindOutletOffModeStatus(getPsgWindOutletOffModeStatus());
+        this.mAirBean.setPsgRightWindOutletAngle(getPsgRightWindOutletAngle());
+        this.mAirBean.setPsgRightMiddleWindOutletAngle(getPsgRightMiddleWindOutletAngle());
+        this.mAirBean.setSmartBlowerStatus(getSmartBlowerStatus());
+        this.mAirBean.setDrvSeatHeatLevel(getDrvSeatHeatLevel());
+        this.mAirBean.setDrvSeatWindLevel(getDrvSeatWindLevel());
+        this.mAirBean.setPsgSeatHeatLevel(getPsgSeatHeatLevel());
+        this.mAirBean.setPsgSeatWindLevel(getPsgSeatWindLevel());
+        this.mAirBean.setDrvTemp(getDrvTemp());
+        this.mAirBean.setPsgTemp(getPsgTemp());
+        this.mAirBean.setTempDualZoneOn(getTempDualZoneOn());
+        this.mAirBean.setOutCarTemp(getOutCarTemp());
+        this.mAirBean.setPm25Concentration(getPm25Concentration());
+        this.mAirBean.setWindOutletCanStatus(getWindOutletCanStatus());
+        this.mAirBean.setMarkedSignalId(SIGNAL_ID_INIT);
+        this.mAirBean.setFrontWindowDefroster(getFrontWindowDefroster());
+        this.mAirBean.setBackWindowDefroster(getBackWindowDefroster());
+        this.mAirBean.setSteeringWheelHeat(getSteeringWheelHeatLevel());
+        LogUtil.logD(TAG, "initAirConditionBean() --- end, mAirBean = " + this.mAirBean);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public AirConditionBean getAirConditionStatus() {
+        int signalId = this.mAirBean.getMarkedSignalId();
+        LogUtil.logD(TAG, "getAirConditionStatus() --- start, mAirBean = " + this.mAirBean);
+        if (signalId == 0 && this.mIsConnected) {
+            initAirConditionBean();
+        }
+        return this.mAirBean;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setHvacPowerStatus(int signalValue) {
+        LogUtil.logD(TAG, "setHvacPowerStatus = " + signalValue);
+        setCarServiceIntValue(signalValue, setSwitchJudgment(signalValue), 356525315);
+        if (this.mSimulationFlag.isAcSimu()) {
+            this.mAirConditionSimulationTest.setSimuHvacPowerStatus(signalValue, this.mAirBean);
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mAirBean), 0);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void openHvacPower() {
+        LogUtil.logD(TAG, "openHvacPower");
+        if (this.mAirBean.getHvacPowerStatus() != 0) {
+            LogUtil.logD(TAG, "Air conditioner power is on!");
+        } else {
+            setHvacPowerStatus(1);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void closeHvacPower() {
+        LogUtil.logD(TAG, "closeHvacPower");
+        if (this.mAirBean.getHvacPowerStatus() != 1) {
+            LogUtil.logD(TAG, "Air conditioner power is off!");
+        } else {
+            setHvacPowerStatus(1);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setAutoStatus(int signalValue) {
+        LogUtil.logD(TAG, "setAutoStatus = " + signalValue);
+        setCarServiceIntValue(signalValue, setSwitchJudgment(signalValue), 356525314);
+        if (this.mSimulationFlag.isAcSimu()) {
+            this.mAirConditionSimulationTest.setSimuAutoStatus(signalValue, this.mAirBean);
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mAirBean), 0);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setAcStatus(int signalValue) {
+        LogUtil.logD(TAG, "setAcStatus = " + signalValue);
+        setCarServiceIntValue(signalValue, setSwitchJudgment(signalValue), 356525312);
+        if (this.mSimulationFlag.isAcSimu()) {
+            this.mAirConditionSimulationTest.setSimuAcStatus(signalValue, this.mAirBean);
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mAirBean), 0);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setLoopMode(int signalValue) {
+        LogUtil.logD(TAG, "setLoopMode = " + signalValue);
+        setCarServiceIntValue(signalValue, setSwitchJudgment(signalValue), 356525319);
+        if (this.mSimulationFlag.isAcSimu()) {
+            this.mAirConditionSimulationTest.setSimuLoopMode(signalValue, this.mAirBean);
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mAirBean), 0);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void openLoopInner() {
+        LogUtil.logD(TAG, "openLoopInner mode= " + this.mAirBean.getLoopMode());
+        int loopMode = this.mAirBean.getLoopMode();
+        if (loopMode == 0) {
+            LogUtil.logD(TAG, "The current loop mode is inner loop");
+            return;
+        }
+        if (loopMode == 1) {
+            setLoopMode(1);
+            setLoopMode(1);
+        } else if (loopMode == 2) {
+            setLoopMode(1);
+        } else {
+            LogUtil.logE(TAG, "Loop mode get error");
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void openLoopOutside() {
+        LogUtil.logE(TAG, "openLoopOutside mode =" + this.mAirBean.getLoopMode());
+        int loopMode = this.mAirBean.getLoopMode();
+        if (loopMode == 0) {
+            setLoopMode(1);
+            return;
+        }
+        if (loopMode == 1) {
+            LogUtil.logD(TAG, "The current loop mode is outsize loop");
+        } else if (loopMode == 2) {
+            setLoopMode(1);
+            setLoopMode(1);
+        } else {
+            LogUtil.logE(TAG, "Loop mode get error");
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void openLoopAuto() {
+        LogUtil.logE(TAG, "openLoopAuto mode =" + this.mAirBean.getLoopMode());
+        int loopMode = this.mAirBean.getLoopMode();
+        if (loopMode == 0) {
+            setLoopMode(1);
+            setLoopMode(1);
+        } else if (loopMode == 1) {
+            setLoopMode(1);
+        } else if (loopMode == 2) {
+            LogUtil.logD(TAG, "The current loop mode is auto loop");
+        } else {
+            LogUtil.logE(TAG, "Loop mode get error");
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setEconStatus(int signalValue) {
+        LogUtil.logD(TAG, "signalValue = " + signalValue);
+        setCarServiceIntValue(signalValue, setSwitchJudgment(signalValue), 356525316);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setBlowerDirectionMode(int signalValue) {
+        LogUtil.logD(TAG, "setBlowerDirectionMode = " + signalValue);
+        setCarServiceIntValue(signalValue, setWindModeJudgment(signalValue), 356525326);
+        if (this.mSimulationFlag.isAcSimu()) {
+            this.mAirConditionSimulationTest.setSimuBlowerDirectionMode(signalValue, this.mAirBean);
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mAirBean), 0);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setAirVolumeLevel(int signalValue) {
+        LogUtil.logD(TAG, "setAirVolumeLevel = " + signalValue);
+        setCarServiceIntValue(signalValue, setAirVolumeLevelJudgment(signalValue), 356525325);
+        if (this.mSimulationFlag.isAcSimu()) {
+            this.mAirConditionSimulationTest.setSimuAirVolumeLevel(signalValue, this.mAirBean);
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mAirBean), 0);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void increaseAirVolumeLevel(int signalValue) {
+        LogUtil.logD(TAG, "increaseAirVolumeLevel = " + signalValue);
+        int currentVolumeLevel = this.mAirBean.getAirVolumeLevel();
+        int totalVolumeLevel = currentVolumeLevel + signalValue;
+        if (signalValue <= 0) {
+            return;
+        }
+        setAirVolumeLevel(totalVolumeLevel);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void reduceAirVolumeLevel(int signalValue) {
+        LogUtil.logD(TAG, "reduceAirVolumeLevel = " + signalValue);
+        int currentVolumeLevel = this.mAirBean.getAirVolumeLevel();
+        int totalVolumeLevel = currentVolumeLevel - signalValue;
+        if (signalValue <= 0) {
+            return;
+        }
+        setAirVolumeLevel(totalVolumeLevel);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setAirVolumeMax() {
+        LogUtil.logD(TAG, "setAirVolumeMax");
+        setAirVolumeLevel(11);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setAirVolumeMin() {
+        LogUtil.logD(TAG, "setAirVolumeMin");
+        setAirVolumeLevel(1);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setDrvWindOutletBlowPersonModeStatus(int signalValue) {
+        LogUtil.logD(TAG, "setDrvWindOutletBlowPersonModeStatus = " + signalValue);
+        setCarServiceIntValue(signalValue, setElectricOutletJudgment(signalValue), 356525338);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setDrvWindOutletAvoidPersonModeStatus(int signalValue) {
+        LogUtil.logD(TAG, "setDrvWindOutletAvoidPersonModeStatus = " + signalValue);
+        setCarServiceIntValue(signalValue, setElectricOutletJudgment(signalValue), 356525340);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setDrvWindOutletSwingModeStatus(int signalValue) {
+        LogUtil.logD(TAG, "setDrvWindOutletSwingModeStatus = " + signalValue);
+        setCarServiceIntValue(signalValue, setElectricOutletJudgment(signalValue), 356525346);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setDrvWindOutletOffModeStatus(int signalValue) {
+        LogUtil.logD(TAG, "setDrvWindOutletOffModeStatus = " + signalValue);
+        setCarServiceIntValue(signalValue, setElectricOutletJudgment(signalValue), 356525336);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setDrvLeftWindOutletAngle(float signalValue) {
+        LogUtil.logD(TAG, "setDrvLeftWindOutletAngle = " + signalValue);
+        setCarServiceFloatValue(signalValue, setWindAngleJudgment(signalValue), 358622494);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setDrvLeftMiddleWindOutletAngle(float signalValue) {
+        LogUtil.logD(TAG, "setDrvLeftMiddleWindOutletAngle = " + signalValue);
+        setCarServiceFloatValue(signalValue, setWindAngleJudgment(signalValue), 358622495);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setPsgWindOutletBlowPersonModeStatus(int signalValue) {
+        LogUtil.logD(TAG, "setPsgWindOutletBlowPersonModeStatus = " + signalValue);
+        setCarServiceIntValue(signalValue, setElectricOutletJudgment(signalValue), 356525339);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setPsgWindOutletAvoidPersonModeStatus(int signalValue) {
+        LogUtil.logD(TAG, "setPsgWindOutletAvoidPersonModeStatus = " + signalValue);
+        setCarServiceIntValue(signalValue, setElectricOutletJudgment(signalValue), 356525341);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setPsgWindOutletSwingModeStatus(int signalValue) {
+        LogUtil.logD(TAG, "setPsgWindOutletSwingModeStatus = " + signalValue);
+        setCarServiceIntValue(signalValue, setElectricOutletJudgment(signalValue), 356525347);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setPsgWindOutletOffModeStatus(int signalValue) {
+        LogUtil.logD(TAG, "setPsgWindOutletOffModeStatus = " + signalValue);
+        setCarServiceIntValue(signalValue, setElectricOutletJudgment(signalValue), 356525337);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setPsgRightWindOutletAngle(float signalValue) {
+        LogUtil.logD(TAG, "setPsgRightWindOutletAngle = " + signalValue);
+        setCarServiceFloatValue(signalValue, setWindAngleJudgment(signalValue), 358622496);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setPsgRightMiddleWindOutletAngle(float signalValue) {
+        LogUtil.logD(TAG, "setPsgRightMiddleWindOutletAngle = " + signalValue);
+        setCarServiceFloatValue(signalValue, setWindAngleJudgment(signalValue), 358622497);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setWindOutletSmartStatus(int signalValue) {
+        LogUtil.logD(TAG, "setWindOutletSmartStatus = " + signalValue);
+        setCarServiceIntValue(signalValue, setElectricOutletJudgment(signalValue), 356525348);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setDrvSeatHeatLevel(int signalValue) {
+        LogUtil.logD(TAG, "setDrvSeatHeatLevel = " + signalValue);
+        setCarServiceIntValue(signalValue, setSwitchJudgment(signalValue), 356525331);
+        if (this.mSimulationFlag.isAcSimu()) {
+            this.mAirConditionSimulationTest.setSimuDrvSeatHeatLevel(signalValue, this.mAirBean);
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mAirBean), 0);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void openDrvSeatHeat() {
+        LogUtil.logD(TAG, "openDrvSeatHeat");
+        if (this.mAirBean.getDrvSeatHeatLevel() != 0) {
+            LogUtil.logD(TAG, "Drv seat heat is already open!");
+        } else {
+            setDrvSeatHeatLevel(1);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void closeDrvSeatHeat() {
+        LogUtil.logD(TAG, "openDrvSeatHeat");
+        int drvSeatHeatLevel = this.mAirBean.getDrvSeatHeatLevel();
+        if (drvSeatHeatLevel == 1) {
+            setDrvSeatHeatLevel(1);
+            return;
+        }
+        if (drvSeatHeatLevel == 2) {
+            setDrvSeatHeatLevel(1);
+            setDrvSeatHeatLevel(1);
+        } else {
+            if (drvSeatHeatLevel != 3) {
+                LogUtil.logD(TAG, "Drv seat heat is already close!");
+                return;
+            }
+            setDrvSeatHeatLevel(1);
+            setDrvSeatHeatLevel(1);
+            setDrvSeatHeatLevel(1);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setDrvSeatWindLevel(int signalValue) {
+        LogUtil.logD(TAG, "setDrvSeatWindLevel = " + signalValue);
+        setCarServiceIntValue(signalValue, setSwitchJudgment(signalValue), 356525349);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setPsgSeatHeatLevel(int signalValue) {
+        LogUtil.logD(TAG, "setPsgSeatHeatLevel = " + signalValue);
+        setCarServiceIntValue(signalValue, setSwitchJudgment(signalValue), 356525332);
+        if (this.mSimulationFlag.isAcSimu()) {
+            this.mAirConditionSimulationTest.setSimuPsgSeatHeatLevel(signalValue, this.mAirBean);
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mAirBean), 0);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void openPsgSeatHeat() {
+        LogUtil.logD(TAG, "openPsgSeatHeat");
+        if (this.mAirBean.getPsgSeatHeatLevel() != 0) {
+            LogUtil.logD(TAG, "Psg seat heat is already open!");
+        } else {
+            setPsgSeatHeatLevel(1);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void closePsgSeatHeat() {
+        LogUtil.logD(TAG, "closePsgSeatHeat");
+        int psgSeatHeatLevel = this.mAirBean.getPsgSeatHeatLevel();
+        if (psgSeatHeatLevel == 1) {
+            setPsgSeatHeatLevel(1);
+            return;
+        }
+        if (psgSeatHeatLevel == 2) {
+            setPsgSeatHeatLevel(1);
+            setPsgSeatHeatLevel(1);
+        } else {
+            if (psgSeatHeatLevel != 3) {
+                LogUtil.logD(TAG, "Psg seat heat is already close!");
+                return;
+            }
+            setPsgSeatHeatLevel(1);
+            setPsgSeatHeatLevel(1);
+            setPsgSeatHeatLevel(1);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setPsgSeatWindLevel(int signalValue) {
+        LogUtil.logD(TAG, "setPsgSeatWindLevel = " + signalValue);
+        setCarServiceIntValue(signalValue, setSwitchJudgment(signalValue), 356525350);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setDrvTemp(int signalValue) {
+        LogUtil.logD(TAG, "setDrvTemp = " + signalValue);
+        LogUtil.logD(TAG, "convertCarServerData = " + convertCarServerData(signalValue));
+        setDrvTempToCar(convertCarServerData(signalValue));
+        if (this.mSimulationFlag.isAcSimu()) {
+            this.mAirConditionSimulationTest.setSimuDrvTemp(signalValue, this.mAirBean);
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mAirBean), 0);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setPsgTemp(int signalValue) {
+        LogUtil.logD(TAG, "setPsgTemp = " + signalValue);
+        LogUtil.logD(TAG, "convertCarServerData = " + convertCarServerData(signalValue));
+        setPsgTempToCar(convertCarServerData(signalValue));
+        if (this.mSimulationFlag.isAcSimu()) {
+            this.mAirConditionSimulationTest.setSimuPsgTemp(signalValue, this.mAirBean);
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mAirBean), 0);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void increaseTemp(int signalValue, boolean isDrv) {
+        LogUtil.logD(TAG, "increaseTemp = " + signalValue);
+        if (signalValue <= 0) {
+            LogUtil.logD(TAG, "increase temp invalid");
+            return;
+        }
+        if (isDrv) {
+            LogUtil.logD(TAG, "increase Drvtemp " + this.mAirBean.getDrvTemp());
+            setDrvTemp(this.mAirBean.getDrvTemp() + signalValue);
+            return;
+        }
+        LogUtil.logD(TAG, "increase Psgtemp " + this.mAirBean.getPsgTemp());
+        setPsgTemp(this.mAirBean.getPsgTemp() + signalValue);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void reduceTemp(int signalValue, boolean isDrv) {
+        LogUtil.logD(TAG, "reduceTemp = " + signalValue);
+        if (signalValue <= 0) {
+            LogUtil.logD(TAG, "reduce temp invalid");
+            return;
+        }
+        if (isDrv) {
+            LogUtil.logD(TAG, "reduceTemp Drvtemp " + this.mAirBean.getDrvTemp());
+            setDrvTemp(this.mAirBean.getDrvTemp() - signalValue);
+            return;
+        }
+        LogUtil.logD(TAG, "reduceTemp Psgtemp " + this.mAirBean.getPsgTemp());
+        setPsgTemp(this.mAirBean.getPsgTemp() - signalValue);
+    }
+
+    private int getVehicleType() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] carModelArray = carInfoManager.getByteProperty(561005100);
+                if (Utils.isEmpty(carModelArray)) {
+                    return -1;
+                }
+                return carModelArray[0] & 255;
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            } catch (IllegalArgumentException ex) {
+                ex.printStackTrace();
+                return this.DEFAULT_NUMBER;
+            }
+        }
+        return -1;
+    }
+
+    private boolean isAcTempRangeType16To30() {
+        try {
+            int vehicleType = getVehicleType();
+            if (vehicleType == 68 || vehicleType == 165) {
+                LogUtil.logD(TAG, "isAcTempRangeType16To30: true");
+                return true;
+            }
+            LogUtil.logD(TAG, "isAcTempRangeType16To30: false");
+            return false;
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setTempMax(boolean isDrv) {
+        LogUtil.logD(TAG, "setTempMax, isDrv = " + isDrv);
+        if (isDrv) {
+            setDrvTemp(isAcTempRangeType16To30() ? 31 : 33);
+        } else {
+            setPsgTemp(isAcTempRangeType16To30() ? 31 : 33);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setTempMin(boolean isDrv) {
+        LogUtil.logD(TAG, "setTempMin, isDrv = " + isDrv);
+        if (isDrv) {
+            setDrvTemp(isAcTempRangeType16To30() ? 15 : 17);
+        } else {
+            setPsgTemp(isAcTempRangeType16To30() ? 15 : 17);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setTempDualZoneOn(int signalValue) {
+        LogUtil.logD(TAG, "setTempDualZoneOn = " + signalValue);
+        setCarServiceIntValue(signalValue, setSwitchJudgment(signalValue), 356525313);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void openFrontWindowDefroster() {
+        LogUtil.logD(TAG, "openFrontWindowDefroster");
+        if (getFrontWindowDefroster() != 0) {
+            LogUtil.logD(TAG, "Front defrost physical button is already open!");
+        } else {
+            changeFrontWindowDefroster();
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void closeFrontWindowDefroster() {
+        LogUtil.logD(TAG, "closeFrontWindowDefroster");
+        if (getFrontWindowDefroster() != 1) {
+            LogUtil.logD(TAG, "Front defrost physical button is already close!");
+        } else {
+            changeFrontWindowDefroster();
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void openBackWindowDefroster() throws RemoteException {
+        LogUtil.logD(TAG, "openBackWindowDefroster");
+        if (getBackWindowDefroster() != 0) {
+            LogUtil.logD(TAG, "Back defrost physical button is already open!");
+        } else {
+            changeBackWindowDefroster();
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void closeBackWindowDefroster() throws RemoteException {
+        LogUtil.logD(TAG, "closeBackWindowDefroster");
+        if (getBackWindowDefroster() != 1) {
+            LogUtil.logD(TAG, "Back defrost physical button is already close!");
+        } else {
+            changeBackWindowDefroster();
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public void setSteeringWheelHeat(int signalValue) throws RemoteException {
+        LogUtil.logD(TAG, "setSteeringWheelHeat = " + signalValue);
+        setCarServiceIntValue(signalValue, setSwitchJudgment(signalValue), 356525370);
+        if (this.mSimulationFlag.isAcSimu()) {
+            this.mAirConditionSimulationTest.setSimuSteeringWheelHeat(signalValue, this.mAirBean);
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mAirBean), 0);
+        }
+    }
+
+    private void changeFrontWindowDefroster() {
+        setCarServiceIntValue(1, 356525333);
+    }
+
+    private void changeBackWindowDefroster() {
+        setCarServiceIntValue(1, 356525334);
+    }
+
+    private void setDrvTempToCar(float signalValue) {
+        if (signalValue == TEMPERATURE_ERROR_CONST) {
+            return;
+        }
+        LogUtil.logD(TAG, "setDrvTempToCar = " + signalValue);
+        setCarServiceFloatValue(signalValue, 49, 358622475);
+    }
+
+    private void setPsgTempToCar(float signalValue) {
+        if (signalValue == TEMPERATURE_ERROR_CONST) {
+            return;
+        }
+        LogUtil.logD(TAG, "setPsgTempToCar =  " + signalValue);
+        setCarServiceFloatValue(signalValue, 68, 358622476);
+    }
+
+    private float convertCarServerData(int pickerShowTemp) {
+        if (setTempJudgment(pickerShowTemp)) {
+            if (isAcTempRangeType16To30()) {
+                if (pickerShowTemp >= 31) {
+                    return TEMPERATURE_MAX_2;
+                }
+                if (pickerShowTemp <= 15) {
+                    return TEMPERATURE_MIN_2;
+                }
+            } else {
+                if (pickerShowTemp >= 33) {
+                    return TEMPERATURE_MAX;
+                }
+                if (pickerShowTemp <= 17) {
+                    return TEMPERATURE_MIN;
+                }
+            }
+            return pickerShowTemp;
+        }
+        return TEMPERATURE_ERROR_CONST;
+    }
+
+    private void setWindOutletDisable() {
+        LogUtil.logD(TAG, "setWindOutletDisable");
+        if (this.mAirBean.getBlowerDirectionMode() == 0 || getBlowerDirectionMode() == 1) {
+            this.mAirBean.setIsWindOutletDisabled(0);
+        } else if (this.mAirBean.getBlowerDirectionMode() == 7 && (this.mAirBean.getMemoryBlowerDirectionMode() == 0 || this.mAirBean.getMemoryBlowerDirectionMode() == 1)) {
+            this.mAirBean.setIsWindOutletDisabled(0);
+        } else {
+            this.mAirBean.setIsWindOutletDisabled(1);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getHvacPowerStatus() {
+        LogUtil.logD(TAG, "getHvacPowerStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525315));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getAutoStatus() {
+        LogUtil.logD(TAG, "getAutoStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525314));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getAcSwitch() {
+        LogUtil.logD(TAG, "getAcSwitch");
+        return getSwitchJudgment(getCarServiceIntValue(356525312));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getLoopMode() {
+        LogUtil.logD(TAG, "getLoopMode");
+        return getLoopModeJudgment(getCarServiceIntValue(356525319));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getEconStatus() {
+        LogUtil.logD(TAG, "getEconStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525316));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getBlowerDirectionMode() {
+        LogUtil.logD(TAG, "getBlowerDirectionMode");
+        return getWindModeJudgment(getCarServiceIntValue(356525326));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getAirVolumeLevel() {
+        LogUtil.logD(TAG, "getAirVolumeLevel");
+        return getAirVolumeLevelJudgment(getCarServiceIntValue(356525325));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getMaxAirVolume() {
+        LogUtil.logD(TAG, "getMaxAirVolume");
+        return 11;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getMinAirVolume() {
+        LogUtil.logD(TAG, "getMinAirVolume");
+        return 1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public boolean isCurrentAirVolumeMin() {
+        return this.mAirBean.getAirVolumeLevel() == 1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public boolean isCurrentAirVolumeMax() {
+        return this.mAirBean.getAirVolumeLevel() == 11;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getDrvWindOutletBlowPersonModeStatus() {
+        LogUtil.logD(TAG, "getDrvWindOutletBlowPersonModeStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525338));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getDrvWindOutletAvoidPersonModeStatus() {
+        LogUtil.logD(TAG, "getDrvWindOutletAvoidPersonModeStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525340));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getDrvWindOutletSwingModeStatus() {
+        LogUtil.logD(TAG, "getDrvWindOutletSwingModeStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525346));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getDrvWindOutletOffModeStatus() {
+        LogUtil.logD(TAG, "getDrvWindOutletOffModeStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525336));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public float getDrvLeftWindOutletAngle() {
+        LogUtil.logD(TAG, "getDrvLeftWindOutletAngle");
+        return getWindAngleJudgment(getCarServiceFloatValue(358622494));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public float getDrvLeftMiddleWindOutletAngle() {
+        LogUtil.logD(TAG, "getDrvLeftMiddleWindOutletAngle");
+        return getWindAngleJudgment(getCarServiceFloatValue(358622495));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getPsgWindOutletBlowPersonModeStatus() {
+        LogUtil.logD(TAG, "getPsgWindOutletBlowPersonModeStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525339));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getPsgWindOutletAvoidPersonModeStatus() {
+        LogUtil.logD(TAG, "getPsgWindOutletAvoidPersonModeStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525341));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getPsgWindOutletSwingModeStatus() {
+        LogUtil.logD(TAG, "getPsgWindOutletSwingModeStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525347));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getPsgWindOutletOffModeStatus() {
+        LogUtil.logD(TAG, "getPsgWindOutletOffModeStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525337));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public float getPsgRightWindOutletAngle() {
+        LogUtil.logD(TAG, "getPsgRightWindOutletAngle");
+        return getWindAngleJudgment(getCarServiceFloatValue(358622496));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public float getPsgRightMiddleWindOutletAngle() {
+        LogUtil.logD(TAG, "getPsgRightMiddleWindOutletAngle");
+        return getWindAngleJudgment(getCarServiceFloatValue(358622497));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getSmartBlowerStatus() {
+        LogUtil.logD(TAG, "getSmartBlowerStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525348));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getDrvSeatHeatLevel() {
+        LogUtil.logD(TAG, "getDrvSeatHeatLevel");
+        return getSeatValueJudgment(getCarServiceIntValue(356525331));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getDrvSeatWindLevel() {
+        LogUtil.logD(TAG, "getDrvSeatWindLevel");
+        return getSeatValueJudgment(getCarServiceIntValue(356525349));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getPsgSeatHeatLevel() {
+        LogUtil.logD(TAG, "getPsgSeatHeatLevel");
+        return getSeatValueJudgment(getCarServiceIntValue(356525332));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getPsgSeatWindLevel() {
+        LogUtil.logD(TAG, "getPsgSeatWindLevel");
+        return getSeatValueJudgment(getCarServiceIntValue(356525350));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getDrvTemp() {
+        LogUtil.logD(TAG, "getDrvTemp");
+        return convertPickerTemp(getDrvTempFromCar());
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getPsgTemp() {
+        LogUtil.logD(TAG, "getPsgTemp");
+        return convertPickerTemp(getPsgTempFromCar());
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getMaxTemp() {
+        LogUtil.logD(TAG, "getMaxTemp");
+        return isAcTempRangeType16To30() ? 31 : 33;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getMinTemp() {
+        LogUtil.logD(TAG, "getMaxTemp");
+        return isAcTempRangeType16To30() ? 15 : 17;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public boolean isCurrentTempMin(boolean isDrv) {
+        LogUtil.logD(TAG, "isCurrentTempMin isDrv = " + isDrv);
+        if (isDrv) {
+            return this.mAirBean.getDrvTemp() == (isAcTempRangeType16To30() ? 15 : 17);
+        }
+        return this.mAirBean.getPsgTemp() == (isAcTempRangeType16To30() ? 15 : 17);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public boolean isCurrentTempMax(boolean isDrv) {
+        LogUtil.logD(TAG, "isCurrentTempMax isDrv = " + isDrv);
+        if (isDrv) {
+            return this.mAirBean.getDrvTemp() == (isAcTempRangeType16To30() ? 31 : 33);
+        }
+        return this.mAirBean.getPsgTemp() == (isAcTempRangeType16To30() ? 31 : 33);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getTempDualZoneOn() {
+        LogUtil.logD(TAG, "getTempDualZoneOn");
+        return getSwitchJudgment(getCarServiceIntValue(356525313));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public float getOutCarTemp() {
+        LogUtil.logD(TAG, "getOutCarTemp");
+        return getCarServiceFloatValue(358622481, TEMPERATURE_ERROR_CONST);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getPm25Concentration() {
+        LogUtil.logD(TAG, "getPm25Concentration");
+        return getAirQualityValue(getCarServiceIntValue(356525321));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getPm25Filter() {
+        LogUtil.logD(TAG, "getPm25Filter");
+        return getAirQualityFilter(getCarServiceIntValue(356525322));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getAnionStatus() {
+        LogUtil.logD(TAG, "getAnionStatus");
+        return getSwitchJudgment(getCarServiceIntValue(356525328));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getFrontWindowDefroster() {
+        LogUtil.logD(TAG, "getFrontWindowDefroster");
+        return getSwitchJudgment(getCarServiceIntValue(356525333));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getBackWindowDefroster() {
+        LogUtil.logD(TAG, "getBackWindowDefroster");
+        return getSwitchJudgment(getCarServiceIntValue(356525334));
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getSteeringWheelHeatLevel() {
+        return getSteeringWheelHeatValueJudgment(getCarServiceIntValue(356525370));
+    }
+
+    private float getDrvTempFromCar() {
+        LogUtil.logD(TAG, "getDrvTempFromCar");
+        return getCarServiceFloatValue(358622475, 49);
+    }
+
+    private float getPsgTempFromCar() {
+        LogUtil.logD(TAG, "getPsgTempFromCar");
+        return getCarServiceFloatValue(358622476, 68);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IAirConditionService
+    public int getWindOutletCanStatus() {
+        LogUtil.logD(TAG, "getWindOutletCanStatus");
+        return getCarServiceIntValue(356525353);
+    }
+
+    private int convertPickerTemp(float carTempData) {
+        if (isAcTempRangeType16To30()) {
+            if (carTempData == TEMPERATURE_MAX_2) {
+                return 31;
+            }
+            if (carTempData == TEMPERATURE_MIN_2) {
+                return 15;
+            }
+            if (carTempData > 30.0f || carTempData < 16.0f || !isEvenTemp(carTempData)) {
+                LogUtil.logD(TAG, "error set = " + carTempData);
+                return -1;
+            }
+        } else {
+            if (carTempData == TEMPERATURE_MAX) {
+                return 33;
+            }
+            if (carTempData == TEMPERATURE_MIN) {
+                return 17;
+            }
+            if (carTempData > 32.0f || carTempData < 18.0f || !isEvenTemp(carTempData)) {
+                LogUtil.logD(TAG, "error set = " + carTempData);
+                return -1;
+            }
+        }
+        return (int) carTempData;
+    }
+
+    private boolean isEvenTemp(float carTempData) {
+        LogUtil.logD(TAG, "isEvenTemp carTempData = " + carTempData);
+        String tempStr = String.valueOf(carTempData);
+        String[] digital = tempStr.split(TEMP_SPLITTER);
+        return TEMP_ODD_SIGN.equals(digital[1]);
+    }
+
+    private boolean setElectricOutletJudgment(int signalValue) {
+        LogUtil.logD(TAG, "setElectricOutletJudgment signalValue = " + signalValue);
+        return signalValue >= 0 && signalValue <= 1;
+    }
+
+    private int getSwitchJudgment(int controlValue) {
+        LogUtil.logD(TAG, "getSwitchJudgment controlValue = " + controlValue);
+        if (controlValue < 0 || controlValue > 1) {
+            return -1;
+        }
+        return controlValue;
+    }
+
+    private int getAirQualityFilter(int filterState) {
+        LogUtil.logD(TAG, "getAirQualityFilter filterState = " + filterState);
+        if (filterState < 0 || filterState > 3) {
+            return -1;
+        }
+        return filterState;
+    }
+
+    private int getAirQualityValue(int airQualityValue) {
+        LogUtil.logD(TAG, "getAirQualityValue airQualityValue = " + airQualityValue);
+        if (airQualityValue < 0 || airQualityValue > 255) {
+            return -1;
+        }
+        return airQualityValue;
+    }
+
+    private boolean setSwitchJudgment(int signalValue) {
+        LogUtil.logD(TAG, "setSwitchJudgment signalValue = " + signalValue);
+        return signalValue >= 0 && signalValue <= 3;
+    }
+
+    private int getLoopModeJudgment(int loopMode) {
+        LogUtil.logD(TAG, "getLoopModeJudgment loopMode = " + loopMode);
+        if (loopMode < 0 || loopMode >= 3) {
+            return -1;
+        }
+        return loopMode;
+    }
+
+    private int getWindModeJudgment(int windMode) {
+        LogUtil.logD(TAG, "getWindModeJudgment windMode = " + windMode);
+        if (windMode < 0 || windMode > 7) {
+            return -1;
+        }
+        return windMode;
+    }
+
+    private boolean setWindModeJudgment(int signalValue) {
+        LogUtil.logD(TAG, "setWindModeJudgment signalValue = " + signalValue);
+        return signalValue >= 0 && signalValue <= 7;
+    }
+
+    private boolean isWindModeReservedValue(int signalValue) {
+        LogUtil.logD(TAG, "isWindModeReservedValue signalValue = " + signalValue);
+        return signalValue == 5 || signalValue == 6;
+    }
+
+    private int getAirVolumeLevelJudgment(int airVolumeLevel) {
+        LogUtil.logD(TAG, "getAirVolumeLevelJudgment airVolumeLevel = " + airVolumeLevel);
+        if (airVolumeLevel < 0 || airVolumeLevel > 15) {
+            return -1;
+        }
+        if (airVolumeLevel > 11 && airVolumeLevel < 15) {
+            return -1;
+        }
+        return airVolumeLevel;
+    }
+
+    private boolean setAirVolumeLevelJudgment(int signalValue) {
+        LogUtil.logD(TAG, "setAirVolumeLevelJudgment signalValue = " + signalValue);
+        return signalValue >= 0 && signalValue <= 15;
+    }
+
+    private float getWindAngleJudgment(float windAngle) {
+        LogUtil.logD(TAG, "getWindAngleJudgment windAngle = " + windAngle);
+        if (windAngle < 0.0f || windAngle > BLOW_RIGHT_LIMIT) {
+            return -1.0f;
+        }
+        return windAngle;
+    }
+
+    private boolean setWindAngleJudgment(float signalValue) {
+        LogUtil.logD(TAG, "setWindAngleJudgment signalValue = " + signalValue);
+        return signalValue >= 0.0f && signalValue <= BLOW_RIGHT_LIMIT;
+    }
+
+    private int getSeatValueJudgment(int seatValue) {
+        LogUtil.logD(TAG, "getSeatValueJudgment seatValue = " + seatValue);
+        if (seatValue < 0 || seatValue > 3) {
+            return -1;
+        }
+        return seatValue;
+    }
+
+    private int getSteeringWheelHeatValueJudgment(int heatValue) {
+        if (heatValue < 0 || heatValue > 3) {
+            return -1;
+        }
+        return heatValue;
+    }
+
+    private boolean setTempJudgment(int signalValue) {
+        LogUtil.logD(TAG, "setTempJudgment signalValue = " + signalValue);
+        return isAcTempRangeType16To30() ? signalValue >= 15 && signalValue <= 31 : signalValue >= 17 && signalValue <= 33;
+    }
+
+    private void setCarServiceIntValue(int signalValue, boolean isInRange, int carAcId) {
+        if (this.mCarHvacManager != null) {
+            if (isInRange) {
+                try {
+                    LogUtil.logD(TAG, "setCarServiceIntValue signalValue = " + signalValue + "； isInRange = " + isInRange + "; carAcId = " + carAcId);
+                    this.mCarHvacManager.setIntProperty(carAcId, 117, signalValue);
+                    return;
+                } catch (CarNotConnectedException exception) {
+                    exception.printStackTrace();
+                    return;
+                }
+            }
+            return;
+        }
+        LogUtil.logD(TAG, "carService not linked");
+    }
+
+    private void setCarServiceIntValue(int signalValue, int carAcId) {
+        if (this.mCarHvacManager != null) {
+            try {
+                LogUtil.logD(TAG, "setCarServiceIntValue signalValue = " + signalValue + "; carAcId = " + carAcId);
+                this.mCarHvacManager.setIntProperty(carAcId, 117, signalValue);
+                return;
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return;
+            }
+        }
+        LogUtil.logD(TAG, "carService not linked");
+    }
+
+    private int getCarServiceIntValue(int carAcId) {
+        if (this.mCarHvacManager != null) {
+            try {
+                LogUtil.logD(TAG, "getCarServiceIntValue carAcId = " + carAcId);
+                return this.mCarHvacManager.getIntProperty(carAcId, 117);
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    private void setCarServiceFloatValue(float signalValue, boolean isInRange, int carAcId) {
+        if (this.mCarHvacManager != null) {
+            if (isInRange) {
+                try {
+                    LogUtil.logD(TAG, "setCarServiceFloatValue signalValue = " + signalValue + "； isInRange = " + isInRange + "; carAcId = " + carAcId);
+                    this.mCarHvacManager.setFloatProperty(carAcId, 117, signalValue);
+                    return;
+                } catch (CarNotConnectedException exception) {
+                    exception.printStackTrace();
+                    return;
+                }
+            }
+            return;
+        }
+        LogUtil.logD(TAG, "carService not linked");
+    }
+
+    private void setCarServiceFloatValue(float signalValue, int zone, int carAcId) {
+        if (this.mCarHvacManager != null) {
+            try {
+                LogUtil.logD(TAG, "setCarServiceFloatValue signalValue = " + signalValue + "； zone = " + zone + "; carAcId = " + carAcId);
+                this.mCarHvacManager.setFloatProperty(carAcId, zone, signalValue);
+                return;
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return;
+            }
+        }
+        LogUtil.logD(TAG, "carService not linked");
+    }
+
+    private float getCarServiceFloatValue(int carAcId) {
+        if (this.mCarHvacManager != null) {
+            try {
+                LogUtil.logD(TAG, "setCarServiceFloatValue carAcId = " + carAcId);
+                return this.mCarHvacManager.getFloatProperty(carAcId, 117);
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return -1.0f;
+            }
+        }
+        return -1.0f;
+    }
+
+    private float getCarServiceFloatValue(int carAcId, float errorCode) {
+        if (this.mCarHvacManager != null) {
+            try {
+                LogUtil.logD(TAG, "setCarServiceFloatValue carAcId = " + carAcId + "; errprcode = " + errorCode);
+                return this.mCarHvacManager.getFloatProperty(carAcId, 117);
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        return errorCode;
+    }
+
+    private float getCarServiceFloatValue(int carAcId, int zone) {
+        if (this.mCarHvacManager != null) {
+            try {
+                LogUtil.logD(TAG, "setCarServiceFloatValue zone = " + zone + "; carAcId = " + carAcId);
+                return this.mCarHvacManager.getFloatProperty(carAcId, zone);
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return -1.0f;
+            }
+        }
+        return -1.0f;
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public AirConditionBean getChangedBean(AirConditionBean bean) {
+        try {
+            return bean.m6clone();
+        } catch (CloneNotSupportedException e) {
+            LogUtil.logD(TAG, "getChangedBean: throw a CloneNotSupportedException!");
+            return bean;
+        }
+    }
+
+    private class AirConditionStateCallBack extends BaseStateCallback<IAirConditionListener> {
+        public AirConditionStateCallBack(String tag) {
+            super(tag);
+        }
+
+        @Override // com.saicmotor.service.vehicle.BaseStateCallback
+        protected void callbackOnStateChanged(Object data) {
+            synchronized (this.mRemoteCallbackList) {
+                int size = this.mRemoteCallbackList.beginBroadcast();
+                LogUtil.logD(AirConditionBinder.TAG, "callbackOnStateChanged: size = " + size + "; data = " + data);
+                for (int i = 0; i < size; i++) {
+                    try {
+                        ((IAirConditionListener) this.mRemoteCallbackList.getBroadcastItem(i)).onChangeEvent((AirConditionBean) data);
+                    } catch (RemoteException except) {
+                        except.printStackTrace();
+                    }
+                }
+                this.mRemoteCallbackList.finishBroadcast();
+            }
+        }
+    }
+}

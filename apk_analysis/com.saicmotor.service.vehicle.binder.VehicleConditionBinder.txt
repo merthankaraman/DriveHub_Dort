@@ -1,0 +1,1946 @@
+package com.saicmotor.service.vehicle.binder;
+
+import android.app.ActivityManager;
+import android.app.IActivityManager;
+import android.car.Car;
+import android.car.CarInfoManager;
+import android.car.CarNotConnectedException;
+import android.car.hardware.CarPropertyValue;
+import android.car.hardware.CarSensorEvent;
+import android.car.hardware.CarSensorManager;
+import android.car.hardware.vendorinstrumentcluster.CarVendorInstrumentClusterManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.os.RemoteException;
+import android.provider.Settings;
+import com.saicmotor.sdk.vehiclesettings.IVehicleConditionListener;
+import com.saicmotor.sdk.vehiclesettings.IVehicleConditionService;
+import com.saicmotor.sdk.vehiclesettings.LogUtil;
+import com.saicmotor.sdk.vehiclesettings.bean.VehicleConditionBean;
+import com.saicmotor.sdk.vehiclesettings.constant.VehicleConditionConst;
+import com.saicmotor.service.vehicle.BaseStateCallback;
+import com.saicmotor.service.vehicle.R;
+import com.saicmotor.service.vehicle.VehicleStorageManager;
+import com.saicmotor.service.vehicle.ble.TspManager;
+import com.saicmotor.service.vehicle.simulationtest.SimulationFlag;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+/* JADX INFO: loaded from: classes.dex */
+public class VehicleConditionBinder extends IVehicleConditionService.Stub implements TspManager.IMaintenanceInfoChangeEvent {
+    private static final int AC_STATUS_TRUE = 1;
+    private static final int BMS_STATUS_TRUE = 1;
+    private static final int BUILTIN_SPEAKER = 0;
+    private static final int DAY_CONVERSION_COEFFICIENT = 86400;
+    private static final int ERROR_RESULT = -1;
+    private static final int EXTERNAL_AMPLIFIER = 1;
+    private static final int FVCM_STATUS_TRUE = 1;
+    private static final int HD360 = 10;
+    private static final int HIGH_CONFIG = 2;
+    private static final String KEY_MAP_RESET_DATE = "reset_time";
+    private static final String KEY_MAP_RESET_MILEAGE = "reset_mileage";
+    private static final String KEY_MAP_STD_ADV_MILEAGE = "alert_mileage";
+    private static final String KEY_MAP_STD_ADV_TIME = "alert_time";
+    private static final String KEY_MAP_STD_MILEAGE = "period_mileage";
+    private static final String KEY_MAP_STD_TIME = "period_time";
+    private static final String KEY_SPEAKER_CONFIG_CODE = "speaker_config_code";
+    private static final int LOW_CONFIG = 0;
+    private static final int MAINTENANCE_IMMEDIATELY = 2;
+    private static final int MAINTENANCE_STATUS_OK = 0;
+    private static final int MAINTENANCE_SUGGEST_TO_MAINTAIN = 1;
+    private static final int MIDDLE_CONFIG = 1;
+    private static final int NO_HD360 = 2;
+    private static final String PACKAGE_ENGMODE = "com.saicmotor.hmi.engmode";
+    private static final int RADAR_STATUS_TRUE = 1;
+    private static final String TAG = "VehicleConditionBinder";
+    private static final int VEHICLE_IGNITION_RUN = 2;
+    private static final int ZERO_RESULT = 0;
+    private VehicleConditionBean mBean;
+    private CarInfoManager mCarInfoManager;
+    private CarSensorManager mCarSensorManager;
+    private CarVendorInstrumentClusterManager mCarVendorInstrumentClusterManager;
+    private Context mContext;
+    private VehicleConditionCallBack mRemoteCallback;
+    private SimulationFlag mSimulationFlag;
+    private int mStdMtcMileage = 0;
+    private int mStdMtcTime = 0;
+    private int mStdMtcAdvMileage = 0;
+    private int mStdMtcAdvTime = 0;
+    private int mResetMileage = -1;
+    private long mResetDate = -1;
+    private boolean mInstrumentClusterMatch = false;
+    private CarSensorManager.OnSensorChangedListener mSpeedSensorChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.1
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            if (carSensorEvent != null && carSensorEvent.floatValues.length > 0) {
+                LogUtil.logD(VehicleConditionBinder.TAG, "mSpeedSensorChangedListener carSensorEvent.floatValues = " + carSensorEvent.floatValues[0]);
+                float signalValue = carSensorEvent.floatValues[0];
+                if (signalValue >= VehicleConditionBinder.this.mContext.getResources().getInteger(R.integer.min_common)) {
+                    VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.CAR_SPEED_SINGAL_ID);
+                    VehicleConditionBinder.this.mBean.setCarSpeed(signalValue);
+                    VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                    VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                    vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+                    return;
+                }
+                return;
+            }
+            if (carSensorEvent == null) {
+                LogUtil.logD(VehicleConditionBinder.TAG, "mSpeedSensorChangedListener carSensorEvent is null");
+                return;
+            }
+            LogUtil.logD(VehicleConditionBinder.TAG, "mSpeedSensorChangedListener carSensorEvent.floatValueslength  = " + carSensorEvent.floatValues.length);
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mIgnitionSensorChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.2
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            LogUtil.logD(VehicleConditionBinder.TAG, "mIgnitionSensorChangedListener carSensorEvent.intValues[0] = " + carSensorEvent.intValues[0]);
+            int signalValue = carSensorEvent.intValues[0];
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_ignition_state, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.CAR_IGNITION_SIGNAL_ID);
+                VehicleConditionBinder.this.mBean.setVehicleIgnitionStatus(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mEngineStateChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.3
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            LogUtil.logD(VehicleConditionBinder.TAG, "mEngineStateChangedListener carSensorEvent.intValues[0] = " + carSensorEvent.intValues[0]);
+            int signalValue = carSensorEvent.intValues[0];
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_engine_state, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.ENGINE_STATE_SIGNAL_ID);
+                VehicleConditionBinder.this.mBean.setEngineStatus(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mGearSensorChangeListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.4
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            LogUtil.logD(VehicleConditionBinder.TAG, "mGearSensorChangeListener carSensorEvent.intValues[0] = " + carSensorEvent.intValues[0]);
+            int signalValue = carSensorEvent.intValues[0];
+            if (!VehicleConditionBinder.this.isInvalidGear(signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.CAR_GEAR_SIGNAL_ID);
+                VehicleConditionBinder.this.mBean.setCarGear(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mEcallStateChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.5
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            LogUtil.logD(VehicleConditionBinder.TAG, "mEcallStateChangedListener carSensorEvent.intValues[0] = " + carSensorEvent.intValues[0]);
+            int signalValue = carSensorEvent.intValues[0];
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_ecall_state, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.ECALL_STATE_SIGNAL_ID);
+                VehicleConditionBinder.this.mBean.setEcallState(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mCrashSignalChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.6
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            LogUtil.logD(VehicleConditionBinder.TAG, "mCrashSignalChangedListener carSensorEvent.intValues[0] = " + carSensorEvent.intValues[0]);
+            int signalValue = carSensorEvent.intValues[0];
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_crash_state, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.CRASH_STATE_SIGNAL_ID);
+                VehicleConditionBinder.this.mBean.setCrashSignal(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mAcAvlblyChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.7
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mAcAvlblyChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_avlbly_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_AC_AVLBLY);
+                VehicleConditionBinder.this.mBean.setAcAvlbly(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mBcmAvlblyChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.8
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mBcmAvlblyChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_avlbly_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_BCM_AVLBLY);
+                VehicleConditionBinder.this.mBean.setBcmAvlbly(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mScsAvlblyChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.9
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mScsAvlblyChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_avlbly_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_SCS_AVLBLY);
+                VehicleConditionBinder.this.mBean.setScsAvlbly(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mApaAvlblyChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.10
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mApaAvlblyChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_avlbly_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_APA_AVLBLY);
+                VehicleConditionBinder.this.mBean.setApaAvlbly(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mPepsAvlblyChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.11
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mPepsAvlblyChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_avlbly_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_PEPS_AVLBLY);
+                VehicleConditionBinder.this.mBean.setPepsAvlbly(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mFvcmAvlblyChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.12
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mFvcmAvlblyChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_avlbly_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_FVCM_AVLBLY);
+                VehicleConditionBinder.this.mBean.setFvcmAvlbly(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mPlcmAvlblyChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.13
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mPlcmAvlblyChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_avlbly_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_PLCM_AVLBLY);
+                VehicleConditionBinder.this.mBean.setPlcmAvlbly(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mBmsAvlblyChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.14
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mBmsAvlblyChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_avlbly_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_BMS_AVLBLY);
+                VehicleConditionBinder.this.mBean.setBmsAvlbly(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mHcuAvlblyChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.15
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mHcuAvlblyChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_avlbly_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_HCU_AVLBLY);
+                VehicleConditionBinder.this.mBean.setHcuAvlbly(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mRadarAvlblyChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.16
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mRadarAvlblyChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_avlbly_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_RADAR_AVLBLY);
+                VehicleConditionBinder.this.mBean.setRadarAvlbly(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mMsmAvlblyChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.17
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mMsmAvlblyChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_avlbly_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_MSM_AVLBLY);
+                VehicleConditionBinder.this.mBean.setMsmAvlbly(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mVcuAvlblyChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.18
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mVcuAvlblyChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_avlbly_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_VCU_AVLBLY);
+                VehicleConditionBinder.this.mBean.setVcuAvlbly(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mCarGearVChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.19
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mCarGearVChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_valid_signal, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_CAR_GEAR_VALID);
+                VehicleConditionBinder.this.mBean.setCarGearV(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarSensorManager.OnSensorChangedListener mMileageUnitChangedListener = new CarSensorManager.OnSensorChangedListener() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.20
+        @Override // android.car.hardware.CarSensorManager.OnSensorChangedListener
+        public void onSensorChanged(CarSensorEvent carSensorEvent) {
+            int signalValue = carSensorEvent.intValues[0];
+            LogUtil.logD(VehicleConditionBinder.TAG, "mMileageUnitChangedListener signalValue = " + signalValue);
+            if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_dsp_meas_sys, signalValue)) {
+                VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_DSP_MEAS_SYS);
+                VehicleConditionBinder.this.mBean.setMileageUnit(signalValue);
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+    };
+    private CarVendorInstrumentClusterManager.CarVendorInstrumentClusterEventCallback mCarVendorInstrumentClusterEventCallback = new CarVendorInstrumentClusterManager.CarVendorInstrumentClusterEventCallback() { // from class: com.saicmotor.service.vehicle.binder.VehicleConditionBinder.21
+        public void onChangeEvent(CarPropertyValue carPropertyValue) {
+            int propertyId = carPropertyValue.getPropertyId();
+            int signalValue = ((Integer) carPropertyValue.getValue()).intValue();
+            LogUtil.logD(VehicleConditionBinder.TAG, "mCarVendorInstrumentClusterEventCallback propertyId = " + propertyId + " signalValue = " + signalValue);
+            VehicleConditionBinder.this.mInstrumentClusterMatch = false;
+            switch (propertyId) {
+                case 557873939:
+                    if (VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_total_mileage, signalValue)) {
+                        return;
+                    }
+                    VehicleConditionBinder.this.onMaintenanceInfoChangeEvent();
+                    break;
+                    break;
+                case 557873940:
+                    if (!VehicleConditionBinder.this.isInvalidIntValue(R.integer.max_swc_function_change_swa, signalValue)) {
+                        VehicleConditionBinder.this.mBean.setSwcFunctionChangeSwa(signalValue);
+                        VehicleConditionBinder.this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_SWC_FUNCTION_CHANGE_SWA);
+                        VehicleConditionBinder.this.mInstrumentClusterMatch = true;
+                    } else {
+                        return;
+                    }
+                    break;
+            }
+            if (VehicleConditionBinder.this.mInstrumentClusterMatch) {
+                VehicleConditionCallBack vehicleConditionCallBack = VehicleConditionBinder.this.mRemoteCallback;
+                VehicleConditionBinder vehicleConditionBinder = VehicleConditionBinder.this;
+                vehicleConditionCallBack.broadcastChangeEvent(vehicleConditionBinder.getChangedBean(vehicleConditionBinder.mBean), 4);
+            }
+        }
+
+        public void onErrorEvent(int propertyId, int zone) {
+        }
+    };
+
+    public VehicleConditionBinder(Context context) {
+        LogUtil.logD(TAG, "VehicleConditionBinder construction");
+        this.mRemoteCallback = new VehicleConditionCallBack(TAG);
+        this.mBean = new VehicleConditionBean();
+        this.mContext = context;
+        this.mSimulationFlag = SimulationFlag.getInstance();
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public void addVehicleConditionListener(IVehicleConditionListener listener) throws RemoteException {
+        this.mRemoteCallback.register(listener);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public void removeVehicleConditionListener(IVehicleConditionListener listener) throws RemoteException {
+        this.mRemoteCallback.unregister(listener);
+    }
+
+    private void updateStatus() {
+        try {
+            LogUtil.logD(TAG, "updateStatus --- start");
+            this.mBean.setAcAvlbly(getAcAvlbly());
+            this.mBean.setBcmAvlbly(getBcmAvlbly());
+            this.mBean.setScsAvlbly(getScsAvlbly());
+            this.mBean.setApaAvlbly(getApaAvlbly());
+            this.mBean.setPepsAvlbly(getPepsAvlbly());
+            this.mBean.setFvcmAvlbly(getFvcmAvlbly());
+            this.mBean.setPlcmAvlbly(getPlcmAvlbly());
+            this.mBean.setBmsAvlbly(getBmsAvlbly());
+            this.mBean.setHcuAvlbly(getHcuAvlbly());
+            this.mBean.setRadarAvlbly(getRadarAvlbly());
+            this.mBean.setMsmAvlbly(getMsmAvlbly());
+            this.mBean.setVcuAvlbly(getVcuAvlbly());
+            this.mBean.setCarGearV(getCarGearV());
+            this.mBean.setCarSpeed(getCarSpeed());
+            this.mBean.setCarGear(getCarGear());
+            this.mBean.setVehicleIgnitionStatus(getVehicleIgnition());
+            this.mBean.setEngineStatus(getEngineState());
+            this.mBean.setCarType(getVehicleType());
+            this.mBean.setEcallState(getEcallState());
+            this.mBean.setCrashSignal(getCrashSignal());
+            this.mBean.setVehicleExteriorColor(getVehicleExteriorColor());
+            this.mBean.setMileageUnit(getMileageUnit());
+            this.mBean.setNextResetDay(getNextResetDay());
+            this.mBean.setNextResetMileage(getNextResetMileage());
+            this.mBean.setMaintenanceStatus(getMaintenanceStatus());
+            this.mBean.setSwcFunctionChangeSwa(getSwcFunctionChangeSwa());
+            this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_ID_INIT);
+            LogUtil.logD(TAG, "updateStatus() --- end, mBean = " + this.mBean);
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void updateVehicleConfigCode() {
+        try {
+            LogUtil.logD(TAG, "updateVehicleConfigCode --- start");
+            this.mBean.setConfig360Value(getConfig360());
+            this.mBean.setAmplifierType(getAmplifierType());
+            this.mBean.setLightingSettings(getLightingSettings());
+            this.mBean.setSpeedAssistConfig(getSpeedAssistConfig());
+            this.mBean.setBlindSpotDetection(getBlindSpotDetection());
+            this.mBean.setEp21ConfigCode(getEp21CarConfigCode());
+            this.mBean.setTrafficJamAssistance(getTrafficJamAssistance());
+            this.mBean.setForwardCollisionAssistance(getForwardCollisionAssistance());
+            this.mBean.setWindowControl(getWindowControl());
+            this.mBean.setSteepDescentControl(getSteepDescentControl());
+            this.mBean.setFrontRadarControl(getFrontRadarControl());
+            this.mBean.setAutomaticCall(getAutomaticCall());
+            this.mBean.setAirFollowVehicleEconConfigCode(getAirFollowEconConfigCode());
+            this.mBean.setRearWindowAutoConfigCode(getRearWindowAutoConfigCode());
+            this.mBean.setTailgateControlConfigCode(getTailgateControlConfigCode());
+            this.mBean.setEleBackMirrorConfigCode(getEleBackMirrorConfigCode());
+            this.mBean.setSeatHeatingConfigCode(getSeatHeatingConfigCode());
+            this.mBean.setPedestrianWarningConfigCode(getPedestrianWarningConfigCode());
+            this.mBean.setDriverSeatConfigCode(getDriverSeatConfigCode());
+            this.mBean.setAqsConfigCode(getAqsConfigCode());
+            this.mBean.setLdwsConfigCode(getLdwsConfigCode());
+            this.mBean.setDmsConfigCode(getDmsConfigCode());
+            this.mBean.setAirbagConfigCode(getAirbagConfigCode());
+            this.mBean.setPmDetectionConfigCode(getPmDetectionConfigCode());
+            this.mBean.setAirFilterConfigCode(getAirFilterConfigCode());
+            this.mBean.setAnionPurifyConfigCode(getAnionPurifyConfigCode());
+            this.mBean.setFrontSeatConfigCode(getFrontSeatConfigCode());
+            this.mBean.setSunRoofControlConfigCode(getSunRoofControlConfigCode());
+            this.mBean.setDoorAutoLockConfigCode(getDoorAutoLockConfigCode());
+            this.mBean.setAirConditionConfigCode(getAirConditionConfigCode());
+            this.mBean.setOnePedalConfigCode(getOnePedalConfigCode());
+            this.mBean.setTransferCaseConfigCode(getTransferCaseConfigCode());
+            this.mBean.setEnergyPredictionConfigCode(getEnergyPredictionConfigCode());
+            this.mBean.setTailerElecticConfigCode(getTailerElecticConfigCode());
+            this.mBean.setLightFrontFogConfigCode(getLightFrontFogConfigCode());
+            this.mBean.setTransmissionConfigCode(getTransmissionConfigCode());
+            this.mBean.setBatteryConfigCode(getBatteryConfigCode());
+            this.mBean.setSpeakerConfigCode(getSpeakerConfigCode());
+            this.mBean.setVehicleNameInfo(getVehicleNameInfo());
+            this.mBean.setVinNumber(getVinNumber());
+            Settings.System.putInt(this.mContext.getContentResolver(), KEY_SPEAKER_CONFIG_CODE, this.mBean.getSpeakerConfigCode());
+            LogUtil.logD(TAG, "updateVehicleConfigCode --- end, mBean = " + this.mBean);
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isInvalidIntValue(int maxId, int value) {
+        return value < this.mContext.getResources().getInteger(R.integer.min_common) || value > this.mContext.getResources().getInteger(maxId);
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isInvalidGear(int gear) {
+        return isInvalidIntValue(R.integer.max_gear_sts, gear) && gear != this.mContext.getResources().getInteger(R.integer.unknown_gear_sts);
+    }
+
+    private void initMaintenanceInfo() {
+        Map<String, String> maintenanceInfo = VehicleStorageManager.getInstance(this.mContext).getMaintenanceInfo();
+        LogUtil.logD(TAG, "initMaintenanceInfo: " + maintenanceInfo);
+        if (maintenanceInfo != null && !maintenanceInfo.isEmpty()) {
+            int resetMileage = Integer.parseInt((String) Objects.requireNonNull(maintenanceInfo.get(KEY_MAP_RESET_MILEAGE)));
+            long resetDate = Long.parseLong((String) Objects.requireNonNull(maintenanceInfo.get(KEY_MAP_RESET_DATE)));
+            this.mResetDate = resetDate;
+            this.mResetMileage = resetMileage;
+            this.mStdMtcMileage = Integer.parseInt((String) Objects.requireNonNull(maintenanceInfo.get(KEY_MAP_STD_MILEAGE)));
+            this.mStdMtcTime = Integer.parseInt((String) Objects.requireNonNull(maintenanceInfo.get(KEY_MAP_STD_TIME)));
+            this.mStdMtcAdvMileage = Integer.parseInt((String) Objects.requireNonNull(maintenanceInfo.get(KEY_MAP_STD_ADV_MILEAGE)));
+            this.mStdMtcAdvTime = Integer.parseInt((String) Objects.requireNonNull(maintenanceInfo.get(KEY_MAP_STD_ADV_TIME)));
+            if (this.mResetDate == 0) {
+                TspManager.getInstance().getMaintenanceInfo();
+            } else {
+                TspManager.getInstance().maintenanceRecord(this.mResetMileage, this.mResetDate);
+            }
+            LogUtil.logD(TAG, "initMaintenanceInfo stdMtcMileage = " + this.mStdMtcMileage + " stdMtcTime = " + this.mStdMtcTime + " stdMtcAdvMileage = " + this.mStdMtcAdvMileage + " stdMtcAdvTime = " + this.mStdMtcAdvTime + " resetMileage =" + resetMileage + " resetDate = " + resetDate);
+            onMaintenanceInfoChangeEvent();
+            return;
+        }
+        this.mResetDate = -1L;
+        this.mResetMileage = -1;
+        TspManager.getInstance().getMaintenanceInfo();
+    }
+
+    public int getStdMtcAdvMileage() {
+        int mtcAdvMileage = this.mStdMtcAdvMileage - (getTotalMileage() - this.mResetMileage);
+        LogUtil.logD(TAG, "getNextResetMileage: nextMileage" + mtcAdvMileage);
+        if (mtcAdvMileage > 0) {
+            return mtcAdvMileage;
+        }
+        return -1;
+    }
+
+    public int getStdMtcAdvDay() {
+        int mtcAdvDay = this.mStdMtcAdvTime - calculateDaysDifference(System.currentTimeMillis() / 1000, this.mResetDate);
+        LogUtil.logD(TAG, "getNextResetDay: getNextResetDay" + mtcAdvDay);
+        if (mtcAdvDay > 0) {
+            return mtcAdvDay;
+        }
+        return -1;
+    }
+
+    public boolean saveMaintenanceInfo(long time, int mileage) {
+        boolean result = VehicleStorageManager.getInstance(this.mContext).saveMaintenanceInfo(time, mileage);
+        if (result) {
+            TspManager.getInstance().maintenanceRecord(mileage, time);
+            this.mResetDate = time;
+            this.mResetMileage = mileage;
+        }
+        return result;
+    }
+
+    private int calculateDaysDifference(long startTime, long endTime) {
+        LogUtil.logD(TAG, "calculateDaysDifference: startTime=" + startTime + " endTime=" + endTime);
+        long diff = startTime - endTime;
+        if (diff > 0) {
+            int day = ((int) diff) / DAY_CONVERSION_COEFFICIENT;
+            LogUtil.logD(TAG, "calculateDaysDifference: " + day);
+            return day;
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getAcAvlbly() throws RemoteException {
+        if (this.mSimulationFlag.isVehicleConditionSimu()) {
+            LogUtil.logD(TAG, "SimulateFvcmAvlbly = 1");
+            return 1;
+        }
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847934).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_avlbly_signal, signalValue);
+                LogUtil.logD(TAG, "getAcAvlbly: signalValue = " + signalValue + "; mBean.getAcAvlbly = " + this.mBean.getAcAvlbly() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getAcAvlbly() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getBcmAvlbly() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847935).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_avlbly_signal, signalValue);
+                LogUtil.logD(TAG, "getBcmAvlbly: signalValue = " + signalValue + "; mBean.getBcmAvlbly = " + this.mBean.getBcmAvlbly() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getBcmAvlbly() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getScsAvlbly() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847936).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_avlbly_signal, signalValue);
+                LogUtil.logD(TAG, "getScsAvlbly: signalValue = " + signalValue + "; mBean.getScsAvlbly = " + this.mBean.getScsAvlbly() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getScsAvlbly() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getApaAvlbly() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847937).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_avlbly_signal, signalValue);
+                LogUtil.logD(TAG, "getApaAvlbly: signalValue = " + signalValue + "; mBean.getApaAvlbly = " + this.mBean.getApaAvlbly() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getApaAvlbly() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getPepsAvlbly() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847938).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_avlbly_signal, signalValue);
+                LogUtil.logD(TAG, "getPepsAvlbly: signalValue = " + signalValue + "; mBean.getPepsAvlbly = " + this.mBean.getPepsAvlbly() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getPepsAvlbly() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getFvcmAvlbly() throws RemoteException {
+        if (this.mSimulationFlag.isVehicleConditionSimu()) {
+            LogUtil.logD(TAG, "SimulateFvcmAvlbly = 1");
+            return 1;
+        }
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847939).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_avlbly_signal, signalValue);
+                LogUtil.logD(TAG, "getFvcmAvlbly: signalValue = " + signalValue + "; mBean.getFvcmAvlbly = " + this.mBean.getFvcmAvlbly() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getFvcmAvlbly() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getPlcmAvlbly() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847940).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_avlbly_signal, signalValue);
+                LogUtil.logD(TAG, "getPlcmAvlbly: signalValue = " + signalValue + "; mBean.getPlcmAvlbly = " + this.mBean.getPlcmAvlbly() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getPlcmAvlbly() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getBmsAvlbly() throws RemoteException {
+        if (this.mSimulationFlag.isVehicleConditionSimu()) {
+            LogUtil.logD(TAG, "SimulateBmsAvlbly = 1");
+            return 1;
+        }
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847941).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_avlbly_signal, signalValue);
+                LogUtil.logD(TAG, "getBmsAvlbly: signalValue = " + signalValue + "; mBean.getBmsAvlbly = " + this.mBean.getBmsAvlbly() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getBmsAvlbly() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getHcuAvlbly() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847942).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_avlbly_signal, signalValue);
+                LogUtil.logD(TAG, "getHcuAvlbly: signalValue = " + signalValue + "; mBean.getHcuAvlbly = " + this.mBean.getHcuAvlbly() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getHcuAvlbly() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getRadarAvlbly() throws RemoteException {
+        if (this.mSimulationFlag.isVehicleConditionSimu()) {
+            LogUtil.logD(TAG, "SimulateRadarAvlbly = 1");
+            return 1;
+        }
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847943).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_avlbly_signal, signalValue);
+                LogUtil.logD(TAG, "getRadarAvlbly: signalValue = " + signalValue + "; mBean.getRadarAvlbly = " + this.mBean.getRadarAvlbly() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getRadarAvlbly() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getMsmAvlbly() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847944).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_avlbly_signal, signalValue);
+                LogUtil.logD(TAG, "getMsmAvlbly: signalValue = " + signalValue + "; mBean.getMsmAvlbly = " + this.mBean.getMsmAvlbly() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getMsmAvlbly() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getVcuAvlbly() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847975).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_avlbly_signal, signalValue);
+                LogUtil.logD(TAG, "getVcuAvlbly: signalValue = " + signalValue + "; mBean.getVcuAvlbly = " + this.mBean.getVcuAvlbly() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getVcuAvlbly() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getCarGearV() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847945).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_valid_signal, signalValue);
+                LogUtil.logD(TAG, "getCarGearV: signalValue = " + signalValue + "; mBean.getCarGearV = " + this.mBean.getCarGearV() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getCarGearV() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getVehicleNameInfo() throws RemoteException {
+        return getEp21CarConfigCode();
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public String getVinNumber() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                String vinNumber = carInfoManager.getStringProperty(554713683);
+                LogUtil.logD(TAG, "get vinNumber = " + vinNumber);
+                if (vinNumber != null) {
+                    return vinNumber;
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get getVinNumber error");
+        return "";
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getVehicleExteriorColor() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] exteriorColor = carInfoManager.getByteProperty(561005056);
+                if (exteriorColor != null && exteriorColor.length > 0) {
+                    LogUtil.logD(TAG, "get exteriorColor = " + ((int) exteriorColor[0]));
+                    return exteriorColor[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get exteriorColor error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getMileageUnit() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847955).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_dsp_meas_sys, signalValue);
+                LogUtil.logD(TAG, "getMileageUnit: signalValue = " + signalValue + "; mBean.getMileageUnit = " + this.mBean.getMileageUnit() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getMileageUnit() : signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getPeripheralKeyModule() {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] keyModule = carInfoManager.getByteProperty(561005126);
+                if (keyModule != null && keyModule.length > 0) {
+                    LogUtil.logD(TAG, "get keyModule = " + ((int) keyModule[0]));
+                    return keyModule[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get keyModule error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getSwcFunctionChangeSwa() throws RemoteException {
+        CarVendorInstrumentClusterManager carVendorInstrumentClusterManager = this.mCarVendorInstrumentClusterManager;
+        if (carVendorInstrumentClusterManager != null) {
+            try {
+                int value = ((Integer) carVendorInstrumentClusterManager.getGlobalProperty(Integer.class, 557873940)).intValue();
+                boolean invalid = isInvalidIntValue(R.integer.max_swc_function_change_swa, value);
+                LogUtil.logD(TAG, "getSwcFunctionChangeSwa: value = " + value + "; mBean.getSwcFunctionChangeSwa = " + this.mBean.getSwcFunctionChangeSwa() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getSwcFunctionChangeSwa() : value;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    public int getTotalMileage() {
+        CarVendorInstrumentClusterManager carVendorInstrumentClusterManager = this.mCarVendorInstrumentClusterManager;
+        if (carVendorInstrumentClusterManager != null) {
+            try {
+                int signalValue = ((Integer) carVendorInstrumentClusterManager.getGlobalProperty(Integer.class, 557873939)).intValue();
+                LogUtil.logD(TAG, "getTotalMileage: mileage = " + signalValue);
+                return signalValue;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    public void setMaintenanceStatus(int status) {
+        LogUtil.logD(TAG, "setMaintenanceStatus: status = " + status);
+        CarVendorInstrumentClusterManager carVendorInstrumentClusterManager = this.mCarVendorInstrumentClusterManager;
+        if (carVendorInstrumentClusterManager != null) {
+            try {
+                carVendorInstrumentClusterManager.setGlobalProperty(Integer.class, 557873938, Integer.valueOf(status));
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getNextResetMileage() {
+        int nextMileage = this.mStdMtcMileage - (getTotalMileage() - this.mResetMileage);
+        LogUtil.logD(TAG, "getNextResetMileage: nextMileage" + nextMileage);
+        if (nextMileage > 0) {
+            return nextMileage;
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getNextResetDay() {
+        int nextDay = this.mStdMtcTime - calculateDaysDifference(System.currentTimeMillis() / 1000, this.mResetDate);
+        LogUtil.logD(TAG, "getNextResetDay: getNextResetDay" + nextDay);
+        if (nextDay > 0) {
+            return nextDay;
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getMaintenanceStatus() {
+        if (this.mResetDate != -1) {
+            if (getNextResetDay() > 0 && getNextResetMileage() > 0) {
+                if (getStdMtcAdvDay() > 0 && getStdMtcAdvMileage() > 0) {
+                    return 0;
+                }
+                return 1;
+            }
+            return 2;
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public long getResetTime() {
+        return this.mResetDate;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public void resetCarMileageInfo() {
+        boolean result = saveMaintenanceInfo(System.currentTimeMillis() / 1000, getTotalMileage());
+        onResetMileageStatusChangeEvent(result);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public float getCarSpeed() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                float value = carSensorManager.getLatestSensorEvent(291504647).floatValues[0];
+                boolean invalid = value < ((float) this.mContext.getResources().getInteger(R.integer.min_common));
+                LogUtil.logD(TAG, "getCarSpeed: value = " + value + "; mBean.getCarSpeed = " + this.mBean.getCarSpeed() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getCarSpeed() : value;
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return -1.0f;
+            }
+        }
+        return -1.0f;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getVehicleIgnition() throws RemoteException {
+        if (this.mSimulationFlag.isVehicleConditionSimu()) {
+            LogUtil.logD(TAG, "SimulateVehicleIgnition = 2");
+            return 2;
+        }
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(289412477).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_ignition_state, signalValue);
+                LogUtil.logD(TAG, "getVehicleIgnition: signalValue = " + signalValue + "; mBean.getVehicleIgnition = " + this.mBean.getVehicleIgnition() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getVehicleIgnition() : signalValue;
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getCarGear() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847918).intValues[0];
+                boolean invalid = isInvalidGear(signalValue);
+                LogUtil.logD(TAG, "getCarGear: signalValue = " + signalValue + "; mBean.getCarGear = " + this.mBean.getCarGear() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getCarGear() : signalValue;
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public VehicleConditionBean getVehicleCondition() throws RemoteException {
+        LogUtil.logD(TAG, "getVehicleCondition  --- start, mBean = " + this.mBean);
+        if (this.mBean == null) {
+            this.mBean = new VehicleConditionBean();
+        }
+        return this.mBean;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getVehicleType() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] carMode = carInfoManager.getByteProperty(561005100);
+                if (carMode != null && carMode.length > 0) {
+                    LogUtil.logD(TAG, "get real car type = " + (carMode[0] & 255));
+                    return carMode[0] & 255;
+                }
+                return -1;
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getEngineState() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847932).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_engine_state, signalValue);
+                LogUtil.logD(TAG, "getEngineStatus: signalValue = " + signalValue + "; mBean.getEngineStatus = " + this.mBean.getEngineStatus() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getEngineStatus() : signalValue;
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getEcallState() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847931).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_ecall_state, signalValue);
+                LogUtil.logD(TAG, "getEcallState: signalValue = " + signalValue + "; mBean.getEcallState = " + this.mBean.getEcallState() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getEcallState() : signalValue;
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getCrashSignal() throws RemoteException {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            try {
+                int signalValue = carSensorManager.getLatestSensorEvent(557847954).intValues[0];
+                boolean invalid = isInvalidIntValue(R.integer.max_crash_state, signalValue);
+                LogUtil.logD(TAG, "getCrashSignal: signalValue = " + signalValue + "; mBean.getCrashSignal = " + this.mBean.getCrashSignal() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getCrashSignal() : signalValue;
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getConfig360() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] config360Value = carInfoManager.getByteProperty(561005062);
+                if (config360Value != null && config360Value.length > 0) {
+                    LogUtil.logD(TAG, "get 360Config = " + ((int) config360Value[0]));
+                    return config360Value[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get 360Config error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getAmplifierType() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] amplifierType = carInfoManager.getByteProperty(561005119);
+                if (amplifierType != null && amplifierType.length > 0) {
+                    LogUtil.logD(TAG, "get amplifierType = " + ((int) amplifierType[0]));
+                    return amplifierType[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get amplifierType error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getAirFollowEconConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] airFollowVehicleEconType = carInfoManager.getByteProperty(561005096);
+                if (airFollowVehicleEconType != null && airFollowVehicleEconType.length > 0) {
+                    LogUtil.logD(TAG, "get airFollowVehicleEconType = " + ((int) airFollowVehicleEconType[0]));
+                    return airFollowVehicleEconType[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get airFollowVehicleEconType error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getRearWindowAutoConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] rearWindowAutomaticStatus = carInfoManager.getByteProperty(561005159);
+                if (rearWindowAutomaticStatus != null && rearWindowAutomaticStatus.length > 0) {
+                    LogUtil.logD(TAG, "get rearWindowAutomaticStatus = " + ((int) rearWindowAutomaticStatus[0]));
+                    return rearWindowAutomaticStatus[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get rearWindowAutomaticStatus error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getTailgateControlConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] tailgateControlConfigCode = carInfoManager.getByteProperty(561005089);
+                if (tailgateControlConfigCode != null && tailgateControlConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get tailgateControlConfigCode = " + ((int) tailgateControlConfigCode[0]));
+                    return tailgateControlConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get tailgateControlConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getEleBackMirrorConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] eleBackMirrorConfigCode = carInfoManager.getByteProperty(561005146);
+                if (eleBackMirrorConfigCode != null && eleBackMirrorConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get eleBackMirrorConfigCode = " + ((int) eleBackMirrorConfigCode[0]));
+                    return eleBackMirrorConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get eleBackMirrorConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getSeatHeatingConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] seatHeatingConfigCode = carInfoManager.getByteProperty(561005058);
+                if (seatHeatingConfigCode != null && seatHeatingConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get seatHeatingConfigCode = " + ((int) seatHeatingConfigCode[0]));
+                    return seatHeatingConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get seatHeatingConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getPedestrianWarningConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] pedestrianWarningConfigCode = carInfoManager.getByteProperty(561005091);
+                if (pedestrianWarningConfigCode != null && pedestrianWarningConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "pedestrianWarningConfigCode = " + ((int) pedestrianWarningConfigCode[0]));
+                    return pedestrianWarningConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get rearWindowAutomaticStatus error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getDriverSeatConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] driverSeatConfigCode = carInfoManager.getByteProperty(561005147);
+                if (driverSeatConfigCode != null && driverSeatConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get driverSeatConfigCode = " + ((int) driverSeatConfigCode[0]));
+                    return driverSeatConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get driverSeatConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getLightingSettings() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] lightingSettings = carInfoManager.getByteProperty(561005108);
+                if (lightingSettings != null && lightingSettings.length > 0) {
+                    LogUtil.logD(TAG, "get lightingSettings = " + ((int) lightingSettings[0]));
+                    return lightingSettings[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get lightingSettings error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getSpeedAssistConfig() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] speedAssistConfig = carInfoManager.getByteProperty(561005092);
+                if (speedAssistConfig != null && speedAssistConfig.length > 0) {
+                    LogUtil.logD(TAG, "get speedAssistConfig = " + ((int) speedAssistConfig[0]));
+                    return speedAssistConfig[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get speedAssistConfig error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getBlindSpotDetection() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] blindSpotDetection = carInfoManager.getByteProperty(561005090);
+                if (blindSpotDetection != null && blindSpotDetection.length > 0) {
+                    LogUtil.logD(TAG, "get blindSpotDetection = " + ((int) blindSpotDetection[0]));
+                    return blindSpotDetection[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get blindSpotDetection error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getTrafficJamAssistance() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] trafficJamAssistance = carInfoManager.getByteProperty(561005134);
+                if (trafficJamAssistance != null && trafficJamAssistance.length > 0) {
+                    LogUtil.logD(TAG, "get trafficJamAssistance = " + ((int) trafficJamAssistance[0]));
+                    return trafficJamAssistance[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get trafficJamAssistance error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getForwardCollisionAssistance() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] forwardCollisionAssistance = carInfoManager.getByteProperty(561005061);
+                if (forwardCollisionAssistance != null && forwardCollisionAssistance.length > 0) {
+                    LogUtil.logD(TAG, "get forwardCollisionAssistance = " + ((int) forwardCollisionAssistance[0]));
+                    return forwardCollisionAssistance[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get forwardCollisionAssistance error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getWindowControl() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] windowControl = carInfoManager.getByteProperty(561005064);
+                if (windowControl != null && windowControl.length > 0) {
+                    LogUtil.logD(TAG, "get windowControl = " + ((int) windowControl[0]));
+                    return windowControl[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get windowControl error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getSteepDescentControl() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] steepDescentControl = carInfoManager.getByteProperty(561005107);
+                if (steepDescentControl != null && steepDescentControl.length > 0) {
+                    LogUtil.logD(TAG, "get steepDescentControl = " + ((int) steepDescentControl[0]));
+                    return steepDescentControl[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get steepDescentControl error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getFrontRadarControl() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] frontRadarControl = carInfoManager.getByteProperty(561005070);
+                if (frontRadarControl != null && frontRadarControl.length > 0) {
+                    LogUtil.logD(TAG, "get frontRadarControl = " + ((int) frontRadarControl[0]));
+                    return frontRadarControl[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get frontRadarControl error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getAutomaticCall() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] automaticCall = carInfoManager.getByteProperty(561005093);
+                if (automaticCall != null && automaticCall.length > 0) {
+                    LogUtil.logD(TAG, "get automaticCall = " + ((int) automaticCall[0]));
+                    return automaticCall[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get automaticCall error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getEp21CarConfigCode() throws RemoteException {
+        if (getConfig360() == 2 && getAmplifierType() == 0) {
+            LogUtil.logE(TAG, "get low config");
+            return 0;
+        }
+        if (getConfig360() == 10 && getAmplifierType() == 0) {
+            LogUtil.logE(TAG, "get middle config");
+            return 1;
+        }
+        if (getConfig360() == 10 && getAmplifierType() == 1) {
+            LogUtil.logE(TAG, "get high config");
+            return 2;
+        }
+        LogUtil.logE(TAG, "get default config");
+        return 0;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getAqsConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] aqsConfigCode = carInfoManager.getByteProperty(561005152);
+                if (aqsConfigCode != null && aqsConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get aqsConfigCode = " + ((int) aqsConfigCode[0]));
+                    return aqsConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get aqsConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getLdwsConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] ldwsConfigCode = carInfoManager.getByteProperty(561005060);
+                if (ldwsConfigCode != null && ldwsConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get ldwsConfigCode = " + ((int) ldwsConfigCode[0]));
+                    return ldwsConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get ldwsConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getDmsConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] dmsConfigCode = carInfoManager.getByteProperty(561005151);
+                if (dmsConfigCode != null && dmsConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get dmsConfigCode = " + ((int) dmsConfigCode[0]));
+                    return dmsConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get dmsConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getAirbagConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] airbagConfigCode = carInfoManager.getByteProperty(561005155);
+                if (airbagConfigCode != null && airbagConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get airbagConfigCode = " + ((int) airbagConfigCode[0]));
+                    return airbagConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get airbagConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getPmDetectionConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] airbagConfigCode = carInfoManager.getByteProperty(561005157);
+                if (airbagConfigCode != null && airbagConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get airbagConfigCode = " + ((int) airbagConfigCode[0]));
+                    return airbagConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get airbagConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getAirFilterConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] airFilterConfigCode = carInfoManager.getByteProperty(561005158);
+                if (airFilterConfigCode != null && airFilterConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get airFilterConfigCode = " + ((int) airFilterConfigCode[0]));
+                    return airFilterConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get airFilterConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getAnionPurifyConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] anionPurifyConfigCode = carInfoManager.getByteProperty(561005156);
+                if (anionPurifyConfigCode != null && anionPurifyConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get anionPurifyConfigCode = " + ((int) anionPurifyConfigCode[0]));
+                    return anionPurifyConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get anionPurifyConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getFrontSeatConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] frontSeatConfigCode = carInfoManager.getByteProperty(561005132);
+                if (frontSeatConfigCode != null && frontSeatConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get frontSeatConfigCode = " + ((int) frontSeatConfigCode[0]));
+                    return frontSeatConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get frontSeatConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getSunRoofControlConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] sunRoofConfigCode = carInfoManager.getByteProperty(561005094);
+                if (sunRoofConfigCode != null && sunRoofConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get sunRoofConfigCode = " + ((int) sunRoofConfigCode[0]));
+                    return sunRoofConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get sunRoofConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getDoorAutoLockConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] autoLockConfigCode = carInfoManager.getByteProperty(561005154);
+                if (autoLockConfigCode != null && autoLockConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get autoLockConfigCode = " + ((int) autoLockConfigCode[0]));
+                    return autoLockConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get autoLockConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getAirConditionConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] airConditionConfigCode = carInfoManager.getByteProperty(561005057);
+                if (airConditionConfigCode != null && airConditionConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get airConditionConfigCode = " + ((int) airConditionConfigCode[0]));
+                    return airConditionConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get airConditionConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getOnePedalConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] onePedalConfigCode = carInfoManager.getByteProperty(561005164);
+                if (onePedalConfigCode != null && onePedalConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "get onePedalConfigCode = " + ((int) onePedalConfigCode[0]));
+                    return onePedalConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "get onePedalConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getTransferCaseConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] transferCaseConfigCode = carInfoManager.getByteProperty(561005109);
+                if (transferCaseConfigCode != null && transferCaseConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "getTransferCaseConfigCode = " + ((int) transferCaseConfigCode[0]));
+                    return transferCaseConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "getTransferCaseConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getEnergyPredictionConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] energyPredictionConfigCode = carInfoManager.getByteProperty(561005168);
+                if (energyPredictionConfigCode != null && energyPredictionConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "getEnergyPredictionConfigCode = " + ((int) energyPredictionConfigCode[0]));
+                    return energyPredictionConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "getEnergyPredictionConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getTailerElecticConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] tailerElecticConfigCode = carInfoManager.getByteProperty(561005171);
+                if (tailerElecticConfigCode != null && tailerElecticConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "getTailerElecticConfigCode = " + ((int) tailerElecticConfigCode[0]));
+                    return tailerElecticConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "getTailerElecticConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getLightFrontFogConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] lightFrontFogConfigCode = carInfoManager.getByteProperty(561005176);
+                if (lightFrontFogConfigCode != null && lightFrontFogConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "getLightFrontFogConfigCode = " + ((int) lightFrontFogConfigCode[0]));
+                    return lightFrontFogConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "getLightFrontFogConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getTransmissionConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] transmissionConfigCode = carInfoManager.getByteProperty(561005088);
+                if (transmissionConfigCode != null && transmissionConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "getTransmissionConfigCode = " + ((int) transmissionConfigCode[0]));
+                    return transmissionConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "getTransmissionConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getBatteryConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] batteryConfigCode = carInfoManager.getByteProperty(561005125);
+                if (batteryConfigCode != null && batteryConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "getBatteryConfigCode = " + ((int) batteryConfigCode[0]));
+                    return batteryConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "getBatteryConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public int getSpeakerConfigCode() throws RemoteException {
+        CarInfoManager carInfoManager = this.mCarInfoManager;
+        if (carInfoManager != null) {
+            try {
+                byte[] speakerConfigCode = carInfoManager.getByteProperty(561005079);
+                if (speakerConfigCode != null && speakerConfigCode.length > 0) {
+                    LogUtil.logD(TAG, "getSpeakerConfigCode = " + ((int) speakerConfigCode[0]));
+                    return speakerConfigCode[0];
+                }
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        LogUtil.logE(TAG, "getSpeakerConfigCode error");
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleConditionService
+    public boolean getEngModeStackStatus() throws RemoteException {
+        ComponentName componentName = getForegroundActivity();
+        return componentName != null && PACKAGE_ENGMODE.equals(componentName.getPackageName());
+    }
+
+    public void initBinder(Car car) {
+        LogUtil.logD(TAG, "initBinder() --- start");
+        try {
+            this.mCarInfoManager = (CarInfoManager) car.getCarManager("info");
+            this.mCarVendorInstrumentClusterManager = (CarVendorInstrumentClusterManager) car.getCarManager("vendorinstrumentcluster");
+            this.mCarSensorManager = (CarSensorManager) car.getCarManager("sensor");
+            TspManager.getInstance().setOnMaintenanceInfoChangeListener(this);
+            initMaintenanceInfo();
+            setMaintenanceStatus(getMaintenanceStatus());
+            if (this.mCarVendorInstrumentClusterManager != null) {
+                this.mCarVendorInstrumentClusterManager.registerCallback(this.mCarVendorInstrumentClusterEventCallback);
+            }
+            if (this.mCarSensorManager != null) {
+                LogUtil.logD(TAG, "initBinder registerListener");
+                this.mCarSensorManager.registerListener(this.mSpeedSensorChangedListener, 291504647, 10);
+                this.mCarSensorManager.registerListener(this.mIgnitionSensorChangedListener, 289412477, 10);
+                this.mCarSensorManager.registerListener(this.mEngineStateChangedListener, 557847932, 1);
+                this.mCarSensorManager.registerListener(this.mGearSensorChangeListener, 557847918, 10);
+                this.mCarSensorManager.registerListener(this.mEcallStateChangedListener, 557847931, 1);
+                this.mCarSensorManager.registerListener(this.mCrashSignalChangedListener, 557847954, 1);
+                this.mCarSensorManager.registerListener(this.mAcAvlblyChangedListener, 557847934, 1);
+                this.mCarSensorManager.registerListener(this.mBcmAvlblyChangedListener, 557847935, 1);
+                this.mCarSensorManager.registerListener(this.mScsAvlblyChangedListener, 557847936, 1);
+                this.mCarSensorManager.registerListener(this.mApaAvlblyChangedListener, 557847937, 1);
+                this.mCarSensorManager.registerListener(this.mPepsAvlblyChangedListener, 557847938, 1);
+                this.mCarSensorManager.registerListener(this.mFvcmAvlblyChangedListener, 557847939, 1);
+                this.mCarSensorManager.registerListener(this.mPlcmAvlblyChangedListener, 557847940, 1);
+                this.mCarSensorManager.registerListener(this.mBmsAvlblyChangedListener, 557847941, 1);
+                this.mCarSensorManager.registerListener(this.mHcuAvlblyChangedListener, 557847942, 1);
+                this.mCarSensorManager.registerListener(this.mRadarAvlblyChangedListener, 557847943, 1);
+                this.mCarSensorManager.registerListener(this.mMsmAvlblyChangedListener, 557847944, 1);
+                this.mCarSensorManager.registerListener(this.mVcuAvlblyChangedListener, 557847975, 1);
+                this.mCarSensorManager.registerListener(this.mCarGearVChangedListener, 557847945, 1);
+                this.mCarSensorManager.registerListener(this.mMileageUnitChangedListener, 557847955, 1);
+            }
+            updateVehicleConfigCode();
+            updateStatus();
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mBean), 4);
+        } catch (CarNotConnectedException except) {
+            except.printStackTrace();
+        }
+    }
+
+    public void destoryBinder() {
+        CarSensorManager carSensorManager = this.mCarSensorManager;
+        if (carSensorManager != null) {
+            carSensorManager.unregisterListener(this.mSpeedSensorChangedListener, 291504647);
+            this.mCarSensorManager.unregisterListener(this.mIgnitionSensorChangedListener, 289412477);
+            this.mCarSensorManager.unregisterListener(this.mEngineStateChangedListener, 557847932);
+            this.mCarSensorManager.unregisterListener(this.mGearSensorChangeListener, 557847918);
+            this.mCarSensorManager.unregisterListener(this.mEcallStateChangedListener, 557847931);
+            this.mCarSensorManager.unregisterListener(this.mCrashSignalChangedListener, 557847954);
+            this.mCarSensorManager.unregisterListener(this.mAcAvlblyChangedListener, 557847934);
+            this.mCarSensorManager.unregisterListener(this.mBcmAvlblyChangedListener, 557847935);
+            this.mCarSensorManager.unregisterListener(this.mScsAvlblyChangedListener, 557847936);
+            this.mCarSensorManager.unregisterListener(this.mApaAvlblyChangedListener, 557847937);
+            this.mCarSensorManager.unregisterListener(this.mPepsAvlblyChangedListener, 557847938);
+            this.mCarSensorManager.unregisterListener(this.mFvcmAvlblyChangedListener, 557847939);
+            this.mCarSensorManager.unregisterListener(this.mPlcmAvlblyChangedListener, 557847940);
+            this.mCarSensorManager.unregisterListener(this.mBmsAvlblyChangedListener, 557847941);
+            this.mCarSensorManager.unregisterListener(this.mHcuAvlblyChangedListener, 557847942);
+            this.mCarSensorManager.unregisterListener(this.mRadarAvlblyChangedListener, 557847943);
+            this.mCarSensorManager.unregisterListener(this.mMsmAvlblyChangedListener, 557847944);
+            this.mCarSensorManager.unregisterListener(this.mVcuAvlblyChangedListener, 557847975);
+            this.mCarSensorManager.unregisterListener(this.mCarGearVChangedListener, 557847945);
+            this.mCarSensorManager.unregisterListener(this.mMileageUnitChangedListener, 557847955);
+        }
+        CarVendorInstrumentClusterManager carVendorInstrumentClusterManager = this.mCarVendorInstrumentClusterManager;
+        if (carVendorInstrumentClusterManager != null) {
+            carVendorInstrumentClusterManager.unregisterCallback(this.mCarVendorInstrumentClusterEventCallback);
+        }
+        this.mRemoteCallback.kill();
+    }
+
+    public void onResetMileageStatusChangeEvent(boolean status) {
+        this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_RESET_MILEAGE);
+        this.mBean.setResetCarMileageInfoStatus(status);
+        this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mBean), 4);
+        onMaintenanceInfoChangeEvent();
+    }
+
+    public void onMaintenanceInfoChangeEvent() {
+        this.mBean.setMarkedSignalId(VehicleConditionConst.SIGNAL_MAINTENANCE_INFO);
+        this.mBean.setNextResetMileage(getNextResetMileage());
+        this.mBean.setNextResetDay(getNextResetDay());
+        this.mBean.setMaintenanceStatus(getMaintenanceStatus());
+        this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mBean), 4);
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public VehicleConditionBean getChangedBean(VehicleConditionBean bean) {
+        try {
+            return bean.m8clone();
+        } catch (CloneNotSupportedException e) {
+            LogUtil.logD(TAG, "getChangedBean: throw a CloneNotSupportedException!");
+            return bean;
+        }
+    }
+
+    @Override // com.saicmotor.service.vehicle.ble.TspManager.IMaintenanceInfoChangeEvent
+    public void onMaintenanceChange(int resetMileage, long resetTime) {
+        this.mResetDate = resetTime;
+        this.mResetMileage = resetMileage;
+        onMaintenanceInfoChangeEvent();
+    }
+
+    private class VehicleConditionCallBack extends BaseStateCallback<IVehicleConditionListener> {
+        public VehicleConditionCallBack(String tag) {
+            super(tag);
+        }
+
+        @Override // com.saicmotor.service.vehicle.BaseStateCallback
+        protected void callbackOnStateChanged(Object data) {
+            synchronized (this.mRemoteCallbackList) {
+                int size = this.mRemoteCallbackList.beginBroadcast();
+                LogUtil.logD(VehicleConditionBinder.TAG, "callbackOnStateChanged: size = " + size + "; data = " + data);
+                for (int i = 0; i < size; i++) {
+                    try {
+                        ((IVehicleConditionListener) this.mRemoteCallbackList.getBroadcastItem(i)).onChangeEvent((VehicleConditionBean) data);
+                    } catch (RemoteException except) {
+                        except.printStackTrace();
+                    }
+                }
+                this.mRemoteCallbackList.finishBroadcast();
+            }
+        }
+    }
+
+    public static ComponentName getForegroundActivity() {
+        IActivityManager activityManager = ActivityManager.getService();
+        try {
+            List<ActivityManager.StackInfo> stackInfoList = activityManager.getAllStackInfos();
+            int size = stackInfoList.size();
+            for (int index = 0; index < size; index++) {
+                ActivityManager.StackInfo stackInfo = stackInfoList.get(index);
+                if (stackInfo.visible) {
+                    return stackInfo.topActivity;
+                }
+            }
+            return null;
+        } catch (RemoteException e) {
+            return null;
+        }
+    }
+}

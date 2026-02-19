@@ -40,6 +40,16 @@ public class MG4Hardware {
     private static final int PROP_SEAT_HEAT_R   = 0x15402514; // 356525332 — sağ koltuk
     private static final int AREA_HVAC          = 0x75;       // 117
 
+    // Araç durum / BMS property'leri (VehicleConditionBinder + VehicleChargingBinder)
+    private static final int PROP_SPEED          = 0x11600207; // 291504647 — float m/s (CarSensorManager)
+    private static final int PROP_SOC            = 0x21600004; // 560002052 — float % (CarBMSManager)
+    private static final int PROP_RANGE          = 0x214099DC; // 557904924 — int km (CarBMSManager)
+    private static final int PROP_BATT_VOLT      = 0x21600006; // 560002054 — float V (CarBMSManager)
+    private static final int PROP_CHR_AMP_ACT    = 0x21600007; // 560002055 — float A gerçek (CarBMSManager)
+    private static final int PROP_CHR_AMP_EXP    = 0x2160000A; // 560002058 — float A beklenen (CarBMSManager)
+    private static final int PROP_AC_AMP         = 0x2160006C; // 560002108 — float A AC giriş (CarBMSManager)
+    private static final int PROP_AC_VOLT        = 0x2160006D; // 560002109 — float V AC giriş (CarBMSManager)
+
     // Katman 2 — Binder (yedek, uid.system gerektirir)
     private static final String DESCRIPTOR_VEHICLE =
             "com.saicmotor.sdk.vehiclesettings.IVehicleSettingService";
@@ -55,6 +65,8 @@ public class MG4Hardware {
     // State
     private static Object  sCarPropertyManager = null;
     private static Object  sCarHvacManager     = null;
+    private static Object  sCarBmsManager      = null;
+    private static Object  sCarSensorManager   = null;
     private static boolean sCarBindAttempted   = false;
     private static IBinder sVehicleBinder      = null;
     private static IBinder sAcBinder           = null;
@@ -94,6 +106,8 @@ public class MG4Hardware {
     public static void destroy() {
         sCarPropertyManager = null;
         sCarHvacManager     = null;
+        sCarBmsManager      = null;
+        sCarSensorManager   = null;
         sVehicleBinder      = null;
         sAcBinder           = null;
         sInitialized        = false;
@@ -299,6 +313,37 @@ public class MG4Hardware {
                 Log.w(TAG, "  CarHvacManager alınamadı: " + e.getMessage());
             }
 
+            // CarBMSManager (SAIC özel — "bms" service adı)
+            try {
+                Object cbm = getCarManager.invoke(sCar, "bms");
+                if (cbm != null) {
+                    sCarBmsManager = cbm;
+                    Log.i(TAG, "  ✓ CarBMSManager HAZIR: " + cbm.getClass().getName());
+                } else {
+                    Log.w(TAG, "  ✗ CarBMSManager null");
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "  CarBMSManager alınamadı: " + e.getMessage());
+            }
+
+            // CarSensorManager
+            try {
+                java.lang.reflect.Field sensorField = null;
+                try { sensorField = carClass.getField("SENSOR_SERVICE"); } catch (Exception ignored) {}
+                String sensorService = (sensorField != null)
+                        ? (String) sensorField.get(null) : "sensor";
+                Log.i(TAG, "  SENSOR_SERVICE = " + sensorService);
+                Object csm = getCarManager.invoke(sCar, sensorService);
+                if (csm != null) {
+                    sCarSensorManager = csm;
+                    Log.i(TAG, "  ✓ CarSensorManager HAZIR: " + csm.getClass().getName());
+                } else {
+                    Log.w(TAG, "  ✗ CarSensorManager null");
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "  CarSensorManager alınamadı: " + e.getMessage());
+            }
+
             if (sCarPropertyManager != null) {
                 readAndLogCurrentState();
             } else {
@@ -329,12 +374,18 @@ public class MG4Hardware {
 
     public static boolean setRegenLevel(RegenLevel level) {
         Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
+        if (level == RegenLevel.OFF) {
+            // OFF: regen ana switch'i kapat (hem CPM hem Binder)
+            boolean ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, 0); // önce en düşüğe çek
+            binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 0);
+            Log.i(TAG, "  Regen OFF → brake switch kapatıldı");
+            return ok || sVehicleBinder != null;
+        }
+        // ON seviyeler: önce switch'i aç, sonra seviyeyi yaz
         if (sCarPropertyManager != null) {
             return setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
         }
-        binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE,
-                TX_SET_REGEN_BRAKE_SWITCH, level != RegenLevel.OFF ? 1 : 0);
-        if (level == RegenLevel.OFF) return true;
+        binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 1);
         return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_LEVEL, level.value);
     }
 
@@ -344,14 +395,20 @@ public class MG4Hardware {
         return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_ONE_PEDAL, enabled ? 1 : 0);
     }
 
-    /** Direksiyon ısıtma — CarHvacManager ile (logdan: PROP=0x1540253a, area=0x75) */
+    /** Direksiyon ısıtma — aç/kapat (eski API uyumluluğu) */
     public static boolean setSteeringHeat(boolean enabled) {
         Log.i(TAG, "setSteeringHeat → " + (enabled ? "Açık" : "Kapalı"));
-        // Araçta: her basışta val=1 gönderiliyor, değer toggle oluyor
-        // Kapatmak için: val=0 ile aynı property'yi set et
         int val = enabled ? 1 : 0;
         if (setIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC, val)) return true;
         return binderTransact(sAcBinder, DESCRIPTOR_AC, TX_SET_STEERING_HEAT, val);
+    }
+
+    /** Direksiyon ısıtma — seviyeli (0=kapalı, 1/2/3=seviye) */
+    public static boolean setSteeringHeatLevel(int level) {
+        Log.i(TAG, "setSteeringHeatLevel → " + level);
+        if (setIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC, level)) return true;
+        // Binder yedek: seviyeli değer gönder (araç destekliyorsa)
+        return binderTransact(sAcBinder, DESCRIPTOR_AC, TX_SET_STEERING_HEAT, level);
     }
 
     /** Sol koltuk ısıtma seviyesi (0=kapalı, 1/2/3=seviye) */
@@ -367,12 +424,70 @@ public class MG4Hardware {
     }
 
     // -------------------------------------------------------------------------
-    // Getter'lar
+    // Getter'lar — Sürüş
     // -------------------------------------------------------------------------
 
     public static int getDriveMode()  { return getIntPropertyCPM(PROP_DRIVE_MODE,  AREA_GLOBAL); }
     public static int getRegenLevel() { return getIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL); }
     public static int getOnePedal()   { return getIntPropertyCPM(PROP_ONE_PEDAL,   AREA_GLOBAL); }
+
+    // -------------------------------------------------------------------------
+    // Getter'lar — Araç Durum / BMS (float dönerler, hata: Float.NaN)
+    // -------------------------------------------------------------------------
+
+    /** Araç hızı — m/s (km/h için × 3.6) */
+    public static float getSpeedMs() {
+        return getFloatPropertyCPM(PROP_SPEED, AREA_GLOBAL);
+    }
+
+    /** SOC — % (0.0–100.0) */
+    public static float getSoc() {
+        float v = getFloatPropertyBms(PROP_SOC);
+        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_SOC, AREA_GLOBAL);
+        return v;
+    }
+
+    /** Kalan menzil — km */
+    public static int getRange() {
+        int v = getIntPropertyBms(PROP_RANGE);
+        if (v < 0) v = getIntPropertyCPM(PROP_RANGE, AREA_GLOBAL);
+        return v;
+    }
+
+    /** DC batarya voltajı — V */
+    public static float getDcVoltage() {
+        float v = getFloatPropertyBms(PROP_BATT_VOLT);
+        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_BATT_VOLT, AREA_GLOBAL);
+        return v;
+    }
+
+    /** DC şarj akımı gerçek — A */
+    public static float getDcCurrentActual() {
+        float v = getFloatPropertyBms(PROP_CHR_AMP_ACT);
+        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_CHR_AMP_ACT, AREA_GLOBAL);
+        return v;
+    }
+
+    /** DC şarj akımı beklenen — A */
+    public static float getDcCurrentExpected() {
+        float v = getFloatPropertyBms(PROP_CHR_AMP_EXP);
+        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_CHR_AMP_EXP, AREA_GLOBAL);
+        return v;
+    }
+
+    /** AC giriş akımı — A */
+    public static float getAcCurrent() {
+        float v = getFloatPropertyBms(PROP_AC_AMP);
+        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_AC_AMP, AREA_GLOBAL);
+        return v;
+    }
+
+    /** AC giriş voltajı — V */
+    public static float getAcVoltage() {
+        float v = getFloatPropertyBms(PROP_AC_VOLT);
+        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_AC_VOLT, AREA_GLOBAL);
+        return v;
+    }
 
     // -------------------------------------------------------------------------
     // CarPropertyManager — reflection ile set/get
@@ -457,6 +572,61 @@ public class MG4Hardware {
         } catch (Exception e) {
             Log.e(TAG, "  CPM getInt 0x" + Integer.toHexString(propId)
                     + " HATA: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            return -1;
+        }
+    }
+
+    private static float getFloatPropertyCPM(int propId, int area) {
+        if (sCarPropertyManager == null) return Float.NaN;
+        try {
+            java.lang.reflect.Method getProperty = sCarPropertyManager.getClass()
+                    .getMethod("getProperty", Class.class, int.class, int.class);
+            Object cpv = getProperty.invoke(sCarPropertyManager, Float.class, propId, area);
+            if (cpv == null) return Float.NaN;
+            java.lang.reflect.Method getValue = cpv.getClass().getMethod("getValue");
+            float result = (Float) getValue.invoke(cpv);
+            Log.i(TAG, "  CPM getFloat 0x" + Integer.toHexString(propId) + " → " + result + " ✓");
+            return result;
+        } catch (Exception e) {
+            Log.d(TAG, "  CPM getFloat 0x" + Integer.toHexString(propId)
+                    + " HATA: " + e.getClass().getSimpleName());
+            return Float.NaN;
+        }
+    }
+
+    /** CarBMSManager üzerinden float okuma */
+    private static float getFloatPropertyBms(int propId) {
+        if (sCarBmsManager == null) return Float.NaN;
+        try {
+            // getGlobalProperty(Float.class, propId) — SAIC API
+            java.lang.reflect.Method m = sCarBmsManager.getClass()
+                    .getMethod("getGlobalProperty", Class.class, int.class);
+            Object result = m.invoke(sCarBmsManager, Float.class, propId);
+            if (result == null) return Float.NaN;
+            float val = (Float) result;
+            Log.i(TAG, "  BMS getFloat 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
+            return val;
+        } catch (Exception e) {
+            Log.d(TAG, "  BMS getFloat 0x" + Integer.toHexString(propId)
+                    + " HATA: " + e.getClass().getSimpleName());
+            return Float.NaN;
+        }
+    }
+
+    /** CarBMSManager üzerinden int okuma */
+    private static int getIntPropertyBms(int propId) {
+        if (sCarBmsManager == null) return -1;
+        try {
+            java.lang.reflect.Method m = sCarBmsManager.getClass()
+                    .getMethod("getGlobalProperty", Class.class, int.class);
+            Object result = m.invoke(sCarBmsManager, Integer.class, propId);
+            if (result == null) return -1;
+            int val = (Integer) result;
+            Log.i(TAG, "  BMS getInt 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
+            return val;
+        } catch (Exception e) {
+            Log.d(TAG, "  BMS getInt 0x" + Integer.toHexString(propId)
+                    + " HATA: " + e.getClass().getSimpleName());
             return -1;
         }
     }

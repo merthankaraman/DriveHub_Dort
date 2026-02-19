@@ -328,7 +328,12 @@ public class MG4ControlService extends Service {
                 mCurrentDriveMode = dm;
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
                 break;
-            // case "REGEN_CYCLE": // devre dışı — regen döngüsü aracın kendi özelliğinde
+            case "REGEN_SET":
+                RegenLevel rl = RegenLevel.fromValue(
+                        intent.getIntExtra("regenValue", RegenLevel.MEDIUM.value));
+                MG4Hardware.setRegenLevel(rl);
+                updateNotification("Regen: " + rl.label);
+                break;
             case "PEDAL_ON":
                 MG4Hardware.setOnePedal(true);
                 updateNotification("OPD: Açık");
@@ -345,6 +350,29 @@ public class MG4ControlService extends Service {
                 MG4Hardware.setSteeringHeat(false);
                 updateNotification("Direksiyon: Isıtma Kapalı");
                 break;
+            case "HEAT_STEER_SET": {
+                int steerLevel = intent.getIntExtra("heatLevel", 0);
+                if (steerLevel == 0) {
+                    MG4Hardware.setSteeringHeat(false);
+                    updateNotification("Direksiyon Isıtma: Kapalı");
+                } else {
+                    MG4Hardware.setSteeringHeatLevel(steerLevel);
+                    updateNotification("Direksiyon Isıtma: Sev." + steerLevel);
+                }
+                break;
+            }
+            case "HEAT_SEAT_L_SET": {
+                int seatLLevel = intent.getIntExtra("heatLevel", 0);
+                MG4Hardware.setSeatHeatLeft(seatLLevel);
+                updateNotification("Sol Koltuk: " + (seatLLevel == 0 ? "Kapalı" : "Sev." + seatLLevel));
+                break;
+            }
+            case "HEAT_SEAT_R_SET": {
+                int seatRLevel = intent.getIntExtra("heatLevel", 0);
+                MG4Hardware.setSeatHeatRight(seatRLevel);
+                updateNotification("Sağ Koltuk: " + (seatRLevel == 0 ? "Kapalı" : "Sev." + seatRLevel));
+                break;
+            }
         }
     }
 

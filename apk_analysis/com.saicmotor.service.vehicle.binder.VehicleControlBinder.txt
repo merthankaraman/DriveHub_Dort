@@ -1,0 +1,784 @@
+package com.saicmotor.service.vehicle.binder;
+
+import android.car.Car;
+import android.car.CarNotConnectedException;
+import android.car.hardware.CarPropertyValue;
+import android.car.hardware.cabin.CarCabinManager;
+import android.car.hardware.doorlock.CarDoorLockManager;
+import android.car.hardware.parkingassistance.CarParkingAssistanceManager;
+import android.content.Context;
+import android.os.RemoteException;
+import com.saicmotor.sdk.vehiclesettings.IVehicleControlListener;
+import com.saicmotor.sdk.vehiclesettings.IVehicleControlService;
+import com.saicmotor.sdk.vehiclesettings.LogUtil;
+import com.saicmotor.sdk.vehiclesettings.bean.VehicleControlBean;
+import com.saicmotor.sdk.vehiclesettings.constant.VehicleControlConst;
+import com.saicmotor.service.vehicle.BaseStateCallback;
+import com.saicmotor.service.vehicle.R;
+import com.saicmotor.service.vehicle.simulationtest.SimulationFlag;
+import com.saicmotor.service.vehicle.simulationtest.VehicleControlSimulationTest;
+
+/* JADX INFO: loaded from: classes.dex */
+public class VehicleControlBinder extends IVehicleControlService.Stub {
+    private static final int FORMAT_FACTOR = 100;
+    private static final String TAG = VehicleControlBinder.class.getSimpleName();
+    private CarCabinManager mCarCabinManager;
+    private CarDoorLockManager mCarDoorLockManager;
+    private CarParkingAssistanceManager mCarParkingAssistanceManager;
+    private Context mContext;
+    private boolean mCarCabinEventMatch = false;
+    private CarCabinManager.CarCabinEventCallback mCarCabinEventCallback = new CarCabinManager.CarCabinEventCallback() { // from class: com.saicmotor.service.vehicle.binder.VehicleControlBinder.1
+        public void onChangeEvent(CarPropertyValue carPropertyValue) {
+            int propertyId = carPropertyValue.getPropertyId();
+            Object signalValue = carPropertyValue.getValue();
+            LogUtil.logD(VehicleControlBinder.TAG, "onChangeEvent(): mCarCabinEventCallback - propertyId = " + propertyId + ", signalValue = " + signalValue);
+            VehicleControlBinder.this.mCarCabinEventMatch = false;
+            VehicleControlBinder.this.onWindowStateChanged(propertyId, signalValue);
+            VehicleControlBinder.this.onSunroofStateChanged(propertyId, signalValue);
+            VehicleControlBinder.this.onCabinStateChanged(propertyId, signalValue);
+            if (VehicleControlBinder.this.mCarCabinEventMatch) {
+                VehicleControlStateCallBack vehicleControlStateCallBack = VehicleControlBinder.this.mRemoteCallback;
+                VehicleControlBinder vehicleControlBinder = VehicleControlBinder.this;
+                vehicleControlStateCallBack.broadcastChangeEvent(vehicleControlBinder.getChangedBean(vehicleControlBinder.mBean), 2);
+            }
+        }
+
+        public void onErrorEvent(int propertyId, int zone) {
+            LogUtil.logE(VehicleControlBinder.TAG, "onErrorEvent(): mCarCabinEventCallback - signal (" + propertyId + ", zone) have an error event!");
+        }
+    };
+    private CarParkingAssistanceManager.CarParkingAssistanceEventCallback mCarParkingCallback = new CarParkingAssistanceManager.CarParkingAssistanceEventCallback() { // from class: com.saicmotor.service.vehicle.binder.VehicleControlBinder.2
+        public void onChangeEvent(CarPropertyValue carPropertyValue) {
+            int propertyId = carPropertyValue.getPropertyId();
+            Object signalValue = carPropertyValue.getValue();
+            LogUtil.logD(VehicleControlBinder.TAG, "onChangeEvent():mCarParkingCallback propertyId = " + propertyId + "; signalValue = " + signalValue);
+            boolean match = true;
+            if (propertyId == 557889904) {
+                if (!VehicleControlBinder.this.isInvalidIntValue(R.integer.max_pdc_sts_get, ((Integer) signalValue).intValue())) {
+                    VehicleControlBinder.this.mBean.setPdcSwitch(((Integer) signalValue).intValue());
+                    VehicleControlBinder.this.mBean.setMarkedSignalId(1011);
+                } else {
+                    return;
+                }
+            } else {
+                match = false;
+            }
+            if (match) {
+                VehicleControlStateCallBack vehicleControlStateCallBack = VehicleControlBinder.this.mRemoteCallback;
+                VehicleControlBinder vehicleControlBinder = VehicleControlBinder.this;
+                vehicleControlStateCallBack.broadcastChangeEvent(vehicleControlBinder.getChangedBean(vehicleControlBinder.mBean), 2);
+            }
+        }
+
+        public void onErrorEvent(int propertyId, int zone) {
+            LogUtil.logE(VehicleControlBinder.TAG, "onErrorEvent(): mCarParkingCallback - signal (" + propertyId + ", zone) have an error event!");
+        }
+    };
+    private CarDoorLockManager.CarDoorLockEventCallback mDoorLockCallback = new CarDoorLockManager.CarDoorLockEventCallback() { // from class: com.saicmotor.service.vehicle.binder.VehicleControlBinder.3
+        public void onChangeEvent(CarPropertyValue carPropertyValue) {
+            int propertyId = carPropertyValue.getPropertyId();
+            Object signalValue = carPropertyValue.getValue();
+            LogUtil.logD(VehicleControlBinder.TAG, "onChangeEvent(): mDoorLockCallback - propertyId = " + propertyId + "; signalValue = " + signalValue);
+            boolean match = true;
+            if (propertyId == 559990308) {
+                if (!VehicleControlBinder.this.isInvalidRearDoorSts(((Float) signalValue).floatValue())) {
+                    VehicleControlBinder.this.mBean.setElectricTailgateLock(((Float) signalValue).floatValue());
+                    VehicleControlBinder.this.mBean.setMarkedSignalId(1006);
+                } else {
+                    return;
+                }
+            } else {
+                match = false;
+            }
+            if (match) {
+                VehicleControlStateCallBack vehicleControlStateCallBack = VehicleControlBinder.this.mRemoteCallback;
+                VehicleControlBinder vehicleControlBinder = VehicleControlBinder.this;
+                vehicleControlStateCallBack.broadcastChangeEvent(vehicleControlBinder.getChangedBean(vehicleControlBinder.mBean), 2);
+            }
+        }
+
+        public void onErrorEvent(int propertyId, int zone) {
+            LogUtil.logE(VehicleControlBinder.TAG, "onErrorEvent(): mDoorLockCallback - signal (" + propertyId + ", zone) have an error event!");
+        }
+    };
+    private VehicleControlStateCallBack mRemoteCallback = new VehicleControlStateCallBack(TAG);
+    private VehicleControlBean mBean = new VehicleControlBean();
+    private SimulationFlag mSimulationFlag = SimulationFlag.getInstance();
+    private VehicleControlSimulationTest mVehicleControlSimulationTest = new VehicleControlSimulationTest();
+
+    public VehicleControlBinder(Context context) {
+        this.mContext = context;
+    }
+
+    public void initBinder(Car car) {
+        LogUtil.logD(TAG, "initBinder() --- start");
+        try {
+            this.mCarCabinManager = (CarCabinManager) car.getCarManager("cabin");
+            this.mCarCabinManager.registerCallback(this.mCarCabinEventCallback);
+            this.mCarDoorLockManager = (CarDoorLockManager) car.getCarManager("doorlock");
+            this.mCarDoorLockManager.registerCallback(this.mDoorLockCallback);
+            this.mCarParkingAssistanceManager = (CarParkingAssistanceManager) car.getCarManager("parkingassistance");
+            this.mCarParkingAssistanceManager.registerCallback(this.mCarParkingCallback);
+            LogUtil.logD(TAG, "initBinder(): mCarCabinManager= " + this.mCarCabinManager + "; mCarDoorLockManager = " + this.mCarDoorLockManager + "; mCarParkingAssistanceManager = " + this.mCarParkingAssistanceManager);
+            updateBean();
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mBean), 2);
+        } catch (CarNotConnectedException except) {
+            except.printStackTrace();
+        }
+    }
+
+    private void updateBean() {
+        try {
+            LogUtil.logD(TAG, "updateBean() --- start");
+            this.mBean.setDoorLock(getDoorLock());
+            this.mBean.setDriverWindow(getDriveWindow());
+            this.mBean.setPassengerWindow(getPassengerWindow());
+            this.mBean.setLeftRearWindow(getLeftRearWindow());
+            this.mBean.setRightRearWindow(getRightRearWindow());
+            this.mBean.setElectricTailgateLock(getElectricTailgateLock());
+            this.mBean.setSunroofSwitch(getSunroofSwitch());
+            this.mBean.setSunroofVentilation(getSunroofVentilation());
+            this.mBean.setEspSwitch(getEspSwitch());
+            this.mBean.setHdcSwitch(getHdcSwitch());
+            this.mBean.setPdcSwitch(getPdcSwitch());
+            this.mBean.setVseSts(getVseSts());
+            this.mBean.setTcsOpngMd(getTcsOpngMd());
+            this.mBean.setTcsOpngSts(getTcsOpngSts());
+            this.mBean.setMarkedSignalId(1000);
+            LogUtil.logD(TAG, "updateBean() --- end, mBean = " + this.mBean);
+        } catch (RemoteException except) {
+            except.printStackTrace();
+        }
+    }
+
+    public void destoryBinder() {
+        CarCabinManager carCabinManager = this.mCarCabinManager;
+        if (carCabinManager != null) {
+            try {
+                carCabinManager.unregisterCallback(this.mCarCabinEventCallback);
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+            }
+        }
+        CarDoorLockManager carDoorLockManager = this.mCarDoorLockManager;
+        if (carDoorLockManager != null) {
+            try {
+                carDoorLockManager.unregisterCallback(this.mDoorLockCallback);
+            } catch (CarNotConnectedException except2) {
+                except2.printStackTrace();
+            }
+        }
+        CarParkingAssistanceManager carParkingAssistanceManager = this.mCarParkingAssistanceManager;
+        if (carParkingAssistanceManager != null) {
+            try {
+                carParkingAssistanceManager.unregisterCallback(this.mCarParkingCallback);
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        this.mRemoteCallback.kill();
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isInvalidIntValue(int maxId, int value) {
+        LogUtil.logD(TAG, "isInvalidIntValue: maxId = " + maxId + "; value = " + value);
+        return value < this.mContext.getResources().getInteger(R.integer.min_common) || value > this.mContext.getResources().getInteger(maxId);
+    }
+
+    private boolean isInvalidFloatValue(int maxId, float value) {
+        LogUtil.logD(TAG, "isInvalidFloatValue: maxId = " + maxId + "; value = " + value);
+        return value < ((float) this.mContext.getResources().getInteger(R.integer.min_common)) || value > ((float) this.mContext.getResources().getInteger(maxId));
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public boolean isInvalidRearDoorSts(float value) {
+        float truncatedValue = Math.round(value * 100.0f) / 100.0f;
+        LogUtil.logD(TAG, "isInvalidFloatValue: value = " + value);
+        return isInvalidFloatValue(R.integer.max_dlock_elec_lock_get, truncatedValue);
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void onWindowStateChanged(int propertyId, Object signalValue) {
+        if (this.mCarCabinEventMatch) {
+        }
+        switch (propertyId) {
+            case 291518465:
+                if (!isInvalidFloatValue(R.integer.max_vehicle_window_get, ((Float) signalValue).floatValue())) {
+                    this.mBean.setDriverWindow(((Float) signalValue).floatValue());
+                    this.mBean.setMarkedSignalId(1002);
+                    this.mCarCabinEventMatch = true;
+                    break;
+                }
+                break;
+            case 291518466:
+                if (!isInvalidFloatValue(R.integer.max_vehicle_window_get, ((Float) signalValue).floatValue())) {
+                    this.mBean.setPassengerWindow(((Float) signalValue).floatValue());
+                    this.mBean.setMarkedSignalId(1003);
+                    this.mCarCabinEventMatch = true;
+                    break;
+                }
+                break;
+            case 291518467:
+                if (!isInvalidFloatValue(R.integer.max_vehicle_window_get, ((Float) signalValue).floatValue())) {
+                    this.mBean.setLeftRearWindow(((Float) signalValue).floatValue());
+                    this.mBean.setMarkedSignalId(1004);
+                    this.mCarCabinEventMatch = true;
+                    break;
+                }
+                break;
+            case 291518468:
+                if (!isInvalidFloatValue(R.integer.max_vehicle_window_get, ((Float) signalValue).floatValue())) {
+                    this.mBean.setRightRearWindow(((Float) signalValue).floatValue());
+                    this.mBean.setMarkedSignalId(VehicleControlConst.SIGNAL_RIGHT_REAR_WINDOW);
+                    this.mCarCabinEventMatch = true;
+                    break;
+                }
+                break;
+            default:
+                this.mCarCabinEventMatch = false;
+                break;
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void onSunroofStateChanged(int propertyId, Object signalValue) {
+        if (this.mCarCabinEventMatch) {
+        }
+        switch (propertyId) {
+            case 289421320:
+                if (!isInvalidIntValue(R.integer.max_skylight_get, ((Integer) signalValue).intValue())) {
+                    this.mBean.setSunroofSwitch(((Integer) signalValue).intValue());
+                    this.mBean.setMarkedSignalId(1007);
+                    this.mCarCabinEventMatch = true;
+                    break;
+                }
+                break;
+            case 289421321:
+                if (!isInvalidIntValue(R.integer.max_skylight_ventilation_get, ((Integer) signalValue).intValue())) {
+                    this.mBean.setSunroofVentilation(((Integer) signalValue).intValue());
+                    this.mBean.setMarkedSignalId(1008);
+                    this.mCarCabinEventMatch = true;
+                    break;
+                }
+                break;
+            default:
+                this.mCarCabinEventMatch = false;
+                break;
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void onCabinStateChanged(int propertyId, Object signalValue) {
+        if (this.mCarCabinEventMatch) {
+        }
+        switch (propertyId) {
+            case 289421312:
+                if (!isInvalidIntValue(R.integer.max_vehicle_lock_get, ((Integer) signalValue).intValue())) {
+                    this.mBean.setDoorLock(((Integer) signalValue).intValue());
+                    this.mBean.setMarkedSignalId(1001);
+                    this.mCarCabinEventMatch = true;
+                    break;
+                }
+                break;
+            case 289421317:
+                if (!isInvalidIntValue(R.integer.max_vehicle_esp_get, ((Integer) signalValue).intValue())) {
+                    this.mBean.setEspSwitch(((Integer) signalValue).intValue());
+                    this.mBean.setMarkedSignalId(1009);
+                    this.mCarCabinEventMatch = true;
+                    break;
+                }
+                break;
+            case 289421318:
+                if (!isInvalidIntValue(R.integer.max_vehicle_hdc_get, ((Integer) signalValue).intValue())) {
+                    this.mBean.setHdcSwitch(((Integer) signalValue).intValue());
+                    this.mBean.setMarkedSignalId(1010);
+                    this.mCarCabinEventMatch = true;
+                    break;
+                }
+                break;
+            case 289421342:
+                if (!isInvalidIntValue(R.integer.max_vse_sts_get, ((Integer) signalValue).intValue())) {
+                    this.mBean.setVseSts(((Integer) signalValue).intValue());
+                    this.mBean.setMarkedSignalId(1012);
+                    this.mCarCabinEventMatch = true;
+                    break;
+                }
+                break;
+            case 289421343:
+                if (!isInvalidIntValue(R.integer.max_tcs_opng_md_get, ((Integer) signalValue).intValue())) {
+                    this.mBean.setTcsOpngMd(((Integer) signalValue).intValue());
+                    this.mBean.setMarkedSignalId(1013);
+                    this.mCarCabinEventMatch = true;
+                    break;
+                }
+                break;
+            case 289421344:
+                if (!isInvalidIntValue(R.integer.max_tcs_opng_sts_get, ((Integer) signalValue).intValue())) {
+                    this.mBean.setTcsOpngSts(((Integer) signalValue).intValue());
+                    this.mBean.setMarkedSignalId(1014);
+                    this.mCarCabinEventMatch = true;
+                    break;
+                }
+                break;
+            default:
+                this.mCarCabinEventMatch = false;
+                break;
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void addVehicleControlListener(IVehicleControlListener listener) throws RemoteException {
+        this.mRemoteCallback.register(listener);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void removeVehicleControlListener(IVehicleControlListener listener) throws RemoteException {
+        this.mRemoteCallback.unregister(listener);
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public int getDoorLock() throws RemoteException {
+        CarCabinManager carCabinManager = this.mCarCabinManager;
+        if (carCabinManager != null) {
+            try {
+                int signalValue = carCabinManager.getIntProperty(289421312, 16777216);
+                boolean invalid = isInvalidIntValue(R.integer.max_vehicle_lock_get, signalValue);
+                LogUtil.logD(TAG, "getDoorLock: signalValue = " + signalValue + "; mBean.getDoorLock = " + this.mBean.getDoorLock() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getDoorLock() : signalValue;
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void setDoorLock(int signalValue) throws RemoteException {
+        CarCabinManager carCabinManager;
+        LogUtil.logD(TAG, "setDoorLock: signalValue = " + signalValue);
+        if (!isInvalidIntValue(R.integer.max_vehicle_lock_set, signalValue) && (carCabinManager = this.mCarCabinManager) != null) {
+            try {
+                carCabinManager.setIntProperty(289421312, 16777216, signalValue);
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+            }
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public float getDriveWindow() throws RemoteException {
+        float signalValue = 0.0f;
+        CarCabinManager carCabinManager = this.mCarCabinManager;
+        if (carCabinManager != null) {
+            try {
+                signalValue = carCabinManager.getFloatProperty(291518465, 16777216);
+                boolean invalid = isInvalidFloatValue(R.integer.max_vehicle_window_get, signalValue);
+                if (invalid) {
+                    signalValue = this.mBean.getDriverWindow();
+                }
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+            }
+        }
+        LogUtil.logD(TAG, "getDriveWindow: signalValue = " + signalValue);
+        return signalValue;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void setDriveWindow(float signalValue) throws RemoteException {
+        CarCabinManager carCabinManager;
+        LogUtil.logD(TAG, "setDriveWindow: signalValue = " + signalValue);
+        if (!isInvalidFloatValue(R.integer.max_vehicle_window_set, signalValue) && (carCabinManager = this.mCarCabinManager) != null) {
+            try {
+                carCabinManager.setFloatProperty(291518465, 16777216, signalValue);
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+            }
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public float getPassengerWindow() throws RemoteException {
+        CarCabinManager carCabinManager = this.mCarCabinManager;
+        if (carCabinManager != null) {
+            try {
+                float value = carCabinManager.getFloatProperty(291518466, 16777216);
+                boolean invalid = isInvalidFloatValue(R.integer.max_vehicle_window_get, value);
+                LogUtil.logD(TAG, "getPassengerWindow: value = " + value + "; mBean.getPassengerWindow = " + this.mBean.getPassengerWindow() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getPassengerWindow() : value;
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+                return -1.0f;
+            }
+        }
+        return -1.0f;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void setPassengerWindow(float signalValue) throws RemoteException {
+        CarCabinManager carCabinManager;
+        LogUtil.logD(TAG, "setPassengerWindow: signalValue = " + signalValue);
+        if (!isInvalidFloatValue(R.integer.max_vehicle_window_set, signalValue) && (carCabinManager = this.mCarCabinManager) != null) {
+            try {
+                carCabinManager.setFloatProperty(291518466, 16777216, signalValue);
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+            }
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public float getLeftRearWindow() throws RemoteException {
+        CarCabinManager carCabinManager = this.mCarCabinManager;
+        if (carCabinManager != null) {
+            try {
+                float value = carCabinManager.getFloatProperty(291518467, 16777216);
+                boolean invalid = isInvalidFloatValue(R.integer.max_vehicle_window_get, value);
+                LogUtil.logD(TAG, "getLeftRearWindow: value = " + value + "; mBean.getLeftRearWindow = " + this.mBean.getLeftRearWindow() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getLeftRearWindow() : value;
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+                return -1.0f;
+            }
+        }
+        return -1.0f;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void setLeftRearWindow(float signalValue) throws RemoteException {
+        CarCabinManager carCabinManager;
+        LogUtil.logD(TAG, "setLeftRearWindow: signalValue = " + signalValue);
+        if (!isInvalidFloatValue(R.integer.max_vehicle_window_set, signalValue) && (carCabinManager = this.mCarCabinManager) != null) {
+            try {
+                carCabinManager.setFloatProperty(291518467, 16777216, signalValue);
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+            }
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public float getRightRearWindow() throws RemoteException {
+        CarCabinManager carCabinManager = this.mCarCabinManager;
+        if (carCabinManager != null) {
+            try {
+                float value = carCabinManager.getFloatProperty(291518468, 16777216);
+                boolean invalid = isInvalidFloatValue(R.integer.max_vehicle_window_get, value);
+                LogUtil.logD(TAG, "getRightRearWindow: value = " + value + "; mBean.getRightRearWindow = " + this.mBean.getRightRearWindow() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getRightRearWindow() : value;
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+                return -1.0f;
+            }
+        }
+        return -1.0f;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void setRightRearWindow(float signalValue) throws RemoteException {
+        CarCabinManager carCabinManager;
+        LogUtil.logD(TAG, "setRightRearWindow: signalValue = " + signalValue);
+        if (!isInvalidFloatValue(R.integer.max_vehicle_window_set, signalValue) && (carCabinManager = this.mCarCabinManager) != null) {
+            try {
+                carCabinManager.setFloatProperty(291518468, 16777216, signalValue);
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+            }
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public float getElectricTailgateLock() throws RemoteException {
+        CarDoorLockManager carDoorLockManager = this.mCarDoorLockManager;
+        if (carDoorLockManager != null) {
+            try {
+                float value = ((Float) carDoorLockManager.getGlobalProperty(Float.class, 559990308)).floatValue();
+                boolean invalid = isInvalidRearDoorSts(value);
+                LogUtil.logD(TAG, "getElectricTailgateLock: value = " + value + "; mBean.getElectricTailgateLock = " + this.mBean.getElectricTailgateLock() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getElectricTailgateLock() : value;
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+                return -1.0f;
+            }
+        }
+        return -1.0f;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void setElectricTailgateLock(float signalValue) throws RemoteException {
+        CarDoorLockManager carDoorLockManager;
+        LogUtil.logD(TAG, "setElectricTailgateLock: signalValue = " + signalValue);
+        if (!isInvalidFloatValue(R.integer.max_dlock_elec_lock_set, signalValue) && (carDoorLockManager = this.mCarDoorLockManager) != null) {
+            try {
+                carDoorLockManager.setGlobalProperty(Float.class, 559990308, Float.valueOf(signalValue));
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+            }
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public int getSunroofSwitch() throws RemoteException {
+        CarCabinManager carCabinManager = this.mCarCabinManager;
+        if (carCabinManager != null) {
+            try {
+                int signalValue = carCabinManager.getIntProperty(289421320, 16777216);
+                boolean invalid = isInvalidIntValue(R.integer.max_skylight_get, signalValue);
+                LogUtil.logD(TAG, "getSunroofSwitch: signalValue = " + signalValue + "; mBean.getSunroofSwitch = " + this.mBean.getSunroofSwitch() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getSunroofSwitch() : signalValue;
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void setSunroofSwitch(int signalValue) throws RemoteException {
+        CarCabinManager carCabinManager;
+        LogUtil.logD(TAG, "setSunroofSwitch: signalValue = " + signalValue);
+        if (!isInvalidIntValue(R.integer.max_skylight_set, signalValue) && (carCabinManager = this.mCarCabinManager) != null) {
+            try {
+                carCabinManager.setIntProperty(289421320, 16777216, signalValue);
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+            }
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public int getSunroofVentilation() throws RemoteException {
+        CarCabinManager carCabinManager = this.mCarCabinManager;
+        if (carCabinManager != null) {
+            try {
+                int value = carCabinManager.getIntProperty(289421321, 16777216);
+                boolean invalid = isInvalidIntValue(R.integer.max_skylight_ventilation_get, value);
+                LogUtil.logD(TAG, "getSunroofVentilation: value = " + value + "; mBean.getSunroofVentilation = " + this.mBean.getSunroofVentilation() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getSunroofVentilation() : value;
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void setSunroofVentilation(int signalValue) throws RemoteException {
+        CarCabinManager carCabinManager;
+        LogUtil.logD(TAG, "setSunroofVentilation: signalValue = " + signalValue);
+        if (!isInvalidIntValue(R.integer.max_skylight_ventilation_set, signalValue) && (carCabinManager = this.mCarCabinManager) != null) {
+            try {
+                carCabinManager.setIntProperty(289421321, 16777216, signalValue);
+            } catch (CarNotConnectedException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public int getEspSwitch() throws RemoteException {
+        CarCabinManager carCabinManager = this.mCarCabinManager;
+        if (carCabinManager != null) {
+            try {
+                int value = carCabinManager.getIntProperty(289421317, 16777216);
+                boolean invalid = isInvalidIntValue(R.integer.max_vehicle_esp_get, value);
+                LogUtil.logD(TAG, "getEspSwitch: value = " + value + "; mBean.getEspSwitch = " + this.mBean.getEspSwitch() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getEspSwitch() : value;
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void setEspSwitch(int signalValue) throws RemoteException {
+        LogUtil.logD(TAG, "setEspSwitch: signalValue = " + signalValue);
+        if (isInvalidIntValue(R.integer.max_vehicle_esp_set, signalValue)) {
+            return;
+        }
+        CarCabinManager carCabinManager = this.mCarCabinManager;
+        if (carCabinManager != null) {
+            try {
+                carCabinManager.setIntProperty(289421317, 16777216, signalValue);
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+            }
+        }
+        if (this.mSimulationFlag.isVehicleControlSimu()) {
+            this.mVehicleControlSimulationTest.setSimuEspSwitch(signalValue, this.mBean);
+            this.mRemoteCallback.broadcastChangeEvent(getChangedBean(this.mBean), 2);
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public int getHdcSwitch() throws RemoteException {
+        CarCabinManager carCabinManager = this.mCarCabinManager;
+        if (carCabinManager != null) {
+            try {
+                int signalValue = carCabinManager.getIntProperty(289421318, 16777216);
+                boolean invalid = isInvalidIntValue(R.integer.max_vehicle_hdc_get, signalValue);
+                LogUtil.logD(TAG, "getHdcSwitch: signalValue = " + signalValue + "; mBean.getHdcSwitch = " + this.mBean.getHdcSwitch() + "; invalid = " + invalid);
+                return invalid ? this.mBean.getHdcSwitch() : signalValue;
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void setHdcSwitch(int signalValue) throws RemoteException {
+        CarCabinManager carCabinManager;
+        LogUtil.logD(TAG, "setHdcSwitch: signalValue = " + signalValue);
+        if (!isInvalidIntValue(R.integer.max_vehicle_hdc_set, signalValue) && (carCabinManager = this.mCarCabinManager) != null) {
+            try {
+                carCabinManager.setIntProperty(289421318, 16777216, signalValue);
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+            }
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public int getPdcSwitch() throws RemoteException {
+        LogUtil.logD(TAG, "getPdcSwitch");
+        CarParkingAssistanceManager carParkingAssistanceManager = this.mCarParkingAssistanceManager;
+        if (carParkingAssistanceManager != null) {
+            try {
+                int signalValue = ((Integer) carParkingAssistanceManager.getGlobalProperty(Integer.class, 557889904)).intValue();
+                boolean invalid = isInvalidIntValue(R.integer.max_pdc_sts_get, signalValue);
+                return invalid ? this.mBean.getPdcSwitch() : signalValue;
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public void setPdcSwitch(int signalValue) throws RemoteException {
+        CarParkingAssistanceManager carParkingAssistanceManager;
+        LogUtil.logD(TAG, "setPdcSwitch signalValue = " + signalValue);
+        if (!isInvalidIntValue(R.integer.max_pdc_sts_set, signalValue) && (carParkingAssistanceManager = this.mCarParkingAssistanceManager) != null) {
+            try {
+                carParkingAssistanceManager.setGlobalProperty(Integer.class, 557889904, Integer.valueOf(signalValue));
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+            }
+        }
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public VehicleControlBean getVehicleControlStatus() throws RemoteException {
+        LogUtil.logD(TAG, "getVehicleControlStatus() --- start, mBean = " + this.mBean);
+        if (this.mBean == null) {
+            this.mBean = new VehicleControlBean();
+        }
+        return this.mBean;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public boolean resetVehicleSettings(int toReset) {
+        if (this.mCarCabinManager != null) {
+            try {
+                LogUtil.logD(TAG, "resetVehicleSettings = " + toReset);
+                this.mCarCabinManager.setIntProperty(289421334, 16777216, toReset);
+                return true;
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+                return false;
+            }
+        }
+        return false;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public int getVseSts() throws RemoteException {
+        LogUtil.logD(TAG, "getVseSts");
+        CarParkingAssistanceManager carParkingAssistanceManager = this.mCarParkingAssistanceManager;
+        if (carParkingAssistanceManager != null) {
+            try {
+                int signalValue = ((Integer) carParkingAssistanceManager.getGlobalProperty(Integer.class, 289421342)).intValue();
+                boolean invalid = isInvalidIntValue(R.integer.max_vse_sts_get, signalValue);
+                return invalid ? this.mBean.getVseSts() : signalValue;
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public int getTcsOpngMd() throws RemoteException {
+        LogUtil.logD(TAG, "getTcsOpngMd");
+        CarParkingAssistanceManager carParkingAssistanceManager = this.mCarParkingAssistanceManager;
+        if (carParkingAssistanceManager != null) {
+            try {
+                int signalValue = ((Integer) carParkingAssistanceManager.getGlobalProperty(Integer.class, 289421343)).intValue();
+                boolean invalid = isInvalidIntValue(R.integer.max_tcs_opng_md_get, signalValue);
+                return invalid ? this.mBean.getTcsOpngMd() : signalValue;
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    @Override // com.saicmotor.sdk.vehiclesettings.IVehicleControlService
+    public int getTcsOpngSts() throws RemoteException {
+        LogUtil.logD(TAG, "getTcsOpngSts");
+        CarParkingAssistanceManager carParkingAssistanceManager = this.mCarParkingAssistanceManager;
+        if (carParkingAssistanceManager != null) {
+            try {
+                int signalValue = ((Integer) carParkingAssistanceManager.getGlobalProperty(Integer.class, 289421344)).intValue();
+                boolean invalid = isInvalidIntValue(R.integer.max_tcs_opng_sts_get, signalValue);
+                return invalid ? this.mBean.getTcsOpngSts() : signalValue;
+            } catch (CarNotConnectedException except) {
+                except.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public VehicleControlBean getChangedBean(VehicleControlBean bean) {
+        try {
+            return bean.m9clone();
+        } catch (CloneNotSupportedException e) {
+            LogUtil.logD(TAG, "getChangedBean: throw a CloneNotSupportedException!");
+            return bean;
+        }
+    }
+
+    private class VehicleControlStateCallBack extends BaseStateCallback<IVehicleControlListener> {
+        public VehicleControlStateCallBack(String tag) {
+            super(tag);
+        }
+
+        @Override // com.saicmotor.service.vehicle.BaseStateCallback
+        protected void callbackOnStateChanged(Object data) {
+            synchronized (this.mRemoteCallbackList) {
+                int size = this.mRemoteCallbackList.beginBroadcast();
+                LogUtil.logD(VehicleControlBinder.TAG, "callbackOnStateChanged: size = " + size + "; data = " + data);
+                for (int i = 0; i < size; i++) {
+                    try {
+                        ((IVehicleControlListener) this.mRemoteCallbackList.getBroadcastItem(i)).onChangeEvent((VehicleControlBean) data);
+                    } catch (RemoteException except) {
+                        except.printStackTrace();
+                    }
+                }
+                this.mRemoteCallbackList.finishBroadcast();
+            }
+        }
+    }
+}

@@ -1,0 +1,307 @@
+package com.saicmotor.service.vehicle.binder;
+
+import android.car.Car;
+import android.car.CarNotConnectedException;
+import android.car.hardware.power.CarPowerManager;
+import android.content.Context;
+import android.content.Intent;
+import android.os.RemoteException;
+import com.saicmotor.sdk.screen.IScreenManagerService;
+import com.saicmotor.sdk.screen.IScreenStateListener;
+import com.saicmotor.sdk.vehiclesettings.LogUtil;
+import com.saicmotor.service.vehicle.BaseStateCallback;
+import java.util.HashMap;
+import java.util.Map;
+
+/* JADX INFO: loaded from: classes.dex */
+public class VehicleScreenBinder extends IScreenManagerService.Stub implements CarPowerManager.CarPowerStateListener {
+    private static final String INTENT_DISPLAY_STATE_REPORT = "com.saic.conn.display.report";
+    private static final String STR_STATE = "state";
+    private static final String TAG = VehicleScreenBinder.class.getSimpleName();
+    private CarPowerManager mCarPowerManager;
+    private Context mContext;
+    private int mScreenState = 2;
+    private int mScreenTheme = 0;
+    private boolean mScreenShowTime = false;
+    private boolean mFirsInit = true;
+    private Map<Object, ScreenStateBean> mScreenStateMap = new HashMap();
+    private VehicleScreenStateCallBack mRemoteCallback = new VehicleScreenStateCallBack(TAG);
+
+    public VehicleScreenBinder(Context context) {
+        this.mContext = context;
+    }
+
+    public void initBinder(Car car) {
+        LogUtil.logD(TAG, "initBinder() --- start");
+        try {
+            this.mCarPowerManager = (CarPowerManager) car.getCarManager("power");
+            this.mCarPowerManager.setListener(this, null);
+        } catch (CarNotConnectedException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    @Override // com.saicmotor.sdk.screen.IScreenManagerService
+    public void screenWakeup(int pid, boolean trans) throws RemoteException {
+        if (!isAllowScreenTurnLight()) {
+            LogUtil.logE(TAG, "screenWakeup abort");
+            return;
+        }
+        LogUtil.logD(TAG, "screenWakeup");
+        if (this.mScreenState == 2 && !this.mFirsInit) {
+            LogUtil.logI(TAG, "mScreenState is on , not enable screen");
+            this.mScreenStateMap.remove(Integer.valueOf(pid));
+        } else if (this.mScreenState != 2) {
+            if (!trans) {
+                this.mScreenStateMap.clear();
+            } else {
+                ScreenStateBean bean = new ScreenStateBean();
+                if (this.mScreenStateMap.containsKey(Integer.valueOf(pid))) {
+                    bean = this.mScreenStateMap.get(Integer.valueOf(pid));
+                    bean.state = 3;
+                } else {
+                    bean.state = 3;
+                    bean.showTime = this.mScreenShowTime;
+                    bean.theme = this.mScreenTheme;
+                }
+                this.mScreenStateMap.put(Integer.valueOf(pid), bean);
+            }
+        }
+        CarPowerManager carPowerManager = this.mCarPowerManager;
+        if (carPowerManager != null) {
+            try {
+                carPowerManager.setBackLightEnable(true);
+            } catch (CarNotConnectedException exception) {
+                exception.printStackTrace();
+            }
+        }
+        this.mScreenState = trans ? 3 : 2;
+        LogUtil.logI(TAG, "screenWakeup set mScreenState : " + this.mScreenState);
+        this.mRemoteCallback.broadcastChangeEvent(null, 5);
+        this.mFirsInit = false;
+    }
+
+    @Override // com.saicmotor.sdk.screen.IScreenManagerService
+    public void screenSleep(int r6, boolean z, int r8) throws RemoteException {
+        LogUtil.logD(TAG, String.format("screenSleep by PID[%d]-showTime[%b]-theme[%d]", Integer.valueOf(r6), Boolean.valueOf(z), Integer.valueOf(r8)));
+        int r0 = this.mScreenState;
+        if (r0 == 2 || r0 == 3) {
+            this.mScreenStateMap.clear();
+        }
+        ScreenStateBean screenStateBean = new ScreenStateBean();
+        screenStateBean.showTime = z;
+        this.mScreenShowTime = z;
+        screenStateBean.theme = r8;
+        this.mScreenTheme = r8;
+        screenStateBean.state = z ? 1 : 0;
+        this.mScreenState = z ? 1 : 0;
+        this.mScreenStateMap.put(Integer.valueOf(r6), screenStateBean);
+        LogUtil.logI(TAG, "screenSleep set mScreenState : " + this.mScreenState);
+        this.mRemoteCallback.broadcastChangeEvent(null, 5);
+        CarPowerManager carPowerManager = this.mCarPowerManager;
+        if (carPowerManager != null) {
+            try {
+                carPowerManager.setBackLightEnable(z);
+            } catch (CarNotConnectedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override // com.saicmotor.sdk.screen.IScreenManagerService
+    public void resumeScreenSleep(int r10) throws RemoteException {
+        CarPowerManager carPowerManager;
+        LogUtil.logD(TAG, "resumeScreenSleep by pid[" + r10 + "]");
+        ScreenStateBean screenStateBean = null;
+        for (Map.Entry<Object, ScreenStateBean> entry : this.mScreenStateMap.entrySet()) {
+            int r5 = ((Integer) entry.getKey()).intValue();
+            ScreenStateBean value = entry.getValue();
+            if (r5 != r10) {
+                if (value.state == 3) {
+                    LogUtil.logD(TAG, "resumeScreenSleep by pid[" + r10 + "] but interrupted by pid[" + r5 + "]");
+                    this.mScreenStateMap.remove(Integer.valueOf(r10));
+                    return;
+                }
+            } else {
+                if (value.state != 3 || this.mScreenState != 3) {
+                    LogUtil.logD(TAG, "resumeScreenSleep by pid[" + r10 + "] but not needed");
+                    this.mScreenStateMap.remove(Integer.valueOf(r10));
+                    return;
+                }
+                screenStateBean = value;
+            }
+        }
+        if (screenStateBean == null) {
+            LogUtil.logD(TAG, "resumeScreenSleep by pid[" + r10 + "] but not wakeuped by it");
+            return;
+        }
+        if (!screenStateBean.showTime && (carPowerManager = this.mCarPowerManager) != null) {
+            try {
+                carPowerManager.setBackLightEnable(false);
+            } catch (CarNotConnectedException e) {
+                e.printStackTrace();
+            }
+        }
+        boolean z = screenStateBean.showTime;
+        screenStateBean.state = z ? 1 : 0;
+        this.mScreenState = z ? 1 : 0;
+        LogUtil.logI(TAG, "resumeScreenSleep set mScreenState : " + this.mScreenState);
+        this.mScreenTheme = screenStateBean.theme;
+        this.mScreenShowTime = screenStateBean.showTime;
+        this.mScreenStateMap.put(Integer.valueOf(r10), screenStateBean);
+        this.mRemoteCallback.broadcastChangeEvent(null, 5);
+    }
+
+    @Override // com.saicmotor.sdk.screen.IScreenManagerService
+    public void registerListener(IScreenStateListener iScreenOffCallback) throws RemoteException {
+        this.mRemoteCallback.register(iScreenOffCallback);
+    }
+
+    @Override // com.saicmotor.sdk.screen.IScreenManagerService
+    public void unregisterListener(IScreenStateListener iScreenOffCallback) throws RemoteException {
+        this.mRemoteCallback.unregister(iScreenOffCallback);
+    }
+
+    @Override // com.saicmotor.sdk.screen.IScreenManagerService
+    public int getCurrentPowerMode() throws RemoteException {
+        CarPowerManager carPowerManager = this.mCarPowerManager;
+        if (carPowerManager != null) {
+            try {
+                int powerMode = carPowerManager.getCurrentPowerMode();
+                LogUtil.logE(TAG, "getCurrentPowerMode:" + powerMode);
+                return powerMode;
+            } catch (CarNotConnectedException e) {
+                e.printStackTrace();
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    private boolean isAllowScreenTurnLight() {
+        CarPowerManager carPowerManager = this.mCarPowerManager;
+        if (carPowerManager == null) {
+            return false;
+        }
+        try {
+            int state = carPowerManager.getCurrentPowerMode();
+            if (state != 2 && state != 5 && state != 20) {
+                return true;
+            }
+            LogUtil.logE(TAG, "isAllowScreenTurnLight state:" + state);
+            return false;
+        } catch (CarNotConnectedException exception) {
+            exception.printStackTrace();
+            return false;
+        }
+    }
+
+    public void destoryBinder() {
+        this.mRemoteCallback.kill();
+    }
+
+    public void onStateChanged(int value) {
+        LogUtil.logE(TAG, "onStateChanged value:" + value);
+        this.mRemoteCallback.broadcastChangeEvent(Integer.valueOf(value), 5);
+    }
+
+    private class VehicleScreenStateCallBack extends BaseStateCallback<IScreenStateListener> {
+        private boolean mLastScreenOff;
+
+        public VehicleScreenStateCallBack(String tag) {
+            super(tag);
+        }
+
+        /* JADX WARN: Removed duplicated region for block: B:18:0x002f  */
+        @Override // com.saicmotor.service.vehicle.BaseStateCallback
+        /*
+            Code decompiled incorrectly, please refer to instructions dump.
+            To view partially-correct code enable 'Show inconsistent code' option in preferences
+        */
+        protected void callbackOnStateChanged(java.lang.Object r7) {
+            /*
+                r6 = this;
+                android.os.RemoteCallbackList<E extends android.os.IInterface> r0 = r6.mRemoteCallbackList
+                monitor-enter(r0)
+                if (r7 != 0) goto L26
+                com.saicmotor.service.vehicle.binder.VehicleScreenBinder r1 = com.saicmotor.service.vehicle.binder.VehicleScreenBinder.this     // Catch: java.lang.Throwable -> L6a
+                int r1 = com.saicmotor.service.vehicle.binder.VehicleScreenBinder.access$000(r1)     // Catch: java.lang.Throwable -> L6a
+                r2 = 1
+                if (r1 == 0) goto L19
+                com.saicmotor.service.vehicle.binder.VehicleScreenBinder r1 = com.saicmotor.service.vehicle.binder.VehicleScreenBinder.this     // Catch: java.lang.Throwable -> L6a
+                int r1 = com.saicmotor.service.vehicle.binder.VehicleScreenBinder.access$000(r1)     // Catch: java.lang.Throwable -> L6a
+                if (r1 != r2) goto L17
+                goto L19
+            L17:
+                r2 = 0
+                goto L1a
+            L19:
+            L1a:
+                r1 = r2
+                boolean r2 = r6.mLastScreenOff     // Catch: java.lang.Throwable -> L6a
+                if (r1 == r2) goto L26
+                com.saicmotor.service.vehicle.binder.VehicleScreenBinder r2 = com.saicmotor.service.vehicle.binder.VehicleScreenBinder.this     // Catch: java.lang.Throwable -> L6a
+                com.saicmotor.service.vehicle.binder.VehicleScreenBinder.access$100(r2, r1)     // Catch: java.lang.Throwable -> L6a
+                r6.mLastScreenOff = r1     // Catch: java.lang.Throwable -> L6a
+            L26:
+                android.os.RemoteCallbackList<E extends android.os.IInterface> r1 = r6.mRemoteCallbackList     // Catch: java.lang.Throwable -> L6a
+                int r1 = r1.beginBroadcast()     // Catch: java.lang.Throwable -> L6a
+                r2 = 0
+            L2d:
+                if (r2 >= r1) goto L63
+                if (r7 != 0) goto L49
+                android.os.RemoteCallbackList<E extends android.os.IInterface> r3 = r6.mRemoteCallbackList     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                android.os.IInterface r3 = r3.getBroadcastItem(r2)     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                com.saicmotor.sdk.screen.IScreenStateListener r3 = (com.saicmotor.sdk.screen.IScreenStateListener) r3     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                com.saicmotor.service.vehicle.binder.VehicleScreenBinder r4 = com.saicmotor.service.vehicle.binder.VehicleScreenBinder.this     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                int r4 = com.saicmotor.service.vehicle.binder.VehicleScreenBinder.access$000(r4)     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                com.saicmotor.service.vehicle.binder.VehicleScreenBinder r5 = com.saicmotor.service.vehicle.binder.VehicleScreenBinder.this     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                int r5 = com.saicmotor.service.vehicle.binder.VehicleScreenBinder.access$200(r5)     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                r3.onScreenOffStateChanged(r4, r5)     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                goto L5b
+            L49:
+                android.os.RemoteCallbackList<E extends android.os.IInterface> r3 = r6.mRemoteCallbackList     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                android.os.IInterface r3 = r3.getBroadcastItem(r2)     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                com.saicmotor.sdk.screen.IScreenStateListener r3 = (com.saicmotor.sdk.screen.IScreenStateListener) r3     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                r4 = r7
+                java.lang.Integer r4 = (java.lang.Integer) r4     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                int r4 = r4.intValue()     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+                r3.onStateChanged(r4)     // Catch: android.os.RemoteException -> L5c java.lang.Throwable -> L6a
+            L5b:
+                goto L60
+            L5c:
+                r3 = move-exception
+                r3.printStackTrace()     // Catch: java.lang.Throwable -> L6a
+            L60:
+                int r2 = r2 + 1
+                goto L2d
+            L63:
+                android.os.RemoteCallbackList<E extends android.os.IInterface> r2 = r6.mRemoteCallbackList     // Catch: java.lang.Throwable -> L6a
+                r2.finishBroadcast()     // Catch: java.lang.Throwable -> L6a
+                monitor-exit(r0)     // Catch: java.lang.Throwable -> L6a
+                return
+            L6a:
+                r1 = move-exception
+                monitor-exit(r0)     // Catch: java.lang.Throwable -> L6a
+                throw r1
+            */
+            throw new UnsupportedOperationException("Method not decompiled: com.saicmotor.service.vehicle.binder.VehicleScreenBinder.VehicleScreenStateCallBack.callbackOnStateChanged(java.lang.Object):void");
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void broadcastScreenState(boolean off) {
+        Intent intent = new Intent(INTENT_DISPLAY_STATE_REPORT);
+        intent.putExtra(STR_STATE, off);
+        this.mContext.sendBroadcast(intent);
+    }
+
+    class ScreenStateBean {
+        public int state = 2;
+        public boolean showTime = false;
+        public int theme = 0;
+
+        ScreenStateBean() {
+        }
+    }
+}

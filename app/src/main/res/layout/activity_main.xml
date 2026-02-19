@@ -1,260 +1,1144 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal"
-    android:background="#0D1117"
-    android:paddingStart="20dp"
-    android:paddingEnd="20dp"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp">
+    android:background="#0D1117">
 
-    <!-- SOL KOLON: Servis durumu -->
+    <!-- ============================================================ -->
+    <!-- ANA EKRAN                                                     -->
+    <!-- ============================================================ -->
     <LinearLayout
-        android:layout_width="0dp"
+        android:id="@+id/layoutMain"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:layout_marginEnd="16dp"
-        android:gravity="center_vertical">
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="MG4 Controller"
-            android:textSize="22sp"
-            android:textColor="#E6EDF3"
-            android:textStyle="bold"
-            android:layout_marginBottom="2dp"/>
-
-        <TextView
-            android:id="@+id/tvVersion"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="EH32 · Android Automotive"
-            android:textSize="11sp"
-            android:textColor="#6E7681"
-            android:layout_marginBottom="14dp"/>
-
-        <Button
-            android:id="@+id/btnPermission"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="WRITE_SETTINGS Izni Ver"
-            android:backgroundTint="#DA3633"
-            android:textColor="#FFFFFF"
-            android:textSize="13sp"
-            android:visibility="gone"
-            android:layout_marginBottom="8dp"/>
-
-        <TextView
-            android:id="@+id/tvStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Hazirlanıyor..."
-            android:textSize="13sp"
-            android:textColor="#8B949E"
-            android:layout_marginBottom="10dp"/>
-
-        <Button
-            android:id="@+id/btnTestBinder"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="Binder Test"
-            android:backgroundTint="#1F6FEB"
-            android:textColor="#FFFFFF"
-            android:textSize="13sp"
-            android:layout_marginBottom="8dp"/>
-
-        <TextView
-            android:id="@+id/tvBinderStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="12sp"
-            android:textColor="#7EE787"
-            android:fontFamily="monospace"
-            android:lineSpacingExtra="4dp"/>
-
-    </LinearLayout>
-
-    <!-- ORTA KOLON: Surus modu -->
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:layout_marginEnd="16dp"
-        android:gravity="center_vertical">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="SURUS MODU"
-            android:textSize="11sp"
-            android:textColor="#6E7681"
-            android:letterSpacing="0.1"
-            android:layout_marginBottom="8dp"/>
-
-        <!-- Üst iki mod -->
+        <!-- SOL KOLON: Servis durumu -->
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="6dp">
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginEnd="16dp"
+            android:gravity="center_vertical">
 
-            <Button
-                android:id="@+id/btnEco"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_weight="1"
-                android:text="ECO"
-                android:backgroundTint="#1A7F37"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MG4 Controller"
+                android:textSize="22sp"
+                android:textColor="#E6EDF3"
                 android:textStyle="bold"
-                android:layout_marginEnd="6dp"/>
+                android:layout_marginBottom="2dp"/>
+
+            <TextView
+                android:id="@+id/tvVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="EH32 · Android Automotive"
+                android:textSize="11sp"
+                android:textColor="#6E7681"
+                android:layout_marginBottom="14dp"/>
 
             <Button
-                android:id="@+id/btnNormal"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_weight="1"
-                android:text="NORMAL"
-                android:backgroundTint="#1F6FEB"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
-        </LinearLayout>
-
-        <!-- Alt iki mod -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="10dp">
-
-            <Button
-                android:id="@+id/btnSport"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_weight="1"
-                android:text="SPORT"
-                android:backgroundTint="#9E3333"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="6dp"/>
-
-            <Button
-                android:id="@+id/btnSnow"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_weight="1"
-                android:text="KAR"
-                android:backgroundTint="#388BFD"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/btnDrive"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="↻  Dongusel Degistir"
-            android:backgroundTint="#21262D"
-            android:textColor="#C9D1D9"
-            android:textSize="13sp"/>
-
-    </LinearLayout>
-
-    <!-- SAG KOLON: Regen, Pedal, Isitma -->
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center_vertical">
-
-        <!-- Regen -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="REGEN"
-            android:textSize="11sp"
-            android:textColor="#6E7681"
-            android:letterSpacing="0.1"
-            android:layout_marginBottom="8dp"/>
-
-        <Button
-            android:id="@+id/btnRegen"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="↻  Regen Seviyesi Degistir"
-            android:backgroundTint="#21262D"
-            android:textColor="#C9D1D9"
-            android:textSize="13sp"
-            android:layout_marginBottom="14dp"/>
-
-        <!-- Tek Pedal -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="TEK PEDAL"
-            android:textSize="11sp"
-            android:textColor="#6E7681"
-            android:letterSpacing="0.1"
-            android:layout_marginBottom="8dp"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="14dp">
-
-            <Button
-                android:id="@+id/btnPedalOn"
-                android:layout_width="0dp"
+                android:id="@+id/btnPermission"
+                android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:layout_weight="1"
-                android:text="AC"
-                android:backgroundTint="#1A7F37"
+                android:text="WRITE_SETTINGS Izni Ver"
+                android:backgroundTint="#DA3633"
                 android:textColor="#FFFFFF"
                 android:textSize="13sp"
-                android:layout_marginEnd="6dp"/>
+                android:visibility="gone"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Hazirlanıyor..."
+                android:textSize="13sp"
+                android:textColor="#8B949E"
+                android:layout_marginBottom="10dp"/>
 
             <Button
-                android:id="@+id/btnPedalOff"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:text="KAPAT"
-                android:backgroundTint="#21262D"
-                android:textColor="#8B949E"
-                android:textSize="13sp"/>
+                android:id="@+id/btnTestBinder"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Binder Test"
+                android:backgroundTint="#1F6FEB"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:id="@+id/tvBinderStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="12sp"
+                android:textColor="#7EE787"
+                android:fontFamily="monospace"
+                android:lineSpacingExtra="4dp"/>
+
         </LinearLayout>
 
-        <!-- Direksiyon Isitma -->
+        <!-- ORTA KOLON: Surus modu -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginEnd="16dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="SURUS MODU"
+                android:textSize="11sp"
+                android:textColor="#6E7681"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="6dp">
+
+                <Button
+                    android:id="@+id/btnEco"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="ECO"
+                    android:backgroundTint="#1A7F37"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="6dp"/>
+
+                <Button
+                    android:id="@+id/btnNormal"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="NORMAL"
+                    android:backgroundTint="#1F6FEB"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="10dp">
+
+                <Button
+                    android:id="@+id/btnSport"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="SPORT"
+                    android:backgroundTint="#9E3333"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="6dp"/>
+
+                <Button
+                    android:id="@+id/btnSnow"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="KAR"
+                    android:backgroundTint="#388BFD"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnDrive"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="↻  Dongusel Degistir"
+                android:backgroundTint="#21262D"
+                android:textColor="#C9D1D9"
+                android:textSize="13sp"/>
+
+        </LinearLayout>
+
+        <!-- SAG KOLON: Regen paneli giriş + Pedal + Isitma -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical">
+
+            <!-- Regen girisi -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="REGEN"
+                android:textSize="11sp"
+                android:textColor="#6E7681"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp"/>
+
+            <Button
+                android:id="@+id/btnRegenPanel"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="⚡  Regen Ayarları"
+                android:backgroundTint="#21262D"
+                android:textColor="#C9D1D9"
+                android:textSize="14sp"
+                android:layout_marginBottom="14dp"/>
+
+            <!-- Tek Pedal -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="TEK PEDAL"
+                android:textSize="11sp"
+                android:textColor="#6E7681"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="14dp">
+
+                <Button
+                    android:id="@+id/btnPedalOn"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:text="AC"
+                    android:backgroundTint="#1A7F37"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:layout_marginEnd="6dp"/>
+
+                <Button
+                    android:id="@+id/btnPedalOff"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:text="KAPAT"
+                    android:backgroundTint="#21262D"
+                    android:textColor="#8B949E"
+                    android:textSize="13sp"/>
+            </LinearLayout>
+
+            <!-- Klima paneli girişi -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ISITMA"
+                android:textSize="11sp"
+                android:textColor="#6E7681"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp"/>
+
+            <Button
+                android:id="@+id/btnClimatePanel"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="♨  Isitma Ayarlari"
+                android:backgroundTint="#21262D"
+                android:textColor="#C9D1D9"
+                android:textSize="13sp"
+                android:layout_marginBottom="14dp"/>
+
+            <!-- Sarj/Durum paneli girisi -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="DURUM"
+                android:textSize="11sp"
+                android:textColor="#6E7681"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp"/>
+
+            <Button
+                android:id="@+id/btnStatusPanel"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="📊  Sarj ve Durum"
+                android:backgroundTint="#21262D"
+                android:textColor="#C9D1D9"
+                android:textSize="13sp"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ============================================================ -->
+    <!-- REGEN PANELİ (overlay — varsayılan gizli)                    -->
+    <!-- ============================================================ -->
+    <LinearLayout
+        android:id="@+id/layoutRegenPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#0D1117"
+        android:paddingStart="40dp"
+        android:paddingEnd="40dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <!-- Başlık + Geri butonu -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="32dp">
+
+            <Button
+                android:id="@+id/btnRegenBack"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="←"
+                android:backgroundTint="#21262D"
+                android:textColor="#C9D1D9"
+                android:textSize="18sp"
+                android:layout_marginEnd="20dp"
+                android:minWidth="0dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="REGEN AYARLARI"
+                android:textSize="20sp"
+                android:textColor="#E6EDF3"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"/>
+
+            <TextView
+                android:id="@+id/tvRegenCurrent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="14sp"
+                android:textColor="#8B949E"/>
+
+        </LinearLayout>
+
+        <!-- Regen seçenekleri yan yana -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- KAPALI -->
+            <Button
+                android:id="@+id/btnRegenOff"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                android:layout_weight="1"
+                android:text="KAPALI"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <!-- DUSUK -->
+            <Button
+                android:id="@+id/btnRegenLow"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                android:layout_weight="1"
+                android:text="DUSUK"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <!-- ORTA -->
+            <Button
+                android:id="@+id/btnRegenMedium"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                android:layout_weight="1"
+                android:text="ORTA"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <!-- YUKSEK -->
+            <Button
+                android:id="@+id/btnRegenHigh"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                android:layout_weight="1"
+                android:text="YUKSEK"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <!-- ADAPTIF -->
+            <Button
+                android:id="@+id/btnRegenAdaptive"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                android:layout_weight="1"
+                android:text="ADAPTIF"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <!-- TEK PEDAL -->
+            <Button
+                android:id="@+id/btnRegenOnePedal"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                android:layout_weight="1"
+                android:text="TEK\nPEDAL"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="14sp"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ============================================================ -->
+    <!-- KLİMA PANELİ (overlay — varsayılan gizli)                   -->
+    <!-- ============================================================ -->
+    <LinearLayout
+        android:id="@+id/layoutClimatePanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#0D1117"
+        android:paddingStart="40dp"
+        android:paddingEnd="40dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <!-- Başlık + Geri butonu -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="28dp">
+
+            <Button
+                android:id="@+id/btnClimateBack"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="←"
+                android:backgroundTint="#21262D"
+                android:textColor="#C9D1D9"
+                android:textSize="18sp"
+                android:layout_marginEnd="20dp"
+                android:minWidth="0dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="ISITMA AYARLARI"
+                android:textSize="20sp"
+                android:textColor="#E6EDF3"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"/>
+
+        </LinearLayout>
+
+        <!-- DİREKSİYON ISITMA -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="DIREKSIYON"
+            android:text="DİREKSİYON ISITMA"
             android:textSize="11sp"
             android:textColor="#6E7681"
             android:letterSpacing="0.1"
             android:layout_marginBottom="8dp"/>
 
-        <Button
-            android:id="@+id/btnHeatOn"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="♨  Isitmayi Ac"
-            android:backgroundTint="#9E3333"
-            android:textColor="#FFFFFF"
-            android:textSize="13sp"/>
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="20dp">
+
+            <Button
+                android:id="@+id/btnSteerOff"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="KAPALI"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnSteerL1"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="SEV. 1"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnSteerL2"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="SEV. 2"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnSteerL3"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="SEV. 3"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
+
+        <!-- SOL KOLTUK ISITMA -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SOL KOLTUK"
+            android:textSize="11sp"
+            android:textColor="#6E7681"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="20dp">
+
+            <Button
+                android:id="@+id/btnSeatLOff"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="KAPALI"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnSeatLL1"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="SEV. 1"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnSeatLL2"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="SEV. 2"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnSeatLL3"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="SEV. 3"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
+
+        <!-- SAĞ KOLTUK ISITMA -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SAG KOLTUK"
+            android:textSize="11sp"
+            android:textColor="#6E7681"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnSeatROff"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="KAPALI"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnSeatRL1"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="SEV. 1"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnSeatRL2"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="SEV. 2"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnSeatRL3"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="SEV. 3"
+                android:backgroundTint="#21262D"
+                android:textColor="#8B949E"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 
-</LinearLayout>
+    <!-- ============================================================ -->
+    <!-- SARJ / DURUM PANELİ (overlay)                               -->
+    <!-- ============================================================ -->
+    <LinearLayout
+        android:id="@+id/layoutStatusPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#0D1117"
+        android:paddingStart="40dp"
+        android:paddingEnd="40dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:visibility="gone">
+
+        <!-- Başlık + Geri + Yenile -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp">
+
+            <Button
+                android:id="@+id/btnStatusBack"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:text="←"
+                android:backgroundTint="#21262D"
+                android:textColor="#C9D1D9"
+                android:textSize="18sp"
+                android:layout_marginEnd="16dp"
+                android:minWidth="0dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="SARJ VE ARAÇ DURUMU"
+                android:textSize="18sp"
+                android:textColor="#E6EDF3"
+                android:textStyle="bold"
+                android:letterSpacing="0.06"/>
+
+            <Button
+                android:id="@+id/btnStatusRefresh"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:text="↻ Yenile"
+                android:backgroundTint="#1F6FEB"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:minWidth="0dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnStatusAutoRefresh"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:text="⏱ Oto"
+                android:backgroundTint="#21262D"
+                android:textColor="#C9D1D9"
+                android:textSize="13sp"
+                android:minWidth="0dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"/>
+
+        </LinearLayout>
+
+        <!-- Üst satır: SOC + Menzil + Hız -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <!-- SOC -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="#161B22"
+                android:padding="12dp"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SOC"
+                    android:textSize="10sp"
+                    android:textColor="#6E7681"
+                    android:letterSpacing="0.1"/>
+
+                <TextView
+                    android:id="@+id/tvSoc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--"
+                    android:textSize="28sp"
+                    android:textColor="#7EE787"
+                    android:textStyle="bold"
+                    android:fontFamily="monospace"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="%"
+                    android:textSize="11sp"
+                    android:textColor="#6E7681"/>
+
+            </LinearLayout>
+
+            <!-- Menzil -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="#161B22"
+                android:padding="12dp"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MENZİL"
+                    android:textSize="10sp"
+                    android:textColor="#6E7681"
+                    android:letterSpacing="0.1"/>
+
+                <TextView
+                    android:id="@+id/tvRange"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--"
+                    android:textSize="28sp"
+                    android:textColor="#58A6FF"
+                    android:textStyle="bold"
+                    android:fontFamily="monospace"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="km"
+                    android:textSize="11sp"
+                    android:textColor="#6E7681"/>
+
+            </LinearLayout>
+
+            <!-- Hız -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="#161B22"
+                android:padding="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="HIZ"
+                    android:textSize="10sp"
+                    android:textColor="#6E7681"
+                    android:letterSpacing="0.1"/>
+
+                <TextView
+                    android:id="@+id/tvSpeed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--"
+                    android:textSize="28sp"
+                    android:textColor="#E6EDF3"
+                    android:textStyle="bold"
+                    android:fontFamily="monospace"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="km/h"
+                    android:textSize="11sp"
+                    android:textColor="#6E7681"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Tablo: AC / DC -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Sol: AC -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="#161B22"
+                android:padding="14dp"
+                android:layout_marginEnd="8dp">
+
+                <!-- Başlık -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="AC  (Alternatif Akım)"
+                    android:textSize="11sp"
+                    android:textColor="#6E7681"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="10dp"/>
+
+                <!-- Satır: V -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Voltaj"
+                        android:textSize="12sp"
+                        android:textColor="#8B949E"/>
+
+                    <TextView
+                        android:id="@+id/tvAcVolt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="-- V"
+                        android:textSize="14sp"
+                        android:textColor="#E6EDF3"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace"/>
+
+                </LinearLayout>
+
+                <!-- Satır: A -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Akım"
+                        android:textSize="12sp"
+                        android:textColor="#8B949E"/>
+
+                    <TextView
+                        android:id="@+id/tvAcAmp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="-- A"
+                        android:textSize="14sp"
+                        android:textColor="#E6EDF3"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace"/>
+
+                </LinearLayout>
+
+                <!-- Satır: kW -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Güç"
+                        android:textSize="12sp"
+                        android:textColor="#8B949E"/>
+
+                    <TextView
+                        android:id="@+id/tvAcKw"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="-- kW"
+                        android:textSize="14sp"
+                        android:textColor="#FFA657"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Sağ: DC -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:orientation="vertical"
+                android:background="#161B22"
+                android:padding="14dp">
+
+                <!-- Başlık satırı: boş | Beklenen | Gerçek -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="DC  (Doğru Akım)"
+                        android:textSize="11sp"
+                        android:textColor="#6E7681"
+                        android:letterSpacing="0.08"/>
+
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="Beklenen"
+                        android:textSize="10sp"
+                        android:textColor="#6E7681"
+                        android:gravity="end"/>
+
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="Gerçek"
+                        android:textSize="10sp"
+                        android:textColor="#6E7681"
+                        android:gravity="end"/>
+
+                </LinearLayout>
+
+                <!-- Satır: V -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Voltaj"
+                        android:textSize="12sp"
+                        android:textColor="#8B949E"/>
+
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textSize="12sp"
+                        android:textColor="#6E7681"
+                        android:gravity="end"
+                        android:fontFamily="monospace"/>
+
+                    <TextView
+                        android:id="@+id/tvDcVolt"
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="-- V"
+                        android:textSize="14sp"
+                        android:textColor="#E6EDF3"
+                        android:textStyle="bold"
+                        android:gravity="end"
+                        android:fontFamily="monospace"/>
+
+                </LinearLayout>
+
+                <!-- Satır: A -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Akım"
+                        android:textSize="12sp"
+                        android:textColor="#8B949E"/>
+
+                    <TextView
+                        android:id="@+id/tvDcAmpExp"
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="-- A"
+                        android:textSize="14sp"
+                        android:textColor="#8B949E"
+                        android:gravity="end"
+                        android:fontFamily="monospace"/>
+
+                    <TextView
+                        android:id="@+id/tvDcAmpAct"
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="-- A"
+                        android:textSize="14sp"
+                        android:textColor="#E6EDF3"
+                        android:textStyle="bold"
+                        android:gravity="end"
+                        android:fontFamily="monospace"/>
+
+                </LinearLayout>
+
+                <!-- Satır: kW -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Güç"
+                        android:textSize="12sp"
+                        android:textColor="#8B949E"/>
+
+                    <TextView
+                        android:id="@+id/tvDcKwExp"
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="-- kW"
+                        android:textSize="14sp"
+                        android:textColor="#8B949E"
+                        android:gravity="end"
+                        android:fontFamily="monospace"/>
+
+                    <TextView
+                        android:id="@+id/tvDcKwAct"
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="-- kW"
+                        android:textSize="14sp"
+                        android:textColor="#FFA657"
+                        android:textStyle="bold"
+                        android:gravity="end"
+                        android:fontFamily="monospace"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>
