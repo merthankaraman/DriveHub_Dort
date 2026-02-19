@@ -1,4 +1,4 @@
-package com.example.mg4_2;
+package com.example.mg4_v3;
 
 import org.junit.Test;
 

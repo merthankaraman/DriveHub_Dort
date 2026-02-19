@@ -60,10 +60,10 @@ writeByteArray(new byte[0])  → Boş byte listesi
 ## 📁 Proje Yapısı
 
 ```
-MG4_2/
+MG4_V3/
 └── app/src/main/
     ├── AndroidManifest.xml
-    └── java/com/example/mg4_2/
+    └── java/com/example/MG4_V3/
         ├── hardware/
         │   └── MG4Hardware.java        # Binder haberleşme katmanı
         ├── model/
@@ -79,6 +79,23 @@ MG4_2/
 
 ---
 
+## ⚡ Hızlı Başlangıç (Yeni Kullanıcı)
+
+Projeyi ilk kez kuracaksan sırasıyla şunları yapman gerekiyor:
+
+1. **Android Studio** kur (Meerkat 2025.1.1+) → [developer.android.com/studio](https://developer.android.com/studio)
+2. Android Studio'da **Android SDK** + **Build Tools** kur (SDK Manager'dan)
+3. **ADB**'yi PATH'e ekle (Android Studio kurulumunda genellikle otomatik eklenir)
+4. Projeyi klonla veya ZIP olarak indir
+5. Android Studio'da projeyi aç → **Build > Build APK**
+6. Aracı USB ile bilgisayara bağla, `adb devices` ile bağlantıyı doğrula
+7. `tools/sign_and_install.bat` dosyasını çift tıkla → imzalar ve araca yükler
+8. Uygulamayı araçta aç → **WRITE_SETTINGS** iznini ver
+
+> Script (`sign_and_install.bat`) platform key dosyalarını otomatik bulur, SDK'yı otomatik bulur, taşınabilirdir — bilgisayara özel bir ayar gerektirmez.
+
+---
+
 ## 🚀 Kurulum
 
 ### Gereksinimler
@@ -87,7 +104,7 @@ MG4_2/
 - JDK — Android Studio ile birlikte gelir (`jbr/` klasörü)
 - ADB bağlantısı (USB veya Wi-Fi)
 - MG4 EH32 aracı
-- Platform key dosyaları: `platform.pk8`, `platform.x509.pem` (proje kökünde mevcut)
+- Platform key dosyaları: `platform.pk8`, `platform.x509.pem` (`tools/` klasöründe mevcut)
 
 ---
 
@@ -129,7 +146,7 @@ Proje kökündeki `tools/sign_and_install.bat` dosyasını **çift tıklayarak**
 Script otomatik olarak şunları yapar:
 1. `app-debug.apk` dosyasını `platform.pk8` + `platform.x509.pem` ile imzalar
 2. Çıktıyı `app-debug-signed.apk` olarak kaydeder
-3. ADB ile araçtaki eski sürümü kaldırır (`adb uninstall com.example.mg4_2`)
+3. ADB ile araçtaki eski sürümü kaldırır (`adb uninstall com.example.mg4_v3`)
 4. Yeni imzalı APK'yı yükler (`adb install app-debug-signed.apk`)
 
 **Manuel yapmak istersen (script yerine):**
@@ -141,7 +158,7 @@ java -jar apksigner.jar sign ^
     app-debug.apk
 
 # 2. Eski sürümü kaldır (şifre değişikliği varsa zorunlu)
-adb uninstall com.example.mg4_2
+adb uninstall com.example.mg4_v3
 
 # 3. Yükle
 adb install app-debug-signed.apk
@@ -161,7 +178,7 @@ key'iyle imzalanmalıdır. Aksi hâlde `ServiceManager.getService()` `null` dön
 Platform key bilgileri:
 - Seri: `b3998086d056cffa`
 - SHA-1: `27:19:6E:38:6B:87:5E:76:AD:F7:00:E7:EA:84:E4:C6:EE:E3:3D:FA`
-- Keystore: `platform.p12` (şifre: `android`)
+- Keystore: `tools/platform.p12` (şifre: `android`)
 
 ---
 

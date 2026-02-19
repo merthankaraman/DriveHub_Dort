@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MG4_2"
+rootProject.name = "MG4_V3"
 include ':app'

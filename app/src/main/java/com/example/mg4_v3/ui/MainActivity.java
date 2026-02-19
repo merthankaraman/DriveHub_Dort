@@ -1,4 +1,4 @@
-package com.example.mg4_2.ui;
+package com.example.mg4_v3.ui;
 
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -8,11 +8,11 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.mg4_2.R;
-import com.example.mg4_2.hardware.MG4Hardware;
-import com.example.mg4_2.model.DriveMode;
-import com.example.mg4_2.model.RegenLevel;
-import com.example.mg4_2.service.MG4ControlService;
+import com.example.mg4_v3.R;
+import com.example.mg4_v3.hardware.MG4Hardware;
+import com.example.mg4_v3.model.DriveMode;
+import com.example.mg4_v3.model.RegenLevel;
+import com.example.mg4_v3.service.MG4ControlService;
 
 public class MainActivity extends AppCompatActivity {
 

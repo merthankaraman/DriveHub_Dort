@@ -16,8 +16,8 @@ set SCRIPT_DIR=%~dp0
 set PROJECT_DIR=%SCRIPT_DIR%..
 set APK_IN=%PROJECT_DIR%\app\build\outputs\apk\debug\app-debug.apk
 set APK_OUT=%PROJECT_DIR%\app\build\outputs\apk\debug\app-debug-signed.apk
-set PLATFORM_PK8=%PROJECT_DIR%\platform.pk8
-set PLATFORM_PEM=%PROJECT_DIR%\platform.x509.pem
+set PLATFORM_PK8=%SCRIPT_DIR%platform.pk8
+set PLATFORM_PEM=%SCRIPT_DIR%platform.x509.pem
 
 :: apksigner.jar yolunu otomatik bul (en yüksek build-tools sürümü)
 set APKSIGNER_JAR=
@@ -90,7 +90,7 @@ if errorlevel 1 (
 :: -------- Yükle --------
 echo [2/2] Araca yukleniyor...
 echo        Once eski surum kaldiriliyor...
-adb uninstall com.example.mg4_2 >nul 2>&1
+adb uninstall com.example.mg4_v3 >nul 2>&1
 adb install "%APK_OUT%"
 
 if errorlevel 1 (

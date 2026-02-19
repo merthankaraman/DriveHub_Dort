@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace 'com.example.mg4_2'
+    namespace 'com.example.mg4_v3'
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -11,7 +11,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.mg4_2"
+        applicationId "com.example.mg4_v3"
         minSdk 28
         targetSdk 36
         versionCode 1
