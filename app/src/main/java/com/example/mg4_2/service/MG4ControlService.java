@@ -53,13 +53,14 @@ public class MG4ControlService extends Service {
     private long mVolUpDownTime   = 0L;
     private long mVolDownDownTime = 0L;
 
-    // Regen döngüsü adımları — araçta doğrulanan değerler (log 1902260053):
-    //   Düşük=0, Orta=1, Yüksek=2, Adaptif=3, Tek Pedal=onePedal(0x2140a193)=1
-    // -1 = Tek Pedal adımı (regen property değil, onePedal property kullanılır)
-    // NOT: Araç Adaptif modda regen=6 da dönebiliyor (Tek Pedal'dan çıkınca) — findNextStep'te normalize ediliyor
-    private static final int[] REGEN_CYCLE_VALUES = { 0, 1, 2, 3, -1 }; // -1 = Tek Pedal
-    private static final String[] REGEN_CYCLE_LABELS = { "Düşük", "Orta", "Yüksek", "Adaptif", "Tek Pedal" };
-    private int mRegenStep = 2; // Başlangıç: Yüksek (index 2)
+    // ★ Tuşu uzun basış eşiği (ms) — kullanıcı ayarlayabilir
+    private static final long STAR_LONG_PRESS_MS = 2000;
+    private long mStarDownTime = 0L; // down=true anındaki timestamp
+
+    // Regen döngüsü — YORUM SATIRINDA (aracın kendi özelliği kullanılıyor)
+    // private static final int[] REGEN_CYCLE_VALUES = { 0, 1, 2, 3, -1 };
+    // private static final String[] REGEN_CYCLE_LABELS = { "Düşük", "Orta", "Yüksek", "Adaptif", "Tek Pedal" };
+    // private int mRegenStep = 2;
 
     private DriveMode mCurrentDriveMode = DriveMode.NORMAL;
     private long      mLastStarKeyTime  = 0L;
@@ -141,14 +142,16 @@ public class MG4ControlService extends Service {
                         + " longpress=" + isLong
                         + " label=" + keycodeLabel(keyCode));
 
-                if (!isDown) return;
-
                 if (keyCode == KEYCODE_STAR) {
-                    onStarKey();
-                } else if (keyCode == KEYCODE_VOLUME_UP) {
-                    onVolumeUp();
-                } else if (keyCode == KEYCODE_VOLUME_DOWN) {
-                    onVolumeDown();
+                    // ★ tuşu: hem down hem up olayını işle (basış süresi ölçümü için)
+                    onStarKey(isDown);
+                } else {
+                    if (!isDown) return; // Diğer tuşlar için sadece down olayına bak
+                    if (keyCode == KEYCODE_VOLUME_UP) {
+                        onVolumeUp();
+                    } else if (keyCode == KEYCODE_VOLUME_DOWN) {
+                        onVolumeDown();
+                    }
                 }
             }
         };
@@ -157,89 +160,72 @@ public class MG4ControlService extends Service {
         ContextCompat.registerReceiver(this, mHardkeyReceiver, filter,
                 ContextCompat.RECEIVER_EXPORTED);
         Log.i(TAG, "Hardkey receiver kayıt edildi — action=" + HARDKEY_ACTION);
-        Log.i(TAG, "  ★ tuşu (keycode=17)      → regen döngüsü");
+        Log.i(TAG, "  ★ kısa (keycode=17)      → Tek Pedal açıksa KAPAT");
+        Log.i(TAG, "  ★ uzun ≥2sn (keycode=17) → Tek Pedal AÇ");
         Log.i(TAG, "  Vol↑+Vol↓ combo (300ms)  → müzik pause/play");
     }
 
     // -------------------------------------------------------------------------
-    // ★ Tuşu — regen döngüsü (SystemUI-aware)
+    // ★ Tuşu — basış süresi ile kısa/uzun ayırt et
+    //   Uzun basış (≥2sn) → Tek Pedal AÇ
+    //   Kısa basış         → Tek Pedal açıksa KAPAT, kapalıysa hiçbir şey yapma
+    //                        (regen döngüsü aracın kendi özelliğine bırakıldı)
     // -------------------------------------------------------------------------
 
-    private void onStarKey() {
+    private void onStarKey(boolean isDown) {
         long now = System.currentTimeMillis();
-        if (now - mLastStarKeyTime < DEBOUNCE_MS) {
-            Log.d(TAG, "  ★ debounce atlandı");
-            return;
-        }
-        mLastStarKeyTime = now;
-        Log.i(TAG, "★ tuşu → regen (SystemUI-aware: 150ms sonra mevcut değer okunacak)");
 
-        // SystemUI aynı tuşla kendi regen döngüsünü işletti.
-        // 150ms bekleyip araçtaki GERÇEK mevcut değeri okuyoruz,
-        // sonra bir adım daha ileri yazıyoruz — böylece net 1 adım ilerlemiş olur.
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            int current = MG4Hardware.getRegenLevel();   // -1 = okunamadı
-            int onePedal = MG4Hardware.getOnePedal();    // 0=kapalı, 1=açık, -1=okunamadı
-            Log.i(TAG, "  [150ms] current regen=" + current + " onePedal=" + onePedal);
+        if (isDown) {
+            // Tuşa basıldı — zamanı kaydet, debounce uygula
+            if (now - mLastStarKeyTime < DEBOUNCE_MS) {
+                Log.d(TAG, "  ★ DOWN debounce atlandı");
+                mStarDownTime = 0L; // debounce'da down'ı geçersiz say
+                return;
+            }
+            mStarDownTime = now;
+            Log.i(TAG, "★ DOWN — süre ölçümü başladı");
+        } else {
+            // Tuş bırakıldı — süreyi hesapla
+            if (mStarDownTime == 0L) {
+                Log.d(TAG, "  ★ UP — geçersiz down (debounce atlandı), yoksayılıyor");
+                return;
+            }
+            long pressDuration = now - mStarDownTime;
+            mStarDownTime = 0L;
+            mLastStarKeyTime = now;
+            Log.i(TAG, "★ UP — basış süresi=" + pressDuration + "ms");
 
-            if (onePedal == 1) {
-                // Zaten Tek Pedal'dayız → bir sonraki adım Düşük regen
-                Log.i(TAG, "  → Tek Pedal'dan çık → Düşük regen");
-                MG4Hardware.setOnePedal(false);
-                MG4Hardware.setRegenLevel(RegenLevel.LOW);
-                mRegenStep = 0; // Düşük
-                updateNotification("Regen: Düşük");
-            } else if (current < 0) {
-                // Okunamadı — iç sayacı ilerlet (eski davranış)
-                Log.w(TAG, "  → Değer okunamadı, iç sayaç ile devam");
-                cycleRegenInternal();
-            } else {
-                // Araçtaki değeri biliyoruz — bir sonraki adıma geç
-                int nextStep = findNextStep(current);
-                int nextValue = REGEN_CYCLE_VALUES[nextStep];
-                String nextLabel = REGEN_CYCLE_LABELS[nextStep];
-                mRegenStep = nextStep;
-                Log.i(TAG, "  → araç regen=" + current + " → nextStep=" + nextStep
-                        + " label=" + nextLabel + " value=" + nextValue);
-
-                if (nextValue == -1) {
-                    // Tek Pedal
+            if (pressDuration >= STAR_LONG_PRESS_MS) {
+                // Uzun basış → Tek Pedal AÇ
+                Log.i(TAG, "  → UZUN basış → Tek Pedal AÇIK");
+                MG4Hardware.setOnePedal(true);
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                    Log.i(TAG, "  → Tek Pedal AÇIK (takviye, 250ms)");
                     MG4Hardware.setOnePedal(true);
-                    Log.i(TAG, "  → Tek Pedal AÇIK (ilk set)");
-                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                        Log.i(TAG, "  → Tek Pedal AÇIK (takviye, 250ms)");
-                        MG4Hardware.setOnePedal(true);
-                    }, 250);
-                } else {
+                }, 250);
+                updateNotification("Tek Pedal: Açık");
+            } else {
+                // Kısa basış → Tek Pedal açıksa kapat
+                Log.i(TAG, "  → KISA basış → onePedal kontrol ediliyor");
+                int onePedal = MG4Hardware.getOnePedal();
+                Log.i(TAG, "  → onePedal=" + onePedal);
+                if (onePedal == 1) {
+                    Log.i(TAG, "  → Tek Pedal KAPATILIYOR");
                     MG4Hardware.setOnePedal(false);
-                    MG4Hardware.setRegenLevel(RegenLevel.fromValue(nextValue));
+                    updateNotification("Tek Pedal: Kapalı");
+                } else {
+                    // Tek pedal zaten kapalı — regen döngüsü aracın kendisinde
+                    Log.i(TAG, "  → Tek Pedal zaten kapalı, regen araçta");
                 }
-                updateNotification("Regen: " + nextLabel);
             }
-        }, 150);
+        }
     }
 
-    /**
-     * Araçtaki mevcut regen değerine (0-3) göre döngüdeki bir sonraki adımı bulur.
-     * REGEN_CYCLE_VALUES = { 0, 1, 2, 3, -1 }
-     * current=3 (Adaptif) → nextStep=4 (Tek Pedal, value=-1)
-     */
-    private int findNextStep(int currentValue) {
-        // Araç bazı durumlarda Adaptif için 6 dönebiliyor (Tek Pedal'dan çıkınca) — 3'e normalize et
-        if (currentValue == 6) {
-            Log.d(TAG, "  findNextStep: regen=6 → Adaptif(3) olarak normalize edildi");
-            currentValue = 3;
-        }
-        // Mevcut değerin döngüdeki indeksini bul
-        for (int i = 0; i < REGEN_CYCLE_VALUES.length; i++) {
-            if (REGEN_CYCLE_VALUES[i] == currentValue) {
-                return (i + 1) % REGEN_CYCLE_VALUES.length;
-            }
-        }
-        // Bulunamazsa mevcut iç sayacı ilerlet
-        Log.w(TAG, "  findNextStep: bilinmeyen regen=" + currentValue + " → iç sayaç kullanılıyor");
-        return (mRegenStep + 1) % REGEN_CYCLE_VALUES.length;
-    }
+    // findNextStep ve cycleRegenInternal — regen döngüsü aracın kendi özelliğine bırakıldı
+    // Gerekirse yorum kaldırılabilir
+    //
+    // private int findNextStep(int currentValue) { ... }
+    // private void cycleRegenInternal() { ... }
 
     // -------------------------------------------------------------------------
     // Volume tuşları
@@ -342,9 +328,7 @@ public class MG4ControlService extends Service {
                 mCurrentDriveMode = dm;
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
                 break;
-            case "REGEN_CYCLE":
-                cycleRegenInternal();
-                break;
+            // case "REGEN_CYCLE": // devre dışı — regen döngüsü aracın kendi özelliğinde
             case "PEDAL_ON":
                 MG4Hardware.setOnePedal(true);
                 updateNotification("OPD: Açık");
@@ -364,30 +348,7 @@ public class MG4ControlService extends Service {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Regen döngüsü — iç sayaç tabanlı (fallback / ekran butonu)
-    // -------------------------------------------------------------------------
-
-    private void cycleRegenInternal() {
-        mRegenStep = (mRegenStep + 1) % REGEN_CYCLE_VALUES.length;
-        int value  = REGEN_CYCLE_VALUES[mRegenStep];
-        String label = REGEN_CYCLE_LABELS[mRegenStep];
-        Log.i(TAG, "cycleRegenInternal → step=" + mRegenStep + " label=" + label + " value=" + value);
-
-        if (value == -1) {
-            MG4Hardware.setOnePedal(true);
-            Log.i(TAG, "  → Tek Pedal AÇIK (ilk set)");
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                Log.i(TAG, "  → Tek Pedal AÇIK (takviye set, 250ms sonra)");
-                MG4Hardware.setOnePedal(true);
-            }, 250);
-        } else {
-            MG4Hardware.setOnePedal(false);
-            MG4Hardware.setRegenLevel(RegenLevel.fromValue(value));
-            Log.i(TAG, "  → onePedal KAPALI, regen=" + label);
-        }
-        updateNotification("Regen: " + label);
-    }
+    // cycleRegenInternal — devre dışı (regen döngüsü aracın kendi özelliğine bırakıldı)
 
     // -------------------------------------------------------------------------
     // Yardımcılar
