@@ -54,7 +54,7 @@ public class MG4ControlService extends Service {
     private long mVolDownDownTime = 0L;
 
     // ★ Tuşu uzun basış eşiği (ms) — kullanıcı ayarlayabilir
-    private static final long STAR_LONG_PRESS_MS = 2000;
+    private static final long STAR_LONG_PRESS_MS = 1500;
     private long mStarDownTime = 0L; // down=true anındaki timestamp
 
     // Regen döngüsü — YORUM SATIRINDA (aracın kendi özelliği kullanılıyor)

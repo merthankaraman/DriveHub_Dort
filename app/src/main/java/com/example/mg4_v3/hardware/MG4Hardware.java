@@ -398,26 +398,13 @@ public class MG4Hardware {
 
     public static boolean setRegenLevel(RegenLevel level) {
         Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
-        if (level == RegenLevel.OFF) {
-            // OFF: hem CPM hem Binder ile regen brake switch'i kapat
-            // CPM: PROP_REGEN_LEVEL değeri 0 araçta "Düşük" sayılabilir,
-            // asıl kapatma TX_SET_REGEN_BRAKE_SWITCH=159 ile yapılıyor
-            //setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, 0);
-            setIntPropertyCPM(PROP_ONE_PEDAL, AREA_GLOBAL, 0);   // Tek pedalı da kapat
-            boolean ok = setIntPropertyCPM(PROP_REGEN_SWITCH, AREA_GLOBAL, 0);
-            if (!ok) {
-                ok = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 0);
-            }
-            Log.i(TAG, "  Regen OFF → brake switch TX=159 value=0 → " + ok);
-            return ok;
-        }
-        // ON seviyeler: önce switch'i aç (her iki katmanda da)
+
         binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 1);
         // Sonra seviyeyi yaz
         boolean ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
-        if (!ok) {
+        /*if (!ok) {
             ok = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_LEVEL, level.value);
-        }
+        }*/
         return ok;
     }
 
@@ -466,44 +453,39 @@ public class MG4Hardware {
      */
     public static boolean setHvacLevelWithToggle(int propId, int area, int targetLevel) {
         long startTime = System.currentTimeMillis();
-        long timeoutMs = 5000; // Toplam 5 saniye içinde bitmezse pes et (Güvenlik freni)
+        long timeoutMs = 7000; // Döngü yavaşladığı için süreyi biraz esnettik
         long lastStepTime = 0;
-        long stepInterval = 300; // Senin istediğin 300ms gecikme
-
-        int[] sequence = {0, 3, 2, 1}; // MG4 Ters Döngüsü
+        long stepInterval = 500; // Tıklar arası 500ms (MG4 ECU'su için en güvenli aralık)
 
         while (System.currentTimeMillis() - startTime < timeoutMs) {
             int current = getIntPropertyHvac(propId, area);
 
-            // 1. Durum Kontrolü
+            // 1. Hedefe ulaşıldı mı?
             if (current == targetLevel) {
-                Log.i(TAG, "Hedefe ulaşıldı: " + targetLevel);
+                Log.i(TAG, "HVAC Hedefe ulaşıldı: " + targetLevel);
                 return true;
             }
 
-            // 2. Okuma Hatası Kontrolü (Zaman bazlı bekleme)
-            if (current < 0) {
-                Log.w(TAG, "Okuma başarısız, bekleniyor...");
-                // Burada CPU'yu %100 yormamak için çok küçük bir mola (10ms) iyidir
+            // 2. Tık gönderme zamanı geldi mi? (500ms bekleme)
+            long now = System.currentTimeMillis();
+            if (now - lastStepTime >= stepInterval) {
+                Log.i(TAG, "HVAC Tık gönderiliyor... Mevcut: " + current);
+                setIntPropertyHvac(propId, area, 1);
+                lastStepTime = now;
+
+                // Tık gönderdikten sonra arabanın beynine 200ms mola verelim
+                try { Thread.sleep(200); } catch (Exception ignored) {}
                 continue;
             }
 
-            // 3. Basma Zamanı Geldi mi? (300ms kontrolü)
-            long now = System.currentTimeMillis();
-            if (now - lastStepTime >= stepInterval) {
-                Log.i(TAG, "Tık gönderiliyor... Mevcut: " + current);
-                setIntPropertyHvac(propId, area, 1);
-                lastStepTime = now; // Son basış zamanını güncelle
-            }
-
-            // İşlemciyi (CPU) boşuna yormamak için çok kısa bir "nefes" payı
-            try { Thread.sleep(20); } catch (InterruptedException ignored) {}
+            // 3. KRİTİK: Okuma sıklığını azaltıyoruz (Poll Rate)
+            // Saniyede 4 kez sormak yeterli. İşlemciyi ve araba hattını yormaz.
+            try { Thread.sleep(250); } catch (Exception ignored) {}
         }
 
-        Log.e(TAG, "Zaman aşımı! Hedefe ulaşılamadı.");
+        Log.e(TAG, "HVAC Zaman aşımı! prop=" + propId);
         return false;
     }
-
     /** HVAC property mevcut değerini oku */
     private static int getIntPropertyHvac(int propId, int area) {
         if (sCarHvacManager == null) return -1;
@@ -546,50 +528,51 @@ public class MG4Hardware {
 
     /** SOC — % (0.0–100.0) */
     public static float getSoc() {
-        float v = getFloatPropertyBms(PROP_SOC);
-        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_SOC, AREA_GLOBAL);
+        // CPM önce dene (BMS getGlobalProperty null döndürüyor — logda doğrulandı)
+        float v = getFloatPropertyCPM(PROP_SOC, AREA_GLOBAL);
+        if (Float.isNaN(v)) v = getFloatPropertyBms(PROP_SOC);
         return v;
     }
 
     /** Kalan menzil — km */
     public static int getRange() {
-        int v = getIntPropertyBms(PROP_RANGE);
-        if (v < 0) v = getIntPropertyCPM(PROP_RANGE, AREA_GLOBAL);
+        int v = getIntPropertyCPM(PROP_RANGE, AREA_GLOBAL);
+        if (v < 0) v = getIntPropertyBms(PROP_RANGE);
         return v;
     }
 
     /** DC batarya voltajı — V */
     public static float getDcVoltage() {
-        float v = getFloatPropertyBms(PROP_BATT_VOLT);
-        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_BATT_VOLT, AREA_GLOBAL);
+        float v = getFloatPropertyCPM(PROP_BATT_VOLT, AREA_GLOBAL);
+        if (Float.isNaN(v)) v = getFloatPropertyBms(PROP_BATT_VOLT);
         return v;
     }
 
     /** DC şarj akımı gerçek — A */
     public static float getDcCurrentActual() {
-        float v = getFloatPropertyBms(PROP_CHR_AMP_ACT);
-        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_CHR_AMP_ACT, AREA_GLOBAL);
+        float v = getFloatPropertyCPM(PROP_CHR_AMP_ACT, AREA_GLOBAL);
+        if (Float.isNaN(v)) v = getFloatPropertyBms(PROP_CHR_AMP_ACT);
         return v;
     }
 
     /** DC şarj akımı beklenen — A */
     public static float getDcCurrentExpected() {
-        float v = getFloatPropertyBms(PROP_CHR_AMP_EXP);
-        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_CHR_AMP_EXP, AREA_GLOBAL);
+        float v = getFloatPropertyCPM(PROP_CHR_AMP_EXP, AREA_GLOBAL);
+        if (Float.isNaN(v)) v = getFloatPropertyBms(PROP_CHR_AMP_EXP);
         return v;
     }
 
     /** AC giriş akımı — A */
     public static float getAcCurrent() {
-        float v = getFloatPropertyBms(PROP_AC_AMP);
-        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_AC_AMP, AREA_GLOBAL);
+        float v = getFloatPropertyCPM(PROP_AC_AMP, AREA_GLOBAL);
+        if (Float.isNaN(v)) v = getFloatPropertyBms(PROP_AC_AMP);
         return v;
     }
 
     /** AC giriş voltajı — V */
     public static float getAcVoltage() {
-        float v = getFloatPropertyBms(PROP_AC_VOLT);
-        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_AC_VOLT, AREA_GLOBAL);
+        float v = getFloatPropertyCPM(PROP_AC_VOLT, AREA_GLOBAL);
+        if (Float.isNaN(v)) v = getFloatPropertyBms(PROP_AC_VOLT);
         return v;
     }
 
@@ -704,96 +687,202 @@ public class MG4Hardware {
             float result = (Float) getValue.invoke(cpv);
             Log.i(TAG, "  CPM getFloat 0x" + Integer.toHexString(propId) + " → " + result + " ✓");
             return result;
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            Log.w(TAG, "  CPM getFloat 0x" + Integer.toHexString(propId)
+                    + " ITE: " + (cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : "null"));
+            return Float.NaN;
         } catch (Exception e) {
-            Log.d(TAG, "  CPM getFloat 0x" + Integer.toHexString(propId)
-                    + " HATA: " + e.getClass().getSimpleName());
+            Log.w(TAG, "  CPM getFloat 0x" + Integer.toHexString(propId)
+                    + " HATA: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             return Float.NaN;
         }
     }
 
-    /** CarBMSManager üzerinden float okuma — birden fazla metod adı denenir */
+    /**
+     * CarBMSManager üzerinden float okuma.
+     * BMS metodları: getGlobalProperty(Class,int), getProperty(Class,int)
+     * Sorun: CarPropertyValue.getValue() → null (prop kayıtlı ama ilk okumada boş geliyor)
+     * Çözüm: getGlobalProperty(int) — Class olmadan, tek int parametre
+     */
     private static float getFloatPropertyBms(int propId) {
         if (sCarBmsManager == null) {
             Log.w(TAG, "  BMS getFloat 0x" + Integer.toHexString(propId) + " — sCarBmsManager NULL");
             return Float.NaN;
         }
-        // Olası metod adları: getGlobalProperty, getFloatProperty, getProperty
-        String[] methods = { "getGlobalProperty", "getFloatProperty", "getProperty" };
-        for (String methodName : methods) {
-            try {
-                java.lang.reflect.Method m = sCarBmsManager.getClass()
-                        .getMethod(methodName, Class.class, int.class);
-                Object result = m.invoke(sCarBmsManager, Float.class, propId);
-                if (result == null) continue;
-                float val = (Float) result;
-                Log.i(TAG, "  BMS getFloat(" + methodName + ") 0x"
-                        + Integer.toHexString(propId) + " → " + val + " ✓");
-                return val;
-            } catch (NoSuchMethodException ignored) {
-            } catch (java.lang.reflect.InvocationTargetException e) {
-                Throwable cause = e.getCause();
-                Log.w(TAG, "  BMS getFloat(" + methodName + ") 0x" + Integer.toHexString(propId)
-                        + " ITE: " + (cause != null ? cause.getMessage() : "null"));
-            } catch (Exception e) {
-                Log.w(TAG, "  BMS getFloat(" + methodName + ") 0x" + Integer.toHexString(propId)
-                        + " HATA: " + e.getClass().getSimpleName() + ": " + e.getMessage());
-            }
-        }
-        // İkinci deneme: sadece int propId alan metodlar
+
+        // Yöntem A: getGlobalProperty(int) — Class parametresi olmadan, direkt değer döner
         try {
             java.lang.reflect.Method m = sCarBmsManager.getClass()
-                    .getMethod("getFloatProperty", int.class, int.class);
-            Object result = m.invoke(sCarBmsManager, propId, AREA_GLOBAL);
-            if (result != null) {
+                    .getMethod("getGlobalProperty", int.class);
+            Object result = m.invoke(sCarBmsManager, propId);
+            if (result instanceof Float) {
                 float val = (Float) result;
-                Log.i(TAG, "  BMS getFloat(getFloatProperty,int,int) 0x"
-                        + Integer.toHexString(propId) + " → " + val + " ✓");
+                Log.i(TAG, "  BMS getFloat(GGP_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
                 return val;
             }
-        } catch (Exception ignored) {}
-        Log.w(TAG, "  BMS getFloat 0x" + Integer.toHexString(propId)
-                + " — tüm metodlar başarısız");
+            if (result instanceof Number) {
+                float val = ((Number) result).floatValue();
+                Log.i(TAG, "  BMS getFloat(GGP_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓ (Number)");
+                return val;
+            }
+            if (result != null) {
+                Log.w(TAG, "  BMS getFloat(GGP_int) 0x" + Integer.toHexString(propId)
+                        + " beklenmedik tip: " + result.getClass().getName() + " = " + result);
+            }
+        } catch (NoSuchMethodException ignored) {
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            Log.w(TAG, "  BMS getFloat(GGP_int) ITE: " + (cause != null ? cause.getMessage() : "null"));
+        } catch (Exception e) {
+            Log.w(TAG, "  BMS getFloat(GGP_int) hata: " + e.getMessage());
+        }
+
+        // Yöntem B: getProperty(int, int) — propId + area
+        try {
+            java.lang.reflect.Method m = sCarBmsManager.getClass()
+                    .getMethod("getProperty", int.class, int.class);
+            Object result = m.invoke(sCarBmsManager, propId, AREA_GLOBAL);
+            if (result instanceof Float) {
+                float val = (Float) result;
+                Log.i(TAG, "  BMS getFloat(GP_int_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
+                return val;
+            }
+            if (result instanceof Number) {
+                float val = ((Number) result).floatValue();
+                Log.i(TAG, "  BMS getFloat(GP_int_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓ (Number)");
+                return val;
+            }
+            if (result != null) {
+                Log.w(TAG, "  BMS getFloat(GP_int_int) beklenmedik tip: " + result.getClass().getName() + " = " + result);
+            }
+        } catch (NoSuchMethodException ignored) {
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            Log.w(TAG, "  BMS getFloat(GP_int_int) ITE: " + (cause != null ? cause.getMessage() : "null"));
+        } catch (Exception e) {
+            Log.w(TAG, "  BMS getFloat(GP_int_int) hata: " + e.getMessage());
+        }
+
+        // Yöntem C: getGlobalProperty(Class, int) — doğrudan T tipinde değer döner (CarPropertyValue değil!)
+        // SAIC kaynak kodu: ((Float) carBMSManager.getGlobalProperty(Float.class, propId)).floatValue()
+        try {
+            java.lang.reflect.Method m = sCarBmsManager.getClass()
+                    .getMethod("getGlobalProperty", Class.class, int.class);
+            Object result = m.invoke(sCarBmsManager, Float.class, propId);
+            if (result instanceof Float) {
+                float val = (Float) result;
+                Log.i(TAG, "  BMS getFloat(GGP_Class_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
+                return val;
+            }
+            if (result instanceof Number) {
+                float val = ((Number) result).floatValue();
+                Log.i(TAG, "  BMS getFloat(GGP_Class_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓ (Number)");
+                return val;
+            }
+            if (result != null) {
+                Log.w(TAG, "  BMS GGP(Class,int) beklenmedik tip: " + result.getClass().getName() + " = " + result);
+            } else {
+                Log.w(TAG, "  BMS GGP(Float.class, 0x" + Integer.toHexString(propId) + ") → null");
+            }
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            Log.w(TAG, "  BMS GGP ITE: " + (cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : "null"));
+        } catch (Exception e) {
+            Log.w(TAG, "  BMS GGP hata: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
+
+        Log.w(TAG, "  BMS getFloat 0x" + Integer.toHexString(propId) + " — tüm metodlar başarısız");
         return Float.NaN;
     }
 
-    /** CarBMSManager üzerinden int okuma — birden fazla metod adı denenir */
+    /** CarBMSManager üzerinden int okuma */
     private static int getIntPropertyBms(int propId) {
         if (sCarBmsManager == null) {
             Log.w(TAG, "  BMS getInt 0x" + Integer.toHexString(propId) + " — sCarBmsManager NULL");
             return -1;
         }
-        String[] methods = { "getGlobalProperty", "getIntProperty", "getProperty" };
-        for (String methodName : methods) {
-            try {
-                java.lang.reflect.Method m = sCarBmsManager.getClass()
-                        .getMethod(methodName, Class.class, int.class);
-                Object result = m.invoke(sCarBmsManager, Integer.class, propId);
-                if (result == null) continue;
-                int val = (Integer) result;
-                Log.i(TAG, "  BMS getInt(" + methodName + ") 0x"
-                        + Integer.toHexString(propId) + " → " + val + " ✓");
-                return val;
-            } catch (NoSuchMethodException ignored) {
-            } catch (java.lang.reflect.InvocationTargetException e) {
-                Throwable cause = e.getCause();
-                Log.w(TAG, "  BMS getInt(" + methodName + ") 0x" + Integer.toHexString(propId)
-                        + " ITE: " + (cause != null ? cause.getMessage() : "null"));
-            } catch (Exception e) {
-                Log.w(TAG, "  BMS getInt(" + methodName + ") 0x" + Integer.toHexString(propId)
-                        + " HATA: " + e.getClass().getSimpleName() + ": " + e.getMessage());
-            }
-        }
+
+        // Yöntem A: getGlobalProperty(int)
         try {
             java.lang.reflect.Method m = sCarBmsManager.getClass()
-                    .getMethod("getIntProperty", int.class, int.class);
-            Object result = m.invoke(sCarBmsManager, propId, AREA_GLOBAL);
-            if (result != null) {
+                    .getMethod("getGlobalProperty", int.class);
+            Object result = m.invoke(sCarBmsManager, propId);
+            if (result instanceof Integer) {
                 int val = (Integer) result;
-                Log.i(TAG, "  BMS getInt(getIntProperty,int,int) 0x"
-                        + Integer.toHexString(propId) + " → " + val + " ✓");
+                Log.i(TAG, "  BMS getInt(GGP_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
                 return val;
             }
-        } catch (Exception ignored) {}
+            if (result instanceof Number) {
+                int val = ((Number) result).intValue();
+                Log.i(TAG, "  BMS getInt(GGP_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓ (Number)");
+                return val;
+            }
+            if (result != null) {
+                Log.w(TAG, "  BMS getInt(GGP_int) beklenmedik tip: " + result.getClass().getName() + " = " + result);
+            }
+        } catch (NoSuchMethodException ignored) {
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            Log.w(TAG, "  BMS getInt(GGP_int) ITE: " + (cause != null ? cause.getMessage() : "null"));
+        } catch (Exception e) {
+            Log.w(TAG, "  BMS getInt(GGP_int) hata: " + e.getMessage());
+        }
+
+        // Yöntem B: getProperty(int, int)
+        try {
+            java.lang.reflect.Method m = sCarBmsManager.getClass()
+                    .getMethod("getProperty", int.class, int.class);
+            Object result = m.invoke(sCarBmsManager, propId, AREA_GLOBAL);
+            if (result instanceof Integer) {
+                int val = (Integer) result;
+                Log.i(TAG, "  BMS getInt(GP_int_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
+                return val;
+            }
+            if (result instanceof Number) {
+                int val = ((Number) result).intValue();
+                Log.i(TAG, "  BMS getInt(GP_int_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓ (Number)");
+                return val;
+            }
+            if (result != null) {
+                Log.w(TAG, "  BMS getInt(GP_int_int) beklenmedik tip: " + result.getClass().getName() + " = " + result);
+            }
+        } catch (NoSuchMethodException ignored) {
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            Log.w(TAG, "  BMS getInt(GP_int_int) ITE: " + (cause != null ? cause.getMessage() : "null"));
+        } catch (Exception e) {
+            Log.w(TAG, "  BMS getInt(GP_int_int) hata: " + e.getMessage());
+        }
+
+        // Yöntem C: getGlobalProperty(Class, int) — doğrudan Integer döner
+        // SAIC kaynak kodu: ((Integer) carBMSManager.getGlobalProperty(Integer.class, propId)).intValue()
+        try {
+            java.lang.reflect.Method m = sCarBmsManager.getClass()
+                    .getMethod("getGlobalProperty", Class.class, int.class);
+            Object result = m.invoke(sCarBmsManager, Integer.class, propId);
+            if (result instanceof Integer) {
+                int val = (Integer) result;
+                Log.i(TAG, "  BMS getInt(GGP_Class_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
+                return val;
+            }
+            if (result instanceof Number) {
+                int val = ((Number) result).intValue();
+                Log.i(TAG, "  BMS getInt(GGP_Class_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓ (Number)");
+                return val;
+            }
+            if (result != null) {
+                Log.w(TAG, "  BMS GGP(Integer.class) beklenmedik tip: " + result.getClass().getName());
+            } else {
+                Log.w(TAG, "  BMS GGP(Integer.class, 0x" + Integer.toHexString(propId) + ") → null");
+            }
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            Log.w(TAG, "  BMS getInt GGP ITE: " + (cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : "null"));
+        } catch (Exception e) {
+            Log.w(TAG, "  BMS getInt GGP hata: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
+
         Log.w(TAG, "  BMS getInt 0x" + Integer.toHexString(propId)
                 + " — tüm metodlar başarısız");
         return -1;
