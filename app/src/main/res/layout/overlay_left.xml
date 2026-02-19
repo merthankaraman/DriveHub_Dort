@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="#CC161B22"
+    android:paddingStart="6dp"
+    android:paddingEnd="6dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp"
+    android:gravity="center_vertical">
+
+    <!-- Direksiyon -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:layout_marginEnd="6dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DIR"
+            android:textSize="9sp"
+            android:textColor="#6E7681"
+            android:gravity="center"
+            android:layout_marginBottom="1dp"/>
+
+        <Button
+            android:id="@+id/btnOvSteer"
+            android:layout_width="52dp"
+            android:layout_height="40dp"
+            android:text="⊙"
+            android:textSize="18sp"
+            android:backgroundTint="#21262D"
+            android:textColor="#8B949E"
+            android:minWidth="0dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"/>
+
+    </LinearLayout>
+
+    <!-- Sol koltuk -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SOL"
+            android:textSize="9sp"
+            android:textColor="#6E7681"
+            android:gravity="center"
+            android:layout_marginBottom="1dp"/>
+
+        <FrameLayout
+            android:id="@+id/btnOvSeatL"
+            android:layout_width="52dp"
+            android:layout_height="40dp"
+            android:background="#21262D"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="🪑"
+                android:textSize="18sp"
+                android:gravity="center"
+                android:paddingBottom="5dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:layout_gravity="bottom"
+                android:orientation="horizontal"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:paddingBottom="3dp">
+
+                <View
+                    android:id="@+id/ovSeatLBar1"
+                    android:layout_width="0dp"
+                    android:layout_height="3dp"
+                    android:layout_weight="1"
+                    android:background="#3D2020"
+                    android:layout_marginEnd="2dp"/>
+
+                <View
+                    android:id="@+id/ovSeatLBar2"
+                    android:layout_width="0dp"
+                    android:layout_height="3dp"
+                    android:layout_weight="1"
+                    android:background="#3D2020"
+                    android:layout_marginEnd="2dp"/>
+
+                <View
+                    android:id="@+id/ovSeatLBar3"
+                    android:layout_width="0dp"
+                    android:layout_height="3dp"
+                    android:layout_weight="1"
+                    android:background="#3D2020"/>
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
