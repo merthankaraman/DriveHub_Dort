@@ -172,50 +172,48 @@ public class MG4ControlService extends Service {
     //                        (regen döngüsü aracın kendi özelliğine bırakıldı)
     // -------------------------------------------------------------------------
 
+    private volatile boolean mStarPressed = false; // Parmağın tuşta olup olmadığını tutar
+
     private void onStarKey(boolean isDown) {
-        long now = System.currentTimeMillis();
-
         if (isDown) {
-            // Tuşa basıldı — zamanı kaydet, debounce uygula
-            if (now - mLastStarKeyTime < DEBOUNCE_MS) {
-                Log.d(TAG, "  ★ DOWN debounce atlandı");
-                mStarDownTime = 0L; // debounce'da down'ı geçersiz say
-                return;
-            }
-            mStarDownTime = now;
-            Log.i(TAG, "★ DOWN — süre ölçümü başladı");
-        } else {
-            // Tuş bırakıldı — süreyi hesapla
-            if (mStarDownTime == 0L) {
-                Log.d(TAG, "  ★ UP — geçersiz down (debounce atlandı), yoksayılıyor");
-                return;
-            }
-            long pressDuration = now - mStarDownTime;
-            mStarDownTime = 0L;
-            mLastStarKeyTime = now;
-            Log.i(TAG, "★ UP — basış süresi=" + pressDuration + "ms");
+            // --- TUŞA BASILDI ---
+            mStarPressed = true;
 
-            if (pressDuration >= STAR_LONG_PRESS_MS) {
-                // Uzun basış → Tek Pedal AÇ
-                Log.i(TAG, "  → UZUN basış → Tek Pedal AÇIK");
-                MG4Hardware.setOnePedal(true);
-                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                    Log.i(TAG, "  → Tek Pedal AÇIK (takviye, 250ms)");
-                    MG4Hardware.setOnePedal(true);
-                }, 250);
-                updateNotification("Tek Pedal: Açık");
-            } else {
-                // Kısa basış → Tek Pedal açıksa kapat
-                Log.i(TAG, "  → KISA basış → onePedal kontrol ediliyor");
-                int onePedal = MG4Hardware.getOnePedal();
-                Log.i(TAG, "  → onePedal=" + onePedal);
-                if (onePedal == 1) {
-                    Log.i(TAG, "  → Tek Pedal KAPATILIYOR");
+            new Thread(() -> {
+                long startTime = System.currentTimeMillis();
+                Log.i(TAG, "★ Tuş basılı tutuluyor, süre ölçülüyor...");
+
+                while (mStarPressed) {
+                    long duration = System.currentTimeMillis() - startTime;
+
+                    // 1. Durum: Belirlediğin süreyi geçti mi? (Parmağını çekmeni beklemez)
+                    if (duration >= STAR_LONG_PRESS_MS) {
+                        Log.i(TAG, "★ EŞİK AŞILDI! (" + duration + "ms) -> Tek Pedal AÇILIYOR");
+
+                        MG4Hardware.setOnePedal(true);
+                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                            Log.i(TAG, "★ Tek Pedal TAKVİYE gönderildi");
+                            MG4Hardware.setOnePedal(true);
+                        }, 250);
+                        updateNotification("Tek Pedal: Açık");
+
+                        mStarPressed = false; // İşlem yapıldı, döngüden zorla çık
+                        break;
+                    }
+
+                    try { Thread.sleep(50); } catch (Exception ignored) {}
+                }
+            }).start();
+
+        } else {
+
+            if (mStarPressed) {
+                mStarPressed = false; // Döngüyü kırar
+
+                Log.i(TAG, "★ Tuş erken bırakıldı -> Kısa basış (Kapatma) işlemi");
+                if (MG4Hardware.getOnePedal() == 1) {
                     MG4Hardware.setOnePedal(false);
                     updateNotification("Tek Pedal: Kapalı");
-                } else {
-                    // Tek pedal zaten kapalı — regen döngüsü aracın kendisinde
-                    Log.i(TAG, "  → Tek Pedal zaten kapalı, regen araçta");
                 }
             }
         }
@@ -368,8 +366,13 @@ public class MG4ControlService extends Service {
             case "REGEN_SET":
                 RegenLevel rl = RegenLevel.fromValue(
                         intent.getIntExtra("regenValue", RegenLevel.MEDIUM.value));
-                MG4Hardware.setRegenLevel(rl);
-                updateNotification("Regen: " + rl.label);
+                boolean regenOk = MG4Hardware.setRegenLevel(rl);
+                if (rl == RegenLevel.OFF && !regenOk) {
+                    Log.w(TAG, "Regen KAPALI başarısız (Binder null) — araç desteklemiyor olabilir");
+                    updateNotification("Regen: Kapalı uygulanamadı");
+                } else {
+                    updateNotification("Regen: " + rl.label);
+                }
                 break;
             case "PEDAL_ON":
                 MG4Hardware.setOnePedal(true);
@@ -380,33 +383,31 @@ public class MG4ControlService extends Service {
                 updateNotification("OPD: Kapalı");
                 break;
             case "HEAT_ON":
-                MG4Hardware.setSteeringHeat(true);
+                new Thread(() -> MG4Hardware.setSteeringHeat(true)).start();
                 updateNotification("Direksiyon: Isıtma Açık");
                 break;
             case "HEAT_OFF":
-                MG4Hardware.setSteeringHeat(false);
+                new Thread(() -> MG4Hardware.setSteeringHeat(false)).start();
                 updateNotification("Direksiyon: Isıtma Kapalı");
                 break;
             case "HEAT_STEER_SET": {
                 int steerLevel = intent.getIntExtra("heatLevel", 0);
-                if (steerLevel == 0) {
-                    MG4Hardware.setSteeringHeat(false);
-                    updateNotification("Direksiyon Isıtma: Kapalı");
-                } else {
-                    MG4Hardware.setSteeringHeatLevel(steerLevel);
-                    updateNotification("Direksiyon Isıtma: Sev." + steerLevel);
-                }
+                final boolean sl = (steerLevel > 0);
+                new Thread(() -> MG4Hardware.setSteeringHeat(sl)).start();
+                updateNotification("Direksiyon Isıtma: " + (steerLevel == 0 ? "Kapalı" : "Açık."));
                 break;
             }
             case "HEAT_SEAT_L_SET": {
                 int seatLLevel = intent.getIntExtra("heatLevel", 0);
-                MG4Hardware.setSeatHeatLeft(seatLLevel);
+                final int ll = seatLLevel;
+                new Thread(() -> MG4Hardware.setSeatHeatLeft(ll)).start();
                 updateNotification("Sol Koltuk: " + (seatLLevel == 0 ? "Kapalı" : "Sev." + seatLLevel));
                 break;
             }
             case "HEAT_SEAT_R_SET": {
                 int seatRLevel = intent.getIntExtra("heatLevel", 0);
-                MG4Hardware.setSeatHeatRight(seatRLevel);
+                final int rl2 = seatRLevel;
+                new Thread(() -> MG4Hardware.setSeatHeatRight(rl2)).start();
                 updateNotification("Sağ Koltuk: " + (seatRLevel == 0 ? "Kapalı" : "Sev." + seatRLevel));
                 break;
             }

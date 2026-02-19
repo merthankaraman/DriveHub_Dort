@@ -29,9 +29,11 @@ public class MG4Hardware {
     private static final String TAG = "MG4_HW";
 
     // Sürüş kontrol property'leri (logdan doğrulandı)
-    private static final int PROP_DRIVE_MODE    = 0x2140a17c;
-    private static final int PROP_REGEN_LEVEL   = 0x2140a191;
-    private static final int PROP_ONE_PEDAL     = 0x2140a193;
+    private static final int PROP_DRIVE_MODE    = 0x2140a17c; //557883772
+    private static final int PROP_REGEN_LEVEL   = 0x2140a191; //557883793
+    private static final int PROP_ONE_PEDAL     = 0x2140a193; //557883795
+
+    private static final int PROP_REGEN_SWITCH  = 0x2140a19c; // 557883804 - Regen Ana Şalteri
     private static final int AREA_GLOBAL        = 0x01000000;
 
     // HVAC property'leri (CarHvacManager logdan doğrulandı)
@@ -58,7 +60,7 @@ public class MG4Hardware {
     private static final int TX_SET_DRIVE_MODE         = 151;
     private static final int TX_SET_REGEN_LEVEL        = 180;
     private static final int TX_SET_ONE_PEDAL          = 181;
-    private static final int TX_SET_REGEN_BRAKE_SWITCH = 182;
+    private static final int TX_SET_REGEN_BRAKE_SWITCH = 159;
     private static final int TX_SET_STEERING_HEAT      = 52;
     private static final int COUNT = 1;
 
@@ -306,6 +308,18 @@ public class MG4Hardware {
                 if (chm != null) {
                     sCarHvacManager = chm;
                     Log.i(TAG, "  ✓ CarHvacManager HAZIR: " + chm.getClass().getName());
+                    // Metodları logla
+                    java.lang.reflect.Method[] hvacMethods = chm.getClass().getMethods();
+                    StringBuilder hvacSb = new StringBuilder("  HVAC metodları: ");
+                    for (java.lang.reflect.Method hm : hvacMethods) {
+                        String name = hm.getName();
+                        if (name.contains("get") || name.contains("set") || name.contains("Property")) {
+                            hvacSb.append(name).append(" ");
+                        }
+                    }
+                    Log.i(TAG, hvacSb.toString());
+                    // Mevcut HVAC değerlerini oku
+                    logHvacCurrentValues(chm);
                 } else {
                     Log.w(TAG, "  ✗ CarHvacManager null");
                 }
@@ -319,6 +333,16 @@ public class MG4Hardware {
                 if (cbm != null) {
                     sCarBmsManager = cbm;
                     Log.i(TAG, "  ✓ CarBMSManager HAZIR: " + cbm.getClass().getName());
+                    // Hangi metodlar mevcut — ilk çalıştırmada logla
+                    java.lang.reflect.Method[] bmsMethods = cbm.getClass().getMethods();
+                    StringBuilder bmsSb = new StringBuilder("  BMS metodları: ");
+                    for (java.lang.reflect.Method bm : bmsMethods) {
+                        String name = bm.getName();
+                        if (name.contains("get") || name.contains("set") || name.contains("Property")) {
+                            bmsSb.append(name).append(" ");
+                        }
+                    }
+                    Log.i(TAG, bmsSb.toString());
                 } else {
                     Log.w(TAG, "  ✗ CarBMSManager null");
                 }
@@ -375,18 +399,26 @@ public class MG4Hardware {
     public static boolean setRegenLevel(RegenLevel level) {
         Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
         if (level == RegenLevel.OFF) {
-            // OFF: regen ana switch'i kapat (hem CPM hem Binder)
-            boolean ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, 0); // önce en düşüğe çek
-            binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 0);
-            Log.i(TAG, "  Regen OFF → brake switch kapatıldı");
-            return ok || sVehicleBinder != null;
+            // OFF: hem CPM hem Binder ile regen brake switch'i kapat
+            // CPM: PROP_REGEN_LEVEL değeri 0 araçta "Düşük" sayılabilir,
+            // asıl kapatma TX_SET_REGEN_BRAKE_SWITCH=159 ile yapılıyor
+            //setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, 0);
+            setIntPropertyCPM(PROP_ONE_PEDAL, AREA_GLOBAL, 0);   // Tek pedalı da kapat
+            boolean ok = setIntPropertyCPM(PROP_REGEN_SWITCH, AREA_GLOBAL, 0);
+            if (!ok) {
+                ok = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 0);
+            }
+            Log.i(TAG, "  Regen OFF → brake switch TX=159 value=0 → " + ok);
+            return ok;
         }
-        // ON seviyeler: önce switch'i aç, sonra seviyeyi yaz
-        if (sCarPropertyManager != null) {
-            return setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
-        }
+        // ON seviyeler: önce switch'i aç (her iki katmanda da)
         binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 1);
-        return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_LEVEL, level.value);
+        // Sonra seviyeyi yaz
+        boolean ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
+        if (!ok) {
+            ok = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_LEVEL, level.value);
+        }
+        return ok;
     }
 
     public static boolean setOnePedal(boolean enabled) {
@@ -395,32 +427,104 @@ public class MG4Hardware {
         return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_ONE_PEDAL, enabled ? 1 : 0);
     }
 
-    /** Direksiyon ısıtma — aç/kapat (eski API uyumluluğu) */
-    public static boolean setSteeringHeat(boolean enabled) {
-        Log.i(TAG, "setSteeringHeat → " + (enabled ? "Açık" : "Kapalı"));
-        int val = enabled ? 1 : 0;
-        if (setIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC, val)) return true;
-        return binderTransact(sAcBinder, DESCRIPTOR_AC, TX_SET_STEERING_HEAT, val);
-    }
+    /** Direksiyon ısıtma — aç/kapat (0=kapat, 1=aç) */
+    public static boolean setSteeringHeat(boolean targetOn) {
+        // 1. Önce arabadaki mevcut durumu oku
+        int currentStatus = getIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC);
 
-    /** Direksiyon ısıtma — seviyeli (0=kapalı, 1/2/3=seviye) */
-    public static boolean setSteeringHeatLevel(int level) {
-        Log.i(TAG, "setSteeringHeatLevel → " + level);
-        if (setIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC, level)) return true;
-        // Binder yedek: seviyeli değer gönder (araç destekliyorsa)
-        return binderTransact(sAcBinder, DESCRIPTOR_AC, TX_SET_STEERING_HEAT, level);
+        // currentStatus: 0 ise Kapalı, 1 veya daha büyükse Açık
+        boolean isActuallyOn = (currentStatus > 0);
+
+        Log.i(TAG, "Direksiyon Isıtma Durumu: " + currentStatus + " | Hedef: " + targetOn);
+
+        // 2. Eğer araba zaten istediğin durumdaysa hiçbir şey yapma
+        if (isActuallyOn == targetOn) {
+            Log.i(TAG, "Zaten hedef durumda, komut gönderilmedi.");
+            return true;
+        }
+
+        // 3. Durum farklıysa "1" göndererek toggle yap (durumu değiştir)
+        Log.i(TAG, "Durum değişiyor, toggle komutu gönderiliyor...");
+        return setIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC, 1);
     }
 
     /** Sol koltuk ısıtma seviyesi (0=kapalı, 1/2/3=seviye) */
     public static boolean setSeatHeatLeft(int level) {
         Log.i(TAG, "setSeatHeatLeft → " + level);
-        return setIntPropertyHvac(PROP_SEAT_HEAT_L, AREA_HVAC, level);
+        return setHvacLevelWithToggle(PROP_SEAT_HEAT_L, AREA_HVAC, level);
     }
 
     /** Sağ koltuk ısıtma seviyesi (0=kapalı, 1/2/3=seviye) */
     public static boolean setSeatHeatRight(int level) {
         Log.i(TAG, "setSeatHeatRight → " + level);
-        return setIntPropertyHvac(PROP_SEAT_HEAT_R, AREA_HVAC, level);
+        return setHvacLevelWithToggle(PROP_SEAT_HEAT_R, AREA_HVAC, level);
+    }
+
+    /**
+     * HVAC (Koltuk/Direksiyon) seviyesini hedef değere getirir.
+     * MG4 Döngüsü: 0 (Off) -> 3 (High) -> 2 (Mid) -> 1 (Low) -> 0
+     */
+    public static boolean setHvacLevelWithToggle(int propId, int area, int targetLevel) {
+        long startTime = System.currentTimeMillis();
+        long timeoutMs = 5000; // Toplam 5 saniye içinde bitmezse pes et (Güvenlik freni)
+        long lastStepTime = 0;
+        long stepInterval = 300; // Senin istediğin 300ms gecikme
+
+        int[] sequence = {0, 3, 2, 1}; // MG4 Ters Döngüsü
+
+        while (System.currentTimeMillis() - startTime < timeoutMs) {
+            int current = getIntPropertyHvac(propId, area);
+
+            // 1. Durum Kontrolü
+            if (current == targetLevel) {
+                Log.i(TAG, "Hedefe ulaşıldı: " + targetLevel);
+                return true;
+            }
+
+            // 2. Okuma Hatası Kontrolü (Zaman bazlı bekleme)
+            if (current < 0) {
+                Log.w(TAG, "Okuma başarısız, bekleniyor...");
+                // Burada CPU'yu %100 yormamak için çok küçük bir mola (10ms) iyidir
+                continue;
+            }
+
+            // 3. Basma Zamanı Geldi mi? (300ms kontrolü)
+            long now = System.currentTimeMillis();
+            if (now - lastStepTime >= stepInterval) {
+                Log.i(TAG, "Tık gönderiliyor... Mevcut: " + current);
+                setIntPropertyHvac(propId, area, 1);
+                lastStepTime = now; // Son basış zamanını güncelle
+            }
+
+            // İşlemciyi (CPU) boşuna yormamak için çok kısa bir "nefes" payı
+            try { Thread.sleep(20); } catch (InterruptedException ignored) {}
+        }
+
+        Log.e(TAG, "Zaman aşımı! Hedefe ulaşılamadı.");
+        return false;
+    }
+
+    /** HVAC property mevcut değerini oku */
+    private static int getIntPropertyHvac(int propId, int area) {
+        if (sCarHvacManager == null) return -1;
+        try {
+            java.lang.reflect.Method getInt = sCarHvacManager.getClass()
+                    .getMethod("getIntProperty", int.class, int.class);
+            Object result = getInt.invoke(sCarHvacManager, propId, area);
+            if (result == null) return -1;
+            int val = (Integer) result;
+            Log.i(TAG, "  HVAC getIntProperty 0x" + Integer.toHexString(propId)
+                    + " area=0x" + Integer.toHexString(area) + " → " + val);
+            return val;
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            Log.w(TAG, "  HVAC getIntProperty ITE: "
+                    + (cause != null ? cause.getMessage() : "null"));
+            return -1;
+        } catch (Exception e) {
+            Log.w(TAG, "  HVAC getIntProperty hata: " + e.getClass().getSimpleName());
+            return -1;
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -524,28 +628,41 @@ public class MG4Hardware {
 
     private static boolean setIntPropertyHvac(int propId, int area, int value) {
         if (sCarHvacManager != null) {
+            // Yöntem 1: setIntProperty(propId, area, value)
             try {
                 java.lang.reflect.Method setInt = sCarHvacManager.getClass()
                         .getMethod("setIntProperty", int.class, int.class, int.class);
                 setInt.invoke(sCarHvacManager, propId, area, value);
-                Log.i(TAG, "  HVAC setInt 0x" + Integer.toHexString(propId)
+                Log.i(TAG, "  HVAC setIntProperty 0x" + Integer.toHexString(propId)
                         + " area=0x" + Integer.toHexString(area) + " value=" + value + " ✓");
                 return true;
             } catch (java.lang.reflect.InvocationTargetException e) {
                 Throwable cause = e.getCause();
-                if (cause != null) {
-                    Log.w(TAG, "  HVAC setInt ITE→" + cause.getClass().getSimpleName()
-                            + ": " + cause.getMessage());
-                } else {
-                    Log.w(TAG, "  HVAC setInt ITE (cause null)");
-                }
-                // HVAC manager başarısız — CPM'e fallback etme, izin hatası aynı olur
-                return false;
+                Log.w(TAG, "  HVAC setIntProperty ITE→"
+                        + (cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : "null"));
+            } catch (NoSuchMethodException e) {
+                Log.w(TAG, "  HVAC setIntProperty metodu yok");
             } catch (Exception e) {
-                Log.w(TAG, "  HVAC setInt hata: " + e.getClass().getSimpleName()
+                Log.w(TAG, "  HVAC setIntProperty hata: " + e.getClass().getSimpleName()
                         + ": " + e.getMessage());
             }
+            // Yöntem 2: setBooleanProperty — direksiyon ısıtma boolean olabilir
+            if (value == 0 || value == 1) {
+                try {
+                    java.lang.reflect.Method setBool = sCarHvacManager.getClass()
+                            .getMethod("setBooleanProperty", int.class, int.class, boolean.class);
+                    setBool.invoke(sCarHvacManager, propId, area, value == 1);
+                    Log.i(TAG, "  HVAC setBooleanProperty 0x" + Integer.toHexString(propId)
+                            + " area=0x" + Integer.toHexString(area) + " value=" + (value==1) + " ✓");
+                    return true;
+                } catch (java.lang.reflect.InvocationTargetException e) {
+                    Throwable cause = e.getCause();
+                    Log.w(TAG, "  HVAC setBooleanProperty ITE→"
+                            + (cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : "null"));
+                } catch (Exception ignored) {}
+            }
         }
+        // Fallback: CPM ile dene
         return setIntPropertyCPM(propId, area, value);
     }
 
@@ -594,46 +711,125 @@ public class MG4Hardware {
         }
     }
 
-    /** CarBMSManager üzerinden float okuma */
+    /** CarBMSManager üzerinden float okuma — birden fazla metod adı denenir */
     private static float getFloatPropertyBms(int propId) {
-        if (sCarBmsManager == null) return Float.NaN;
-        try {
-            // getGlobalProperty(Float.class, propId) — SAIC API
-            java.lang.reflect.Method m = sCarBmsManager.getClass()
-                    .getMethod("getGlobalProperty", Class.class, int.class);
-            Object result = m.invoke(sCarBmsManager, Float.class, propId);
-            if (result == null) return Float.NaN;
-            float val = (Float) result;
-            Log.i(TAG, "  BMS getFloat 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
-            return val;
-        } catch (Exception e) {
-            Log.d(TAG, "  BMS getFloat 0x" + Integer.toHexString(propId)
-                    + " HATA: " + e.getClass().getSimpleName());
+        if (sCarBmsManager == null) {
+            Log.w(TAG, "  BMS getFloat 0x" + Integer.toHexString(propId) + " — sCarBmsManager NULL");
             return Float.NaN;
         }
-    }
-
-    /** CarBMSManager üzerinden int okuma */
-    private static int getIntPropertyBms(int propId) {
-        if (sCarBmsManager == null) return -1;
+        // Olası metod adları: getGlobalProperty, getFloatProperty, getProperty
+        String[] methods = { "getGlobalProperty", "getFloatProperty", "getProperty" };
+        for (String methodName : methods) {
+            try {
+                java.lang.reflect.Method m = sCarBmsManager.getClass()
+                        .getMethod(methodName, Class.class, int.class);
+                Object result = m.invoke(sCarBmsManager, Float.class, propId);
+                if (result == null) continue;
+                float val = (Float) result;
+                Log.i(TAG, "  BMS getFloat(" + methodName + ") 0x"
+                        + Integer.toHexString(propId) + " → " + val + " ✓");
+                return val;
+            } catch (NoSuchMethodException ignored) {
+            } catch (java.lang.reflect.InvocationTargetException e) {
+                Throwable cause = e.getCause();
+                Log.w(TAG, "  BMS getFloat(" + methodName + ") 0x" + Integer.toHexString(propId)
+                        + " ITE: " + (cause != null ? cause.getMessage() : "null"));
+            } catch (Exception e) {
+                Log.w(TAG, "  BMS getFloat(" + methodName + ") 0x" + Integer.toHexString(propId)
+                        + " HATA: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            }
+        }
+        // İkinci deneme: sadece int propId alan metodlar
         try {
             java.lang.reflect.Method m = sCarBmsManager.getClass()
-                    .getMethod("getGlobalProperty", Class.class, int.class);
-            Object result = m.invoke(sCarBmsManager, Integer.class, propId);
-            if (result == null) return -1;
-            int val = (Integer) result;
-            Log.i(TAG, "  BMS getInt 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
-            return val;
-        } catch (Exception e) {
-            Log.d(TAG, "  BMS getInt 0x" + Integer.toHexString(propId)
-                    + " HATA: " + e.getClass().getSimpleName());
+                    .getMethod("getFloatProperty", int.class, int.class);
+            Object result = m.invoke(sCarBmsManager, propId, AREA_GLOBAL);
+            if (result != null) {
+                float val = (Float) result;
+                Log.i(TAG, "  BMS getFloat(getFloatProperty,int,int) 0x"
+                        + Integer.toHexString(propId) + " → " + val + " ✓");
+                return val;
+            }
+        } catch (Exception ignored) {}
+        Log.w(TAG, "  BMS getFloat 0x" + Integer.toHexString(propId)
+                + " — tüm metodlar başarısız");
+        return Float.NaN;
+    }
+
+    /** CarBMSManager üzerinden int okuma — birden fazla metod adı denenir */
+    private static int getIntPropertyBms(int propId) {
+        if (sCarBmsManager == null) {
+            Log.w(TAG, "  BMS getInt 0x" + Integer.toHexString(propId) + " — sCarBmsManager NULL");
             return -1;
         }
+        String[] methods = { "getGlobalProperty", "getIntProperty", "getProperty" };
+        for (String methodName : methods) {
+            try {
+                java.lang.reflect.Method m = sCarBmsManager.getClass()
+                        .getMethod(methodName, Class.class, int.class);
+                Object result = m.invoke(sCarBmsManager, Integer.class, propId);
+                if (result == null) continue;
+                int val = (Integer) result;
+                Log.i(TAG, "  BMS getInt(" + methodName + ") 0x"
+                        + Integer.toHexString(propId) + " → " + val + " ✓");
+                return val;
+            } catch (NoSuchMethodException ignored) {
+            } catch (java.lang.reflect.InvocationTargetException e) {
+                Throwable cause = e.getCause();
+                Log.w(TAG, "  BMS getInt(" + methodName + ") 0x" + Integer.toHexString(propId)
+                        + " ITE: " + (cause != null ? cause.getMessage() : "null"));
+            } catch (Exception e) {
+                Log.w(TAG, "  BMS getInt(" + methodName + ") 0x" + Integer.toHexString(propId)
+                        + " HATA: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            }
+        }
+        try {
+            java.lang.reflect.Method m = sCarBmsManager.getClass()
+                    .getMethod("getIntProperty", int.class, int.class);
+            Object result = m.invoke(sCarBmsManager, propId, AREA_GLOBAL);
+            if (result != null) {
+                int val = (Integer) result;
+                Log.i(TAG, "  BMS getInt(getIntProperty,int,int) 0x"
+                        + Integer.toHexString(propId) + " → " + val + " ✓");
+                return val;
+            }
+        } catch (Exception ignored) {}
+        Log.w(TAG, "  BMS getInt 0x" + Integer.toHexString(propId)
+                + " — tüm metodlar başarısız");
+        return -1;
     }
 
     // -------------------------------------------------------------------------
     // Tanı
     // -------------------------------------------------------------------------
+
+    /** HVAC mevcut değerlerini logla — hangi area geçerli, hangi değer okunuyor */
+    private static void logHvacCurrentValues(Object hvacManager) {
+        int[] testAreas = { 0x75, 0x01, 0x01000000, 0x49, 0x11, 0 };
+        int[] testProps = { PROP_STEERING_HEAT, PROP_SEAT_HEAT_L, PROP_SEAT_HEAT_R };
+        String[] propNames = { "STEER_HEAT", "SEAT_L", "SEAT_R" };
+        for (int pi = 0; pi < testProps.length; pi++) {
+            for (int area : testAreas) {
+                try {
+                    java.lang.reflect.Method getInt = hvacManager.getClass()
+                            .getMethod("getIntProperty", int.class, int.class);
+                    Object result = getInt.invoke(hvacManager, testProps[pi], area);
+                    if (result != null) {
+                        Log.i(TAG, "  HVAC " + propNames[pi] + " 0x"
+                                + Integer.toHexString(testProps[pi])
+                                + " area=0x" + Integer.toHexString(area)
+                                + " → " + result);
+                    }
+                } catch (java.lang.reflect.InvocationTargetException e) {
+                    Throwable cause = e.getCause();
+                    if (cause != null && !cause.getClass().getSimpleName().equals("IllegalArgumentException")) {
+                        Log.d(TAG, "  HVAC " + propNames[pi] + " area=0x"
+                                + Integer.toHexString(area) + " ITE: " + cause.getMessage());
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+    }
 
     private static void readAndLogCurrentState() {
         Log.i(TAG, "--- Mevcut araç durumu ---");
