@@ -217,7 +217,7 @@ DOOR_ROW_2   = 80                     — arka kapılar
 ## 9. Mevcut Kodumuzdaki Durum
 
 ### ✅ Doğrulandı ve Kullanılıyor
-```java
+```text
 PROP_DRIVE_MODE          = 0x2140A17C  (557883772)  ✅
 PROP_REGEN_LEVEL         = 0x2140A191  (557883793)  ✅
 PROP_ONE_PEDAL           = 0x2140A193  (557883795)  ✅
@@ -227,7 +227,7 @@ PROP_SEAT_HEAT_R         = 0x15402514  (356525332)  ✅
 ```
 
 ### 🆕 Yeni Eklenmesi Gerekenler
-```java
+```text
 PROP_REGEN_BRAKE_SWITCH  = 0x2140A18F  (557883791)  — CPM katmanında regen OFF
 PROP_REGEN_LEVEL_DISABLE = 0x2140A19C  (557883804)  — alternatif regen OFF
 PROP_STEERING_LEVEL      = 0x2140A18D  (557883789)  — direksiyon ağırlığı
