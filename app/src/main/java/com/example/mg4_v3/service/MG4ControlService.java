@@ -1,5 +1,6 @@
 package com.example.mg4_v3.service;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -56,8 +57,6 @@ public class MG4ControlService extends Service {
     private static final int    KEYCODE_STAR        = 17;
     private static final int    KEYCODE_VOLUME_UP   = 24;
     private static final int    KEYCODE_VOLUME_DOWN = 25;
-    private static final long   DEBOUNCE_MS         = 500;
-
     // Vol↑+Vol↓ combo → müzik pause/play (300ms pencere)
     private static final long COMBO_WINDOW_MS = 300;
     private long mVolUpDownTime   = 0L;
@@ -65,15 +64,8 @@ public class MG4ControlService extends Service {
 
     // ★ Tuşu uzun basış eşiği (ms) — kullanıcı ayarlayabilir
     private static final long STAR_LONG_PRESS_MS = 1200;
-    private long mStarDownTime = 0L; // down=true anındaki timestamp
-
-    // Regen döngüsü — YORUM SATIRINDA (aracın kendi özelliği kullanılıyor)
-    // private static final int[] REGEN_CYCLE_VALUES = { 0, 1, 2, 3, -1 };
-    // private static final String[] REGEN_CYCLE_LABELS = { "Düşük", "Orta", "Yüksek", "Adaptif", "Tek Pedal" };
-    // private int mRegenStep = 2;
 
     private DriveMode mCurrentDriveMode = DriveMode.NORMAL;
-    private long      mLastStarKeyTime  = 0L;
     private BroadcastReceiver mHardkeyReceiver;
 
     // Overlay
@@ -141,6 +133,8 @@ public class MG4ControlService extends Service {
     // Floating overlay — ısıtma hızlı erişim
     // -------------------------------------------------------------------------
 
+    // inflate(..., null) zorunlu — overlay view'lar WindowManager'a eklenir, parent yoktur
+    @SuppressLint("InflateParams")
     private void showOverlay() {
         try {
             mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
@@ -216,6 +210,7 @@ public class MG4ControlService extends Service {
     // Açık olan seat popup view'u (ikisi aynı anda açılmasın)
     private View mSeatPopupView;
 
+    @SuppressLint("InflateParams")
     private void showSeatPopup(View anchor, boolean isLeft) {
         // Önceki popup varsa kapat
         dismissSeatPopup();
@@ -535,7 +530,7 @@ public class MG4ControlService extends Service {
         // android.uid.system ile bu genellikle çalışır
         try {
             List<MediaController> controllers = msm.getActiveSessions(null);
-            if (controllers != null && !controllers.isEmpty()) {
+            if (!controllers.isEmpty()) {
                 Log.i(TAG, "MEDIA: getActiveSessions(null) → " + controllers.size()
                         + " oturum bulundu");
                 for (int i = 0; i < controllers.size(); i++) {

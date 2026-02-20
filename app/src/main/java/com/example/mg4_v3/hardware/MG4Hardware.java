@@ -2,7 +2,6 @@ package com.example.mg4_v3.hardware;
 
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Parcel;
@@ -33,7 +32,6 @@ public class MG4Hardware {
     private static final int PROP_REGEN_LEVEL   = 0x2140a191; //557883793
     private static final int PROP_ONE_PEDAL     = 0x2140a193; //557883795
 
-    private static final int PROP_REGEN_SWITCH  = 0x2140a19c; // 557883804 - Regen Ana Şalteri
     private static final int AREA_GLOBAL        = 0x01000000;
 
     // HVAC property'leri (CarHvacManager logdan doğrulandı)
@@ -59,13 +57,9 @@ public class MG4Hardware {
     // Katman 2 — Binder (yedek, uid.system gerektirir)
     private static final String DESCRIPTOR_VEHICLE =
             "com.saicmotor.sdk.vehiclesettings.IVehicleSettingService";
-    private static final String DESCRIPTOR_AC =
-            "com.saicmotor.sdk.vehiclesettings.IAirConditionService";
     private static final int TX_SET_DRIVE_MODE         = 151;
-    private static final int TX_SET_REGEN_LEVEL        = 180;
     private static final int TX_SET_ONE_PEDAL          = 181;
     private static final int TX_SET_REGEN_BRAKE_SWITCH = 159;
-    private static final int TX_SET_STEERING_HEAT      = 52;
     private static final int COUNT = 1;
 
     /** HVAC property değişikliğini dinlemek isteyen servis buraya register olur. */
@@ -89,9 +83,7 @@ public class MG4Hardware {
     private static Object  sCarHvacManager     = null;
     private static boolean sCarBindAttempted   = false;
     private static IBinder sVehicleBinder      = null;
-    private static IBinder sAcBinder           = null;
     private static boolean sInitialized        = false;
-    private static Context sContext;
 
     // -------------------------------------------------------------------------
     // Init / Destroy
@@ -100,7 +92,7 @@ public class MG4Hardware {
     public static void init(Context context) {
         if (sInitialized) return;
         sInitialized = true;
-        sContext = context.getApplicationContext();
+        Context appContext = context.getApplicationContext();
 
         Log.i(TAG, "========================================");
         Log.i(TAG, "=== MG4Hardware.init() ===");
@@ -108,12 +100,11 @@ public class MG4Hardware {
         Log.i(TAG, "  sdk=" + android.os.Build.VERSION.SDK_INT + " device=" + android.os.Build.DEVICE);
 
         // Katman 1: CarPropertyManager — com.android.car'a bind ol
-        bindCarService(sContext);
+        bindCarService(appContext);
 
         // Katman 2: Binder (yedek)
         logAvailableVehicleServices();
         sVehicleBinder = getBinderService("vehiclesetting");
-        sAcBinder      = getBinderService("aircondition");
         if (sVehicleBinder != null) Log.i(TAG, "  ✓ Katman2: vehiclesetting binder bağlı");
         else Log.w(TAG, "  ✗ Katman2: vehiclesetting null (SELinux — beklenen)");
         Log.i(TAG, "========================================");
@@ -127,7 +118,6 @@ public class MG4Hardware {
         sCarPropertyManager = null;
         sCarHvacManager     = null;
         sVehicleBinder      = null;
-        sAcBinder           = null;
         sBmsCache.clear();
         sInitialized        = false;
         sCarBindAttempted   = false;
@@ -183,7 +173,7 @@ public class MG4Hardware {
             // B başarısız olduysa A'yı dene
             if (car == null && createCarA != null) {
                 try {
-                    car = createCarA.invoke(null, context, (Object) null);
+                    car = createCarA.invoke(null, context, (android.os.Handler) null);
                     if (car != null) Log.i(TAG, "  Katman1: createCar(Context, Handler) → başarılı");
                 } catch (Exception e) {
                     Log.w(TAG, "  createCar(Context, Handler) hata: " + e.getMessage());
@@ -375,12 +365,7 @@ public class MG4Hardware {
         Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
 
         binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 1);
-        // Sonra seviyeyi yaz
-        boolean ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
-        /*if (!ok) {
-            ok = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_LEVEL, level.value);
-        }*/
-        return ok;
+        return setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
     }
 
     public static boolean setOnePedal(boolean enabled) {
@@ -493,16 +478,19 @@ public class MG4Hardware {
     public static int getOnePedal()   { return getIntPropertyCPM(PROP_ONE_PEDAL,   AREA_GLOBAL); }
 
     // -------------------------------------------------------------------------
-    // Getter'lar — HVAC (overlay polling için)
+    // Getter'lar — HVAC (dışarıdan sorgulanabilir, callback yanında yedek okuma)
     // -------------------------------------------------------------------------
 
     /** Direksiyon ısıtma mevcut durumu: 0=Kapalı, >0=Açık, -1=okunamadı */
+    @SuppressWarnings("unused")
     public static int getHvacSteer() { return getIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC); }
 
     /** Sol koltuk ısıtma mevcut seviyesi: 0=Kapalı, 1/2/3, -1=okunamadı */
+    @SuppressWarnings("unused")
     public static int getHvacSeatL() { return getIntPropertyHvac(PROP_SEAT_HEAT_L,   AREA_HVAC); }
 
     /** Sağ koltuk ısıtma mevcut seviyesi: 0=Kapalı, 1/2/3, -1=okunamadı */
+    @SuppressWarnings("unused")
     public static int getHvacSeatR() { return getIntPropertyHvac(PROP_SEAT_HEAT_R,   AREA_HVAC); }
 
     // -------------------------------------------------------------------------
@@ -524,7 +512,10 @@ public class MG4Hardware {
     /** Kalan menzil — km. CPM'den oku, yoksa BMS cache'e bak. */
     public static int getRange() {
         int v = getIntPropertyCPM(PROP_RANGE, AREA_GLOBAL);
-        if (v < 0) v = bmsInt(PROP_RANGE);
+        if (v < 0) {
+            Object cached = sBmsCache.get(PROP_RANGE);
+            if (cached instanceof Number) v = ((Number) cached).intValue();
+        }
         return v;
     }
 
@@ -570,13 +561,6 @@ public class MG4Hardware {
         return Float.NaN;
     }
 
-    /** BMS cache'ten int oku — callback gelmemişse -1 döner */
-    private static int bmsInt(int propId) {
-        Object val = sBmsCache.get(propId);
-        if (val instanceof Number) return ((Number) val).intValue();
-        return -1;
-    }
-
     // -------------------------------------------------------------------------
     // CarPropertyManager — reflection ile set/get
     // -------------------------------------------------------------------------
@@ -610,6 +594,7 @@ public class MG4Hardware {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static boolean setIntPropertyHvac(int propId, int area, int value) {
         if (sCarHvacManager != null) {
             // Yöntem 1: setIntProperty(propId, area, value)
@@ -650,6 +635,7 @@ public class MG4Hardware {
         return setIntPropertyCPM(propId, area, value);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static int getIntPropertyCPM(int propId, int area) {
         if (sCarPropertyManager == null) return -1;
         try {
@@ -677,6 +663,7 @@ public class MG4Hardware {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static float getFloatPropertyCPM(int propId, int area) {
         if (sCarPropertyManager == null) return Float.NaN;
         try {
@@ -766,6 +753,10 @@ public class MG4Hardware {
                                 Log.w(TAG, "  BMS callback parse hata: " + ex.getMessage());
                             }
                         }
+                        // equals/hashCode/toString — Object metodları için varsayılan dönüş
+                        if ("equals".equals(mName)) return args != null && args.length == 1 && proxyObj == args[0];
+                        if ("hashCode".equals(mName)) return System.identityHashCode(proxyObj);
+                        if ("toString".equals(mName)) return "BmsCallbackProxy";
                         return null;
                     });
 
@@ -855,6 +846,10 @@ public class MG4Hardware {
                                 }
                             }
                         }
+                        // equals/hashCode/toString — Object metodları için varsayılan dönüş
+                        if ("equals".equals(mName)) return args != null && args.length == 1 && proxyObj == args[0];
+                        if ("hashCode".equals(mName)) return System.identityHashCode(proxyObj);
+                        if ("toString".equals(mName)) return "HvacCallbackProxy";
                         return null;
                     });
 
@@ -909,6 +904,7 @@ public class MG4Hardware {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static boolean binderTransact(IBinder binder, String descriptor, int txId, int value) {
         if (binder == null) {
             Log.w(TAG, "  Binder TX=" + txId + " — binder null");
