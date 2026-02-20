@@ -34,8 +34,8 @@
             android:layout_height="40dp"
             android:text="⊙"
             android:textSize="18sp"
-            android:backgroundTint="#21262D"
-            android:textColor="#8B949E"
+            android:backgroundTint="#FFA657"
+            android:textColor="#FFFFFF"
             android:minWidth="0dp"
             android:paddingStart="0dp"
             android:paddingEnd="0dp"/>
@@ -62,7 +62,7 @@
             android:id="@+id/btnOvSeatL"
             android:layout_width="52dp"
             android:layout_height="40dp"
-            android:background="#21262D"
+            android:background="#FFA657"
             android:clickable="true"
             android:focusable="true">
 

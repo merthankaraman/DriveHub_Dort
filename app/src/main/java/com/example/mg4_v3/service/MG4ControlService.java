@@ -13,7 +13,9 @@ import android.graphics.PixelFormat;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -62,7 +64,7 @@ public class MG4ControlService extends Service {
     private long mVolDownDownTime = 0L;
 
     // ★ Tuşu uzun basış eşiği (ms) — kullanıcı ayarlayabilir
-    private static final long STAR_LONG_PRESS_MS = 1500;
+    private static final long STAR_LONG_PRESS_MS = 1200;
     private long mStarDownTime = 0L; // down=true anındaki timestamp
 
     // Regen döngüsü — YORUM SATIRINDA (aracın kendi özelliği kullanılıyor)
@@ -91,6 +93,8 @@ public class MG4ControlService extends Service {
     private int            mSteerLevel = 0;
     private int            mSeatLLevel = 0;
     private int            mSeatRLevel = 0;
+
+    private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     @Override
     public void onCreate() {
@@ -199,6 +203,9 @@ public class MG4ControlService extends Service {
 
             mWindowManager.addView(mOverlayRight, lpRight);
 
+            // CarHvacManager callback'ini kayıt et
+            MG4Hardware.setHvacListener(mHvacListener);
+
             Log.i(TAG, "Overlay eklendi — sol x=" + (-OVERLAY_OFFSET_PX)
                     + "  sağ x=+" + OVERLAY_OFFSET_PX);
         } catch (Exception e) {
@@ -265,6 +272,7 @@ public class MG4ControlService extends Service {
     }
 
     private void removeOverlay() {
+        MG4Hardware.setHvacListener(null);
         dismissSeatPopup();
         if (mWindowManager != null) {
             if (mOverlayLeft  != null) try { mWindowManager.removeView(mOverlayLeft);  } catch (Exception ignored) {}
@@ -272,12 +280,71 @@ public class MG4ControlService extends Service {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // HVAC callback — CarHvacManager property değişikliklerini dinle
+    // -------------------------------------------------------------------------
+
+    /**
+     * MG4Hardware'e kayıt edilir. CarHvacManager bir property değiştiğinde çağrılır.
+     * propId: PROP_STEERING_HEAT / PROP_SEAT_HEAT_L / PROP_SEAT_HEAT_R
+     * value : yeni değer (int)
+     */
+    private final MG4Hardware.HvacListener mHvacListener =
+            (propId, value) -> mMainHandler.post(() -> onHvacChanged(propId, value));
+
+    private void onHvacChanged(int propId, int value) {
+        if (mOverlayLeft == null || mOverlayRight == null) return;
+        Log.d(TAG, "onHvacChanged propId=0x" + Integer.toHexString(propId) + " value=" + value);
+
+        switch (propId) {
+            case MG4Hardware.PROP_STEERING_HEAT_PUB: {
+                int newSteer = (value > 0) ? 1 : 0;
+                if (newSteer != mSteerLevel) {
+                    mSteerLevel = newSteer;
+                    applySteerUi(mSteerLevel);
+                }
+                break;
+            }
+            case MG4Hardware.PROP_SEAT_HEAT_L_PUB:
+                if (value != mSeatLLevel) {
+                    mSeatLLevel = value;
+                    applySeatLUi(mSeatLLevel);
+                }
+                break;
+            case MG4Hardware.PROP_SEAT_HEAT_R_PUB:
+                if (value != mSeatRLevel) {
+                    mSeatRLevel = value;
+                    applySeatRUi(mSeatRLevel);
+                }
+                break;
+        }
+    }
+
+    /** Direksiyon ısıtma UI'ı — sadece görsel (yazma yok) */
+    private void applySteerUi(int level) {
+        if (mBtnOvSteer == null) return;
+        mBtnOvSteer.setBackgroundTintList(
+                ColorStateList.valueOf(level > 0 ? COLOR_HEAT_ON : 0xFFFFA657));
+        mBtnOvSteer.setTextColor(0xFFFFFFFF);
+    }
+
+    /** Sol koltuk UI'ı — sadece görsel */
+    private void applySeatLUi(int level) {
+        if (mBtnOvSeatL == null) return;
+        mBtnOvSeatL.setBackgroundColor(level > 0 ? COLOR_HEAT_ON : 0xFFFFA657);
+        updateSeatBars(mOvSeatLBar1, mOvSeatLBar2, mOvSeatLBar3, level);
+    }
+
+    /** Sağ koltuk UI'ı — sadece görsel */
+    private void applySeatRUi(int level) {
+        if (mBtnOvSeatR == null) return;
+        mBtnOvSeatR.setBackgroundColor(level > 0 ? COLOR_HEAT_ON : 0xFFFFA657);
+        updateSeatBars(mOvSeatRBar1, mOvSeatRBar2, mOvSeatRBar3, level);
+    }
+
     private void ovSteer(int level) {
         new Thread(() -> MG4Hardware.setSteeringHeat(level > 0)).start();
-        // İkon rengi: açık=kırmızı/sıcak, kapalı=gri
-        mBtnOvSteer.setBackgroundTintList(
-                ColorStateList.valueOf(level > 0 ? COLOR_HEAT_ON : COLOR_INACTIVE));
-        mBtnOvSteer.setTextColor(level > 0 ? 0xFFFFCCCC : 0xFF8B949E);
+        applySteerUi(level);
         updateNotification("Direksiyon: " + (level == 0 ? "Kapalı" : "Açık"));
     }
 
@@ -285,9 +352,7 @@ public class MG4ControlService extends Service {
         mSeatLLevel = level;
         final int l = level;
         new Thread(() -> MG4Hardware.setSeatHeatLeft(l)).start();
-        updateSeatBars(mOvSeatLBar1, mOvSeatLBar2, mOvSeatLBar3, level);
-        // Koltuk arka planı
-        mBtnOvSeatL.setBackgroundColor(level > 0 ? 0xFF3D1515 : 0xFF21262D);
+        applySeatLUi(level);
         updateNotification("Sol Koltuk: " + (level == 0 ? "Kapalı" : "Sev." + level));
     }
 
@@ -295,8 +360,7 @@ public class MG4ControlService extends Service {
         mSeatRLevel = level;
         final int l = level;
         new Thread(() -> MG4Hardware.setSeatHeatRight(l)).start();
-        updateSeatBars(mOvSeatRBar1, mOvSeatRBar2, mOvSeatRBar3, level);
-        mBtnOvSeatR.setBackgroundColor(level > 0 ? 0xFF3D1515 : 0xFF21262D);
+        applySeatRUi(level);
         updateNotification("Sağ Koltuk: " + (level == 0 ? "Kapalı" : "Sev." + level));
     }
 

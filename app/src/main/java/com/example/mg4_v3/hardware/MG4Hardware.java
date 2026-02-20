@@ -37,13 +37,17 @@ public class MG4Hardware {
     private static final int AREA_GLOBAL        = 0x01000000;
 
     // HVAC property'leri (CarHvacManager logdan doğrulandı)
-    private static final int PROP_STEERING_HEAT = 0x1540253a; // 356525370
-    private static final int PROP_SEAT_HEAT_L   = 0x15402513; // 356525331 — sol koltuk
-    private static final int PROP_SEAT_HEAT_R   = 0x15402514; // 356525332 — sağ koltuk
+    // Service'in callback'inde kullanabilmesi için public
+    public  static final int PROP_STEERING_HEAT_PUB = 0x1540253a; // 356525370
+    public  static final int PROP_SEAT_HEAT_L_PUB   = 0x15402513; // 356525331 — sol koltuk
+    public  static final int PROP_SEAT_HEAT_R_PUB   = 0x15402514; // 356525332 — sağ koltuk
+    private static final int PROP_STEERING_HEAT = PROP_STEERING_HEAT_PUB;
+    private static final int PROP_SEAT_HEAT_L   = PROP_SEAT_HEAT_L_PUB;
+    private static final int PROP_SEAT_HEAT_R   = PROP_SEAT_HEAT_R_PUB;
     private static final int AREA_HVAC          = 0x75;       // 117
 
     // Araç durum / BMS property'leri (VehicleConditionBinder + VehicleChargingBinder)
-    private static final int PROP_SPEED          = 0x11600207; // 291504647 — float m/s (CarSensorManager)
+    private static final int PROP_SPEED          = 0x11600207; // 291504647 — float km/h (CarSensorManager)
     private static final int PROP_SOC            = 0x21600004; // 560002052 — float % (CarBMSManager)
     private static final int PROP_RANGE          = 0x214099DC; // 557904924 — int km (CarBMSManager)
     private static final int PROP_BATT_VOLT      = 0x21600006; // 560002054 — float V (CarBMSManager)
@@ -64,11 +68,25 @@ public class MG4Hardware {
     private static final int TX_SET_STEERING_HEAT      = 52;
     private static final int COUNT = 1;
 
+    /** HVAC property değişikliğini dinlemek isteyen servis buraya register olur. */
+    public interface HvacListener {
+        void onHvacPropertyChanged(int propId, int value);
+    }
+
+    private static volatile HvacListener sHvacListener = null;
+
+    public static void setHvacListener(HvacListener listener) {
+        sHvacListener = listener;
+    }
+
+    // BMS cache — CarBMSManager onChangeEvent callback'ten gelen son değerler
+    // key=propId, value=son bilinen değer (Float veya Integer olarak Object)
+    private static final java.util.concurrent.ConcurrentHashMap<Integer, Object> sBmsCache =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
     // State
     private static Object  sCarPropertyManager = null;
     private static Object  sCarHvacManager     = null;
-    private static Object  sCarBmsManager      = null;
-    private static Object  sCarSensorManager   = null;
     private static boolean sCarBindAttempted   = false;
     private static IBinder sVehicleBinder      = null;
     private static IBinder sAcBinder           = null;
@@ -108,10 +126,9 @@ public class MG4Hardware {
     public static void destroy() {
         sCarPropertyManager = null;
         sCarHvacManager     = null;
-        sCarBmsManager      = null;
-        sCarSensorManager   = null;
         sVehicleBinder      = null;
         sAcBinder           = null;
+        sBmsCache.clear();
         sInitialized        = false;
         sCarBindAttempted   = false;
         Log.i(TAG, "destroy()");
@@ -303,23 +320,11 @@ public class MG4Hardware {
             try {
                 java.lang.reflect.Field hvacField = carClass.getField("HVAC_SERVICE");
                 String hvacService = (String) hvacField.get(null);
-                Log.i(TAG, "  HVAC_SERVICE = " + hvacService);
                 Object chm = getCarManager.invoke(sCar, hvacService);
                 if (chm != null) {
                     sCarHvacManager = chm;
                     Log.i(TAG, "  ✓ CarHvacManager HAZIR: " + chm.getClass().getName());
-                    // Metodları logla
-                    java.lang.reflect.Method[] hvacMethods = chm.getClass().getMethods();
-                    StringBuilder hvacSb = new StringBuilder("  HVAC metodları: ");
-                    for (java.lang.reflect.Method hm : hvacMethods) {
-                        String name = hm.getName();
-                        if (name.contains("get") || name.contains("set") || name.contains("Property")) {
-                            hvacSb.append(name).append(" ");
-                        }
-                    }
-                    Log.i(TAG, hvacSb.toString());
-                    // Mevcut HVAC değerlerini oku
-                    logHvacCurrentValues(chm);
+                    registerHvacCallback(chm);
                 } else {
                     Log.w(TAG, "  ✗ CarHvacManager null");
                 }
@@ -331,18 +336,8 @@ public class MG4Hardware {
             try {
                 Object cbm = getCarManager.invoke(sCar, "bms");
                 if (cbm != null) {
-                    sCarBmsManager = cbm;
                     Log.i(TAG, "  ✓ CarBMSManager HAZIR: " + cbm.getClass().getName());
-                    // Hangi metodlar mevcut — ilk çalıştırmada logla
-                    java.lang.reflect.Method[] bmsMethods = cbm.getClass().getMethods();
-                    StringBuilder bmsSb = new StringBuilder("  BMS metodları: ");
-                    for (java.lang.reflect.Method bm : bmsMethods) {
-                        String name = bm.getName();
-                        if (name.contains("get") || name.contains("set") || name.contains("Property")) {
-                            bmsSb.append(name).append(" ");
-                        }
-                    }
-                    Log.i(TAG, bmsSb.toString());
+                    registerBmsCallback(cbm);
                 } else {
                     Log.w(TAG, "  ✗ CarBMSManager null");
                 }
@@ -350,27 +345,7 @@ public class MG4Hardware {
                 Log.w(TAG, "  CarBMSManager alınamadı: " + e.getMessage());
             }
 
-            // CarSensorManager
-            try {
-                java.lang.reflect.Field sensorField = null;
-                try { sensorField = carClass.getField("SENSOR_SERVICE"); } catch (Exception ignored) {}
-                String sensorService = (sensorField != null)
-                        ? (String) sensorField.get(null) : "sensor";
-                Log.i(TAG, "  SENSOR_SERVICE = " + sensorService);
-                Object csm = getCarManager.invoke(sCar, sensorService);
-                if (csm != null) {
-                    sCarSensorManager = csm;
-                    Log.i(TAG, "  ✓ CarSensorManager HAZIR: " + csm.getClass().getName());
-                } else {
-                    Log.w(TAG, "  ✗ CarSensorManager null");
-                }
-            } catch (Exception e) {
-                Log.w(TAG, "  CarSensorManager alınamadı: " + e.getMessage());
-            }
-
-            if (sCarPropertyManager != null) {
-                readAndLogCurrentState();
-            } else {
+            if (sCarPropertyManager == null) {
                 Log.e(TAG, "  ✗ CarPropertyManager alınamadı — hiçbir şey çalışmayacak");
             }
         } catch (java.lang.reflect.InvocationTargetException e) {
@@ -487,7 +462,7 @@ public class MG4Hardware {
         return false;
     }
     /** HVAC property mevcut değerini oku */
-    private static int getIntPropertyHvac(int propId, int area) {
+    public static int getIntPropertyHvac(int propId, int area) {
         if (sCarHvacManager == null) return -1;
         try {
             java.lang.reflect.Method getInt = sCarHvacManager.getClass()
@@ -495,7 +470,7 @@ public class MG4Hardware {
             Object result = getInt.invoke(sCarHvacManager, propId, area);
             if (result == null) return -1;
             int val = (Integer) result;
-            Log.i(TAG, "  HVAC getIntProperty 0x" + Integer.toHexString(propId)
+            Log.d(TAG, "  HVAC getIntProperty 0x" + Integer.toHexString(propId)
                     + " area=0x" + Integer.toHexString(area) + " → " + val);
             return val;
         } catch (java.lang.reflect.InvocationTargetException e) {
@@ -518,62 +493,88 @@ public class MG4Hardware {
     public static int getOnePedal()   { return getIntPropertyCPM(PROP_ONE_PEDAL,   AREA_GLOBAL); }
 
     // -------------------------------------------------------------------------
+    // Getter'lar — HVAC (overlay polling için)
+    // -------------------------------------------------------------------------
+
+    /** Direksiyon ısıtma mevcut durumu: 0=Kapalı, >0=Açık, -1=okunamadı */
+    public static int getHvacSteer() { return getIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC); }
+
+    /** Sol koltuk ısıtma mevcut seviyesi: 0=Kapalı, 1/2/3, -1=okunamadı */
+    public static int getHvacSeatL() { return getIntPropertyHvac(PROP_SEAT_HEAT_L,   AREA_HVAC); }
+
+    /** Sağ koltuk ısıtma mevcut seviyesi: 0=Kapalı, 1/2/3, -1=okunamadı */
+    public static int getHvacSeatR() { return getIntPropertyHvac(PROP_SEAT_HEAT_R,   AREA_HVAC); }
+
+    // -------------------------------------------------------------------------
     // Getter'lar — Araç Durum / BMS (float dönerler, hata: Float.NaN)
     // -------------------------------------------------------------------------
 
-    /** Araç hızı — m/s (km/h için × 3.6) */
-    public static float getSpeedMs() {
+    /** Araç hızı — km/h (araç doğrudan km/h gönderiyor, dönüşüm gereksiz) */
+    public static float getSpeedKmh() {
         return getFloatPropertyCPM(PROP_SPEED, AREA_GLOBAL);
     }
 
-    /** SOC — % (0.0–100.0) */
+    /** SOC — % (0.0–100.0). CPM'den oku, yoksa BMS cache'e bak. */
     public static float getSoc() {
-        // CPM önce dene (BMS getGlobalProperty null döndürüyor — logda doğrulandı)
         float v = getFloatPropertyCPM(PROP_SOC, AREA_GLOBAL);
-        if (Float.isNaN(v)) v = getFloatPropertyBms(PROP_SOC);
+        if (Float.isNaN(v)) v = bmsFloat(PROP_SOC);
         return v;
     }
 
-    /** Kalan menzil — km */
+    /** Kalan menzil — km. CPM'den oku, yoksa BMS cache'e bak. */
     public static int getRange() {
         int v = getIntPropertyCPM(PROP_RANGE, AREA_GLOBAL);
-        if (v < 0) v = getIntPropertyBms(PROP_RANGE);
+        if (v < 0) v = bmsInt(PROP_RANGE);
         return v;
     }
 
     /** DC batarya voltajı — V */
     public static float getDcVoltage() {
         float v = getFloatPropertyCPM(PROP_BATT_VOLT, AREA_GLOBAL);
-        if (Float.isNaN(v)) v = getFloatPropertyBms(PROP_BATT_VOLT);
+        if (Float.isNaN(v)) v = bmsFloat(PROP_BATT_VOLT);
         return v;
     }
 
     /** DC şarj akımı gerçek — A */
     public static float getDcCurrentActual() {
         float v = getFloatPropertyCPM(PROP_CHR_AMP_ACT, AREA_GLOBAL);
-        if (Float.isNaN(v)) v = getFloatPropertyBms(PROP_CHR_AMP_ACT);
+        if (Float.isNaN(v)) v = bmsFloat(PROP_CHR_AMP_ACT);
         return v;
     }
 
     /** DC şarj akımı beklenen — A */
     public static float getDcCurrentExpected() {
         float v = getFloatPropertyCPM(PROP_CHR_AMP_EXP, AREA_GLOBAL);
-        if (Float.isNaN(v)) v = getFloatPropertyBms(PROP_CHR_AMP_EXP);
+        if (Float.isNaN(v)) v = bmsFloat(PROP_CHR_AMP_EXP);
         return v;
     }
 
     /** AC giriş akımı — A */
     public static float getAcCurrent() {
         float v = getFloatPropertyCPM(PROP_AC_AMP, AREA_GLOBAL);
-        if (Float.isNaN(v)) v = getFloatPropertyBms(PROP_AC_AMP);
+        if (Float.isNaN(v)) v = bmsFloat(PROP_AC_AMP);
         return v;
     }
 
     /** AC giriş voltajı — V */
     public static float getAcVoltage() {
         float v = getFloatPropertyCPM(PROP_AC_VOLT, AREA_GLOBAL);
-        if (Float.isNaN(v)) v = getFloatPropertyBms(PROP_AC_VOLT);
+        if (Float.isNaN(v)) v = bmsFloat(PROP_AC_VOLT);
         return v;
+    }
+
+    /** BMS cache'ten float oku — callback gelmemişse NaN döner */
+    private static float bmsFloat(int propId) {
+        Object val = sBmsCache.get(propId);
+        if (val instanceof Number) return ((Number) val).floatValue();
+        return Float.NaN;
+    }
+
+    /** BMS cache'ten int oku — callback gelmemişse -1 döner */
+    private static int bmsInt(int propId) {
+        Object val = sBmsCache.get(propId);
+        if (val instanceof Number) return ((Number) val).intValue();
+        return -1;
     }
 
     // -------------------------------------------------------------------------
@@ -658,7 +659,7 @@ public class MG4Hardware {
             if (cpv == null) return -1;
             java.lang.reflect.Method getValue = cpv.getClass().getMethod("getValue");
             int result = (Integer) getValue.invoke(cpv);
-            Log.i(TAG, "  CPM getInt 0x" + Integer.toHexString(propId) + " → " + result + " ✓");
+            Log.d(TAG, "  CPM getInt 0x" + Integer.toHexString(propId) + " → " + result + " ✓");
             return result;
         } catch (java.lang.reflect.InvocationTargetException e) {
             Throwable cause = e.getCause();
@@ -685,7 +686,7 @@ public class MG4Hardware {
             if (cpv == null) return Float.NaN;
             java.lang.reflect.Method getValue = cpv.getClass().getMethod("getValue");
             float result = (Float) getValue.invoke(cpv);
-            Log.i(TAG, "  CPM getFloat 0x" + Integer.toHexString(propId) + " → " + result + " ✓");
+            Log.d(TAG, "  CPM getFloat 0x" + Integer.toHexString(propId) + " → " + result + " ✓");
             return result;
         } catch (java.lang.reflect.InvocationTargetException e) {
             Throwable cause = e.getCause();
@@ -699,239 +700,171 @@ public class MG4Hardware {
         }
     }
 
-    /**
-     * CarBMSManager üzerinden float okuma.
-     * BMS metodları: getGlobalProperty(Class,int), getProperty(Class,int)
-     * Sorun: CarPropertyValue.getValue() → null (prop kayıtlı ama ilk okumada boş geliyor)
-     * Çözüm: getGlobalProperty(int) — Class olmadan, tek int parametre
-     */
-    private static float getFloatPropertyBms(int propId) {
-        if (sCarBmsManager == null) {
-            Log.w(TAG, "  BMS getFloat 0x" + Integer.toHexString(propId) + " — sCarBmsManager NULL");
-            return Float.NaN;
-        }
-
-        // Yöntem A: getGlobalProperty(int) — Class parametresi olmadan, direkt değer döner
-        try {
-            java.lang.reflect.Method m = sCarBmsManager.getClass()
-                    .getMethod("getGlobalProperty", int.class);
-            Object result = m.invoke(sCarBmsManager, propId);
-            if (result instanceof Float) {
-                float val = (Float) result;
-                Log.i(TAG, "  BMS getFloat(GGP_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
-                return val;
-            }
-            if (result instanceof Number) {
-                float val = ((Number) result).floatValue();
-                Log.i(TAG, "  BMS getFloat(GGP_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓ (Number)");
-                return val;
-            }
-            if (result != null) {
-                Log.w(TAG, "  BMS getFloat(GGP_int) 0x" + Integer.toHexString(propId)
-                        + " beklenmedik tip: " + result.getClass().getName() + " = " + result);
-            }
-        } catch (NoSuchMethodException ignored) {
-        } catch (java.lang.reflect.InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            Log.w(TAG, "  BMS getFloat(GGP_int) ITE: " + (cause != null ? cause.getMessage() : "null"));
-        } catch (Exception e) {
-            Log.w(TAG, "  BMS getFloat(GGP_int) hata: " + e.getMessage());
-        }
-
-        // Yöntem B: getProperty(int, int) — propId + area
-        try {
-            java.lang.reflect.Method m = sCarBmsManager.getClass()
-                    .getMethod("getProperty", int.class, int.class);
-            Object result = m.invoke(sCarBmsManager, propId, AREA_GLOBAL);
-            if (result instanceof Float) {
-                float val = (Float) result;
-                Log.i(TAG, "  BMS getFloat(GP_int_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
-                return val;
-            }
-            if (result instanceof Number) {
-                float val = ((Number) result).floatValue();
-                Log.i(TAG, "  BMS getFloat(GP_int_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓ (Number)");
-                return val;
-            }
-            if (result != null) {
-                Log.w(TAG, "  BMS getFloat(GP_int_int) beklenmedik tip: " + result.getClass().getName() + " = " + result);
-            }
-        } catch (NoSuchMethodException ignored) {
-        } catch (java.lang.reflect.InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            Log.w(TAG, "  BMS getFloat(GP_int_int) ITE: " + (cause != null ? cause.getMessage() : "null"));
-        } catch (Exception e) {
-            Log.w(TAG, "  BMS getFloat(GP_int_int) hata: " + e.getMessage());
-        }
-
-        // Yöntem C: getGlobalProperty(Class, int) — doğrudan T tipinde değer döner (CarPropertyValue değil!)
-        // SAIC kaynak kodu: ((Float) carBMSManager.getGlobalProperty(Float.class, propId)).floatValue()
-        try {
-            java.lang.reflect.Method m = sCarBmsManager.getClass()
-                    .getMethod("getGlobalProperty", Class.class, int.class);
-            Object result = m.invoke(sCarBmsManager, Float.class, propId);
-            if (result instanceof Float) {
-                float val = (Float) result;
-                Log.i(TAG, "  BMS getFloat(GGP_Class_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
-                return val;
-            }
-            if (result instanceof Number) {
-                float val = ((Number) result).floatValue();
-                Log.i(TAG, "  BMS getFloat(GGP_Class_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓ (Number)");
-                return val;
-            }
-            if (result != null) {
-                Log.w(TAG, "  BMS GGP(Class,int) beklenmedik tip: " + result.getClass().getName() + " = " + result);
-            } else {
-                Log.w(TAG, "  BMS GGP(Float.class, 0x" + Integer.toHexString(propId) + ") → null");
-            }
-        } catch (java.lang.reflect.InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            Log.w(TAG, "  BMS GGP ITE: " + (cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : "null"));
-        } catch (Exception e) {
-            Log.w(TAG, "  BMS GGP hata: " + e.getClass().getSimpleName() + ": " + e.getMessage());
-        }
-
-        Log.w(TAG, "  BMS getFloat 0x" + Integer.toHexString(propId) + " — tüm metodlar başarısız");
-        return Float.NaN;
-    }
-
-    /** CarBMSManager üzerinden int okuma */
-    private static int getIntPropertyBms(int propId) {
-        if (sCarBmsManager == null) {
-            Log.w(TAG, "  BMS getInt 0x" + Integer.toHexString(propId) + " — sCarBmsManager NULL");
-            return -1;
-        }
-
-        // Yöntem A: getGlobalProperty(int)
-        try {
-            java.lang.reflect.Method m = sCarBmsManager.getClass()
-                    .getMethod("getGlobalProperty", int.class);
-            Object result = m.invoke(sCarBmsManager, propId);
-            if (result instanceof Integer) {
-                int val = (Integer) result;
-                Log.i(TAG, "  BMS getInt(GGP_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
-                return val;
-            }
-            if (result instanceof Number) {
-                int val = ((Number) result).intValue();
-                Log.i(TAG, "  BMS getInt(GGP_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓ (Number)");
-                return val;
-            }
-            if (result != null) {
-                Log.w(TAG, "  BMS getInt(GGP_int) beklenmedik tip: " + result.getClass().getName() + " = " + result);
-            }
-        } catch (NoSuchMethodException ignored) {
-        } catch (java.lang.reflect.InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            Log.w(TAG, "  BMS getInt(GGP_int) ITE: " + (cause != null ? cause.getMessage() : "null"));
-        } catch (Exception e) {
-            Log.w(TAG, "  BMS getInt(GGP_int) hata: " + e.getMessage());
-        }
-
-        // Yöntem B: getProperty(int, int)
-        try {
-            java.lang.reflect.Method m = sCarBmsManager.getClass()
-                    .getMethod("getProperty", int.class, int.class);
-            Object result = m.invoke(sCarBmsManager, propId, AREA_GLOBAL);
-            if (result instanceof Integer) {
-                int val = (Integer) result;
-                Log.i(TAG, "  BMS getInt(GP_int_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
-                return val;
-            }
-            if (result instanceof Number) {
-                int val = ((Number) result).intValue();
-                Log.i(TAG, "  BMS getInt(GP_int_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓ (Number)");
-                return val;
-            }
-            if (result != null) {
-                Log.w(TAG, "  BMS getInt(GP_int_int) beklenmedik tip: " + result.getClass().getName() + " = " + result);
-            }
-        } catch (NoSuchMethodException ignored) {
-        } catch (java.lang.reflect.InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            Log.w(TAG, "  BMS getInt(GP_int_int) ITE: " + (cause != null ? cause.getMessage() : "null"));
-        } catch (Exception e) {
-            Log.w(TAG, "  BMS getInt(GP_int_int) hata: " + e.getMessage());
-        }
-
-        // Yöntem C: getGlobalProperty(Class, int) — doğrudan Integer döner
-        // SAIC kaynak kodu: ((Integer) carBMSManager.getGlobalProperty(Integer.class, propId)).intValue()
-        try {
-            java.lang.reflect.Method m = sCarBmsManager.getClass()
-                    .getMethod("getGlobalProperty", Class.class, int.class);
-            Object result = m.invoke(sCarBmsManager, Integer.class, propId);
-            if (result instanceof Integer) {
-                int val = (Integer) result;
-                Log.i(TAG, "  BMS getInt(GGP_Class_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓");
-                return val;
-            }
-            if (result instanceof Number) {
-                int val = ((Number) result).intValue();
-                Log.i(TAG, "  BMS getInt(GGP_Class_int) 0x" + Integer.toHexString(propId) + " → " + val + " ✓ (Number)");
-                return val;
-            }
-            if (result != null) {
-                Log.w(TAG, "  BMS GGP(Integer.class) beklenmedik tip: " + result.getClass().getName());
-            } else {
-                Log.w(TAG, "  BMS GGP(Integer.class, 0x" + Integer.toHexString(propId) + ") → null");
-            }
-        } catch (java.lang.reflect.InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            Log.w(TAG, "  BMS getInt GGP ITE: " + (cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : "null"));
-        } catch (Exception e) {
-            Log.w(TAG, "  BMS getInt GGP hata: " + e.getClass().getSimpleName() + ": " + e.getMessage());
-        }
-
-        Log.w(TAG, "  BMS getInt 0x" + Integer.toHexString(propId)
-                + " — tüm metodlar başarısız");
-        return -1;
-    }
-
     // -------------------------------------------------------------------------
     // Tanı
     // -------------------------------------------------------------------------
 
-    /** HVAC mevcut değerlerini logla — hangi area geçerli, hangi değer okunuyor */
-    private static void logHvacCurrentValues(Object hvacManager) {
-        int[] testAreas = { 0x75, 0x01, 0x01000000, 0x49, 0x11, 0 };
-        int[] testProps = { PROP_STEERING_HEAT, PROP_SEAT_HEAT_L, PROP_SEAT_HEAT_R };
-        String[] propNames = { "STEER_HEAT", "SEAT_L", "SEAT_R" };
-        for (int pi = 0; pi < testProps.length; pi++) {
-            for (int area : testAreas) {
-                try {
-                    java.lang.reflect.Method getInt = hvacManager.getClass()
-                            .getMethod("getIntProperty", int.class, int.class);
-                    Object result = getInt.invoke(hvacManager, testProps[pi], area);
-                    if (result != null) {
-                        Log.i(TAG, "  HVAC " + propNames[pi] + " 0x"
-                                + Integer.toHexString(testProps[pi])
-                                + " area=0x" + Integer.toHexString(area)
-                                + " → " + result);
-                    }
-                } catch (java.lang.reflect.InvocationTargetException e) {
-                    Throwable cause = e.getCause();
-                    if (cause != null && !cause.getClass().getSimpleName().equals("IllegalArgumentException")) {
-                        Log.d(TAG, "  HVAC " + propNames[pi] + " area=0x"
-                                + Integer.toHexString(area) + " ITE: " + cause.getMessage());
-                    }
-                } catch (Exception ignored) {}
+    /**
+     * CarBMSManager'a callback kayıt eder.
+     * BMS onChangeEvent(propId, area, value) gelince sBmsCache güncellenir.
+     * Pull yöntemi (getGlobalProperty) bu araçta çalışmıyor — sadece push (callback) çalışıyor.
+     */
+    private static void registerBmsCallback(Object bmsManager) {
+        try {
+            java.lang.reflect.Method[] methods = bmsManager.getClass().getMethods();
+            java.lang.reflect.Method registerMethod = null;
+            for (java.lang.reflect.Method m : methods) {
+                String n = m.getName();
+                if (n.contains("register") || n.contains("Register")) {
+                    Log.i(TAG, "  BMS register metodu: " + n
+                            + " params=" + java.util.Arrays.toString(m.getParameterTypes()));
+                    if (registerMethod == null) registerMethod = m;
+                }
             }
+
+            if (registerMethod == null) {
+                Log.w(TAG, "  BMS: registerCallback metodu bulunamadı — callback devre dışı");
+                return;
+            }
+
+            Class<?>[] paramTypes = registerMethod.getParameterTypes();
+            if (paramTypes.length == 0) {
+                Log.w(TAG, "  BMS: register metodu parametre almıyor — atlanıyor");
+                return;
+            }
+
+            Class<?> callbackClass = paramTypes[0];
+            Log.i(TAG, "  BMS: callback sınıfı = " + callbackClass.getName()
+                    + " isInterface=" + callbackClass.isInterface());
+
+            if (!callbackClass.isInterface()) {
+                Log.w(TAG, "  BMS: callback sınıfı interface değil — proxy oluşturulamaz");
+                return;
+            }
+
+            Object proxy = java.lang.reflect.Proxy.newProxyInstance(
+                    callbackClass.getClassLoader(),
+                    new Class<?>[]{ callbackClass },
+                    (proxyObj, method, args) -> {
+                        String mName = method.getName();
+                        // Logcat'te görülen format: onChangeEvent(propId, area, value)
+                        // args[0]=propId(int), args[1]=area(int), args[2]=value(Number)
+                        if ((mName.contains("Change") || mName.contains("Event")
+                                || mName.contains("Property") || mName.contains("Update"))
+                                && args != null && args.length >= 3) {
+
+                            try {
+                                int propId = (Integer) args[0];
+                                // args[2] Float veya Integer olabilir
+                                Object rawVal = args[2];
+                                if (rawVal instanceof Number) {
+                                    sBmsCache.put(propId, rawVal);
+                                    Log.d(TAG, "  BMS cache ← 0x" + Integer.toHexString(propId)
+                                            + " = " + rawVal);
+                                }
+                            } catch (Exception ex) {
+                                Log.w(TAG, "  BMS callback parse hata: " + ex.getMessage());
+                            }
+                        }
+                        return null;
+                    });
+
+            registerMethod.invoke(bmsManager, proxy);
+            Log.i(TAG, "  ✓ BMS callback kayıt edildi");
+
+        } catch (Exception e) {
+            Log.w(TAG, "  BMS registerCallback hata: "
+                    + e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
-    private static void readAndLogCurrentState() {
-        Log.i(TAG, "--- Mevcut araç durumu ---");
-        int dm = getIntPropertyCPM(PROP_DRIVE_MODE, AREA_GLOBAL);
-        Log.i(TAG, "  DriveMode  → " + dm
-                + (dm >= 0 ? " (" + DriveMode.fromValue(dm).label + ")" : " (okunamadı)"));
-        int rg = getIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL);
-        Log.i(TAG, "  RegenLevel → " + rg
-                + (rg >= 0 ? " (" + RegenLevel.fromValue(rg).label + ")" : " (okunamadı)"));
-        int op = getIntPropertyCPM(PROP_ONE_PEDAL, AREA_GLOBAL);
-        Log.i(TAG, "  OnePedal   → " + op
-                + (op >= 0 ? " (" + (op == 1 ? "Açık" : "Kapalı") + ")" : " (okunamadı)"));
-        Log.i(TAG, "--------------------------");
+    /**
+     * CarHvacManager'a callback kayıt eder.
+     * Araç HVAC property'lerinden herhangi biri değiştiğinde sHvacListener çağrılır.
+     * CarHvacManager.CarHvacEventCallback API'si reflection ile denenir.
+     */
+    private static void registerHvacCallback(Object hvacManager) {
+        // CarHvacManager'ın registerCallback metodu ve callback class'ı araç üreticisine göre farklılık gösterir.
+        // SAIC implementasyonunda genellikle registerCallback(CarHvacEventCallback) şeklindedir.
+        // Önce metodları tara, sonra uygun olanı bul.
+        try {
+            java.lang.reflect.Method[] methods = hvacManager.getClass().getMethods();
+            java.lang.reflect.Method registerMethod = null;
+            for (java.lang.reflect.Method m : methods) {
+                if (m.getName().contains("register") || m.getName().contains("Register")) {
+                    Log.i(TAG, "  HVAC register metodu: " + m.getName()
+                            + " params=" + java.util.Arrays.toString(m.getParameterTypes()));
+                    if (registerMethod == null) registerMethod = m;
+                }
+            }
+
+            if (registerMethod == null) {
+                Log.w(TAG, "  HVAC: registerCallback metodu bulunamadı — callback devre dışı");
+                return;
+            }
+
+            // Callback sınıfını dinamik proxy ile oluştur
+            Class<?>[] paramTypes = registerMethod.getParameterTypes();
+            if (paramTypes.length == 0) {
+                Log.w(TAG, "  HVAC: register metodu parametre almıyor — atlanıyor");
+                return;
+            }
+
+            Class<?> callbackClass = paramTypes[0];
+            Log.i(TAG, "  HVAC: callback sınıfı = " + callbackClass.getName()
+                    + " isInterface=" + callbackClass.isInterface());
+
+            if (!callbackClass.isInterface()) {
+                Log.w(TAG, "  HVAC: callback sınıfı interface değil — proxy oluşturulamaz");
+                return;
+            }
+
+            Object proxy = java.lang.reflect.Proxy.newProxyInstance(
+                    callbackClass.getClassLoader(),
+                    new Class<?>[]{ callbackClass },
+                    (proxyObj, method, args) -> {
+                        String mName = method.getName();
+                        // Callback metodunu logla
+                        Log.d(TAG, "  HVAC callback: " + mName
+                                + " args=" + java.util.Arrays.toString(args));
+
+                        // CarHvacManager callback metodları genellikle:
+                        //   onChangeEvent(CarHvacManager, int propId, int areaId, T value)
+                        // ya da onPropertyChanged(int propId, int areaId, int value) vb.
+                        if (mName.contains("Change") || mName.contains("Property")
+                                || mName.contains("Event") || mName.contains("Update")) {
+                            HvacListener listener = sHvacListener;
+                            if (listener != null && args != null) {
+                                // args içinde int propId bul
+                                Integer propId = null;
+                                Integer value  = null;
+                                for (Object a : args) {
+                                    if (a instanceof Integer) {
+                                        if (propId == null) propId = (Integer) a;
+                                        else if (value == null)  value  = (Integer) a;
+                                    }
+                                }
+                                if (propId != null && value != null) {
+                                    final int fProp = propId;
+                                    final int fVal  = value;
+                                    if (fProp == PROP_STEERING_HEAT
+                                            || fProp == PROP_SEAT_HEAT_L
+                                            || fProp == PROP_SEAT_HEAT_R) {
+                                        listener.onHvacPropertyChanged(fProp, fVal);
+                                    }
+                                }
+                            }
+                        }
+                        return null;
+                    });
+
+            registerMethod.invoke(hvacManager, proxy);
+            Log.i(TAG, "  ✓ HVAC callback kayıt edildi");
+
+        } catch (Exception e) {
+            Log.w(TAG, "  HVAC registerCallback hata: "
+                    + e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
     }
 
     private static void logAvailableVehicleServices() {

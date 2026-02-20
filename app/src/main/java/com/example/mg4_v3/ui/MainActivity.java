@@ -313,10 +313,10 @@ public class MainActivity extends AppCompatActivity {
         int range = MG4Hardware.getRange();
         mTvRange.setText(range >= 0 ? String.valueOf(range) : "--");
 
-        // Hız (m/s → km/h)
-        float speedMs = MG4Hardware.getSpeedMs();
-        if (!Float.isNaN(speedMs) && speedMs >= 0) {
-            mTvSpeed.setText(String.format("%.0f", speedMs * 3.6f));
+        // Hız (km/h — araç doğrudan km/h gönderiyor)
+        float speedKmh = MG4Hardware.getSpeedKmh();
+        if (!Float.isNaN(speedKmh) && speedKmh >= 0) {
+            mTvSpeed.setText(String.format("%.0f", speedKmh));
         } else {
             mTvSpeed.setText("--");
         }

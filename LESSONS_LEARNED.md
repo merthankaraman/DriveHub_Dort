@@ -30,7 +30,7 @@ Normal Android uygulaması olarak yüklenince `ServiceManager.getService("vehicl
 ### Çözüm (Root veya /system/priv-app GEREKMİYOR)
 
 **Adım 1 — AndroidManifest.xml'e ekle:**
-```xml
+```bash
 <manifest
     android:sharedUserId="android.uid.system"
     android:persistent="true"
@@ -69,7 +69,7 @@ MG4 EH32 firmware'indeki TÜM sistem APK'ları (launcher, vehiclesettings, HVAC 
 | `aircondition` | `com.saicmotor.sdk.vehiclesettings.IAirConditionService` | Direksiyon ısıtma, koltuk ısıtma |
 
 ### Doğru Binder Parcel Formatı
-```java
+```bash
 Parcel data = Parcel.obtain();
 Parcel reply = Parcel.obtain();
 try {
@@ -110,7 +110,7 @@ try {
 
 Binder'ın yedeği olarak `android.car.Car` + `CarPropertyManager` kullanılabilir. Bu API doğrudan import edilemez (AOSP system library), reflection gerekir:
 
-```java
+```bash
 Class<?> carClass = Class.forName("android.car.Car");
 Method createCarMethod = carClass.getMethod("createCar", Context.class);
 Object car = createCarMethod.invoke(null, context);
@@ -152,7 +152,7 @@ Object cpm = ((Car) car).getCarManager(Car.PROPERTY_SERVICE);
 
 Regen'i tamamen kapatmak için sadece level değeri göndermek yetmez. Ayrı bir "switch" transaction'ı gönderilmeli:
 
-```java
+```bash
 // Regen'i kapat
 binder.transact(182, data_with_value_0, reply, 0); // setRegenerativeBrakeSwitch = OFF
 
@@ -173,7 +173,7 @@ com.saic.keyevent.hardkey.report
 ```
 
 ### Extra Anahtarları (Logcat'ten Doğrulanan)
-```java
+```bash
 int keyCode  = intent.getIntExtra("android.intent.extra.hardkey.keycode", -1);
 boolean down = intent.getBooleanExtra("android.intent.extra.hardkey.down", false);
 boolean longPress = intent.getBooleanExtra("android.intent.extra.hardkey.longpress", false);
@@ -193,7 +193,7 @@ boolean longPress = intent.getBooleanExtra("android.intent.extra.hardkey.longpre
 - **Vol Up + Vol Down (300ms içinde):** Medya oynatmayı toggle eder.
 
 ### Receiver Kaydı (Android 13+)
-```java
+```bash
 IntentFilter filter = new IntentFilter("com.saic.keyevent.hardkey.report");
 registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
 ```
@@ -209,7 +209,7 @@ registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
 - Boot'ta otomatik başlar
 
 ### Servis Başlatma (START_STICKY)
-```java
+```bash
 @Override
 public int onStartCommand(Intent intent, int flags, int startId) {
     // komut işle...
@@ -218,7 +218,7 @@ public int onStartCommand(Intent intent, int flags, int startId) {
 ```
 
 ### Boot'ta Otomatik Başlatma
-```java
+```bash
 // BootReceiver — 4 farklı boot action dinlenmeli:
 android.intent.action.BOOT_COMPLETED
 android.intent.action.LOCKED_BOOT_COMPLETED
@@ -232,7 +232,7 @@ Manifest'te `android:persistent="true"` da gerekli — sistem app process'ini ca
 
 ## 9. AndroidManifest.xml Özeti
 
-```xml
+```bash
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:sharedUserId="android.uid.system"
@@ -311,7 +311,7 @@ adb install -r app\build\outputs\apk\debug\app-debug-platform-signed.apk
 
 `android.car.*` ve `android.os.ServiceManager` sınıfları normal Android SDK'da mevcut değil — bunlar AOSP/OEM sistem kütüphaneleri. Bu yüzden reflection gerekli:
 
-```java
+```bash
 // ServiceManager (Binder erişimi)
 Class<?> smClass = Class.forName("android.os.ServiceManager");
 Method getService = smClass.getMethod("getService", String.class);
@@ -429,7 +429,179 @@ ProjectRoot/
 
 ---
 
-## 17. Başka SAIC/MG Araçlara Uyarlama
+## 17. CarBMSManager — Push Only (Pull Çalışmıyor)
+
+### Problem
+`CarBMSManager.getGlobalProperty()` çağrısı araçta `NullPointerException` fırlatıyor:
+```
+CarPropertyValue.getValue() on null object reference
+```
+Araç BMS property'lerini pull isteğine yanıt vermiyor.
+
+### Neden
+SAIC'in özel `CarBMSManager` implementasyonu sadece event-push (callback) yöntemiyle çalışıyor. Property'leri sürekli yayınlıyor fakat istek geldiğinde `CarPropertyValue.getValue()` null döndürüyor.
+
+### Logcat Kanıtı
+```
+CarBMSManager: onChangeEvent, PropID, area, value: 560002055_16777216_1.25
+```
+Araç değeri kendi kendine yayınlıyor — sorulmadan.
+
+### Çözüm: Reflection Proxy + ConcurrentHashMap Cache
+
+```bash
+// Cache — propId → son bilinen değer
+private static final ConcurrentHashMap<Integer, Object> sBmsCache = new ConcurrentHashMap<>();
+
+// CarBMSManager'ın registerCallback metodunu reflection ile bul ve proxy kaydet
+private static void registerBmsCallback(Object bmsManager) {
+    // registerXxx metodunu bul
+    Method registerMethod = null;
+    for (Method m : bmsManager.getClass().getMethods()) {
+        if (m.getName().contains("register")) { registerMethod = m; break; }
+    }
+    Class<?> callbackClass = registerMethod.getParameterTypes()[0]; // interface olmalı
+    Object proxy = Proxy.newProxyInstance(
+        callbackClass.getClassLoader(), new Class<?>[]{ callbackClass },
+        (obj, method, args) -> {
+            // onChangeEvent(propId, area, value) formatı
+            if (method.getName().contains("Change") && args != null && args.length >= 3) {
+                int propId = (Integer) args[0];
+                Object val = args[2]; // Float veya Integer
+                if (val instanceof Number) sBmsCache.put(propId, val);
+            }
+            return null;
+        });
+    registerMethod.invoke(bmsManager, proxy);
+}
+
+// Getter — cache'ten oku, BMS'e istek ATMA
+private static float bmsFloat(int propId) {
+    Object val = sBmsCache.get(propId);
+    if (val instanceof Number) return ((Number) val).floatValue();
+    return Float.NaN; // henüz callback gelmemişse
+}
+```
+
+### Kritik Kural
+BMS'e pull isteği **hiç gönderme**. Sadece `registerBmsCallback()` ile abone ol, değerleri cache'e yaz, getter'lar cache'ten okusun.
+
+### BMS Property ID'leri (push ile gelen değerler)
+
+| Özellik | PropID (hex) | PropID (decimal) | Tip |
+|---|---|---|---|
+| SOC | `0x21600004` | 560002052 | float % |
+| Kalan Menzil | `0x214099DC` | 557904924 | int km |
+| DC Batarya Voltajı | `0x21600006` | 560002054 | float V |
+| DC Şarj Akımı (gerçek) | `0x21600007` | 560002055 | float A |
+| DC Şarj Akımı (beklenen) | `0x2160000A` | 560002058 | float A |
+| AC Giriş Akımı | `0x2160006C` | 560002108 | float A |
+| AC Giriş Voltajı | `0x2160006D` | 560002109 | float V |
+
+---
+
+## 18. CarHvacManager — Callback ile Overlay Senkronizasyonu
+
+### Problem
+Overlay butonları araçtaki gerçek HVAC durumunu yansıtmıyor — kullanıcı fiziksel HVAC panelinden değişiklik yapınca overlay eski durumda kalıyor.
+
+### Çözüm: HvacListener Interface + Reflection Proxy
+
+```bash
+// MG4Hardware içinde:
+public interface HvacListener {
+    void onHvacPropertyChanged(int propId, int value);
+}
+private static volatile HvacListener sHvacListener = null;
+public static void setHvacListener(HvacListener l) { sHvacListener = l; }
+
+// CarHvacManager'a proxy kaydet
+private static void registerHvacCallback(Object hvacManager) {
+    // BMS ile aynı pattern — registerXxx metodunu bul, proxy oluştur
+    // Callback gelince sHvacListener.onHvacPropertyChanged() çağır
+}
+```
+
+```bash
+// MG4ControlService içinde:
+private final Handler mMainHandler = new Handler(Looper.getMainLooper());
+
+private final MG4Hardware.HvacListener mHvacListener =
+    (propId, value) -> mMainHandler.post(() -> onHvacChanged(propId, value));
+
+// showOverlay() → MG4Hardware.setHvacListener(mHvacListener)
+// removeOverlay() → MG4Hardware.setHvacListener(null)
+```
+
+### Önemli Detaylar
+- HVAC callback muhtemelen arka thread'den geliyor → UI güncellemesi için `mMainHandler.post()` şart
+- `setHvacListener(null)` overlay kapanınca çağrılmalı — aksi halde arka planda listener çalışmaya devam eder
+- Overlay açılırken `setHvacListener(mHvacListener)` çağrısı overlay view oluşturulduktan SONRA yapılmalı
+
+---
+
+## 19. Hız — CPM Pull Çalışıyor, BMS'ten Farklı
+
+### Araç Hız Okuma
+```bash
+// CarPropertyManager (AOSP standart) üzerinden pull — ÇALIŞIYOR
+float speedKmh = getFloatPropertyCPM(PROP_SPEED, AREA_GLOBAL);
+// Araç duruyorken 0.0 döner ✓
+```
+
+| Özellik | PropID | Kaynak | Yöntem |
+|---|---|---|---|
+| Hız | `0x11600207` | CarPropertyManager | Pull (çalışıyor) |
+| SOC, Akım, Voltaj | BMS PropID'leri | CarBMSManager | Push-only callback |
+
+**Kritik Not:** Araç km/h değeri gönderiyor (m/s değil). Metod adı `getSpeedKmh()` olmalı, dönüşüm yapma.
+
+---
+
+## 20. TYPE_SYSTEM_OVERLAY Deprecated
+
+### Problem
+```
+'TYPE_SYSTEM_OVERLAY' is deprecated as of API 26 (Oreo; Android 8.0)
+```
+
+### Çözüm
+```bash
+// Eski (deprecated):
+lp.type = WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY;
+
+// Doğru (API 26+):
+lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+```
+Her `LayoutParams` nesnesinde bu değişiklik yapılmalı (özellikle birden fazla overlay varsa).
+
+---
+
+## 21. Kullanılmayan Kod Temizliği Stratejisi
+
+Bu projede yapılan temizlikte öğrenilenler:
+
+### BMS pull metodları silindi (~180 satır)
+- `getFloatPropertyBms()` — 3 farklı yöntem denerken hepsi başarısız oluyordu, logda görüldü
+- `getIntPropertyBms()` — aynı şekilde çalışmıyor
+- **Kural:** Çalışmadığı logcat'ten kanıtlanan yöntemler silinmeli, yedek olarak tutulmamalı
+
+### Tanı metodları silindi
+- `logHvacCurrentValues()` — tüm area kombinasyonlarını denerdi (ilk keşif için yazılmıştı)
+- `readAndLogCurrentState()` — init sırasında mevcut durumu logladı
+- **Kural:** Keşif/tanı metodları çalışır hale gelince silinmeli, production kodunda kalmamalı
+
+### Log seviyesi ayarı
+- `CPM getInt/getFloat` ve `HVAC getIntProperty` başarı logları `Log.i` → `Log.d`
+- **Kural:** Döngüsel çağrılan metodlardaki başarı logları `Log.d` olmalı, logcat spam yapmasın; sadece hata logları `Log.w/e` olarak kalır
+
+### Kullanılmayan field'lar
+- `sCarBmsManager` — BMS cache'e geçince referansa gerek kalmadı
+- `sCarSensorManager` — hiç okunmuyordu
+
+---
+
+## 22. Başka SAIC/MG Araçlara Uyarlama
 
 Bu araştırma MG4 EH32 için yapıldı. Farklı MG modelleri veya farklı EH sürümleri için:
 
@@ -440,4 +612,4 @@ Bu araştırma MG4 EH32 için yapıldı. Farklı MG modelleri veya farklı EH s�
 
 ---
 
-*Bu doküman MG4 EH32 projesinde elde edilen pratik deneyimlere dayanmaktadır. Tüm değerler araç üzerinde test edilerek doğrulanmıştır.*
+*Bu doküman MG4 EH32 projesinde elde edilen pratik deneyimlere dayanmaktadır. Tüm değerler araç üzerinde test edilerek doğrulanmıştır. Son güncelleme: Bölüm 17-21 (CarBMSManager push-only, HVAC callback overlay senkronizasyonu, hız okuma, TYPE_APPLICATION_OVERLAY, kod temizliği stratejisi).*

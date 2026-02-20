@@ -1,0 +1,464 @@
+2026-02-20 15:04:56.950  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:56.951  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:56.952  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:56.952  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:56.952  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:56.952  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:57.055  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.055  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.055  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.055  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.056  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.059  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.160  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.160  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.160  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.161  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.161  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.164  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.264  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.264  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.264  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.265  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.265  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.265  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.474  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.474  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.474  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.474  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.474  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.474  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.544  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:57.544  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:57.544  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:57.545  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:57.545  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:57.546  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:57.649  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.649  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.649  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.650  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.650  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.652  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.755  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.755  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.756  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.756  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.757  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.757  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:57.859  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.859  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.860  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.860  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.860  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:57.861  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.069  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.069  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.069  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.070  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.069  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.070  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.175  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:58.175  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:58.175  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:58.175  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:58.176  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:58.184  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:58.253  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.254  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.254  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.254  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.254  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.259 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:04:58.260 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600004 — tüm metodlar başarısız
+2026-02-20 15:04:58.260  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.264 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getInt GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:04:58.264 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getInt 0x214099dc — tüm metodlar başarısız
+2026-02-20 15:04:58.267 11611-11611 MG4_HW                                   com.example.mg4_v3                   I    CPM getFloat 0x11600207 → 0.0 ✓
+2026-02-20 15:04:58.271 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:04:58.271 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600006 — tüm metodlar başarısız
+2026-02-20 15:04:58.277 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:04:58.277 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600007 — tüm metodlar başarısız
+2026-02-20 15:04:58.279 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:04:58.279 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160000a — tüm metodlar başarısız
+2026-02-20 15:04:58.282 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:04:58.282 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160006d — tüm metodlar başarısız
+2026-02-20 15:04:58.283 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:04:58.284 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160006c — tüm metodlar başarısız
+2026-02-20 15:04:58.350  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.350  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.351  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.351  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.351  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.353  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.457  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.457  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.457  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.457  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.457  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.457  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.664  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.664  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.664  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.664  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.665  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.668  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.770  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:58.770  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:58.770  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:58.771  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:58.771  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:58.772  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:58.875  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.875  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.876  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.876  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.876  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.877  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:58.944  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.944  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.944  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.946  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.946  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:58.946  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.050  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.050  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.050  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.050  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.053  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.053  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.258  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.258  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.259  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.259  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.260  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.262  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.364  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:59.364  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:59.364  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:59.364  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:59.365  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:59.365  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:59.469  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.469  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.469  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.469  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.470  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.470  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.538  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.538  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.538  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.539  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.539  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.539  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.644  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:59.644  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:59.644  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:59.644  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:59.645  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:59.645  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:04:59.749  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.750  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.750  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.750  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.752  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.752  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.853  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.854  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.854  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.854  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.855  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.858  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:04:59.961  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.966  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.968  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.969  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.968  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:04:59.966  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.068 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:00.068 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600004 — tüm metodlar başarısız
+2026-02-20 15:05:00.074 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getInt GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:00.074 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getInt 0x214099dc — tüm metodlar başarısız
+2026-02-20 15:05:00.076 11611-11611 MG4_HW                                   com.example.mg4_v3                   I    CPM getFloat 0x11600207 → 0.0 ✓
+2026-02-20 15:05:00.078 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:00.078 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600006 — tüm metodlar başarısız
+2026-02-20 15:05:00.080 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:00.080 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600007 — tüm metodlar başarısız
+2026-02-20 15:05:00.082 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:00.082 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160000a — tüm metodlar başarısız
+2026-02-20 15:05:00.084 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:00.084 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160006d — tüm metodlar başarısız
+2026-02-20 15:05:00.086 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:00.086 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160006c — tüm metodlar başarısız
+2026-02-20 15:05:00.169  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.169  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.169  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.170  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.170  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.170  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.275  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.275  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.275  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.275  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.275  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.276  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.448  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.448  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.449  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.449  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.449  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.449  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.553  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:05:00.553  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:05:00.553  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:05:00.553  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:05:00.554  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:05:00.554  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:05:00.659  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.659  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.660  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.660  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.661  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.661  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.764  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.764  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.764  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.765  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.765  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.767  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:00.859  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.859  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.860  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.860  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.860  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:00.860  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.035  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.035  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.035  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.035  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.036  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.036  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.142  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.142  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.144  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.145  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.145  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.143  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.220 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:01.220 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600004 — tüm metodlar başarısız
+2026-02-20 15:05:01.225 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getInt GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:01.225 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getInt 0x214099dc — tüm metodlar başarısız
+2026-02-20 15:05:01.227 11611-11611 MG4_HW                                   com.example.mg4_v3                   I    CPM getFloat 0x11600207 → 0.0 ✓
+2026-02-20 15:05:01.230 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:01.230 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600006 — tüm metodlar başarısız
+2026-02-20 15:05:01.232 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:01.232 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600007 — tüm metodlar başarısız
+2026-02-20 15:05:01.234 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:01.234 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160000a — tüm metodlar başarısız
+2026-02-20 15:05:01.236 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:01.236 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160006d — tüm metodlar başarısız
+2026-02-20 15:05:01.238 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:01.238 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160006c — tüm metodlar başarısız
+2026-02-20 15:05:01.351  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.351  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.352  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.352  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.352  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.353  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.455  3768-3768  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883767_16777216_1
+2026-02-20 15:05:01.455  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.455  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.455  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.455  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.455  3775-3775  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883767_16777216_1
+2026-02-20 15:05:01.457  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.458  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.665  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:01.666  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:01.666  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:01.667  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:01.669  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:01.669  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:01.734  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.734  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.735  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.735  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.735  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.736  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:01.946  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.946  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.947  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.947  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.947  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:01.950  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.050  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.050  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.050  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.051  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.051  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.051  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.256 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.256 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600004 — tüm metodlar başarısız
+2026-02-20 15:05:02.259 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getInt GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.259 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getInt 0x214099dc — tüm metodlar başarısız
+2026-02-20 15:05:02.260 11611-11611 MG4_HW                                   com.example.mg4_v3                   I    CPM getFloat 0x11600207 → 0.0 ✓
+2026-02-20 15:05:02.260  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.261  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.261  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.261  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.261  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.262  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.262 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.262 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600006 — tüm metodlar başarısız
+2026-02-20 15:05:02.264 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.264 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600007 — tüm metodlar başarısız
+2026-02-20 15:05:02.266 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.266 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160000a — tüm metodlar başarısız
+2026-02-20 15:05:02.268 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.268 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160006d — tüm metodlar başarısız
+2026-02-20 15:05:02.269 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.269 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160006c — tüm metodlar başarısız
+2026-02-20 15:05:02.366  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:02.366  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:02.367  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:02.367  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:02.368  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:02.372  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:02.434  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.434  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.434  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.435  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.437  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.437  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.549  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.549  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.550  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.550  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.550  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.550  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.644  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:05:02.644  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:05:02.644  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:05:02.645  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:05:02.645  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:05:02.646  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.25
+2026-02-20 15:05:02.695 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.695 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600004 — tüm metodlar başarısız
+2026-02-20 15:05:02.700 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getInt GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.700 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getInt 0x214099dc — tüm metodlar başarısız
+2026-02-20 15:05:02.704 11611-11611 MG4_HW                                   com.example.mg4_v3                   I    CPM getFloat 0x11600207 → 0.0 ✓
+2026-02-20 15:05:02.710 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.711 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600006 — tüm metodlar başarısız
+2026-02-20 15:05:02.715 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.715 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x21600007 — tüm metodlar başarısız
+2026-02-20 15:05:02.720 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.720 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160000a — tüm metodlar başarısız
+2026-02-20 15:05:02.723 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.723 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160006d — tüm metodlar başarısız
+2026-02-20 15:05:02.725 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS GGP ITE: NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.car.hardware.CarPropertyValue.getValue()' on a null object reference
+2026-02-20 15:05:02.725 11611-11611 MG4_HW                                   com.example.mg4_v3                   W    BMS getFloat 0x2160006c — tüm metodlar başarısız
+2026-02-20 15:05:02.751  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:02.751  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:02.752  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:02.752  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:02.752  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:02.752  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:02.854  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.855  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.855  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.856  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.856  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.857  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:02.960  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.960  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.960  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.961  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.961  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:02.964  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.066  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.067  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.067  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.067  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.067  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.070  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.136  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.136  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.136  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.137  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.137  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.137  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.241  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.241  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.241  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.241  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.241  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.242  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.450  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.450  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.450  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.450  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.451  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.451  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.555  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.555  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.556  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.556  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.557  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.558  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.660  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.660  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.660  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.660  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.662  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.662  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.764  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.764  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.764  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.765  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.765  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.765  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:03.834  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.834  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.834  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.834  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.835  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.836  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:03.939  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.940  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.940  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.940  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.940  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:03.944  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:04.046  3768-3768  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883767_16777216_0
+2026-02-20 15:05:04.047  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:04.047  3775-3775  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883767_16777216_0
+2026-02-20 15:05:04.047  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:04.049  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:04.049  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:04.051  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:04.052  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:04.150  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:04.150  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:04.151  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:04.151  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:04.152  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:04.155  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:04.360  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:04.360  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:04.360  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:04.360  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:04.360  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:04.360  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.4000244
+2026-02-20 15:05:04.465  3768-3768  CarAdvancedAssistedDrivingManager        com.android.car                      I  onChangeEvent,PropID,area,value:557883767_16777216_1
+2026-02-20 15:05:04.466  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:04.466  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:04.466  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:04.466  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:04.466  3775-3775  CarAdvancedAssistedDrivingManager        com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:557883767_16777216_1
+2026-02-20 15:05:04.466  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:04.467  3775-3775  CarBMSManager                            com.saicmotor.service.vehicle        I  onChangeEvent,PropID,area,value:560002055_16777216_1.2999878
+2026-02-20 15:05:04.534  5307-5307  CarBMSManager                            com.saicmotor.voiceservice           I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:04.534  3829-3829  CarBMSManager                            com.saicmotor.service.engmode        I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:04.535  5160-5160  CarBMSManager                            com.saicmotor.weathers               I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:04.535  4511-4687  CarBMSManager                            com.yfve.carotherservice             I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366
+2026-02-20 15:05:04.535  4151-4151  CarBMSManager                            com.saicmotor.adapterservice         I  onChangeEvent,PropID,area,value:560002055_16777216_1.3500366

@@ -31,7 +31,7 @@
             android:id="@+id/btnOvSeatR"
             android:layout_width="52dp"
             android:layout_height="40dp"
-            android:background="#21262D"
+            android:background="#FFA657"
             android:clickable="true"
             android:focusable="true">
 
