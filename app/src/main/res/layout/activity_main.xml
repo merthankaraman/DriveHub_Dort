@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0D1117">
@@ -168,11 +169,12 @@
             <Button
                 android:id="@+id/btnDrive"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="↻  Dongusel Degistir"
-                android:backgroundTint="#21262D"
-                android:textColor="#C9D1D9"
-                android:textSize="13sp"/>
+                android:layout_height="56dp"
+                android:text="ÖZEL"
+                android:backgroundTint="#6B3FA0"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"/>
 
         </LinearLayout>
 
@@ -203,44 +205,6 @@
                 android:textColor="#C9D1D9"
                 android:textSize="14sp"
                 android:layout_marginBottom="14dp"/>
-
-            <!-- Tek Pedal -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="TEK PEDAL"
-                android:textSize="11sp"
-                android:textColor="#6E7681"
-                android:letterSpacing="0.1"
-                android:layout_marginBottom="8dp"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="14dp">
-
-                <Button
-                    android:id="@+id/btnPedalOn"
-                    android:layout_width="0dp"
-                    android:layout_height="52dp"
-                    android:layout_weight="1"
-                    android:text="AC"
-                    android:backgroundTint="#1A7F37"
-                    android:textColor="#FFFFFF"
-                    android:textSize="13sp"
-                    android:layout_marginEnd="6dp"/>
-
-                <Button
-                    android:id="@+id/btnPedalOff"
-                    android:layout_width="0dp"
-                    android:layout_height="52dp"
-                    android:layout_weight="1"
-                    android:text="KAPAT"
-                    android:backgroundTint="#21262D"
-                    android:textColor="#8B949E"
-                    android:textSize="13sp"/>
-            </LinearLayout>
 
             <!-- Klima paneli girişi -->
             <TextView
@@ -292,53 +256,53 @@
         android:id="@+id/layoutRegenPanel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:background="#0D1117"
-        android:paddingStart="40dp"
-        android:paddingEnd="40dp"
-        android:paddingTop="24dp"
-        android:paddingBottom="24dp"
         android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingStart="40dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="40dp"
+        android:paddingBottom="24dp"
         android:visibility="gone">
 
         <!-- Başlık + Geri butonu -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginBottom="32dp"
             android:gravity="center_vertical"
-            android:layout_marginBottom="32dp">
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btnRegenBack"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"
-                android:text="←"
-                android:backgroundTint="#21262D"
-                android:textColor="#C9D1D9"
-                android:textSize="18sp"
                 android:layout_marginEnd="20dp"
+                android:backgroundTint="#21262D"
                 android:minWidth="0dp"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"/>
+                android:paddingEnd="16dp"
+                android:text="←"
+                android:textColor="#C9D1D9"
+                android:textSize="18sp" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:letterSpacing="0.08"
                 android:text="REGEN AYARLARI"
-                android:textSize="20sp"
                 android:textColor="#E6EDF3"
-                android:textStyle="bold"
-                android:letterSpacing="0.08"/>
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvRegenCurrent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:textSize="14sp"
-                android:textColor="#8B949E"/>
+                android:textColor="#8B949E"
+                android:textSize="14sp" />
 
         </LinearLayout>
 
@@ -353,65 +317,65 @@
                 android:id="@+id/btnRegenOff"
                 android:layout_width="0dp"
                 android:layout_height="72dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="KAPALI"
                 android:backgroundTint="#21262D"
+                android:text="KAPALI"
                 android:textColor="#8B949E"
                 android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
+                android:textStyle="bold" />
 
             <!-- DUSUK -->
             <Button
                 android:id="@+id/btnRegenLow"
                 android:layout_width="0dp"
                 android:layout_height="72dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="DUSUK"
                 android:backgroundTint="#21262D"
+                android:text="DUSUK"
                 android:textColor="#8B949E"
                 android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
+                android:textStyle="bold" />
 
             <!-- ORTA -->
             <Button
                 android:id="@+id/btnRegenMedium"
                 android:layout_width="0dp"
                 android:layout_height="72dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="ORTA"
                 android:backgroundTint="#21262D"
+                android:text="ORTA"
                 android:textColor="#8B949E"
                 android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
+                android:textStyle="bold" />
 
             <!-- YUKSEK -->
             <Button
                 android:id="@+id/btnRegenHigh"
                 android:layout_width="0dp"
                 android:layout_height="72dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="YUKSEK"
                 android:backgroundTint="#21262D"
+                android:text="YUKSEK"
                 android:textColor="#8B949E"
                 android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
+                android:textStyle="bold" />
 
             <!-- ADAPTIF -->
             <Button
                 android:id="@+id/btnRegenAdaptive"
                 android:layout_width="0dp"
                 android:layout_height="72dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="ADAPTIF"
                 android:backgroundTint="#21262D"
+                android:text="ADAPTIF"
                 android:textColor="#8B949E"
                 android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
+                android:textStyle="bold" />
 
             <!-- TEK PEDAL -->
             <Button
@@ -419,11 +383,11 @@
                 android:layout_width="0dp"
                 android:layout_height="72dp"
                 android:layout_weight="1"
-                android:text="TEK\nPEDAL"
                 android:backgroundTint="#21262D"
+                android:text="TEK\nPEDAL"
                 android:textColor="#8B949E"
                 android:textSize="14sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -511,31 +475,7 @@
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_weight="1"
-                android:text="SEV. 1"
-                android:backgroundTint="#21262D"
-                android:textColor="#8B949E"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
-
-            <Button
-                android:id="@+id/btnSteerL2"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
-                android:text="SEV. 2"
-                android:backgroundTint="#21262D"
-                android:textColor="#8B949E"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
-
-            <Button
-                android:id="@+id/btnSteerL3"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
-                android:text="SEV. 3"
+                android:text="AÇIK"
                 android:backgroundTint="#21262D"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
@@ -675,463 +615,332 @@
     </LinearLayout>
 
     <!-- ============================================================ -->
-    <!-- SARJ / DURUM PANELİ (overlay)                               -->
+    <!-- SARJ PANELİ (overlay)                                       -->
     <!-- ============================================================ -->
     <LinearLayout
         android:id="@+id/layoutStatusPanel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:background="#0D1117"
+        android:orientation="vertical"
         android:paddingStart="40dp"
-        android:paddingEnd="40dp"
         android:paddingTop="20dp"
+        android:paddingEnd="40dp"
         android:paddingBottom="20dp"
         android:visibility="gone">
 
-        <!-- Başlık + Geri + Yenile -->
+        <!-- Başlık + Geri + Yenile + Oto -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginBottom="16dp"
             android:gravity="center_vertical"
-            android:layout_marginBottom="20dp">
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btnStatusBack"
                 android:layout_width="wrap_content"
                 android:layout_height="44dp"
-                android:text="←"
-                android:backgroundTint="#21262D"
-                android:textColor="#C9D1D9"
-                android:textSize="18sp"
                 android:layout_marginEnd="16dp"
+                android:backgroundTint="#21262D"
                 android:minWidth="0dp"
                 android:paddingStart="14dp"
-                android:paddingEnd="14dp"/>
+                android:paddingEnd="14dp"
+                android:text="←"
+                android:textColor="#C9D1D9"
+                android:textSize="18sp" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="SARJ VE ARAÇ DURUMU"
-                android:textSize="18sp"
+                android:letterSpacing="0.06"
+                android:text="SARJ DURUMU"
                 android:textColor="#E6EDF3"
-                android:textStyle="bold"
-                android:letterSpacing="0.06"/>
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-            <Button
-                android:id="@+id/btnStatusRefresh"
+            <TextView
+                android:id="@+id/tvChargingDuration"
                 android:layout_width="wrap_content"
-                android:layout_height="44dp"
-                android:text="↻ Yenile"
-                android:backgroundTint="#1F6FEB"
-                android:textColor="#FFFFFF"
-                android:textSize="13sp"
-                android:minWidth="0dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:layout_marginEnd="8dp"/>
-
-            <Button
-                android:id="@+id/btnStatusAutoRefresh"
-                android:layout_width="wrap_content"
-                android:layout_height="44dp"
-                android:text="⏱ Oto"
-                android:backgroundTint="#21262D"
-                android:textColor="#C9D1D9"
-                android:textSize="13sp"
-                android:minWidth="0dp"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"/>
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:text="--:--:--"
+                android:textColor="#7EE787"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
-        <!-- Üst satır: SOC + Menzil + Hız -->
+        <!-- Beklenen Şarj Gücü -->
+        <TextView
+            android:id="@+id/tvExpectedPower"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:fontFamily="monospace"
+            android:text="Beklenen Şarj Gücü:  -- kW"
+            android:textColor="#FFA657"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <!-- İki sütun: AC | Batarya -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="16dp">
-
-            <!-- SOC -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="#161B22"
-                android:padding="12dp"
-                android:layout_marginEnd="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="SOC"
-                    android:textSize="10sp"
-                    android:textColor="#6E7681"
-                    android:letterSpacing="0.1"/>
-
-                <TextView
-                    android:id="@+id/tvSoc"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="--"
-                    android:textSize="28sp"
-                    android:textColor="#7EE787"
-                    android:textStyle="bold"
-                    android:fontFamily="monospace"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="%"
-                    android:textSize="11sp"
-                    android:textColor="#6E7681"/>
-
-            </LinearLayout>
-
-            <!-- Menzil -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="#161B22"
-                android:padding="12dp"
-                android:layout_marginEnd="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="MENZİL"
-                    android:textSize="10sp"
-                    android:textColor="#6E7681"
-                    android:letterSpacing="0.1"/>
-
-                <TextView
-                    android:id="@+id/tvRange"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="--"
-                    android:textSize="28sp"
-                    android:textColor="#58A6FF"
-                    android:textStyle="bold"
-                    android:fontFamily="monospace"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="km"
-                    android:textSize="11sp"
-                    android:textColor="#6E7681"/>
-
-            </LinearLayout>
-
-            <!-- Hız -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="#161B22"
-                android:padding="12dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="HIZ"
-                    android:textSize="10sp"
-                    android:textColor="#6E7681"
-                    android:letterSpacing="0.1"/>
-
-                <TextView
-                    android:id="@+id/tvSpeed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="--"
-                    android:textSize="28sp"
-                    android:textColor="#E6EDF3"
-                    android:textStyle="bold"
-                    android:fontFamily="monospace"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="km/h"
-                    android:textSize="11sp"
-                    android:textColor="#6E7681"/>
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Tablo: AC / DC -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:orientation="horizontal">
 
-            <!-- Sol: AC -->
+            <!-- Sol sütun: AC -->
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="12dp"
                 android:layout_weight="1"
-                android:orientation="vertical"
                 android:background="#161B22"
-                android:padding="14dp"
-                android:layout_marginEnd="8dp">
+                android:orientation="vertical"
+                android:padding="24dp">
 
-                <!-- Başlık -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="AC  (Alternatif Akım)"
-                    android:textSize="11sp"
+                    android:layout_marginBottom="20dp"
+                    android:letterSpacing="0.12"
+                    android:text="AC"
                     android:textColor="#6E7681"
-                    android:letterSpacing="0.08"
-                    android:layout_marginBottom="10dp"/>
+                    android:textSize="13sp" />
 
-                <!-- Satır: V -->
+                <!-- V -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="6dp">
+                    android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Voltaj"
-                        android:textSize="12sp"
-                        android:textColor="#8B949E"/>
+                        android:text="V"
+                        android:textColor="#8B949E"
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/tvAcVolt"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="-- V"
-                        android:textSize="14sp"
+                        android:fontFamily="monospace"
+                        android:text="--"
                         android:textColor="#E6EDF3"
-                        android:textStyle="bold"
-                        android:fontFamily="monospace"/>
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
-                <!-- Satır: A -->
+                <!-- A -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="6dp">
+                    android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Akım"
-                        android:textSize="12sp"
-                        android:textColor="#8B949E"/>
+                        android:text="A"
+                        android:textColor="#8B949E"
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/tvAcAmp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="-- A"
-                        android:textSize="14sp"
+                        android:fontFamily="monospace"
+                        android:text="--"
                         android:textColor="#E6EDF3"
-                        android:textStyle="bold"
-                        android:fontFamily="monospace"/>
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
-                <!-- Satır: kW -->
+                <!-- kW -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:layout_marginBottom="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Güç"
-                        android:textSize="12sp"
-                        android:textColor="#8B949E"/>
+                        android:text="kW"
+                        android:textColor="#8B949E"
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/tvAcKw"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="-- kW"
-                        android:textSize="14sp"
+                        android:fontFamily="monospace"
+                        android:text="--"
                         android:textColor="#FFA657"
-                        android:textStyle="bold"
-                        android:fontFamily="monospace"/>
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <!-- kWh (toplam enerji) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="48dp"
+                        android:layout_height="wrap_content"
+                        android:text="kWh"
+                        android:textColor="#8B949E"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvAcEnergy"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:text="--"
+                        android:textColor="#7EE787"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
             </LinearLayout>
 
-            <!-- Sağ: DC -->
+            <!-- Sağ sütun: Batarya -->
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:orientation="vertical"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
                 android:background="#161B22"
-                android:padding="14dp">
+                android:orientation="vertical"
+                android:padding="24dp">
 
-                <!-- Başlık satırı: boş | Beklenen | Gerçek -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    android:letterSpacing="0.12"
+                    android:text="Batarya"
+                    android:textColor="#6E7681"
+                    android:textSize="13sp" />
+
+                <!-- V -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="10dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="DC  (Doğru Akım)"
-                        android:textSize="11sp"
-                        android:textColor="#6E7681"
-                        android:letterSpacing="0.08"/>
-
-                    <TextView
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="Beklenen"
-                        android:textSize="10sp"
-                        android:textColor="#6E7681"
-                        android:gravity="end"/>
-
-                    <TextView
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="Gerçek"
-                        android:textSize="10sp"
-                        android:textColor="#6E7681"
-                        android:gravity="end"/>
-
-                </LinearLayout>
-
-                <!-- Satır: V -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="6dp">
+                    android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Voltaj"
-                        android:textSize="12sp"
-                        android:textColor="#8B949E"/>
-
-                    <TextView
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="--"
-                        android:textSize="12sp"
-                        android:textColor="#6E7681"
-                        android:gravity="end"
-                        android:fontFamily="monospace"/>
+                        android:text="V"
+                        android:textColor="#8B949E"
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/tvDcVolt"
-                        android:layout_width="80dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="-- V"
-                        android:textSize="14sp"
+                        android:fontFamily="monospace"
+                        android:text="--"
                         android:textColor="#E6EDF3"
-                        android:textStyle="bold"
-                        android:gravity="end"
-                        android:fontFamily="monospace"/>
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
-                <!-- Satır: A -->
+                <!-- gerçek A -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="6dp">
+                    android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Akım"
-                        android:textSize="12sp"
-                        android:textColor="#8B949E"/>
-
-                    <TextView
-                        android:id="@+id/tvDcAmpExp"
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="-- A"
-                        android:textSize="14sp"
+                        android:text="A"
                         android:textColor="#8B949E"
-                        android:gravity="end"
-                        android:fontFamily="monospace"/>
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/tvDcAmpAct"
-                        android:layout_width="80dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="-- A"
-                        android:textSize="14sp"
+                        android:fontFamily="monospace"
+                        android:text="--"
                         android:textColor="#E6EDF3"
-                        android:textStyle="bold"
-                        android:gravity="end"
-                        android:fontFamily="monospace"/>
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
-                <!-- Satır: kW -->
+                <!-- gerçek kW -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:layout_marginBottom="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Güç"
-                        android:textSize="12sp"
-                        android:textColor="#8B949E"/>
-
-                    <TextView
-                        android:id="@+id/tvDcKwExp"
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="-- kW"
-                        android:textSize="14sp"
+                        android:text="kW"
                         android:textColor="#8B949E"
-                        android:gravity="end"
-                        android:fontFamily="monospace"/>
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/tvDcKwAct"
-                        android:layout_width="80dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="-- kW"
-                        android:textSize="14sp"
+                        android:fontFamily="monospace"
+                        android:text="--"
                         android:textColor="#FFA657"
-                        android:textStyle="bold"
-                        android:gravity="end"
-                        android:fontFamily="monospace"/>
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <!-- kWh (toplam enerji) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="48dp"
+                        android:layout_height="wrap_content"
+                        android:text="kWh"
+                        android:textColor="#8B949E"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvDcEnergy"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:text="--"
+                        android:textColor="#7EE787"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 

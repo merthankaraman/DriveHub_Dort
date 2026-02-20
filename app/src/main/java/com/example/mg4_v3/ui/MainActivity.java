@@ -39,39 +39,35 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnRegenOnePedal;
     private TextView mTvRegenCurrent;
 
-    // Durum/Şarj paneli
+    // Şarj paneli
     private View     mLayoutStatusPanel;
-    private Button   mBtnStatusAutoRefresh;
-    private boolean  mAutoRefreshActive = false;
-    private final Handler mAutoRefreshHandler = new Handler();
-    private final Runnable mAutoRefreshRunnable = new Runnable() {
+    private boolean  mChargingPanelOpen = false;
+    private final Handler mChargingHandler = new Handler();
+    private final Runnable mChargingRunnable = new Runnable() {
         @Override
         public void run() {
-            if (mAutoRefreshActive) {
+            if (mChargingPanelOpen) {
                 refreshStatusPanel();
-                mAutoRefreshHandler.postDelayed(this, 1000);
+                mChargingHandler.postDelayed(this, 1000);
             }
         }
     };
-    private TextView mTvSoc;
-    private TextView mTvRange;
-    private TextView mTvSpeed;
+    private TextView mTvChargingDuration;
+    private TextView mTvExpectedPower;
     private TextView mTvAcVolt;
     private TextView mTvAcAmp;
     private TextView mTvAcKw;
+    private TextView mTvAcEnergy;
     private TextView mTvDcVolt;
-    private TextView mTvDcAmpExp;
     private TextView mTvDcAmpAct;
-    private TextView mTvDcKwExp;
     private TextView mTvDcKwAct;
+    private TextView mTvDcEnergy;
 
     // Klima paneli
     private View   mLayoutClimatePanel;
     // Direksiyon
     private Button mBtnSteerOff;
     private Button mBtnSteerL1;
-    private Button mBtnSteerL2;
-    private Button mBtnSteerL3;
     // Sol koltuk
     private Button mBtnSeatLOff;
     private Button mBtnSeatLL1;
@@ -107,34 +103,27 @@ public class MainActivity extends AppCompatActivity {
 
         // Ana ekran butonları
         findViewById(R.id.btnTestBinder).setOnClickListener(v -> testCarProperty());
-        findViewById(R.id.btnDrive).setOnClickListener(v     -> sendCommand("DRIVE_CYCLE"));
-        findViewById(R.id.btnPedalOn).setOnClickListener(v   -> sendCommand("PEDAL_ON"));
-        findViewById(R.id.btnPedalOff).setOnClickListener(v  -> sendCommand("PEDAL_OFF"));
-        findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.ECO));
+        findViewById(R.id.btnDrive).setOnClickListener(v     -> sendDriveMode(DriveMode.CUSTOM));
+findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.ECO));
         findViewById(R.id.btnNormal).setOnClickListener(v    -> sendDriveMode(DriveMode.NORMAL));
         findViewById(R.id.btnSport).setOnClickListener(v     -> sendDriveMode(DriveMode.SPORT));
         findViewById(R.id.btnSnow).setOnClickListener(v      -> sendDriveMode(DriveMode.SNOW));
 
-        // Durum/Şarj paneli
-        mLayoutStatusPanel = findViewById(R.id.layoutStatusPanel);
-        mTvSoc      = findViewById(R.id.tvSoc);
-        mTvRange    = findViewById(R.id.tvRange);
-        mTvSpeed    = findViewById(R.id.tvSpeed);
-        mTvAcVolt   = findViewById(R.id.tvAcVolt);
-        mTvAcAmp    = findViewById(R.id.tvAcAmp);
-        mTvAcKw     = findViewById(R.id.tvAcKw);
-        mTvDcVolt   = findViewById(R.id.tvDcVolt);
-        mTvDcAmpExp = findViewById(R.id.tvDcAmpExp);
-        mTvDcAmpAct = findViewById(R.id.tvDcAmpAct);
-        mTvDcKwExp  = findViewById(R.id.tvDcKwExp);
-        mTvDcKwAct  = findViewById(R.id.tvDcKwAct);
-
-        mBtnStatusAutoRefresh = findViewById(R.id.btnStatusAutoRefresh);
+        // Şarj paneli
+        mLayoutStatusPanel  = findViewById(R.id.layoutStatusPanel);
+        mTvChargingDuration = findViewById(R.id.tvChargingDuration);
+        mTvExpectedPower    = findViewById(R.id.tvExpectedPower);
+        mTvAcVolt          = findViewById(R.id.tvAcVolt);
+        mTvAcAmp           = findViewById(R.id.tvAcAmp);
+        mTvAcKw            = findViewById(R.id.tvAcKw);
+        mTvAcEnergy        = findViewById(R.id.tvAcEnergy);
+        mTvDcVolt          = findViewById(R.id.tvDcVolt);
+        mTvDcAmpAct        = findViewById(R.id.tvDcAmpAct);
+        mTvDcKwAct         = findViewById(R.id.tvDcKwAct);
+        mTvDcEnergy        = findViewById(R.id.tvDcEnergy);
 
         findViewById(R.id.btnStatusPanel).setOnClickListener(v -> openStatusPanel());
         findViewById(R.id.btnStatusBack).setOnClickListener(v  -> closeStatusPanel());
-        findViewById(R.id.btnStatusRefresh).setOnClickListener(v -> refreshStatusPanel());
-        mBtnStatusAutoRefresh.setOnClickListener(v -> toggleAutoRefresh());
 
         // Klima paneli açma butonu
         findViewById(R.id.btnClimatePanel).setOnClickListener(v -> openClimatePanel());
@@ -169,8 +158,6 @@ public class MainActivity extends AppCompatActivity {
         // Direksiyon
         mBtnSteerOff = findViewById(R.id.btnSteerOff);
         mBtnSteerL1  = findViewById(R.id.btnSteerL1);
-        mBtnSteerL2  = findViewById(R.id.btnSteerL2);
-        mBtnSteerL3  = findViewById(R.id.btnSteerL3);
         // Sol koltuk
         mBtnSeatLOff = findViewById(R.id.btnSeatLOff);
         mBtnSeatLL1  = findViewById(R.id.btnSeatLL1);
@@ -187,8 +174,6 @@ public class MainActivity extends AppCompatActivity {
         // Direksiyon buton listener'ları
         mBtnSteerOff.setOnClickListener(v -> selectSteerHeat(0));
         mBtnSteerL1.setOnClickListener(v  -> selectSteerHeat(1));
-        mBtnSteerL2.setOnClickListener(v  -> selectSteerHeat(2));
-        mBtnSteerL3.setOnClickListener(v  -> selectSteerHeat(3));
 
         // Sol koltuk listener'ları
         mBtnSeatLOff.setOnClickListener(v -> selectSeatLeft(0));
@@ -212,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mAutoRefreshHandler.removeCallbacks(mAutoRefreshRunnable);
+        mChargingHandler.removeCallbacks(mChargingRunnable);
     }
 
     // -------------------------------------------------------------------------
@@ -240,6 +225,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectRegen(RegenLevel level) {
+        // Tek pedal açıksa önce kapat, sonra regen seviyesi gönder
+        sendCommand("PEDAL_OFF");
         sendRegenLevel(level);
         highlightRegenButton(regenButton(level));
         mTvRegenCurrent.setText("Aktif: " + level.label);
@@ -275,89 +262,67 @@ public class MainActivity extends AppCompatActivity {
     private void openStatusPanel() {
         mLayoutMain.setVisibility(View.GONE);
         mLayoutStatusPanel.setVisibility(View.VISIBLE);
+        mChargingPanelOpen = true;
         refreshStatusPanel();
+        mChargingHandler.postDelayed(mChargingRunnable, 1000);
     }
 
     private void closeStatusPanel() {
-        stopAutoRefresh();
+        mChargingPanelOpen = false;
+        mChargingHandler.removeCallbacks(mChargingRunnable);
         mLayoutStatusPanel.setVisibility(View.GONE);
         mLayoutMain.setVisibility(View.VISIBLE);
     }
 
-    private void toggleAutoRefresh() {
-        if (mAutoRefreshActive) {
-            stopAutoRefresh();
-        } else {
-            mAutoRefreshActive = true;
-            mBtnStatusAutoRefresh.setBackgroundTintList(
-                    android.content.res.ColorStateList.valueOf(0xFF1A7F37));
-            mBtnStatusAutoRefresh.setTextColor(0xFFFFFFFF);
-            mAutoRefreshHandler.postDelayed(mAutoRefreshRunnable, 1000);
-        }
-    }
-
-    private void stopAutoRefresh() {
-        mAutoRefreshActive = false;
-        mAutoRefreshHandler.removeCallbacks(mAutoRefreshRunnable);
-        mBtnStatusAutoRefresh.setBackgroundTintList(
-                android.content.res.ColorStateList.valueOf(COLOR_INACTIVE));
-        mBtnStatusAutoRefresh.setTextColor(0xFFC9D1D9);
-    }
-
     private void refreshStatusPanel() {
-        // SOC
-        float soc = MG4Hardware.getSoc();
-        mTvSoc.setText(Float.isNaN(soc) ? "--" : String.format("%.1f", soc));
-
-        // Menzil
-        int range = MG4Hardware.getRange();
-        mTvRange.setText(range >= 0 ? String.valueOf(range) : "--");
-
-        // Hız (km/h — araç doğrudan km/h gönderiyor)
-        float speedKmh = MG4Hardware.getSpeedKmh();
-        if (!Float.isNaN(speedKmh) && speedKmh >= 0) {
-            mTvSpeed.setText(String.format("%.0f", speedKmh));
-        } else {
-            mTvSpeed.setText("--");
-        }
-
-        // DC voltaj
-        float dcVolt = MG4Hardware.getDcVoltage();
-        mTvDcVolt.setText(Float.isNaN(dcVolt) ? "-- V" : String.format("%.1f V", dcVolt));
-
-        // DC akım gerçek
+        // DC voltaj (her iki sütun için gerekli)
+        float dcVolt   = MG4Hardware.getDcVoltage();
         float dcAmpAct = MG4Hardware.getDcCurrentActual();
-        mTvDcAmpAct.setText(Float.isNaN(dcAmpAct) ? "-- A" : String.format("%.1f A", dcAmpAct));
-
-        // DC akım beklenen
         float dcAmpExp = MG4Hardware.getDcCurrentExpected();
-        mTvDcAmpExp.setText(Float.isNaN(dcAmpExp) ? "-- A" : String.format("%.1f A", dcAmpExp));
 
-        // DC güç hesabı: P = V × I
-        if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct)) {
-            mTvDcKwAct.setText(String.format("%.1f kW", (dcVolt * dcAmpAct) / 1000f));
-        } else {
-            mTvDcKwAct.setText("-- kW");
-        }
+        // Beklenen Şarj Gücü (üstteki metin)
         if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) {
-            mTvDcKwExp.setText(String.format("%.1f kW", (dcVolt * dcAmpExp) / 1000f));
+            float expKw = (dcVolt * dcAmpExp) / 1000f;
+            mTvExpectedPower.setText(String.format("Beklenen Şarj Gücü:  %.1f kW", expKw));
         } else {
-            mTvDcKwExp.setText("-- kW");
+            mTvExpectedPower.setText("Beklenen Şarj Gücü:  -- kW");
         }
 
-        // AC voltaj
+        // AC sütunu
         float acVolt = MG4Hardware.getAcVoltage();
-        mTvAcVolt.setText(Float.isNaN(acVolt) ? "-- V" : String.format("%.0f V", acVolt));
-
-        // AC akım
-        float acAmp = MG4Hardware.getAcCurrent();
-        mTvAcAmp.setText(Float.isNaN(acAmp) ? "-- A" : String.format("%.1f A", acAmp));
-
-        // AC güç: P = V × I
+        float acAmp  = MG4Hardware.getAcCurrent();
+        mTvAcVolt.setText(Float.isNaN(acVolt) ? "--" : String.format("%.0f V", acVolt));
+        mTvAcAmp.setText(Float.isNaN(acAmp)   ? "--" : String.format("%.1f A", acAmp));
         if (!Float.isNaN(acVolt) && !Float.isNaN(acAmp)) {
             mTvAcKw.setText(String.format("%.1f kW", (acVolt * acAmp) / 1000f));
         } else {
-            mTvAcKw.setText("-- kW");
+            mTvAcKw.setText("--");
+        }
+
+        // Batarya sütunu
+        mTvDcVolt.setText(Float.isNaN(dcVolt)     ? "--" : String.format("%.1f V", dcVolt));
+        mTvDcAmpAct.setText(Float.isNaN(dcAmpAct) ? "--" : String.format("%.1f A", dcAmpAct));
+        if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct)) {
+            mTvDcKwAct.setText(String.format("%.1f kW", (dcVolt * dcAmpAct) / 1000f));
+        } else {
+            mTvDcKwAct.setText("--");
+        }
+
+        // Enerji satırları (şarj boyunca biriken)
+        float acEnergy = MG4Hardware.getAcEnergyKwh();
+        float dcEnergy = MG4Hardware.getDcEnergyKwh();
+        mTvAcEnergy.setText(acEnergy > 0f ? String.format("%.3f kWh", acEnergy) : "--");
+        mTvDcEnergy.setText(dcEnergy > 0f ? String.format("%.3f kWh", dcEnergy) : "--");
+
+        // Şarj süresi (sağ üst köşe)
+        long totalSec = MG4Hardware.getChargingDurationMs() / 1000;
+        if (totalSec > 0) {
+            long h = totalSec / 3600;
+            long m = (totalSec % 3600) / 60;
+            long s = totalSec % 60;
+            mTvChargingDuration.setText(String.format("%02d:%02d:%02d", h, m, s));
+        } else {
+            mTvChargingDuration.setText("--:--:--");
         }
     }
 
@@ -383,12 +348,12 @@ public class MainActivity extends AppCompatActivity {
     private void selectSteerHeat(int level) {
         sendHeatSteer(level);
         highlightSteerButton(steerButton(level));
-        String label = level == 0 ? "Direksiyon: Kapalı" : "Direksiyon: Sev." + level;
+        String label = level == 0 ? "Direksiyon: Kapalı" : "Direksiyon: Açık";
         Toast.makeText(this, label, Toast.LENGTH_SHORT).show();
     }
 
     private void highlightSteerButton(Button selected) {
-        Button[] all = { mBtnSteerOff, mBtnSteerL1, mBtnSteerL2, mBtnSteerL3 };
+        Button[] all = { mBtnSteerOff, mBtnSteerL1 };
         for (Button b : all) {
             boolean active = (b == selected);
             b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
@@ -398,12 +363,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private Button steerButton(int level) {
-        switch (level) {
-            case 1:  return mBtnSteerL1;
-            case 2:  return mBtnSteerL2;
-            case 3:  return mBtnSteerL3;
-            default: return mBtnSteerOff;
-        }
+        return level == 1 ? mBtnSteerL1 : mBtnSteerOff;
     }
 
     // Sol koltuk

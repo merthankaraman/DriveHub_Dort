@@ -53,6 +53,7 @@ public class MG4Hardware {
     private static final int PROP_CHR_AMP_EXP    = 0x2160000A; // 560002058 — float A beklenen (CarBMSManager)
     private static final int PROP_AC_AMP         = 0x2160006C; // 560002108 — float A AC giriş (CarBMSManager)
     private static final int PROP_AC_VOLT        = 0x2160006D; // 560002109 — float V AC giriş (CarBMSManager)
+    private static final int PROP_CHG_STATUS     = 557904905;  // 0x2140F409 — şarj durumu (0=şarjda değil)
 
     // Katman 2 — Binder (yedek, uid.system gerektirir)
     private static final String DESCRIPTOR_VEHICLE =
@@ -77,6 +78,12 @@ public class MG4Hardware {
     // key=propId, value=son bilinen değer (Float veya Integer olarak Object)
     private static final java.util.concurrent.ConcurrentHashMap<Integer, Object> sBmsCache =
             new java.util.concurrent.ConcurrentHashMap<>();
+
+    // Enerji birikimi — UI kapalı olsa bile BMS callback içinde güncellenir
+    private static volatile float sAcEnergyKwh      = 0f;
+    private static volatile float sDcEnergyKwh      = 0f;
+    private static volatile long  sLastBmsEventMs   = 0L;
+    private static volatile long  sChargingElapsedMs = 0L;
 
     // State
     private static Object  sCarPropertyManager = null;
@@ -119,6 +126,10 @@ public class MG4Hardware {
         sCarHvacManager     = null;
         sVehicleBinder      = null;
         sBmsCache.clear();
+        sAcEnergyKwh       = 0f;
+        sDcEnergyKwh       = 0f;
+        sLastBmsEventMs    = 0L;
+        sChargingElapsedMs = 0L;
         sInitialized        = false;
         sCarBindAttempted   = false;
         Log.i(TAG, "destroy()");
@@ -561,6 +572,31 @@ public class MG4Hardware {
         return Float.NaN;
     }
 
+    /** Araç şarjda mı? BMS cache'teki PROP_CHG_STATUS'a bakar. */
+    private static boolean isCharging() {
+        Object val = sBmsCache.get(PROP_CHG_STATUS);
+        if (val instanceof Number) return ((Number) val).intValue() > 0;
+        return false;
+    }
+
+    /** AC girişinden gelen toplam enerji — kWh (şarj boyunca birikir) */
+    public static float getAcEnergyKwh() { return sAcEnergyKwh; }
+
+    /** Bataryanın aldığı toplam enerji — kWh (şarj boyunca birikir) */
+    public static float getDcEnergyKwh() { return sDcEnergyKwh; }
+
+    /** Şarj süresi — ms (isCharging() true olan sürenin toplamı) */
+    public static long getChargingDurationMs() { return sChargingElapsedMs; }
+
+    /** Enerji ve süre sayaçlarını sıfırla */
+    public static void resetEnergy() {
+        sAcEnergyKwh       = 0f;
+        sDcEnergyKwh       = 0f;
+        sLastBmsEventMs    = 0L;
+        sChargingElapsedMs = 0L;
+        Log.i(TAG, "resetEnergy() çağrıldı");
+    }
+
     // -------------------------------------------------------------------------
     // CarPropertyManager — reflection ile set/get
     // -------------------------------------------------------------------------
@@ -748,6 +784,25 @@ public class MG4Hardware {
                                     sBmsCache.put(propId, rawVal);
                                     Log.d(TAG, "  BMS cache ← 0x" + Integer.toHexString(propId)
                                             + " = " + rawVal);
+                                    // Enerji birikimi: DC voltaj her geldiğinde tetikle (BMS döngüsü başına 1×)
+                                    if (propId == PROP_BATT_VOLT) {
+                                        long nowMs = android.os.SystemClock.elapsedRealtime();
+                                        long deltaMs = (sLastBmsEventMs > 0) ? (nowMs - sLastBmsEventMs) : 0;
+                                        sLastBmsEventMs = nowMs;
+                                        if (deltaMs > 0 && deltaMs < 5000 && isCharging()) {
+                                            sChargingElapsedMs += deltaMs;
+                                            float acV = bmsFloat(PROP_AC_VOLT);
+                                            float acA = bmsFloat(PROP_AC_AMP);
+                                            if (!Float.isNaN(acV) && !Float.isNaN(acA) && acA > 0f) {
+                                                sAcEnergyKwh += (acV * acA / 1000f) * deltaMs / 3_600_000f;
+                                            }
+                                            float dcV = ((Number) rawVal).floatValue();
+                                            float dcA = bmsFloat(PROP_CHR_AMP_ACT);
+                                            if (!Float.isNaN(dcA) && dcA > 0f) {
+                                                sDcEnergyKwh += (dcV * dcA / 1000f) * deltaMs / 3_600_000f;
+                                            }
+                                        }
+                                    }
                                 }
                             } catch (Exception ex) {
                                 Log.w(TAG, "  BMS callback parse hata: " + ex.getMessage());
