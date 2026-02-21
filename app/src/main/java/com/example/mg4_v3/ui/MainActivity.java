@@ -12,10 +12,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.mg4_v3.R;
+import com.example.mg4_v3.audio.EngineSoundManager;
 import com.example.mg4_v3.hardware.MG4Hardware;
 import com.example.mg4_v3.model.DriveMode;
 import com.example.mg4_v3.model.RegenLevel;
 import com.example.mg4_v3.service.MG4ControlService;
+
+import static com.example.mg4_v3.audio.EngineSoundManager.SoundMode;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,6 +28,15 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView mTvStatus;
     private TextView mTvBinder;
+    private TextView mTvSpeed;
+    
+    // Yapay motor sesi
+    private EngineSoundManager mEngineSound;
+    private Button mBtnSoundToggle;
+    private Button mBtnSoundLoop;
+    private Button mBtnSoundFull;
+    private Button mBtnSoundVirtualGear;
+    private boolean mSoundEnabled = true; // Varsayılan: açık
 
     // Ana ekran
     private View mLayoutMain;
@@ -63,6 +75,27 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvDcKwAct;
     private TextView mTvDcEnergy;
 
+    // Hız güncelleme
+    private final Handler mSpeedHandler = new Handler();
+    private final Runnable mSpeedRunnable = new Runnable() {
+        @Override
+        public void run() {
+            float speed = MG4Hardware.getSpeedKmh();
+            if (mTvSpeed != null) {
+                if (Float.isNaN(speed)) {
+                    mTvSpeed.setText("-- km/h");
+                } else {
+                    mTvSpeed.setText(String.format("%.0f km/h", speed));
+                }
+            }
+            // Yapay motor sesini güncelle
+            if (mEngineSound != null) {
+                mEngineSound.onSpeedChanged(speed);
+            }
+            mSpeedHandler.postDelayed(this, 500);
+        }
+    };
+
     // Klima paneli
     private View   mLayoutClimatePanel;
     // Direksiyon
@@ -86,6 +119,61 @@ public class MainActivity extends AppCompatActivity {
 
         mTvStatus = findViewById(R.id.tvStatus);
         mTvBinder = findViewById(R.id.tvBinderStatus);
+        mTvSpeed  = findViewById(R.id.tvSpeed);
+        
+        // Motor sesi butonları
+        mBtnSoundToggle = findViewById(R.id.btnSoundToggle);
+        mBtnSoundLoop = findViewById(R.id.btnSoundLoop);
+        mBtnSoundFull = findViewById(R.id.btnSoundFull);
+        mBtnSoundVirtualGear = findViewById(R.id.btnSoundVirtualGear);
+
+        // Araç servislerini başlat
+        MG4Hardware.init(this);
+        
+        // Yapay motor sesi yöneticisini başlat
+        mEngineSound = EngineSoundManager.getInstance(this);
+        
+        // Motor sesi aç/kapa butonu
+        mBtnSoundToggle.setOnClickListener(v -> {
+            mSoundEnabled = !mSoundEnabled;
+            if (mSoundEnabled) {
+                mEngineSound.start();
+                Toast.makeText(this, "Motor sesi açıldı", Toast.LENGTH_SHORT).show();
+            } else {
+                mEngineSound.stop();
+                Toast.makeText(this, "Motor sesi kapatıldı", Toast.LENGTH_SHORT).show();
+            }
+            updateSoundToggleButton();
+        });
+        
+        // Motor sesi modu butonları
+        mBtnSoundLoop.setOnClickListener(v -> {
+            if (mSoundEnabled) {
+                mEngineSound.setMode(SoundMode.LOOP);
+                updateSoundModeButtons(SoundMode.LOOP);
+                Toast.makeText(this, "Motor sesi: Loop (Vites yok)", Toast.LENGTH_SHORT).show();
+            }
+        });
+        
+        mBtnSoundFull.setOnClickListener(v -> {
+            if (mSoundEnabled) {
+                mEngineSound.setMode(SoundMode.FULL);
+                updateSoundModeButtons(SoundMode.FULL);
+                Toast.makeText(this, "Motor sesi: Tam (Vites var)", Toast.LENGTH_SHORT).show();
+            }
+        });
+        
+        mBtnSoundVirtualGear.setOnClickListener(v -> {
+            if (mSoundEnabled) {
+                mEngineSound.setMode(SoundMode.VIRTUAL_GEAR);
+                updateSoundModeButtons(SoundMode.VIRTUAL_GEAR);
+                Toast.makeText(this, "Motor sesi: Yapay Vites (6 vites simülasyonu)", Toast.LENGTH_SHORT).show();
+            }
+        });
+        
+        // Başlangıçta Loop modunu göster ve ses açık durumunu göster
+        updateSoundModeButtons(SoundMode.LOOP);
+        updateSoundToggleButton();
 
         // Versiyon numarasını göster
         try {
@@ -192,12 +280,33 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     protected void onResume() {
         super.onResume();
         mTvStatus.setText("✅ Servis çalışıyor. ★ tuşu aktif.");
+        mSpeedHandler.post(mSpeedRunnable);
+        // Yapay motor sesini başlat (eğer açıksa)
+        if (mEngineSound != null && mSoundEnabled) {
+            mEngineSound.start();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mChargingHandler.removeCallbacks(mChargingRunnable);
+        mSpeedHandler.removeCallbacks(mSpeedRunnable);
+        // Yapay motor sesini temizle
+        if (mEngineSound != null) {
+            mEngineSound.stop();
+            mEngineSound = null;
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mSpeedHandler.removeCallbacks(mSpeedRunnable);
+        // Yapay motor sesini durdur
+        if (mEngineSound != null) {
+            mEngineSound.stop();
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -420,6 +529,57 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Motor sesi modu
+    // -------------------------------------------------------------------------
+    
+    private void updateSoundToggleButton() {
+        if (mBtnSoundToggle == null) return;
+        
+        if (mSoundEnabled) {
+            mBtnSoundToggle.setText("🔊 Ses Kapa");
+            mBtnSoundToggle.setBackgroundTintList(
+                    android.content.res.ColorStateList.valueOf(0xFF1A7F37)); // Yeşil
+            mBtnSoundToggle.setTextColor(0xFFFFFFFF);
+            // Mod butonlarını aktif et
+            mBtnSoundLoop.setEnabled(true);
+            mBtnSoundFull.setEnabled(true);
+            mBtnSoundVirtualGear.setEnabled(true);
+        } else {
+            mBtnSoundToggle.setText("🔇 Ses Aç");
+            mBtnSoundToggle.setBackgroundTintList(
+                    android.content.res.ColorStateList.valueOf(COLOR_INACTIVE)); // Gri
+            mBtnSoundToggle.setTextColor(0xFF8B949E);
+            // Mod butonlarını pasif et
+            mBtnSoundLoop.setEnabled(false);
+            mBtnSoundFull.setEnabled(false);
+            mBtnSoundVirtualGear.setEnabled(false);
+        }
+    }
+    
+    private void updateSoundModeButtons(SoundMode activeMode) {
+        if (mBtnSoundLoop == null || mBtnSoundFull == null || mBtnSoundVirtualGear == null) return;
+        
+        boolean isLoop = (activeMode == SoundMode.LOOP);
+        boolean isFull = (activeMode == SoundMode.FULL);
+        boolean isVirtualGear = (activeMode == SoundMode.VIRTUAL_GEAR);
+        
+        mBtnSoundLoop.setBackgroundTintList(
+                android.content.res.ColorStateList.valueOf(
+                        isLoop ? COLOR_ACTIVE : COLOR_INACTIVE));
+        mBtnSoundLoop.setTextColor(isLoop ? 0xFFFFFFFF : 0xFF8B949E);
+        
+        mBtnSoundFull.setBackgroundTintList(
+                android.content.res.ColorStateList.valueOf(
+                        isFull ? COLOR_ACTIVE : COLOR_INACTIVE));
+        mBtnSoundFull.setTextColor(isFull ? 0xFFFFFFFF : 0xFF8B949E);
+        
+        mBtnSoundVirtualGear.setBackgroundTintList(
+                android.content.res.ColorStateList.valueOf(
+                        isVirtualGear ? COLOR_ACTIVE : COLOR_INACTIVE));
+        mBtnSoundVirtualGear.setTextColor(isVirtualGear ? 0xFFFFFFFF : 0xFF8B949E);
+    }
+    
     // -------------------------------------------------------------------------
     // Binder test
     // -------------------------------------------------------------------------
