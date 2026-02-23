@@ -4,4 +4,6 @@
         <!-- Customize your dark theme here. -->
         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
     </style>
+
+    <style name="Theme.MG4_V3" parent="Base.Theme.MG4_V3" />
 </resources>

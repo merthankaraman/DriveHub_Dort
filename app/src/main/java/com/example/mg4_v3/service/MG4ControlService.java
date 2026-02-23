@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.PixelFormat;
 import android.media.session.MediaController;
@@ -104,7 +105,13 @@ public class MG4ControlService extends Service {
 
         updateNotification("Bağlanıyor...");
         registerHardkeyReceiver();
-        showOverlay();
+        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        boolean overlayEnabled = prefs.getBoolean("overlay_enabled", true);
+        if (overlayEnabled) {
+            showOverlay();
+        } else {
+            Log.i(TAG, "Overlay kullanıcı ayarı nedeniyle kapalı (overlay_enabled=false)");
+        }
         Log.i(TAG, "=== onCreate tamamlandı ===");
     }
 
@@ -137,6 +144,9 @@ public class MG4ControlService extends Service {
     @SuppressLint("InflateParams")
     private void showOverlay() {
         try {
+            // Eski overlay varsa temizle
+            removeOverlay();
+
             mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
             LayoutInflater inflater = LayoutInflater.from(this);
 
@@ -273,6 +283,8 @@ public class MG4ControlService extends Service {
             if (mOverlayLeft  != null) try { mWindowManager.removeView(mOverlayLeft);  } catch (Exception ignored) {}
             if (mOverlayRight != null) try { mWindowManager.removeView(mOverlayRight); } catch (Exception ignored) {}
         }
+        mOverlayLeft = null;
+        mOverlayRight = null;
     }
 
     // -------------------------------------------------------------------------
@@ -674,6 +686,14 @@ public class MG4ControlService extends Service {
                 updateNotification("Sağ Koltuk: " + (seatRLevel == 0 ? "Kapalı" : "Sev." + seatRLevel));
                 break;
             }
+            case "OVERLAY_ON":
+                showOverlay();
+                updateNotification("Overlay: Açık");
+                break;
+            case "OVERLAY_OFF":
+                removeOverlay();
+                updateNotification("Overlay: Kapalı");
+                break;
         }
     }
 

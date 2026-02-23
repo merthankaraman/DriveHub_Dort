@@ -71,18 +71,20 @@ public class EngineSoundManager {
     // Volume aralığı (0.0 = sessiz, 1.0 = tam ses)
     // Müzikle birlikte çalması için düşük tutuyoruz
     private static final float VOLUME_MIN = 0.0f;   // 0 km/h için (sessiz)
-    private static final float VOLUME_MAX = 0.35f; // 150 km/h için (müziği bastırmayacak seviye)
+    private static final float VOLUME_MAX = 0.50f; // 150 km/h için (müziği bastırmayacak seviye)
     
     // Minimum hız eşiği — bu hızın altında ses çalmaz
     private static final float MIN_SPEED_TO_PLAY = 5f; // km/h
     
-    // Loop için dosya zaman aralığı — 3–6 sn = 1000 RPM → 10000 RPM (içerik zaten ramp)
-    private static final int LOOP_START_MS = 3000;   // 3 sn = 1000 RPM
-    private static final int LOOP_END_MS = 6000;     // 6 sn = 10000 RPM
+    // Loop için dosya zaman aralığı — 0–8 sn = 1000 RPM → 10000 RPM (içerik zaten ramp)
+    private static final int LOOP_START_MS = 0;   // 0 sn = 1000 RPM
+    private static final int LOOP_END_MS = 8000;     // 8 sn = 10000 RPM
     
     // Yapay viteste sabit hız için: istenen RPM'deki kısa dilimi loop'la (pitch 1.0 = doğru tını)
-    private static final int RPM_SLICE_HALF_MS = 200; // Dilim = merkez ±200ms (400ms loop)
-    
+    private static final int RPM_SLICE_HALF_MS = 350; // Dilim = merkez ±350ms (700ms loop, daha akıcı)
+    /** Vites geçişinde histerezis (km/h): sınırda sürekli atlama olmasın */
+    private static final float VIRTUAL_GEAR_HYSTERESIS_KMH = 5f;
+
     // Pozisyon kontrolü için timer interval
     private static final int POSITION_CHECK_INTERVAL_MS = 80;
     
@@ -377,7 +379,7 @@ public class EngineSoundManager {
             
             // Yapay vites modunda: 3–6 sn = 1000→10000 RPM; istenen RPM'deki DİLİMİ loop'la, pitch=1.0
             if (mCurrentMode == SoundMode.VIRTUAL_GEAR) {
-                int gearIndex = findVirtualGear(speedKmh);
+                int gearIndex = findVirtualGearWithHysteresis(speedKmh, mCurrentVirtualGear);
                 if (gearIndex >= 0) {
                     VirtualGear gear = VIRTUAL_GEARS[gearIndex];
                     if (mCurrentVirtualGear != gearIndex && mCurrentVirtualGear >= 0) {
@@ -471,7 +473,7 @@ public class EngineSoundManager {
     }
     
     /**
-     * Hıza göre yapay vites bulur.
+     * Hıza göre yapay vites bulur (histerezis yok).
      */
     private int findVirtualGear(float speedKmh) {
         for (int i = 0; i < VIRTUAL_GEARS.length; i++) {
@@ -480,8 +482,30 @@ public class EngineSoundManager {
                 return i;
             }
         }
-        // Son vites (maksimum)
         return VIRTUAL_GEARS.length - 1;
+    }
+
+    /**
+     * Histerezis ile vites seçer: sınırda (örn. 40–41 km/h) sürekli vites atlaması olmaz.
+     * Yukarı vites için hız biraz üst eşiği geçmeli, aşağı vites için biraz alt eşiği geçmeli.
+     */
+    private int findVirtualGearWithHysteresis(float speedKmh, int currentGearIndex) {
+        int rawGear = findVirtualGear(speedKmh);
+        if (currentGearIndex < 0) return rawGear;
+
+        if (rawGear > currentGearIndex) {
+            // Yukarı vites: yeni vitesin min hızı + histerezis geçilmeli
+            float upThreshold = VIRTUAL_GEARS[rawGear].minSpeed + VIRTUAL_GEAR_HYSTERESIS_KMH;
+            if (speedKmh >= upThreshold) return rawGear;
+            return currentGearIndex;
+        }
+        if (rawGear < currentGearIndex) {
+            // Aşağı vites: mevcut vitesin min hızı - histerezis altına düşmeli
+            float downThreshold = VIRTUAL_GEARS[currentGearIndex].minSpeed - VIRTUAL_GEAR_HYSTERESIS_KMH;
+            if (speedKmh <= downThreshold) return rawGear;
+            return currentGearIndex;
+        }
+        return currentGearIndex;
     }
     
     /**

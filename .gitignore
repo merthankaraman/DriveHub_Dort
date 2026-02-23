@@ -69,6 +69,9 @@ fastlane/readme.md
 # Claude Code
 .claude/
 
+# Cursor (kurallar ve ayarlar yerelde kalsın)
+.cursor/
+
 # Version control
 .svn/
 

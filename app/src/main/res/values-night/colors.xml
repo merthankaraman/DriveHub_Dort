@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Gece modu yüzey + metin renkleri -->
+    <color name="surface">#0D1117</color>
+    <color name="surface_variant">#161B22</color>
+    <!-- Sayısal değerler (V / A / kW / kWh) için yüksek kontrastlı renk -->
+    <color name="status_value">#E6EDF3</color>
+</resources>

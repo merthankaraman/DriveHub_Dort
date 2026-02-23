@@ -486,17 +486,40 @@ private static float bmsFloat(int propId) {
 ### Kritik Kural
 BMS'e pull isteği **hiç gönderme**. Sadece `registerBmsCallback()` ile abone ol, değerleri cache'e yaz, getter'lar cache'ten okusun.
 
-### BMS Property ID'leri (push ile gelen değerler)
+### BMS Property ID — Yanlış Yaptığımız ve Doğru Yöntem
 
-| Özellik | PropID (hex) | PropID (decimal) | Tip |
-|---|---|---|---|
-| SOC | `0x21600004` | 560002052 | float % |
-| Kalan Menzil | `0x214099DC` | 557904924 | int km |
-| DC Batarya Voltajı | `0x21600006` | 560002054 | float V |
-| DC Şarj Akımı (gerçek) | `0x21600007` | 560002055 | float A |
-| DC Şarj Akımı (beklenen) | `0x2160000A` | 560002058 | float A |
-| AC Giriş Akımı | `0x2160006C` | 560002108 | float A |
-| AC Giriş Voltajı | `0x2160006D` | 560002109 | float V |
+**Ne yanlış yaptık:** Kodda propId'leri hex sabitlerle yazmıştık (`0x2160006C` vb.) ve yorumda "560002108" yazıyordu. Ama `0x2160006C` aslında **560000108** (ondalık), araç ise callback'te **560002108** gönderiyor. Cache'e `getPropertyId()` ile gelen **ondalık** key yazılıyor; getter'da ise hex'ten hesaplanan yanlış sayıyla okuyorduk. Sonuç: cache key eşleşmediği için V/A hep NaN, şarj ekranında "--" görünüyordu.
+
+**Nasıl çekilir (doğru yöntem):**
+1. Logcat'te araç BMS satırlarına bak: `CarBMSManager: onChangeEvent,PropID,area,value:560002108_16777216_8.0`
+2. Buradaki **ilk sayı (560002108)** gerçek propId — ondalık (decimal).
+3. Kodda sabitleri **doğrudan bu onluk değerlerle** tanımla. Hex kullanma (hex↔decimal dönüşümü kolayca hatalı oluyor).
+4. Callback proxy'de `event.getPropertyId()` (veya reflection ile alınan propId) ile cache'e yazılan key ile getter'daki sabit **birebir aynı** olmalı.
+
+```java
+// Doğru — logcat'teki onluk değerler (log 2302261213 doğruladı)
+private static final int PROP_AC_AMP  = 560002108;  // AC giriş akımı A
+private static final int PROP_AC_VOLT = 560002109;  // AC giriş voltajı V
+private static final int PROP_BATT_VOLT = 560002054;
+private static final int PROP_CHR_AMP_ACT = 560002055;
+// Yanlış örnek: 0x2160006C = 560000108 ≠ 560002108 → cache eşleşmez
+```
+
+**Sistem logu ile uygulama callback'i farklı propId kullanabilir:** CarBMSManager sistem logunda `560002054_16777216_417.5` görünürken, uygulamamızdaki `CarPropertyValue.getPropertyId()` **0x2160f406** (560039942) dönebiliyor. Cache key, callback'te gelen getPropertyId() değeridir — sabitleri mutlaka **kendi logumuzdaki** "BMS CACHE OK 0x..." değerlerine göre ayarla (log 2302261219).
+
+**Şarj ekranında sadece kW görünüyorsa:** Cache key (callback'teki propId) ile getter'daki sabit eşleşmiyordur. Logda "BMS CACHE OK 0x2160f406" gibi satırlara bak; kodda kullanılan sabitler bu hex/onluk değerlerle aynı olmalı.
+
+### BMS Property ID'leri (push ile gelen — kodda onluk kullan)
+
+| Özellik | PropID (kodda kullan — decimal) | Tip |
+|---|---|---|
+| SOC | 560002052 | float % |
+| Kalan Menzil | 557904924 | int km |
+| DC Batarya Voltajı | 560002054 | float V |
+| DC Şarj Akımı (gerçek) | 560002055 | float A |
+| DC Şarj Akımı (beklenen) | 560002058 | float A |
+| AC Giriş Akımı | 560002108 | float A |
+| AC Giriş Voltajı | 560002109 | float V |
 
 ---
 
@@ -612,4 +635,4 @@ Bu araştırma MG4 EH32 için yapıldı. Farklı MG modelleri veya farklı EH s�
 
 ---
 
-*Bu doküman MG4 EH32 projesinde elde edilen pratik deneyimlere dayanmaktadır. Tüm değerler araç üzerinde test edilerek doğrulanmıştır. Son güncelleme: Bölüm 17-21 (CarBMSManager push-only, HVAC callback overlay senkronizasyonu, hız okuma, TYPE_APPLICATION_OVERLAY, kod temizliği stratejisi).*
+*Bu doküman MG4 EH32 projesinde elde edilen pratik deneyimlere dayanmaktadır. Tüm değerler araç üzerinde test edilerek doğrulanmıştır. Son güncelleme: Bölüm 17 (BMS property ID — araç onluk gönderiyor, kodda onluk sabit kullan; hex hesaplama yanlış eşleşmeye yol açar), 18-22.*

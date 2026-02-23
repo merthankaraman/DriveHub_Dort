@@ -45,15 +45,16 @@ public class MG4Hardware {
     private static final int AREA_HVAC          = 0x75;       // 117
 
     // Araç durum / BMS property'leri (VehicleConditionBinder + VehicleChargingBinder)
+    // CarPropertyValue.getPropertyId() ile callback'te DÖNEN değerler (log 2302261219: 0x2160f406 vb.)
     private static final int PROP_SPEED          = 0x11600207; // 291504647 — float km/h (CarSensorManager)
-    private static final int PROP_SOC            = 0x21600004; // 560002052 — float % (CarBMSManager)
+    private static final int PROP_SOC            = 560002052;   // float % (CarBMSManager)
     private static final int PROP_RANGE          = 0x214099DC; // 557904924 — int km (CarBMSManager)
-    private static final int PROP_BATT_VOLT      = 0x21600006; // 560002054 — float V (CarBMSManager)
-    private static final int PROP_CHR_AMP_ACT    = 0x21600007; // 560002055 — float A gerçek (CarBMSManager)
-    private static final int PROP_CHR_AMP_EXP    = 0x2160000A; // 560002058 — float A beklenen (CarBMSManager)
-    private static final int PROP_AC_AMP         = 0x2160006C; // 560002108 — float A AC giriş (CarBMSManager)
-    private static final int PROP_AC_VOLT        = 0x2160006D; // 560002109 — float V AC giriş (CarBMSManager)
-    private static final int PROP_CHG_STATUS     = 557904905;  // 0x2140F409 — şarj durumu (0=şarjda değil)
+    private static final int PROP_BATT_VOLT      = 0x2160f406;  // 560039942 — float V DC (callback'te gelen)
+    private static final int PROP_CHR_AMP_ACT   = 0x2160f407;  // 560039943 — float A gerçek (callback'te gelen)
+    private static final int PROP_CHR_AMP_EXP   = 0x2160f40A;  // 560039946 — float A beklenen (pattern; logda görünmezse NaN kalır)
+    private static final int PROP_AC_AMP        = 0x2160f43c;  // 560039996 — float A AC giriş (callback'te gelen)
+    private static final int PROP_AC_VOLT      = 0x2160f43d;  // 560039997 — float V AC giriş (callback'te gelen)
+    private static final int PROP_CHG_STATUS    = 557904905;   // şarj durumu (0=şarjda değil)
 
     // Katman 2 — Binder (yedek, uid.system gerektirir)
     private static final String DESCRIPTOR_VEHICLE =
@@ -79,11 +80,19 @@ public class MG4Hardware {
     private static final java.util.concurrent.ConcurrentHashMap<Integer, Object> sBmsCache =
             new java.util.concurrent.ConcurrentHashMap<>();
 
+    /** İlk BMS callback'te bir kez loglamak için */
+    private static volatile boolean sBmsFirstEventLogged = false;
+    /** Eksik BMS parse metod uyarısı bir kez */
+    private static volatile boolean sBmsParseWarningLogged = false;
+    private static volatile boolean sBmsPropIdWarningLogged = false;
     // Enerji birikimi — UI kapalı olsa bile BMS callback içinde güncellenir
-    private static volatile float sAcEnergyKwh      = 0f;
-    private static volatile float sDcEnergyKwh      = 0f;
-    private static volatile long  sLastBmsEventMs   = 0L;
-    private static volatile long  sChargingElapsedMs = 0L;
+    private static volatile float sAcEnergyKwh       = 0f;
+    private static volatile float sDcEnergyKwh       = 0f;
+    private static volatile long  sLastBmsEventMs    = 0L;
+    // Şarj süresi için basit sayaç — şarj başladığı anda sistem saatini tutar
+    private static volatile long  sChargingStartWallMs = 0L;
+    // Detay log açık mı? (BMS/StatusPanel spam'i için)
+    private static volatile boolean sLogEnabled = true;
 
     // State
     private static Object  sCarPropertyManager = null;
@@ -101,35 +110,45 @@ public class MG4Hardware {
         sInitialized = true;
         Context appContext = context.getApplicationContext();
 
-        Log.i(TAG, "========================================");
-        Log.i(TAG, "=== MG4Hardware.init() ===");
-        Log.i(TAG, "  uid=" + android.os.Process.myUid() + " pid=" + android.os.Process.myPid());
-        Log.i(TAG, "  sdk=" + android.os.Build.VERSION.SDK_INT + " device=" + android.os.Build.DEVICE);
+        if (sLogEnabled) {
+            Log.i(TAG, "========================================");
+            Log.i(TAG, "=== MG4Hardware.init() ===");
+            Log.i(TAG, "  uid=" + android.os.Process.myUid() + " pid=" + android.os.Process.myPid());
+            Log.i(TAG, "  sdk=" + android.os.Build.VERSION.SDK_INT + " device=" + android.os.Build.DEVICE);
+        }
 
         // Katman 1: CarPropertyManager — com.android.car'a bind ol
         bindCarService(appContext);
 
         // Katman 2: Binder (yedek)
-        logAvailableVehicleServices();
+        if (sLogEnabled) logAvailableVehicleServices();
         sVehicleBinder = getBinderService("vehiclesetting");
-        if (sVehicleBinder != null) Log.i(TAG, "  ✓ Katman2: vehiclesetting binder bağlı");
-        else Log.w(TAG, "  ✗ Katman2: vehiclesetting null (SELinux — beklenen)");
-        Log.i(TAG, "========================================");
+        if (sLogEnabled) {
+            if (sVehicleBinder != null) Log.i(TAG, "  ✓ Katman2: vehiclesetting binder bağlı");
+            else Log.w(TAG, "  ✗ Katman2: vehiclesetting null (SELinux — beklenen)");
+            Log.i(TAG, "========================================");
+        }
     }
 
     public static boolean isReady() {
         return sCarPropertyManager != null || sVehicleBinder != null;
     }
 
+    /** Ayrıntılı log açık mı? */
+    public static boolean isLogEnabled() { return sLogEnabled; }
+
+    /** Ayrıntılı log (BMS dump, StatusPanel vb.) aç/kapa. */
+    public static void setLogEnabled(boolean enabled) { sLogEnabled = enabled; }
+
     public static void destroy() {
         sCarPropertyManager = null;
         sCarHvacManager     = null;
         sVehicleBinder      = null;
         sBmsCache.clear();
-        sAcEnergyKwh       = 0f;
-        sDcEnergyKwh       = 0f;
-        sLastBmsEventMs    = 0L;
-        sChargingElapsedMs = 0L;
+        sAcEnergyKwh         = 0f;
+        sDcEnergyKwh         = 0f;
+        sLastBmsEventMs      = 0L;
+        sChargingStartWallMs = 0L;
         sInitialized        = false;
         sCarBindAttempted   = false;
         Log.i(TAG, "destroy()");
@@ -530,39 +549,46 @@ public class MG4Hardware {
         return v;
     }
 
-    /** DC batarya voltajı — V */
+    /** DC batarya voltajı — V. Önce BMS cache (canlı callback), yoksa CPM. */
     public static float getDcVoltage() {
-        float v = getFloatPropertyCPM(PROP_BATT_VOLT, AREA_GLOBAL);
-        if (Float.isNaN(v)) v = bmsFloat(PROP_BATT_VOLT);
+        float v = bmsFloat(PROP_BATT_VOLT);
+        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_BATT_VOLT, AREA_GLOBAL);
         return v;
     }
 
-    /** DC şarj akımı gerçek — A */
+    /** DC şarj akımı gerçek — A. Önce BMS cache, yoksa CPM. */
     public static float getDcCurrentActual() {
-        float v = getFloatPropertyCPM(PROP_CHR_AMP_ACT, AREA_GLOBAL);
-        if (Float.isNaN(v)) v = bmsFloat(PROP_CHR_AMP_ACT);
+        float v = bmsFloat(PROP_CHR_AMP_ACT);
+        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_CHR_AMP_ACT, AREA_GLOBAL);
         return v;
     }
 
-    /** DC şarj akımı beklenen — A */
+    /** DC şarj akımı beklenen — A. Önce BMS cache, yoksa CPM. */
     public static float getDcCurrentExpected() {
-        float v = getFloatPropertyCPM(PROP_CHR_AMP_EXP, AREA_GLOBAL);
-        if (Float.isNaN(v)) v = bmsFloat(PROP_CHR_AMP_EXP);
+        float v = bmsFloat(PROP_CHR_AMP_EXP);
+        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_CHR_AMP_EXP, AREA_GLOBAL);
         return v;
     }
 
-    /** AC giriş akımı — A */
+    /** AC giriş akımı — A. Önce BMS cache, yoksa CPM. */
     public static float getAcCurrent() {
-        float v = getFloatPropertyCPM(PROP_AC_AMP, AREA_GLOBAL);
-        if (Float.isNaN(v)) v = bmsFloat(PROP_AC_AMP);
+        float v = bmsFloat(PROP_AC_AMP);
+        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_AC_AMP, AREA_GLOBAL);
         return v;
     }
 
-    /** AC giriş voltajı — V */
+    /** AC giriş voltajı — V. Önce BMS cache, yoksa CPM. */
     public static float getAcVoltage() {
-        float v = getFloatPropertyCPM(PROP_AC_VOLT, AREA_GLOBAL);
-        if (Float.isNaN(v)) v = bmsFloat(PROP_AC_VOLT);
+        float v = bmsFloat(PROP_AC_VOLT);
+        if (Float.isNaN(v)) v = getFloatPropertyCPM(PROP_AC_VOLT, AREA_GLOBAL);
         return v;
+    }
+
+    /** BMS / şarj ile ilgili property mi (log spam azaltmak için sadece bunları logluyoruz) */
+    private static boolean isBmsPropId(int propId) {
+        return (propId >= 0x2160f406 && propId <= 0x2160f43d)  // callback'te gelen 0x2160f406, 0x2160f407, 0x2160f43c, 0x2160f43d
+                || (propId >= 0x21400000 && propId <= 0x21410000)
+                || propId == PROP_CHG_STATUS || propId == PROP_RANGE;
     }
 
     /** BMS cache'ten float oku — callback gelmemişse NaN döner */
@@ -572,10 +598,16 @@ public class MG4Hardware {
         return Float.NaN;
     }
 
-    /** Araç şarjda mı? BMS cache'teki PROP_CHG_STATUS'a bakar. */
+    /** Araç şarjda mı? Önce PROP_CHG_STATUS; yoksa AC/DC akım ve voltajdan çıkarım. */
     private static boolean isCharging() {
         Object val = sBmsCache.get(PROP_CHG_STATUS);
         if (val instanceof Number) return ((Number) val).intValue() > 0;
+        // Araç PROP_CHG_STATUS göndermiyorsa: AC'den anlamlı akım çekiliyorsa veya DC tarafında güç var ise şarjda say
+        float acA = bmsFloat(PROP_AC_AMP);
+        float dcA = bmsFloat(PROP_CHR_AMP_ACT);
+        float dcV = bmsFloat(PROP_BATT_VOLT);
+        if (!Float.isNaN(acA) && acA > 0.5f) return true;
+        if (!Float.isNaN(dcA) && !Float.isNaN(dcV) && dcV > 200f && Math.abs(dcA) > 0.1f) return true;
         return false;
     }
 
@@ -585,15 +617,46 @@ public class MG4Hardware {
     /** Bataryanın aldığı toplam enerji — kWh (şarj boyunca birikir) */
     public static float getDcEnergyKwh() { return sDcEnergyKwh; }
 
-    /** Şarj süresi — ms (isCharging() true olan sürenin toplamı) */
-    public static long getChargingDurationMs() { return sChargingElapsedMs; }
+    /**
+     * Şarj süresi — ms.
+     * Basit mantık: isCharging() ilk kez true olduğunda o anki System.currentTimeMillis() alınır,
+     * her çağrıda şimdiki saatle farkı döner. Şarj bittiğinde süre sabit kalır.
+     */
+    public static long getChargingDurationMs() {
+        boolean charging = isCharging();
+        long now = System.currentTimeMillis();
+        if (charging) {
+            if (sChargingStartWallMs == 0L) {
+                sChargingStartWallMs = now;
+                return 0L;
+            }
+            return Math.max(0L, now - sChargingStartWallMs);
+        } else {
+            if (sChargingStartWallMs == 0L) return 0L;
+            return Math.max(0L, now - sChargingStartWallMs);
+        }
+    }
+
+    /** Şu an şarjda mı? (PROP_CHG_STATUS veya AC/DC akım çıkarımı) — UI'da göstermek için. */
+    public static boolean isChargingNow() { return isCharging(); }
+
+    /** Şarj başlangıç zamanı (wall clock ms). Geçmiş kaydı için. */
+    public static long getChargingStartWallMs() { return sChargingStartWallMs; }
+
+    /** Şarj bittiğinde kayıt alındıktan sonra çağrılır; sonraki seans için sayacı sıfırlar. */
+    public static void resetSessionAfterSave() {
+        sChargingStartWallMs = 0L;
+        sAcEnergyKwh         = 0f;
+        sDcEnergyKwh         = 0f;
+        sLastBmsEventMs      = 0L;
+    }
 
     /** Enerji ve süre sayaçlarını sıfırla */
     public static void resetEnergy() {
-        sAcEnergyKwh       = 0f;
-        sDcEnergyKwh       = 0f;
-        sLastBmsEventMs    = 0L;
-        sChargingElapsedMs = 0L;
+        sAcEnergyKwh         = 0f;
+        sDcEnergyKwh         = 0f;
+        sLastBmsEventMs      = 0L;
+        sChargingStartWallMs = 0L;
         Log.i(TAG, "resetEnergy() çağrıldı");
     }
 
@@ -770,27 +833,146 @@ public class MG4Hardware {
                     new Class<?>[]{ callbackClass },
                     (proxyObj, method, args) -> {
                         String mName = method.getName();
-                        // Logcat'te görülen format: onChangeEvent(propId, area, value)
-                        // args[0]=propId(int), args[1]=area(int), args[2]=value(Number)
-                        if ((mName.contains("Change") || mName.contains("Event")
-                                || mName.contains("Property") || mName.contains("Update"))
-                                && args != null && args.length >= 3) {
-
+                        if (args != null && (mName.contains("Change") || mName.contains("Event")
+                                || mName.contains("Property") || mName.contains("Update") || mName.contains("Bms") || mName.contains("Data"))) {
+                            // Tek argüman = CarPropertyValue benzeri (getPropertyId + getValue)
+                            if (args.length == 1 && args[0] != null) {
+                                if (!sBmsFirstEventLogged) {
+                                    sBmsFirstEventLogged = true;
+                                    Log.i(TAG, "BMS callback ilk event args=1 [0]=" + (args[0] != null ? args[0].getClass().getName() : "null"));
+                                }
+                                Object event = args[0];
+                                Class<?> clazz = event.getClass();
+                                java.lang.reflect.Method getPropIdM = null;
+                                try { getPropIdM = clazz.getMethod("getPropertyId"); } catch (NoSuchMethodException e) {}
+                                if (getPropIdM == null) try { getPropIdM = clazz.getMethod("getPropId"); } catch (NoSuchMethodException e) {}
+                                java.lang.reflect.Method getValM = null;
+                                try { getValM = clazz.getMethod("getValue"); } catch (NoSuchMethodException e) {}
+                                if (getValM == null) try { getValM = clazz.getMethod("getFloatValue"); } catch (NoSuchMethodException e) {}
+                                if (getValM == null) {
+                                    for (java.lang.reflect.Method m : clazz.getMethods()) {
+                                        if (m.getParameterCount() == 0 && (m.getName().toLowerCase().contains("value") || m.getName().toLowerCase().contains("float"))) {
+                                            Class<?> ret = m.getReturnType();
+                                            if (Number.class.isAssignableFrom(ret) || ret == float.class || ret == int.class || ret == double.class
+                                                    || ret == float[].class || ret == Float[].class) {
+                                                getValM = m;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                if (getPropIdM != null && getValM != null) {
+                                    try {
+                                        Object pidObj = getPropIdM.invoke(event);
+                                        int propId = pidObj instanceof Number ? ((Number) pidObj).intValue() : -1;
+                                        Object valueObj = getValM.invoke(event);
+                                        if (propId < 0 && !sBmsPropIdWarningLogged) {
+                                            sBmsPropIdWarningLogged = true;
+                                            Log.w(TAG, "BMS parse: propId alınamadı pidObj=" + pidObj + " type=" + (pidObj != null ? pidObj.getClass().getSimpleName() : "null"));
+                                        }
+                                        Object toCache = null;
+                                        if (valueObj instanceof Number) {
+                                            toCache = valueObj;
+                                        } else if (valueObj instanceof float[]) {
+                                            float[] arr = (float[]) valueObj;
+                                            if (arr.length > 0) toCache = Float.valueOf(arr[0]);
+                                        } else if (valueObj instanceof Float[]) {
+                                            Float[] arr = (Float[]) valueObj;
+                                            if (arr.length > 0 && arr[0] != null) toCache = arr[0];
+                                        } else if (valueObj instanceof int[]) {
+                                            int[] arr = (int[]) valueObj;
+                                            if (arr.length > 0) toCache = Integer.valueOf(arr[0]);
+                                        } else if (valueObj != null && valueObj.getClass().isArray() && java.lang.reflect.Array.getLength(valueObj) > 0) {
+                                            Object first = java.lang.reflect.Array.get(valueObj, 0);
+                                            if (first instanceof Number) toCache = (Number) first;
+                                        }
+                                        if (propId >= 0 && toCache instanceof Number) {
+                                            sBmsCache.put(propId, toCache);
+                                            if (isBmsPropId(propId)) {
+                                                Log.i(TAG, "BMS CACHE OK 0x" + Integer.toHexString(propId) + " = " + toCache);
+                                            }
+                                            if (propId == PROP_BATT_VOLT) {
+                                                long nowMs = android.os.SystemClock.elapsedRealtime();
+                                                long deltaMs = (sLastBmsEventMs > 0) ? (nowMs - sLastBmsEventMs) : 0;
+                                                sLastBmsEventMs = nowMs;
+                                                if (deltaMs > 0 && deltaMs < 5000 && isCharging()) {
+                                                    float acV = bmsFloat(PROP_AC_VOLT);
+                                                    float acA = bmsFloat(PROP_AC_AMP);
+                                                    if (!Float.isNaN(acV) && !Float.isNaN(acA) && acA > 0f) {
+                                                        sAcEnergyKwh += (acV * acA / 1000f) * deltaMs / 3_600_000f;
+                                                    }
+                                                    float dcV = ((Number) toCache).floatValue();
+                                                    float dcA = bmsFloat(PROP_CHR_AMP_ACT);
+                                                    if (!Float.isNaN(dcA) && Math.abs(dcA) > 0.01f) {
+                                                        sDcEnergyKwh += (dcV * Math.abs(dcA) / 1000f) * deltaMs / 3_600_000f;
+                                                    }
+                                                }
+                                            }
+                                        } else if (isBmsPropId(propId)) {
+                                            Log.w(TAG, "BMS parse value tipi desteklenmiyor: propId=0x" + Integer.toHexString(propId) + " value=" + (valueObj != null ? valueObj.getClass().getName() : "null"));
+                                        }
+                                    } catch (Exception ex) {
+                                        Log.w(TAG, "BMS CarPropertyValue parse hata: " + ex.getMessage());
+                                    }
+                                } else if (!sBmsParseWarningLogged) {
+                                    sBmsParseWarningLogged = true;
+                                    if (getPropIdM == null) Log.w(TAG, "BMS parse: getPropertyId/getPropId metodu bulunamadı");
+                                    if (getValM == null) {
+                                        StringBuilder sb = new StringBuilder("BMS parse: getValue/getFloatValue yok. value* metodları: ");
+                                        for (java.lang.reflect.Method m : clazz.getMethods()) {
+                                            if (m.getParameterCount() == 0 && m.getName().toLowerCase().contains("value"))
+                                                sb.append(m.getName()).append(" ");
+                                        }
+                                        Log.w(TAG, sb.toString());
+                                    }
+                                }
+                            } else if (args.length >= 2) {
                             try {
-                                int propId = (Integer) args[0];
-                                // args[2] Float veya Integer olabilir
-                                Object rawVal = args[2];
-                                if (rawVal instanceof Number) {
+                                // propId: args içinde BMS/araç property int'ini ara (0x2140xxxx, 0x2160xxxx vb.)
+                                int propId = -1;
+                                for (Object a : args) {
+                                    if (a instanceof Integer) {
+                                        int i = (Integer) a;
+                                        if ((i >= 0x21400000 && i <= 0x21410000) || (i >= 0x21600000 && i <= 0x21600200)) {
+                                            propId = i;
+                                            break;
+                                        }
+                                    }
+                                }
+                                // value: Number veya getValue() ile al
+                                Object rawVal = null;
+                                for (Object a : args) {
+                                    if (a instanceof Number) {
+                                        rawVal = a;
+                                        break;
+                                    }
+                                    if (a != null && !(a instanceof Integer) && !(a instanceof Long)) {
+                                        try {
+                                            java.lang.reflect.Method getVal = a.getClass().getMethod("getValue");
+                                            Object v = getVal.invoke(a);
+                                            if (v instanceof Number) {
+                                                rawVal = v;
+                                                break;
+                                            }
+                                        } catch (Exception ignored) {}
+                                        try {
+                                            java.lang.reflect.Method getVal = a.getClass().getMethod("getFloatValue");
+                                            Object v = getVal.invoke(a);
+                                            if (v instanceof Number) {
+                                                rawVal = v;
+                                                break;
+                                            }
+                                        } catch (Exception ignored) {}
+                                    }
+                                }
+                                if (propId >= 0 && rawVal instanceof Number) {
                                     sBmsCache.put(propId, rawVal);
-                                    Log.d(TAG, "  BMS cache ← 0x" + Integer.toHexString(propId)
-                                            + " = " + rawVal);
-                                    // Enerji birikimi: DC voltaj her geldiğinde tetikle (BMS döngüsü başına 1×)
+                                    Log.i(TAG, "BMS CACHE OK 0x" + Integer.toHexString(propId) + " = " + rawVal);
                                     if (propId == PROP_BATT_VOLT) {
                                         long nowMs = android.os.SystemClock.elapsedRealtime();
                                         long deltaMs = (sLastBmsEventMs > 0) ? (nowMs - sLastBmsEventMs) : 0;
                                         sLastBmsEventMs = nowMs;
                                         if (deltaMs > 0 && deltaMs < 5000 && isCharging()) {
-                                            sChargingElapsedMs += deltaMs;
                                             float acV = bmsFloat(PROP_AC_VOLT);
                                             float acA = bmsFloat(PROP_AC_AMP);
                                             if (!Float.isNaN(acV) && !Float.isNaN(acA) && acA > 0f) {
@@ -798,15 +980,18 @@ public class MG4Hardware {
                                             }
                                             float dcV = ((Number) rawVal).floatValue();
                                             float dcA = bmsFloat(PROP_CHR_AMP_ACT);
-                                            if (!Float.isNaN(dcA) && dcA > 0f) {
-                                                sDcEnergyKwh += (dcV * dcA / 1000f) * deltaMs / 3_600_000f;
+                                            if (!Float.isNaN(dcA) && Math.abs(dcA) > 0.01f) {
+                                                sDcEnergyKwh += (dcV * Math.abs(dcA) / 1000f) * deltaMs / 3_600_000f;
                                             }
                                         }
                                     }
+                                } else {
+                                    Log.w(TAG, "BMS callback SKIP: propId=" + propId + " rawVal=" + rawVal);
                                 }
                             } catch (Exception ex) {
-                                Log.w(TAG, "  BMS callback parse hata: " + ex.getMessage());
+                                Log.w(TAG, "BMS callback parse hata: " + ex.getMessage());
                             }
+                            } // args.length >= 2
                         }
                         // equals/hashCode/toString — Object metodları için varsayılan dönüş
                         if ("equals".equals(mName)) return args != null && args.length == 1 && proxyObj == args[0];

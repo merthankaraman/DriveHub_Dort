@@ -2,4 +2,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- Gündüz modu yüzey + metin renkleri -->
+    <color name="surface">#F6F8FA</color>
+    <color name="surface_variant">#E6E8EB</color>
+    <!-- Sayısal değerler (V / A / kW / kWh) için yüksek kontrastlı renk -->
+    <color name="status_value">#111827</color>
 </resources>

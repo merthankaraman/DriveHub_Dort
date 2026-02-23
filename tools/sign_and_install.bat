@@ -90,8 +90,9 @@ if errorlevel 1 (
 :: -------- Yükle --------
 echo [2/2] Araca yukleniyor...
 echo        Once eski surum kaldiriliyor...
-adb uninstall com.example.mg4_v3 >nul 2>&1
-adb install "%APK_OUT%"
+::adb uninstall com.example.mg4_v3 >nul 2>&1
+::adb install "%APK_OUT%"
+adb install -r "%APK_OUT%"
 
 if errorlevel 1 (
     echo.
