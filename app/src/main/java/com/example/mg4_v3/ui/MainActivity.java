@@ -61,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnSoundLoop;
     private Button mBtnSoundFull;
     private Button mBtnSoundVirtualGear;
+    private Button mBtnSoundVirtualGearV2; // YENİ EKLENDİ
+    private Button mBtnGearProfile;
     private boolean mSoundEnabled = false; // Varsayılan: kapalı (kalıcı tercih SharedPreferences'tan yüklenecek)
 
     // Ana ekran
@@ -167,6 +169,19 @@ public class MainActivity extends AppCompatActivity {
         mBtnSoundLoop = findViewById(R.id.btnSoundLoop);
         mBtnSoundFull = findViewById(R.id.btnSoundFull);
         mBtnSoundVirtualGear = findViewById(R.id.btnSoundVirtualGear);
+        mBtnSoundVirtualGearV2 = findViewById(R.id.btnSoundVirtualGearV2); // YENİ EKLENDİ
+
+        mBtnGearProfile = findViewById(R.id.btnGearProfile);
+
+        // Kendi metodumuzla güvenle okuyoruz (Çökme riski SIFIR)
+        String savedProfileStr = prefs.getString("gear_profile", "SPORT_6");
+        EngineSoundManager.GearProfile savedProfile = gearProfileFromString(savedProfileStr);
+
+        mEngineSound.setGearProfile(savedProfile);
+        updateGearProfileButtonText(savedProfile);
+
+        // Butona tıklandığında seçim penceresini aç
+        mBtnGearProfile.setOnClickListener(v -> showGearProfileDialog());
 
         // Araç servislerini başlat
         MG4Hardware.init(this);
@@ -235,6 +250,16 @@ public class MainActivity extends AppCompatActivity {
                 getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "VIRTUAL_GEAR").apply();
                 updateSoundModeButtons(SoundMode.VIRTUAL_GEAR);
                 Toast.makeText(this, "Motor sesi: Yapay Vites (6 vites simülasyonu)", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // YENİ V2 BUTONU TIKLAMA OLAYI
+        mBtnSoundVirtualGearV2.setOnClickListener(v -> {
+            if (mSoundEnabled) {
+                mEngineSound.setMode(SoundMode.VIRTUAL_GEAR_V2);
+                getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2").apply();
+                updateSoundModeButtons(SoundMode.VIRTUAL_GEAR_V2);
+                Toast.makeText(this, "Motor sesi: V2 (Pürüzsüz Vites)", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -748,12 +773,18 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private static SoundMode soundModeFromString(String s) {
         if ("FULL".equals(s)) return SoundMode.FULL;
         if ("VIRTUAL_GEAR".equals(s)) return SoundMode.VIRTUAL_GEAR;
+        if ("VIRTUAL_GEAR_V2".equals(s)) return SoundMode.VIRTUAL_GEAR_V2; // YENİ EKLENDİ
         return SoundMode.LOOP;
+    }
+    private static EngineSoundManager.GearProfile gearProfileFromString(String s) {
+        if ("CRUISER_4".equals(s)) return EngineSoundManager.GearProfile.CRUISER_4;
+        if ("RALLY_8".equals(s)) return EngineSoundManager.GearProfile.RALLY_8;
+        return EngineSoundManager.GearProfile.SPORT_6; // Varsayılan güvenli değer
     }
 
     private void updateSoundToggleButton() {
         if (mBtnSoundToggle == null) return;
-        
+
         if (mSoundEnabled) {
             mBtnSoundToggle.setText("🔊 Ses Kapa");
             mBtnSoundToggle.setBackgroundTintList(
@@ -763,6 +794,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             mBtnSoundLoop.setEnabled(true);
             mBtnSoundFull.setEnabled(true);
             mBtnSoundVirtualGear.setEnabled(true);
+            if(mBtnSoundVirtualGearV2 != null) mBtnSoundVirtualGearV2.setEnabled(true); // YENİ
         } else {
             mBtnSoundToggle.setText("🔇 Ses Aç");
             mBtnSoundToggle.setBackgroundTintList(
@@ -772,6 +804,46 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             mBtnSoundLoop.setEnabled(false);
             mBtnSoundFull.setEnabled(false);
             mBtnSoundVirtualGear.setEnabled(false);
+            if(mBtnSoundVirtualGearV2 != null) mBtnSoundVirtualGearV2.setEnabled(false); // YENİ
+        }
+    }
+
+    private void showGearProfileDialog() {
+        String[] options = {"4-İleri Cruiser (Uzun Oran)", "6-İleri Spor LFA", "8-İleri Ralli (Kısa Oran)"};
+
+        new AlertDialog.Builder(this)
+                .setTitle("Şanzıman Profilini Seç")
+                .setItems(options, (dialog, which) -> {
+                    EngineSoundManager.GearProfile selectedProfile;
+                    switch (which) {
+                        case 0: selectedProfile = EngineSoundManager.GearProfile.CRUISER_4; break;
+                        case 2: selectedProfile = EngineSoundManager.GearProfile.RALLY_8; break;
+                        case 1:
+                        default: selectedProfile = EngineSoundManager.GearProfile.SPORT_6; break;
+                    }
+
+                    // Sesi güncelle
+                    mEngineSound.setGearProfile(selectedProfile);
+
+                    // Tercihi kaydet
+                    getSharedPreferences("mg4_v3", MODE_PRIVATE)
+                            .edit()
+                            .putString("gear_profile", selectedProfile.name())
+                            .apply();
+
+                    // Buton metnini güncelle
+                    updateGearProfileButtonText(selectedProfile);
+                    Toast.makeText(this, "Şanzıman değiştirildi", Toast.LENGTH_SHORT).show();
+                })
+                .show();
+    }
+
+    private void updateGearProfileButtonText(EngineSoundManager.GearProfile profile) {
+        if (mBtnGearProfile == null) return;
+        switch (profile) {
+            case CRUISER_4: mBtnGearProfile.setText("⚙️ Şanzıman: 4-İleri Cruiser"); break;
+            case RALLY_8:   mBtnGearProfile.setText("⚙️ Şanzıman: 8-İleri Ralli"); break;
+            case SPORT_6:   mBtnGearProfile.setText("⚙️ Şanzıman: 6-İleri Spor LFA"); break;
         }
     }
 
@@ -799,28 +871,27 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         btnAuto.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isAuto  ? COLOR_ACTIVE : COLOR_INACTIVE));
         btnAuto.setTextColor(isAuto  ? 0xFFFFFFFF : 0xFF8B949E);
     }
-    
+
     private void updateSoundModeButtons(SoundMode activeMode) {
-        if (mBtnSoundLoop == null || mBtnSoundFull == null || mBtnSoundVirtualGear == null) return;
-        
+        if (mBtnSoundLoop == null || mBtnSoundFull == null || mBtnSoundVirtualGear == null || mBtnSoundVirtualGearV2 == null) return;
+
         boolean isLoop = (activeMode == SoundMode.LOOP);
         boolean isFull = (activeMode == SoundMode.FULL);
         boolean isVirtualGear = (activeMode == SoundMode.VIRTUAL_GEAR);
-        
-        mBtnSoundLoop.setBackgroundTintList(
-                android.content.res.ColorStateList.valueOf(
-                        isLoop ? COLOR_ACTIVE : COLOR_INACTIVE));
+        boolean isVirtualGearV2 = (activeMode == SoundMode.VIRTUAL_GEAR_V2); // YENİ
+
+        mBtnSoundLoop.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isLoop ? COLOR_ACTIVE : COLOR_INACTIVE));
         mBtnSoundLoop.setTextColor(isLoop ? 0xFFFFFFFF : 0xFF8B949E);
-        
-        mBtnSoundFull.setBackgroundTintList(
-                android.content.res.ColorStateList.valueOf(
-                        isFull ? COLOR_ACTIVE : COLOR_INACTIVE));
+
+        mBtnSoundFull.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isFull ? COLOR_ACTIVE : COLOR_INACTIVE));
         mBtnSoundFull.setTextColor(isFull ? 0xFFFFFFFF : 0xFF8B949E);
-        
-        mBtnSoundVirtualGear.setBackgroundTintList(
-                android.content.res.ColorStateList.valueOf(
-                        isVirtualGear ? COLOR_ACTIVE : COLOR_INACTIVE));
+
+        mBtnSoundVirtualGear.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isVirtualGear ? COLOR_ACTIVE : COLOR_INACTIVE));
         mBtnSoundVirtualGear.setTextColor(isVirtualGear ? 0xFFFFFFFF : 0xFF8B949E);
+
+        // YENİ BUTON RENK KONTROLÜ
+        mBtnSoundVirtualGearV2.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isVirtualGearV2 ? COLOR_ACTIVE : COLOR_INACTIVE));
+        mBtnSoundVirtualGearV2.setTextColor(isVirtualGearV2 ? 0xFFFFFFFF : 0xFF8B949E);
     }
     
     // -------------------------------------------------------------------------

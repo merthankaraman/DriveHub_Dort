@@ -21,9 +21,66 @@ public class EngineSoundManager {
     
     /** Ses modu */
     public enum SoundMode {
-        LOOP,      // 3-6 saniye arası loop, vites değişimi yok
-        FULL,      // Tüm dosya, vites değişimleri dahil
-        VIRTUAL_GEAR // Yapay vites: hız aralıklarına göre sabit devirler
+        LOOP,          // 3-6 saniye arası loop, vites değişimi yok
+        FULL,          // Tüm dosya, vites değişimleri dahil
+        VIRTUAL_GEAR,  // V1: Ses dosyasını milisaniye milisaniye keserek atlayan eski mod
+        VIRTUAL_GEAR_V2 // V2: Sesi kesmeden sadece Pitch (Ton) ile gerçekçi vites atan yeni mod
+    }
+
+    /** Şanzıman Profilleri */
+    public enum GearProfile {
+        CRUISER_4, // 4-İleri Uzun
+        SPORT_6,   // 6-İleri Gerçek LFA
+        RALLY_8    // 8-İleri Kısa
+    }
+
+    private GearProfile mCurrentGearProfile = GearProfile.SPORT_6; // Varsayılan
+
+    // 1. Profil: 4-İleri Cruiser
+    private static final VirtualGear[] GEARS_CRUISER_4 = {
+            new VirtualGear(0f,   35f,  "V1"),
+            new VirtualGear(35f,  80f,  "V2"),
+            new VirtualGear(80f,  125f, "V3"),
+            new VirtualGear(125f, 160f, "V4")
+    };
+
+    // 2. Profil: 6-İleri Gerçek LFA
+    private static final VirtualGear[] GEARS_SPORT_6 = {
+            new VirtualGear(0f,   20f,  "V1"),
+            new VirtualGear(20f,  45f,  "V2"),
+            new VirtualGear(45f,  75f,  "V3"),
+            new VirtualGear(75f,  110f, "V4"),
+            new VirtualGear(110f, 140f, "V5"),
+            new VirtualGear(140f, 160f, "V6")
+    };
+
+    // 3. Profil: 8-İleri Ralli
+    private static final VirtualGear[] GEARS_RALLY_8 = {
+            new VirtualGear(0f,   15f,  "V1"),
+            new VirtualGear(15f,  30f,  "V2"),
+            new VirtualGear(30f,  45f,  "V3"),
+            new VirtualGear(45f,  65f,  "V4"),
+            new VirtualGear(65f,  85f,  "V5"),
+            new VirtualGear(85f,  110f, "V6"),
+            new VirtualGear(110f, 135f, "V7"),
+            new VirtualGear(135f, 160f, "V8")
+    };
+
+    /** Seçili olan aktif şanzıman dizisini döndürür */
+    private VirtualGear[] getActiveGearArray() {
+        switch (mCurrentGearProfile) {
+            case CRUISER_4: return GEARS_CRUISER_4;
+            case RALLY_8:   return GEARS_RALLY_8;
+            case SPORT_6:
+            default:        return GEARS_SPORT_6;
+        }
+    }
+
+    /** Dışarıdan şanzıman profilini değiştirmek için */
+    public void setGearProfile(GearProfile profile) {
+        mCurrentGearProfile = profile;
+        mCurrentVirtualGear = -1; // Vites değiştirdiğimizde mevcut vitesi sıfırla
+        Log.i(TAG, "Şanzıman profili değişti: " + profile.name());
     }
     
     /** Yapay vites sistemi — her aralıkta hız 1000–10000 RPM'ye eşlenir */
@@ -102,7 +159,7 @@ public class EngineSoundManager {
             if (mMediaPlayer != null && mIsPlaying && mMediaPlayer.isPlaying()) {
                 try {
                     // LOOP ve VIRTUAL_GEAR modlarında pozisyon kontrolü yap
-                    if (mCurrentMode == SoundMode.LOOP) {
+                    if (mCurrentMode == SoundMode.LOOP || mCurrentMode == SoundMode.VIRTUAL_GEAR_V2) {
                         int currentPos = mMediaPlayer.getCurrentPosition();
                         if (currentPos >= LOOP_END_MS) {
                             mMediaPlayer.seekTo(LOOP_START_MS);
@@ -418,7 +475,49 @@ public class EngineSoundManager {
                     pitch = 1.0f;
                     volume = VOLUME_MIN;
                 }
-            } else {
+            } else if (mCurrentMode == SoundMode.VIRTUAL_GEAR_V2) {
+                // YENİ V2 PÜRÜZSÜZ VİTES MODU
+                int gearIndex = findVirtualGearWithHysteresisV2(speedKmh, mCurrentVirtualGear);
+                if (gearIndex >= 0) {
+                    VirtualGear gear = getActiveGearArray()[gearIndex];
+                    if (mCurrentVirtualGear != gearIndex && mCurrentVirtualGear >= 0) {
+                        Log.i(TAG, String.format("V2 Vites Atıldı: %s → %s (%.0f km/h)",
+                                getActiveGearArray()[mCurrentVirtualGear].name, gear.name, speedKmh));
+                    }
+                    mCurrentVirtualGear = gearIndex;
+
+                    float span = gear.maxSpeed - gear.minSpeed;
+                    if (span < 1f) span = 1f;
+
+                    // O viteste yüzde kaçtayız? (0.0 = Başlangıç, 1.0 = Kesici)
+                    float t = (speedKmh - gear.minSpeed) / span;
+                    t = Math.max(0f, Math.min(1f, t));
+
+                    // --- DEVİR (PITCH) DÜZELTMESİ ---
+                    float minPitch;
+                    float maxPitch = 1.65f; // Motorun kesiciye girdiği tiz an (9000 RPM)
+
+                    if (mCurrentVirtualGear == 0) {
+                        // Sadece 1. Vites: Araç dururken veya yeni kalkıyorken rölantiden başlar
+                        minPitch = 0.65f;
+                    } else {
+                        // Diğer Vitesler (2, 3, 4, 5, 6): Vites atıldığında devir 1000'e DEĞİL,
+                        // torkun yüksek olduğu 4500-5000 devir civarına düşer.
+                        minPitch = 1.15f;
+                    }
+
+                    // Güncel tonu hesapla
+                    pitch = minPitch + (t * (maxPitch - minPitch));
+
+                    // Ses şiddeti vitesin devrine göre hesaplanır
+                    volume = VOLUME_MIN + (t * (VOLUME_MAX - VOLUME_MIN));
+
+                } else {
+                    pitch = 1.0f;
+                    volume = VOLUME_MIN;
+                }
+            }
+            else {
                 // Normal mod: linear interpolation
                 float t = speedKmh / MAX_SPEED_KMH;
                 t = Math.max(0f, Math.min(1f, t));
@@ -502,6 +601,37 @@ public class EngineSoundManager {
         if (rawGear < currentGearIndex) {
             // Aşağı vites: mevcut vitesin min hızı - histerezis altına düşmeli
             float downThreshold = VIRTUAL_GEARS[currentGearIndex].minSpeed - VIRTUAL_GEAR_HYSTERESIS_KMH;
+            if (speedKmh <= downThreshold) return rawGear;
+            return currentGearIndex;
+        }
+        return currentGearIndex;
+    }
+
+    /**
+     * V2 şanzımanı için hıza göre yapay vites bulur (histerezis yok).
+     */
+    private int findVirtualGearV2(float speedKmh) {
+        VirtualGear[] activeGears = getActiveGearArray(); // Aktif diziyi al
+        for (int i = 0; i < activeGears.length; i++) {
+            if (speedKmh >= activeGears[i].minSpeed && speedKmh <= activeGears[i].maxSpeed) {
+                return i;
+            }
+        }
+        return activeGears.length - 1;
+    }
+
+    private int findVirtualGearWithHysteresisV2(float speedKmh, int currentGearIndex) {
+        VirtualGear[] activeGears = getActiveGearArray(); // Aktif diziyi al
+        int rawGear = findVirtualGearV2(speedKmh);
+        if (currentGearIndex < 0) return rawGear;
+
+        if (rawGear > currentGearIndex) {
+            float upThreshold = activeGears[rawGear].minSpeed + VIRTUAL_GEAR_HYSTERESIS_KMH;
+            if (speedKmh >= upThreshold) return rawGear;
+            return currentGearIndex;
+        }
+        if (rawGear < currentGearIndex) {
+            float downThreshold = activeGears[currentGearIndex].minSpeed - VIRTUAL_GEAR_HYSTERESIS_KMH;
             if (speedKmh <= downThreshold) return rawGear;
             return currentGearIndex;
         }

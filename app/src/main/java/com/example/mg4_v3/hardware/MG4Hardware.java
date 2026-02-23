@@ -607,7 +607,7 @@ public class MG4Hardware {
         float dcA = bmsFloat(PROP_CHR_AMP_ACT);
         float dcV = bmsFloat(PROP_BATT_VOLT);
         if (!Float.isNaN(acA) && acA > 0.5f) return true;
-        if (!Float.isNaN(dcA) && !Float.isNaN(dcV) && dcV > 200f && dcA < 0.3f) return true;
+        if (!Float.isNaN(dcA) && !Float.isNaN(dcV) && dcV > 200f && dcA <= 0f && getSpeedKmh() == 0) return true;
         return false;
     }
 
@@ -904,10 +904,7 @@ public class MG4Hardware {
                                                     float dcV = ((Number) toCache).floatValue();
                                                     float dcA = bmsFloat(PROP_CHR_AMP_ACT);
                                                     if (!Float.isNaN(dcA) && Math.abs(dcA) > 0.01f) {
-                                                        //sDcEnergyKwh += (dcV * Math.abs(dcA) / 1000f) * deltaMs / 3_600_000f;
-                                                        if (dcA < 0){
-                                                            sDcEnergyKwh += (dcV * Math.abs(dcA) / 1000f) * deltaMs / 3_600_000f;
-                                                        }
+                                                        sDcEnergyKwh += (dcV * Math.abs(dcA) / 1000f) * deltaMs / 3_600_000f;
                                                     }
                                                 }
                                             }
@@ -983,7 +980,7 @@ public class MG4Hardware {
                                             }
                                             float dcV = ((Number) rawVal).floatValue();
                                             float dcA = bmsFloat(PROP_CHR_AMP_ACT);
-                                            if (!Float.isNaN(dcA) && Math.abs(dcA) > 0.01f) {
+                                            if (!Float.isNaN(dcA) && dcA < 0f) {
                                                 sDcEnergyKwh += (dcV * Math.abs(dcA) / 1000f) * deltaMs / 3_600_000f;
                                             }
                                         }
