@@ -776,7 +776,7 @@
         android:paddingTop="20dp"
         android:paddingEnd="40dp"
         android:paddingBottom="20dp"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <!-- Başlık + Geri + Yenile -->
         <LinearLayout
