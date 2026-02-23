@@ -64,7 +64,7 @@
                 android:layout_height="wrap_content"
                 android:text="MG4 Controller"
                 android:textSize="22sp"
-                android:textColor="#E6EDF3"
+                android:textColor="@color/status_value"
                 android:textStyle="bold"
                 android:layout_marginBottom="2dp"/>
 
@@ -74,7 +74,7 @@
                 android:layout_height="wrap_content"
                 android:text="EH32 · Android Automotive"
                 android:textSize="11sp"
-                android:textColor="#6E7681"
+                android:textColor="@color/status_value"
                 android:layout_marginBottom="14dp"/>
 
             <Button
@@ -94,7 +94,7 @@
                 android:layout_height="wrap_content"
                 android:text="Hazirlanıyor..."
                 android:textSize="13sp"
-                android:textColor="#8B949E"
+                android:textColor="@color/status_value"
                 android:layout_marginBottom="10dp"/>
 
             <TextView
@@ -103,7 +103,7 @@
                 android:layout_height="wrap_content"
                 android:text="-- km/h"
                 android:textSize="20sp"
-                android:textColor="#FFA657"
+                android:textColor="@color/status_value"
                 android:fontFamily="monospace"
                 android:layout_marginBottom="8dp"/>
 
@@ -112,7 +112,7 @@
                 android:layout_height="wrap_content"
                 android:text="MOTOR SESİ"
                 android:textSize="11sp"
-                android:textColor="#6E7681"
+                android:textColor="@color/status_value"
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="6dp"/>
 
@@ -122,7 +122,7 @@
                 android:layout_height="44dp"
                 android:text="🔊 Ses Aç"
                 android:backgroundTint="#21262D"
-                android:textColor="#8B949E"
+                android:textColor="#FFFFFF"
                 android:textSize="13sp"
                 android:layout_marginBottom="6dp"/>
 
@@ -150,7 +150,7 @@
                     android:layout_weight="1"
                     android:text="🎵 Tam"
                     android:backgroundTint="#21262D"
-                    android:textColor="#8B949E"
+                    android:textColor="#FFFFFF"
                     android:textSize="11sp"
                     android:layout_marginEnd="4dp"/>
 
@@ -161,7 +161,7 @@
                     android:layout_weight="1"
                     android:text="⚙️ V1"
                     android:backgroundTint="#21262D"
-                    android:textColor="#8B949E"
+                    android:textColor="#FFFFFF"
                     android:textSize="11sp"
                     android:layout_marginEnd="4dp"/>
 
@@ -172,7 +172,7 @@
                     android:layout_weight="1"
                     android:text="🏎️ V2"
                     android:backgroundTint="#21262D"
-                    android:textColor="#8B949E"
+                    android:textColor="#FFFFFF"
                     android:textSize="11sp"/>
             </LinearLayout>
 
@@ -182,7 +182,7 @@
                 android:layout_height="40dp"
                 android:text="⚙️ Şanzıman: 6-İleri LFA"
                 android:backgroundTint="#21262D"
-                android:textColor="#C9D1D9"
+                android:textColor="#FFFFFF"
                 android:textSize="11sp"
                 android:layout_marginBottom="12dp"/>
 
@@ -202,7 +202,7 @@
                 android:layout_height="wrap_content"
                 android:text=""
                 android:textSize="12sp"
-                android:textColor="#7EE787"
+                android:textColor="@color/status_value"
                 android:fontFamily="monospace"
                 android:lineSpacingExtra="4dp"/>
 
@@ -220,14 +220,14 @@
                     android:layout_weight="1"
                     android:text="Loglar (detay)"
                     android:textSize="11sp"
-                    android:textColor="#6E7681" />
+                    android:textColor="@color/status_value" />
 
-                <Switch
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/switchLogs"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Açık"
-                    android:textColor="#E6EDF3" />
+                    android:textColor="@color/status_value" />
 
             </LinearLayout>
 
@@ -246,8 +246,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="SURUS MODU"
-                android:textSize="11sp"
-                android:textColor="#6E7681"
+                android:gravity="center_horizontal"
+                android:textSize="20sp"
+                android:textColor="@color/status_value"
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="8dp"/>
 
@@ -335,9 +336,10 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:textSize="20sp"
                 android:text="REGEN"
-                android:textSize="11sp"
-                android:textColor="#6E7681"
+                android:textColor="@color/status_value"
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="8dp"/>
 
@@ -348,7 +350,8 @@
                 android:text="⚡  Regen Ayarları"
                 android:backgroundTint="#21262D"
                 android:textColor="#C9D1D9"
-                android:textSize="14sp"
+                android:gravity="center_horizontal"
+                android:textSize="20sp"
                 android:layout_marginBottom="14dp"/>
 
             <!-- Klima paneli girişi -->
@@ -356,8 +359,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="ISITMA"
-                android:textSize="11sp"
-                android:textColor="#6E7681"
+                android:gravity="center_horizontal"
+                android:textSize="20sp"
+                android:textColor="@color/status_value"
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="8dp"/>
 
@@ -368,7 +372,8 @@
                 android:text="♨  Isitma Ayarlari"
                 android:backgroundTint="#21262D"
                 android:textColor="#C9D1D9"
-                android:textSize="13sp"
+                android:gravity="center_horizontal"
+                android:textSize="20sp"
                 android:layout_marginBottom="14dp"/>
 
             <!-- Sarj/Durum paneli girisi -->
@@ -376,8 +381,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="DURUM"
-                android:textSize="11sp"
-                android:textColor="#6E7681"
+                android:gravity="center_horizontal"
+                android:textSize="20sp"
+                android:textColor="@color/status_value"
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="8dp"/>
 
@@ -388,7 +394,8 @@
                 android:text="📊  Sarj ve Durum"
                 android:backgroundTint="#21262D"
                 android:textColor="#C9D1D9"
-                android:textSize="13sp"/>
+                android:gravity="center_horizontal"
+                android:textSize="20sp"/>
 
         </LinearLayout>
 
@@ -437,7 +444,7 @@
                 android:layout_weight="1"
                 android:letterSpacing="0.08"
                 android:text="REGEN AYARLARI"
-                android:textColor="#E6EDF3"
+                android:textColor="@color/status_value"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -466,7 +473,7 @@
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
                 android:text="KAPALI"
-                android:textColor="#8B949E"
+                android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -479,7 +486,7 @@
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
                 android:text="DUSUK"
-                android:textColor="#8B949E"
+                android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -492,7 +499,7 @@
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
                 android:text="ORTA"
-                android:textColor="#8B949E"
+                android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -505,7 +512,7 @@
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
                 android:text="YUKSEK"
-                android:textColor="#8B949E"
+                android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -518,7 +525,7 @@
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
                 android:text="ADAPTIF"
-                android:textColor="#8B949E"
+                android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -527,10 +534,11 @@
                 android:id="@+id/btnRegenOnePedal"
                 android:layout_width="0dp"
                 android:layout_height="72dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="TEK\nPEDAL"
-                android:textColor="#8B949E"
+                android:text="TEK PEDAL"
+                android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -545,45 +553,45 @@
         android:id="@+id/layoutClimatePanel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:background="@color/surface"
-        android:paddingStart="40dp"
-        android:paddingEnd="40dp"
-        android:paddingTop="24dp"
-        android:paddingBottom="24dp"
         android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingStart="40dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="40dp"
+        android:paddingBottom="24dp"
         android:visibility="gone">
 
         <!-- Başlık + Geri butonu -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginBottom="28dp"
             android:gravity="center_vertical"
-            android:layout_marginBottom="28dp">
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btnClimateBack"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"
-                android:text="←"
-                android:backgroundTint="#21262D"
-                android:textColor="#C9D1D9"
-                android:textSize="18sp"
                 android:layout_marginEnd="20dp"
+                android:backgroundTint="#21262D"
                 android:minWidth="0dp"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"/>
+                android:paddingEnd="16dp"
+                android:text="←"
+                android:textColor="#C9D1D9"
+                android:textSize="18sp" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:letterSpacing="0.08"
                 android:text="ISITMA AYARLARI"
+                android:textColor="@color/status_value"
                 android:textSize="20sp"
-                android:textColor="#E6EDF3"
-                android:textStyle="bold"
-                android:letterSpacing="0.08"/>
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -591,24 +599,24 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginBottom="16dp"
             android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Üstte ısıtma kısayolu (overlay)"
-                android:textSize="12sp"
-                android:textColor="#6E7681" />
+                android:textColor="@color/status_value"
+                android:textSize="12sp" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchOverlay"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Açık"
-                android:textColor="#E6EDF3" />
+                android:textColor="@color/status_value" />
 
         </LinearLayout>
 
@@ -616,40 +624,40 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="DİREKSİYON ISITMA"
-            android:textSize="11sp"
-            android:textColor="#6E7681"
+            android:layout_marginBottom="8dp"
             android:letterSpacing="0.1"
-            android:layout_marginBottom="8dp"/>
+            android:text="DİREKSİYON ISITMA"
+            android:textColor="@color/status_value"
+            android:textSize="11sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="20dp"
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btnSteerOff"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="KAPALI"
                 android:backgroundTint="#21262D"
+                android:text="KAPALI"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/btnSteerL1"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_weight="1"
-                android:text="AÇIK"
                 android:backgroundTint="#21262D"
+                android:text="AÇIK"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -657,64 +665,64 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="SOL KOLTUK"
-            android:textSize="11sp"
-            android:textColor="#6E7681"
+            android:layout_marginBottom="8dp"
             android:letterSpacing="0.1"
-            android:layout_marginBottom="8dp"/>
+            android:text="SOL KOLTUK"
+            android:textColor="@color/status_value"
+            android:textSize="11sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="20dp"
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btnSeatLOff"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="KAPALI"
                 android:backgroundTint="#21262D"
+                android:text="KAPALI"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/btnSeatLL1"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="SEV. 1"
                 android:backgroundTint="#21262D"
+                android:text="SEV. 1"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/btnSeatLL2"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="SEV. 2"
                 android:backgroundTint="#21262D"
+                android:text="SEV. 2"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/btnSeatLL3"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_weight="1"
-                android:text="SEV. 3"
                 android:backgroundTint="#21262D"
+                android:text="SEV. 3"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -722,11 +730,11 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="SAG KOLTUK"
-            android:textSize="11sp"
-            android:textColor="#6E7681"
+            android:layout_marginBottom="8dp"
             android:letterSpacing="0.1"
-            android:layout_marginBottom="8dp"/>
+            android:text="SAG KOLTUK"
+            android:textColor="@color/status_value"
+            android:textSize="11sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -737,48 +745,48 @@
                 android:id="@+id/btnSeatROff"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="KAPALI"
                 android:backgroundTint="#21262D"
+                android:text="KAPALI"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/btnSeatRL1"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="SEV. 1"
                 android:backgroundTint="#21262D"
+                android:text="SEV. 1"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/btnSeatRL2"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:text="SEV. 2"
                 android:backgroundTint="#21262D"
+                android:text="SEV. 2"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"/>
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/btnSeatRL3"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_weight="1"
-                android:text="SEV. 3"
                 android:backgroundTint="#21262D"
+                android:text="SEV. 3"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -827,7 +835,7 @@
                 android:layout_weight="1"
                 android:letterSpacing="0.06"
                 android:text="SARJ DURUMU"
-                android:textColor="#E6EDF3"
+                android:textColor="@color/status_value"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
