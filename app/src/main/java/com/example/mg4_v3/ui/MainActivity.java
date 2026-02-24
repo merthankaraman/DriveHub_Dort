@@ -200,7 +200,6 @@ public class MainActivity extends AppCompatActivity {
         mSoundEnabled = prefsSound.getBoolean(PREF_SOUND_ENABLED, false);
         SoundMode savedMode = soundModeFromString(prefsSound.getString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2"));
         boolean logsEnabled = prefsSound.getBoolean("logs_enabled", true);
-        mEngineSound.setMode(savedMode);
         if (mSoundEnabled) mEngineSound.start();
         MG4Hardware.setLogEnabled(logsEnabled);
         updateSoundModeButtons(savedMode);
@@ -266,8 +265,6 @@ public class MainActivity extends AppCompatActivity {
         // Motor sesi modu butonları
         mBtnSoundVirtualGear.setOnClickListener(v -> {
             if (mSoundEnabled) {
-                // Sanal vites = V2 modu
-                mEngineSound.setMode(SoundMode.VIRTUAL_GEAR_V2);
                 getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2").apply();
                 updateSoundModeButtons(SoundMode.VIRTUAL_GEAR_V2);
                 Toast.makeText(this, "Motor sesi: Sanal Vites", Toast.LENGTH_SHORT).show();
@@ -277,10 +274,8 @@ public class MainActivity extends AppCompatActivity {
         // YENİ V2 BUTONU TIKLAMA OLAYI
         mBtnSoundVirtualGearV2.setOnClickListener(v -> {
             if (mSoundEnabled) {
-                // Assetto modu = FULL
-                mEngineSound.setMode(SoundMode.FULL);
-                getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "FULL").apply();
-                updateSoundModeButtons(SoundMode.FULL);
+                getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2").apply();
+                updateSoundModeButtons(SoundMode.VIRTUAL_GEAR_V2);
                 Toast.makeText(this, "Motor sesi: Assetto", Toast.LENGTH_SHORT).show();
             }
         });
@@ -454,6 +449,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             mCurrentPanel = savedInstanceState.getInt(STATE_PANEL, PANEL_MAIN);
             restorePanelAfterRecreate();
         }
+
+        mEngineSound = EngineSoundManager.getInstance(this);
+        mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LFA());
     }
 
     @Override
@@ -793,7 +791,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     
     /** Kayıtlı string'den SoundMode (kalıcı tercih için). */
     private static SoundMode soundModeFromString(String s) {
-        if ("FULL".equals(s)) return SoundMode.FULL;
+        if ("FULL".equals(s)) return SoundMode.VIRTUAL_GEAR_V2;
         // Varsayılan ve eski kayıtlar için: sanal vites modu
         return SoundMode.VIRTUAL_GEAR_V2;
     }
@@ -894,7 +892,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
         // Sanal vites = VIRTUAL_GEAR_V2, Assetto = FULL
         boolean isSanal   = (activeMode == SoundMode.VIRTUAL_GEAR_V2);
-        boolean isAssetto = (activeMode == SoundMode.FULL);
+        boolean isAssetto = (activeMode == SoundMode.VIRTUAL_GEAR_V2);
 
         mBtnSoundVirtualGear.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isSanal ? COLOR_ACTIVE : COLOR_INACTIVE));
         mBtnSoundVirtualGear.setTextColor(isSanal ? 0xFFFFFFFF : 0xFF8B949E);
