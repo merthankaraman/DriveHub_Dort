@@ -12,7 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.Switch;
+import androidx.appcompat.widget.SwitchCompat;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -173,21 +173,19 @@ public class MainActivity extends AppCompatActivity {
 
         mBtnGearProfile = findViewById(R.id.btnGearProfile);
 
-        // Kendi metodumuzla güvenle okuyoruz (Çökme riski SIFIR)
+        // Yapay motor sesi yöneticisini başlat (önce instance al)
+        mEngineSound = EngineSoundManager.getInstance(this);
+
+        // Kayıtlı vites profili
         String savedProfileStr = prefs.getString("gear_profile", "SPORT_6");
         EngineSoundManager.GearProfile savedProfile = gearProfileFromString(savedProfileStr);
-
         mEngineSound.setGearProfile(savedProfile);
         updateGearProfileButtonText(savedProfile);
-
         // Butona tıklandığında seçim penceresini aç
         mBtnGearProfile.setOnClickListener(v -> showGearProfileDialog());
 
         // Araç servislerini başlat
         MG4Hardware.init(this);
-        
-        // Yapay motor sesi yöneticisini başlat
-        mEngineSound = EngineSoundManager.getInstance(this);
 
         // Son kaydedilen motor sesi / log ayarlarını yükle (kalıcı)
         SharedPreferences prefsSound = getSharedPreferences("mg4_v3", MODE_PRIVATE);
@@ -215,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Log (detay) switch'i
-        Switch swLogs = findViewById(R.id.switchLogs);
+        SwitchCompat swLogs = findViewById(R.id.switchLogs);
         if (swLogs != null) {
             swLogs.setChecked(logsEnabled);
             swLogs.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -382,7 +380,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mBtnSeatRL3  = findViewById(R.id.btnSeatRL3);
 
         // Overlay görünürlüğü (klima ekranı üstünde)
-        Switch swOverlay = findViewById(R.id.switchOverlay);
+        SwitchCompat swOverlay = findViewById(R.id.switchOverlay);
         if (swOverlay != null) {
             SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
             boolean enabled = p.getBoolean(PREF_OVERLAY_ENABLED, true);
