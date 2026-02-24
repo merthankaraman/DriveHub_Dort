@@ -15,9 +15,24 @@ android {
         minSdk 28
         targetSdk 36
         versionCode 1
-        versionName "1.2.5.3"
+        versionName "1.2.5.10"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    flavorDimensions "env"
+
+    productFlavors {
+        car {
+            dimension "env"
+            // Araç için orijinal paket adı
+            applicationId "com.example.mg4_v3"
+        }
+        sim {
+            dimension "env"
+            // Simülasyon / emulator için ayrı paket
+            applicationId "com.example.mg4_v3.sim"
+        }
     }
 
     buildTypes {

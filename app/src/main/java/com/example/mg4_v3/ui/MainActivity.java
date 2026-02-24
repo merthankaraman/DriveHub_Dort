@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import androidx.appcompat.widget.SwitchCompat;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -54,19 +55,24 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvStatus;
     private TextView mTvBinder;
     private TextView mTvSpeed;
+    private TextView mTvSpeedTestLabel;
     
     // Yapay motor sesi
     private EngineSoundManager mEngineSound;
     private Button mBtnSoundToggle;
-    private Button mBtnSoundLoop;
-    private Button mBtnSoundFull;
-    private Button mBtnSoundVirtualGear;
-    private Button mBtnSoundVirtualGearV2; // YENİ EKLENDİ
+    private Button mBtnSoundVirtualGear;   // Sanal vites
+    private Button mBtnSoundVirtualGearV2; // Assetto
     private Button mBtnGearProfile;
+    private Button mBtnSpeedTest;
     private boolean mSoundEnabled = false; // Varsayılan: kapalı (kalıcı tercih SharedPreferences'tan yüklenecek)
 
     // Ana ekran
     private View mLayoutMain;
+    private View mLayoutSpeedTest;
+
+    // Hız simülasyonu (bilgisayarda test için)
+    private boolean mSimSpeedActive = false;
+    private float   mSimSpeedKmh   = 0f;
 
     // Regen paneli
     private View   mLayoutRegenPanel;
@@ -118,7 +124,9 @@ public class MainActivity extends AppCompatActivity {
     private final Runnable mSpeedRunnable = new Runnable() {
         @Override
         public void run() {
-            float speed = MG4Hardware.getSpeedKmh();
+            // Simülasyon açıksa slider hızını, değilse araç hızını kullan
+            float speed = mSimSpeedActive ? mSimSpeedKmh : MG4Hardware.getSpeedKmh();
+
             if (mTvSpeed != null) {
                 if (Float.isNaN(speed)) {
                     mTvSpeed.setText("-- km/h");
@@ -163,15 +171,15 @@ public class MainActivity extends AppCompatActivity {
         mTvStatus = findViewById(R.id.tvStatus);
         mTvBinder = findViewById(R.id.tvBinderStatus);
         mTvSpeed  = findViewById(R.id.tvSpeed);
+        mTvSpeedTestLabel = findViewById(R.id.tvSpeedTestLabel);
         
         // Motor sesi butonları
         mBtnSoundToggle = findViewById(R.id.btnSoundToggle);
-        mBtnSoundLoop = findViewById(R.id.btnSoundLoop);
-        mBtnSoundFull = findViewById(R.id.btnSoundFull);
         mBtnSoundVirtualGear = findViewById(R.id.btnSoundVirtualGear);
-        mBtnSoundVirtualGearV2 = findViewById(R.id.btnSoundVirtualGearV2); // YENİ EKLENDİ
-
+        mBtnSoundVirtualGearV2 = findViewById(R.id.btnSoundVirtualGearV2);
         mBtnGearProfile = findViewById(R.id.btnGearProfile);
+        mBtnSpeedTest = findViewById(R.id.btnSpeedTest);
+        mLayoutSpeedTest = findViewById(R.id.layoutSpeedTest);
 
         // Yapay motor sesi yöneticisini başlat (önce instance al)
         mEngineSound = EngineSoundManager.getInstance(this);
@@ -190,13 +198,45 @@ public class MainActivity extends AppCompatActivity {
         // Son kaydedilen motor sesi / log ayarlarını yükle (kalıcı)
         SharedPreferences prefsSound = getSharedPreferences("mg4_v3", MODE_PRIVATE);
         mSoundEnabled = prefsSound.getBoolean(PREF_SOUND_ENABLED, false);
-        SoundMode savedMode = soundModeFromString(prefsSound.getString(PREF_SOUND_MODE, "LOOP"));
+        SoundMode savedMode = soundModeFromString(prefsSound.getString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2"));
         boolean logsEnabled = prefsSound.getBoolean("logs_enabled", true);
         mEngineSound.setMode(savedMode);
         if (mSoundEnabled) mEngineSound.start();
         MG4Hardware.setLogEnabled(logsEnabled);
         updateSoundModeButtons(savedMode);
         updateSoundToggleButton();
+
+        // Hız test paneli (simülasyon)
+        SeekBar seekSpeedTest = findViewById(R.id.seekSpeedTest);
+        if (mBtnSpeedTest != null && seekSpeedTest != null && mLayoutSpeedTest != null) {
+            mBtnSpeedTest.setOnClickListener(v -> {
+                boolean opening = mLayoutSpeedTest.getVisibility() != View.VISIBLE;
+                mLayoutSpeedTest.setVisibility(opening ? View.VISIBLE : View.GONE);
+                mSimSpeedActive = opening;
+                if (!opening) {
+                    // Panel kapandı → tekrar gerçek hızdan beslenecek
+                    mSimSpeedKmh = 0f;
+                }
+            });
+
+            seekSpeedTest.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    float speed = progress; // 0–200 km/h
+                    mSimSpeedActive = true;
+                    mSimSpeedKmh = speed;
+                    if (mTvSpeedTestLabel != null) {
+                        mTvSpeedTestLabel.setText(String.format("Simüle hız: %.0f km/h", speed));
+                    }
+                    if (mSoundEnabled && mEngineSound != null) {
+                        mEngineSound.onSpeedChanged(speed);
+                    }
+                }
+
+                @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+            });
+        }
 
         // Motor sesi aç/kapa butonu
         mBtnSoundToggle.setOnClickListener(v -> {
@@ -224,40 +264,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Motor sesi modu butonları
-        mBtnSoundLoop.setOnClickListener(v -> {
-            if (mSoundEnabled) {
-                mEngineSound.setMode(SoundMode.LOOP);
-                getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "LOOP").apply();
-                updateSoundModeButtons(SoundMode.LOOP);
-                Toast.makeText(this, "Motor sesi: Loop (Vites yok)", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        mBtnSoundFull.setOnClickListener(v -> {
-            if (mSoundEnabled) {
-                mEngineSound.setMode(SoundMode.FULL);
-                getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "FULL").apply();
-                updateSoundModeButtons(SoundMode.FULL);
-                Toast.makeText(this, "Motor sesi: Tam (Vites var)", Toast.LENGTH_SHORT).show();
-            }
-        });
-
         mBtnSoundVirtualGear.setOnClickListener(v -> {
             if (mSoundEnabled) {
-                mEngineSound.setMode(SoundMode.VIRTUAL_GEAR);
-                getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "VIRTUAL_GEAR").apply();
-                updateSoundModeButtons(SoundMode.VIRTUAL_GEAR);
-                Toast.makeText(this, "Motor sesi: Yapay Vites (6 vites simülasyonu)", Toast.LENGTH_SHORT).show();
+                // Sanal vites = V2 modu
+                mEngineSound.setMode(SoundMode.VIRTUAL_GEAR_V2);
+                getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2").apply();
+                updateSoundModeButtons(SoundMode.VIRTUAL_GEAR_V2);
+                Toast.makeText(this, "Motor sesi: Sanal Vites", Toast.LENGTH_SHORT).show();
             }
         });
 
         // YENİ V2 BUTONU TIKLAMA OLAYI
         mBtnSoundVirtualGearV2.setOnClickListener(v -> {
             if (mSoundEnabled) {
-                mEngineSound.setMode(SoundMode.VIRTUAL_GEAR_V2);
-                getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2").apply();
-                updateSoundModeButtons(SoundMode.VIRTUAL_GEAR_V2);
-                Toast.makeText(this, "Motor sesi: V2 (Pürüzsüz Vites)", Toast.LENGTH_SHORT).show();
+                // Assetto modu = FULL
+                mEngineSound.setMode(SoundMode.FULL);
+                getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "FULL").apply();
+                updateSoundModeButtons(SoundMode.FULL);
+                Toast.makeText(this, "Motor sesi: Assetto", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -770,9 +794,8 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     /** Kayıtlı string'den SoundMode (kalıcı tercih için). */
     private static SoundMode soundModeFromString(String s) {
         if ("FULL".equals(s)) return SoundMode.FULL;
-        if ("VIRTUAL_GEAR".equals(s)) return SoundMode.VIRTUAL_GEAR;
-        if ("VIRTUAL_GEAR_V2".equals(s)) return SoundMode.VIRTUAL_GEAR_V2; // YENİ EKLENDİ
-        return SoundMode.LOOP;
+        // Varsayılan ve eski kayıtlar için: sanal vites modu
+        return SoundMode.VIRTUAL_GEAR_V2;
     }
     private static EngineSoundManager.GearProfile gearProfileFromString(String s) {
         if ("CRUISER_4".equals(s)) return EngineSoundManager.GearProfile.CRUISER_4;
@@ -789,20 +812,16 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
                     android.content.res.ColorStateList.valueOf(0xFF1A7F37)); // Yeşil
             mBtnSoundToggle.setTextColor(0xFFFFFFFF);
             // Mod butonlarını aktif et
-            mBtnSoundLoop.setEnabled(true);
-            mBtnSoundFull.setEnabled(true);
-            mBtnSoundVirtualGear.setEnabled(true);
-            if(mBtnSoundVirtualGearV2 != null) mBtnSoundVirtualGearV2.setEnabled(true); // YENİ
+            if (mBtnSoundVirtualGear != null)  mBtnSoundVirtualGear.setEnabled(true);
+            if (mBtnSoundVirtualGearV2 != null) mBtnSoundVirtualGearV2.setEnabled(true);
         } else {
             mBtnSoundToggle.setText("🔇 Ses Aç");
             mBtnSoundToggle.setBackgroundTintList(
                     android.content.res.ColorStateList.valueOf(COLOR_INACTIVE)); // Gri
             mBtnSoundToggle.setTextColor(0xFF8B949E);
             // Mod butonlarını pasif et
-            mBtnSoundLoop.setEnabled(false);
-            mBtnSoundFull.setEnabled(false);
-            mBtnSoundVirtualGear.setEnabled(false);
-            if(mBtnSoundVirtualGearV2 != null) mBtnSoundVirtualGearV2.setEnabled(false); // YENİ
+            if (mBtnSoundVirtualGear != null)  mBtnSoundVirtualGear.setEnabled(false);
+            if (mBtnSoundVirtualGearV2 != null) mBtnSoundVirtualGearV2.setEnabled(false);
         }
     }
 
@@ -871,25 +890,17 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void updateSoundModeButtons(SoundMode activeMode) {
-        if (mBtnSoundLoop == null || mBtnSoundFull == null || mBtnSoundVirtualGear == null || mBtnSoundVirtualGearV2 == null) return;
+        if (mBtnSoundVirtualGear == null || mBtnSoundVirtualGearV2 == null) return;
 
-        boolean isLoop = (activeMode == SoundMode.LOOP);
-        boolean isFull = (activeMode == SoundMode.FULL);
-        boolean isVirtualGear = (activeMode == SoundMode.VIRTUAL_GEAR);
-        boolean isVirtualGearV2 = (activeMode == SoundMode.VIRTUAL_GEAR_V2); // YENİ
+        // Sanal vites = VIRTUAL_GEAR_V2, Assetto = FULL
+        boolean isSanal   = (activeMode == SoundMode.VIRTUAL_GEAR_V2);
+        boolean isAssetto = (activeMode == SoundMode.FULL);
 
-        mBtnSoundLoop.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isLoop ? COLOR_ACTIVE : COLOR_INACTIVE));
-        mBtnSoundLoop.setTextColor(isLoop ? 0xFFFFFFFF : 0xFF8B949E);
+        mBtnSoundVirtualGear.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isSanal ? COLOR_ACTIVE : COLOR_INACTIVE));
+        mBtnSoundVirtualGear.setTextColor(isSanal ? 0xFFFFFFFF : 0xFF8B949E);
 
-        mBtnSoundFull.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isFull ? COLOR_ACTIVE : COLOR_INACTIVE));
-        mBtnSoundFull.setTextColor(isFull ? 0xFFFFFFFF : 0xFF8B949E);
-
-        mBtnSoundVirtualGear.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isVirtualGear ? COLOR_ACTIVE : COLOR_INACTIVE));
-        mBtnSoundVirtualGear.setTextColor(isVirtualGear ? 0xFFFFFFFF : 0xFF8B949E);
-
-        // YENİ BUTON RENK KONTROLÜ
-        mBtnSoundVirtualGearV2.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isVirtualGearV2 ? COLOR_ACTIVE : COLOR_INACTIVE));
-        mBtnSoundVirtualGearV2.setTextColor(isVirtualGearV2 ? 0xFFFFFFFF : 0xFF8B949E);
+        mBtnSoundVirtualGearV2.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isAssetto ? COLOR_ACTIVE : COLOR_INACTIVE));
+        mBtnSoundVirtualGearV2.setTextColor(isAssetto ? 0xFFFFFFFF : 0xFF8B949E);
     }
     
     // -------------------------------------------------------------------------

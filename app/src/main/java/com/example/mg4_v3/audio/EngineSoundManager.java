@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.SoundPool;
 import android.os.Build;
 import android.util.Log;
 
@@ -11,20 +12,17 @@ import com.example.mg4_v3.R;
 
 /**
  * Yapay motor sesi yöneticisi.
- * 
- * LFA motor sesini kullanır, hıza göre pitch ve volume ayarlar.
+ * * LFA motor sesini kullanır, hıza göre pitch ve volume ayarlar.
  * - Hız 0-150 km/h arasında pitch/volume değişir
  * - 150'yi aşsa bile maksimum seviyede kalır
  * - İki mod: Loop (vites yok) veya Tam (vites var)
  */
 public class EngineSoundManager {
-    
-    /** Ses modu */
+
+    /** Ses modu (sadeleştirilmiş) */
     public enum SoundMode {
-        LOOP,          // 3-6 saniye arası loop, vites değişimi yok
-        FULL,          // Tüm dosya, vites değişimleri dahil
-        VIRTUAL_GEAR,  // V1: Ses dosyasını milisaniye milisaniye keserek atlayan eski mod
-        VIRTUAL_GEAR_V2 // V2: Sesi kesmeden sadece Pitch (Ton) ile gerçekçi vites atan yeni mod
+        FULL,           // Assetto tarzı: sürekli devir, vites hissi yok
+        VIRTUAL_GEAR_V2 // Sanal vites: SoundPool ile pürüzsüz vites atışı
     }
 
     /** Şanzıman Profilleri */
@@ -82,428 +80,252 @@ public class EngineSoundManager {
         mCurrentVirtualGear = -1; // Vites değiştirdiğimizde mevcut vitesi sıfırla
         Log.i(TAG, "Şanzıman profili değişti: " + profile.name());
     }
-    
+
     /** Yapay vites sistemi — her aralıkta hız 1000–10000 RPM'ye eşlenir */
     private static class VirtualGear {
         final float minSpeed;
         final float maxSpeed;
         final String name;
-        
+
         VirtualGear(float min, float max, String n) {
             minSpeed = min;
             maxSpeed = max;
             name = n;
         }
     }
-    
-    // Yapay vites tablosu: her aralıkta min hız → 1000 RPM, max hız → 10000 RPM (linear)
-    private static final VirtualGear[] VIRTUAL_GEARS = {
-        new VirtualGear(0f,   10f,  "V1"),   // 0-10 km/h
-        new VirtualGear(11f,  40f,  "V2"),   // 11-40 km/h
-        new VirtualGear(41f,  70f,  "V3"),   // 41-70 km/h
-        new VirtualGear(71f,  90f,  "V4"),   // 71-90 km/h
-        new VirtualGear(91f,  130f, "V5"),   // 91-130 km/h
-        new VirtualGear(131f, 150f, "V6")   // 131–150 km/h → 150’de 10000 RPM
-    };
-    
-    // 3sn=1000 RPM, 6sn=10000 RPM → dosya içinde konum (ms) = 3000 + 3000 * (rpm-1000)/9000
-    private static final int RPM_RANGE = 9000;  // 10000 - 1000
-    
+
     private int mCurrentVirtualGear = -1;
-    private int mVirtualGearLoopStartMs = LOOP_START_MS;
-    private int mVirtualGearLoopEndMs = LOOP_END_MS;
-    
+
     /** Motor güç oranı 0..1 (0= gaz yok/coasting, 1= tam gaz). -1 = bilinmiyor (güç yoksa 1 kabul edilir). */
     private float mPowerRatio = -1f;
 
     private static final String TAG = "EngineSound";
-    
+
     // Hız limiti
     private static final float MAX_SPEED_KMH = 150f;
-    
+
     // Pitch aralığı (0.5x = yavaş, 1.5x = hızlı)
     private static final float PITCH_MIN = 0.5f;  // 0 km/h için
     private static final float PITCH_MAX = 1.5f;  // 150 km/h için
-    
+
     // Volume aralığı (0.0 = sessiz, 1.0 = tam ses)
-    // Müzikle birlikte çalması için düşük tutuyoruz
-    private static final float VOLUME_MIN = 0.0f;   // 0 km/h için (sessiz)
-    private static final float VOLUME_MAX = 0.50f; // 150 km/h için (müziği bastırmayacak seviye)
-    
+    private static final float VOLUME_MIN = 0.0f;
+    private static final float VOLUME_MAX = 0.50f;
+
     // Minimum hız eşiği — bu hızın altında ses çalmaz
     private static final float MIN_SPEED_TO_PLAY = 5f; // km/h
-    
+
     // Loop için dosya zaman aralığı — 0–8 sn = 1000 RPM → 10000 RPM (içerik zaten ramp)
-    private static final int LOOP_START_MS = 0;   // 0 sn = 1000 RPM
-    private static final int LOOP_END_MS = 8000;     // 8 sn = 10000 RPM
-    
-    // Yapay viteste sabit hız için: istenen RPM'deki kısa dilimi loop'la (pitch 1.0 = doğru tını)
-    private static final int RPM_SLICE_HALF_MS = 350; // Dilim = merkez ±350ms (700ms loop, daha akıcı)
+    private static final int LOOP_START_MS = 0;
+    private static final int LOOP_END_MS = 8000;
+
+    // Yapay viteste sabit hız için: istenen RPM'deki kısa dilimi loop'la
+    private static final int RPM_SLICE_HALF_MS = 350;
     /** Vites geçişinde histerezis (km/h): sınırda sürekli atlama olmasın */
     private static final float VIRTUAL_GEAR_HYSTERESIS_KMH = 5f;
 
     // Pozisyon kontrolü için timer interval
     private static final int POSITION_CHECK_INTERVAL_MS = 80;
 
-    // V2 Modu için sabit "Drone" döngü aralığı (Örn: 4. sn ile 6. sn arası)
-    private static final int V2_BASE_LOOP_START_MS = 4000;
-    private static final int V2_BASE_LOOP_END_MS = 6000;
-
-    private boolean mIsLoopSeeking = false; // Geçiş anında mıyız?
-    
     private static EngineSoundManager sInstance = null;
-    
+
     private Context mContext;
-    private MediaPlayer mMediaPlayer;
     private boolean mIsPlaying = false;
     private float mCurrentSpeed = 0f;
-    private SoundMode mCurrentMode = SoundMode.LOOP; // Varsayılan: Loop modu
+    private SoundMode mCurrentMode = SoundMode.VIRTUAL_GEAR_V2; // Varsayılan: Sanal vites
     private android.os.Handler mHandler;
-    private final Runnable mPositionChecker = new Runnable() {
-        @Override
-        public void run() {
-            if (mMediaPlayer != null && mIsPlaying && mMediaPlayer.isPlaying()) {
-                try {
-                    // LOOP ve VIRTUAL_GEAR modlarında pozisyon kontrolü yap
-                    int currentPos = mMediaPlayer.getCurrentPosition();
-                    if (mCurrentMode == SoundMode.LOOP) {
-                        if (currentPos >= LOOP_END_MS) {
-                            mMediaPlayer.seekTo(LOOP_START_MS);
-                        }
-                    } else if (mCurrentMode == SoundMode.VIRTUAL_GEAR) {
-                        if (currentPos >= mVirtualGearLoopEndMs) {
-                            mMediaPlayer.seekTo(mVirtualGearLoopStartMs);
-                        }
-                    }
-                    else if (mCurrentMode == SoundMode.VIRTUAL_GEAR_V2) {
-                        // Sona 150ms kala "yumuşak geçiş" işlemini başlat
-                        if (currentPos >= V2_BASE_LOOP_END_MS - 150 && !mIsLoopSeeking) {
-                            mIsLoopSeeking = true;
 
-                            mMediaPlayer.setVolume(0f, 0f);
+    // --- SES MOTORLARI ---
+    private MediaPlayer mMediaPlayer;
+    private SoundPool mSoundPool;     // V2 İÇİN YENİ OYUN MOTORU
+    private int mV2SoundId = -1;
+    private int mV2StreamId = -1;
 
-                            mMediaPlayer.seekTo(V2_BASE_LOOP_START_MS);
+    // Eski V1/Loop modları için kullanılan pozisyon denetleyici artık gereksiz.
 
-                            mHandler.postDelayed(() -> {
-                                mIsLoopSeeking = false;
-                                onSpeedChanged(mCurrentSpeed);
-                            }, 150);
-                        }
-                    }
-                } catch (Exception e) {
-                    Log.w(TAG, "Position check hata: " + e.getMessage());
-                }
-            }
-            // Tekrar kontrol et
-            if (mIsPlaying) {
-                mHandler.postDelayed(this, POSITION_CHECK_INTERVAL_MS);
-            }
-        }
-    };
-    
     private EngineSoundManager(Context context) {
         mContext = context.getApplicationContext();
         mHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     }
-    
+
     public static synchronized EngineSoundManager getInstance(Context context) {
         if (sInstance == null) {
             sInstance = new EngineSoundManager(context);
         }
         return sInstance;
     }
-    
-    /**
-     * Ses modunu değiştirir (Loop veya Tam).
-     * Çalışırken değiştirilebilir.
-     */
+
+    /** Ses modunu değiştirir. */
     public void setMode(SoundMode mode) {
-        if (mCurrentMode == mode) {
-            Log.d(TAG, "setMode() — zaten " + mode + " modunda");
-            return;
-        }
-        
+        if (mCurrentMode == mode) return;
+
         mCurrentMode = mode;
-        mCurrentVirtualGear = -1; // Vites sıfırla
+        mCurrentVirtualGear = -1;
         Log.i(TAG, "Ses modu değiştirildi: " + mode);
-        
-        // Çalıyorsa yeniden başlat (mod değişikliği için)
-        if (mIsPlaying && mMediaPlayer != null) {
-            try {
-                boolean wasPlaying = mMediaPlayer.isPlaying();
-                int currentPos = mMediaPlayer.getCurrentPosition();
-                
-                // Durdur
-                mMediaPlayer.pause();
-                
-                // Moda göre pozisyon ayarla
-                if (mode == SoundMode.LOOP || mode == SoundMode.VIRTUAL_GEAR) {
-                    mMediaPlayer.seekTo(LOOP_START_MS);
-                } else {
-                    mMediaPlayer.seekTo(0); // FULL mod: baştan başla
-                }
-                
-                // Tekrar başlat
-                if (wasPlaying) {
-                    mMediaPlayer.start();
-                }
-                
-                // Yapay vites modunda pozisyon kontrolünü başlat
-                if (mode == SoundMode.VIRTUAL_GEAR) {
-                    mHandler.post(mPositionChecker);
-                }
-                
-                // Hız güncellemesini tekrar uygula
-                onSpeedChanged(mCurrentSpeed);
-                
-                Log.i(TAG, "Mod değişikliği uygulandı: " + mode);
-            } catch (Exception e) {
-                Log.e(TAG, "setMode() hata: " + e.getMessage());
-            }
+
+        // Mod değiştiğinde motoru baştan başlat
+        if (mIsPlaying) {
+            stop();
+            start();
         }
     }
-    
-    /**
-     * Mevcut ses modunu döndürür.
-     */
+
     public SoundMode getMode() {
         return mCurrentMode;
     }
-    
-    /**
-     * Ses motorunu başlatır (loop modunda).
-     * onCreate veya onResume'da çağrılmalı.
-     */
+
     public void start() {
         if (mIsPlaying) {
             Log.d(TAG, "start() — zaten çalıyor");
             return;
         }
-        
+        mIsPlaying = true;
+
         try {
-            // MediaPlayer oluştur
-            mMediaPlayer = new MediaPlayer();
-            
-            // Ses dosyasını yükle
-            android.content.res.AssetFileDescriptor afd = mContext.getResources()
-                    .openRawResourceFd(R.raw.lfa_engine_acceleration);
-            if (afd == null) {
-                Log.e(TAG, "start() — ses dosyası bulunamadı: lfa_engine_acceleration.mp3");
-                return;
-            }
-            
-            mMediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-            afd.close();
-            
-            // Audio attributes — müzikle birlikte çalması için
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                AudioAttributes attrs = new AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build();
-                mMediaPlayer.setAudioAttributes(attrs);
-            } else {
-                mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            }
-            
-            // Loop ayarla — moda göre
-            if (mCurrentMode == SoundMode.LOOP) {
-                mMediaPlayer.setLooping(false); // Manuel loop yapacağız
-            } else {
-                mMediaPlayer.setLooping(true); // FULL mod: tüm dosyayı loop et
-            }
-            
-            // Completion listener — moda göre davran
-            mMediaPlayer.setOnCompletionListener(mp -> {
-                if (mIsPlaying) {
-                    if (mCurrentMode == SoundMode.LOOP) {
-                        Log.d(TAG, "MediaPlayer completion — loop başına dönülüyor");
-                        mp.seekTo(LOOP_START_MS);
-                        mp.start();
-                    } else {
-                        // FULL mod: MediaPlayer zaten looping=true olduğu için otomatik başa döner
-                        Log.d(TAG, "MediaPlayer completion — FULL mod (otomatik loop)");
-                    }
-                }
-            });
-            
-            // Error listener
-            mMediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                Log.e(TAG, "MediaPlayer error: what=" + what + " extra=" + extra);
-                stop();
-                return true;
-            });
-            
-            // Hazır olunca başlat
-            mMediaPlayer.setOnPreparedListener(mp -> {
-                Log.i(TAG, "MediaPlayer hazır — başlatılıyor (mod: " + mCurrentMode + ")");
-                
-                // Moda göre başlangıç pozisyonu
-                if (mCurrentMode == SoundMode.LOOP || mCurrentMode == SoundMode.VIRTUAL_GEAR) {
-                    mp.seekTo(LOOP_START_MS);
-                    // Pozisyon kontrolü başlat (belirli aralığı loop etmek için)
-                    mHandler.post(mPositionChecker);
+            if (mCurrentMode == SoundMode.VIRTUAL_GEAR_V2) {
+                // ==========================================
+                // YENİ V2: SOUNDPOOL (SIFIR GECİKME, RAM'DEN)
+                // ==========================================
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    AudioAttributes attrs = new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build();
+                    mSoundPool = new SoundPool.Builder()
+                            .setMaxStreams(1)
+                            .setAudioAttributes(attrs)
+                            .build();
                 } else {
-                    mp.seekTo(0); // FULL mod: baştan başla
+                    mSoundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
                 }
-                
-                mp.setVolume(VOLUME_MIN, VOLUME_MIN);
-                mp.start();
-                mIsPlaying = true;
-                
-                // İlk hız güncellemesini uygula
-                onSpeedChanged(mCurrentSpeed);
-            });
-            
-            mMediaPlayer.prepareAsync();
-            
+
+                mSoundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
+                    if (status == 0 && mIsPlaying && mCurrentMode == SoundMode.VIRTUAL_GEAR_V2) {
+                        // -1 parametresi sonsuz kusursuz döngüyü temsil eder
+                        mV2StreamId = soundPool.play(mV2SoundId, VOLUME_MIN, VOLUME_MIN, 1, -1, 1.0f);
+                        Log.i(TAG, "SoundPool V2 hazır ve başladı.");
+                        onSpeedChanged(mCurrentSpeed);
+                    }
+                });
+
+                // WAV dosyasını RAM'e yükle (Mükemmel döngü için)
+                mV2SoundId = mSoundPool.load(mContext, R.raw.aa2, 1);
+
+            } else {
+                // ==========================================
+                // ESKİ MODLAR (V1, LOOP, FULL): MEDIAPLAYER
+                // ==========================================
+                mMediaPlayer = new MediaPlayer();
+
+                android.content.res.AssetFileDescriptor afd = mContext.getResources()
+                        .openRawResourceFd(R.raw.aa2);
+                if (afd == null) return;
+                mMediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                afd.close();
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    AudioAttributes attrs = new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build();
+                    mMediaPlayer.setAudioAttributes(attrs);
+                } else {
+                    mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                }
+
+                // Assetto modu: tüm dosya doğal loop
+                mMediaPlayer.setLooping(true);
+
+                // Tam modda completion özel iş yapmıyor; MediaPlayer kendi loop'unu yönetir.
+                mMediaPlayer.setOnCompletionListener(mp -> {});
+
+                mMediaPlayer.setOnErrorListener((mp, what, extra) -> {
+                    stop();
+                    return true;
+                });
+
+                mMediaPlayer.setOnPreparedListener(mp -> {
+                    mp.seekTo(0);
+                    mp.setVolume(VOLUME_MIN, VOLUME_MIN);
+                    mp.start();
+                    onSpeedChanged(mCurrentSpeed);
+                });
+                mMediaPlayer.prepareAsync();
+            }
+
         } catch (Exception e) {
             Log.e(TAG, "start() hata: " + e.getMessage(), e);
             stop();
         }
     }
-    
-    /**
-     * Ses motorunu durdurur ve kaynakları temizler.
-     * onDestroy veya onPause'da çağrılmalı.
-     */
+
     public void stop() {
-        if (!mIsPlaying && mMediaPlayer == null) {
-            return;
-        }
-        
+        if (!mIsPlaying) return;
         mIsPlaying = false;
-        
-        // Pozisyon kontrolünü durdur
-        mHandler.removeCallbacks(mPositionChecker);
-        
+
+        // MediaPlayer Temizliği
         if (mMediaPlayer != null) {
             try {
-                if (mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.stop();
-                }
+                if (mMediaPlayer.isPlaying()) mMediaPlayer.stop();
                 mMediaPlayer.release();
             } catch (Exception e) {
                 Log.w(TAG, "stop() release hata: " + e.getMessage());
             }
             mMediaPlayer = null;
         }
-        
+
+        // SoundPool Temizliği
+        if (mSoundPool != null) {
+            try {
+                if (mV2StreamId != -1) mSoundPool.stop(mV2StreamId);
+                mSoundPool.release();
+            } catch (Exception e) {
+                Log.w(TAG, "SoundPool stop hata: " + e.getMessage());
+            }
+            mSoundPool = null;
+            mV2SoundId = -1;
+            mV2StreamId = -1;
+        }
+
         Log.i(TAG, "stop() — ses durduruldu");
     }
-    
-    /**
-     * Motor güç oranını verir (0 = gaz yok, 1 = tam gaz).
-     * Araçtan güç/kW bilgisi alındığında buraya 0..1 aralığında beslenebilir.
-     * Bilinmiyorsa -1 bırakın; ses tam volume ile çalar.
-     * 
-     * @param powerRatio 0f = güç yok (coasting), 1f = max güç, -1f = bilinmiyor
-     */
+
     public void setPowerRatio(float powerRatio) {
         if (powerRatio < -0.01f) mPowerRatio = -1f;
         else mPowerRatio = Math.max(0f, Math.min(1f, powerRatio));
     }
-    
-    /**
-     * Hız değiştiğinde çağrılır.
-     * MainActivity'deki hız döngüsünden çağrılacak.
-     * 
-     * @param speedKmh Araç hızı (km/h)
-     */
+
     public void onSpeedChanged(float speedKmh) {
-        // 1. Önce değerleri kontrol et ve geçici bir değişkende sakla
         float processedSpeed = speedKmh;
-
-        if (Float.isNaN(processedSpeed) || processedSpeed < 0) {
-            processedSpeed = 0f;
-        }
-
-        if (processedSpeed > MAX_SPEED_KMH) {
-            processedSpeed = MAX_SPEED_KMH;
-        }
+        if (Float.isNaN(processedSpeed) || processedSpeed < 0) processedSpeed = 0f;
+        if (processedSpeed > MAX_SPEED_KMH) processedSpeed = MAX_SPEED_KMH;
 
         mCurrentSpeed = processedSpeed;
 
-        if (mMediaPlayer == null || !mIsPlaying) {
-            return;
-        }
-
-        // 2. Lambda içinde kullanmak için "final" bir kopya oluştur
+        if (!mIsPlaying) return;
         final float finalSpeed = processedSpeed;
-
-        // 3. Artık güvenle post edebilirsin
         mHandler.post(() -> updatePlaybackParams(finalSpeed));
     }
-    
-    /**
-     * Pitch ve volume'ü hıza göre günceller.
-     */
+
     private void updatePlaybackParams(float speedKmh) {
-        if (mMediaPlayer == null || !mIsPlaying) {
-            return;
-        }
-        
+        if (!mIsPlaying) return;
+
         try {
-            // Hız çok düşükse sesi kapat
-            if (speedKmh < MIN_SPEED_TO_PLAY) {
-                mMediaPlayer.setVolume(0f, 0f);
-                mCurrentVirtualGear = -1;
-                return;
-            }
-            
             float pitch;
             float volume;
-            
-            // Yapay vites modunda: 3–6 sn = 1000→10000 RPM; istenen RPM'deki DİLİMİ loop'la, pitch=1.0
-            if (mCurrentMode == SoundMode.VIRTUAL_GEAR) {
-                int gearIndex = findVirtualGearWithHysteresis(speedKmh, mCurrentVirtualGear);
-                if (gearIndex >= 0) {
-                    VirtualGear gear = VIRTUAL_GEARS[gearIndex];
-                    if (mCurrentVirtualGear != gearIndex && mCurrentVirtualGear >= 0) {
-                        Log.i(TAG, String.format("Vites: %s → %s (%.0f km/h)",
-                                VIRTUAL_GEARS[mCurrentVirtualGear].name, gear.name, speedKmh));
-                    }
-                    mCurrentVirtualGear = gearIndex;
 
-                    float span = gear.maxSpeed - gear.minSpeed;
-                    if (span < 1f) span = 1f;
-                    float t = (speedKmh - gear.minSpeed) / span;
-                    t = Math.max(0f, Math.min(1f, t));
+            // ==============================================================
+            // V2 MODU (SOUNDPOOL KONTROLÜ - MEDIAPLAYER'A GİRMEDEN ÇIKAR)
+            // ==============================================================
+            if (mCurrentMode == SoundMode.VIRTUAL_GEAR_V2) {
+                if (mSoundPool == null || mV2StreamId == -1) return; // Henüz RAM'e yüklenmediyse bekle
 
-                    // --- İŞTE SENİN KODUNDAKİ DÜZELTME BURADA ---
-                    // Kalkışta (V1) devir 1000'den başlar.
-                    // Ancak 2, 3, 4. viteslere atıldığında devir 1000'e düşmesin, 4500 civarına düşsün!
-                    float minRpm = (mCurrentVirtualGear == 0) ? 1000f : 4500f;
-                    float maxRpm = 10000f;
-
-                    // İstenen RPM artık 1000'e çakılmayacak
-                    float desiredRpm = minRpm + (maxRpm - minRpm) * t;
-
-                    // Dosyada bu RPM'nin olduğu an: 3sn=1000, 6sn=10000 → konum (ms)
-                    int centerMs = 3000 + (int) (3000f * (desiredRpm - 1000f) / RPM_RANGE);
-                    centerMs = Math.max(LOOP_START_MS, Math.min(LOOP_END_MS, centerMs));
-
-                    mVirtualGearLoopStartMs = Math.max(LOOP_START_MS, centerMs - RPM_SLICE_HALF_MS);
-                    mVirtualGearLoopEndMs = Math.min(LOOP_END_MS, centerMs + RPM_SLICE_HALF_MS);
-                    if (mVirtualGearLoopEndMs - mVirtualGearLoopStartMs < 100) {
-                        mVirtualGearLoopStartMs = centerMs - 50;
-                        mVirtualGearLoopEndMs = centerMs + 50;
-                    }
-
-                    pitch = 1.0f; // Senin orijinal mantığındaki gibi sabit kalsın
-                    volume = VOLUME_MIN + t * (VOLUME_MAX - VOLUME_MIN);
-
-                    // Şu an loop diliminin dışındaysak, dilim başına seek et
-                    int pos = mMediaPlayer.getCurrentPosition();
-                    if (pos < mVirtualGearLoopStartMs || pos > mVirtualGearLoopEndMs) {
-                        mMediaPlayer.seekTo(mVirtualGearLoopStartMs);
-                    }
-                } else {
-                    pitch = 1.0f;
-                    volume = VOLUME_MIN;
+                if (speedKmh < MIN_SPEED_TO_PLAY) {
+                    mSoundPool.setVolume(mV2StreamId, 0f, 0f);
+                    mCurrentVirtualGear = -1;
+                    return;
                 }
-            } else if (mCurrentMode == SoundMode.VIRTUAL_GEAR_V2) {
-                // YENİ V2: SABİT UĞULTU + PITCH ŞANZIMANI
+
                 int gearIndex = findVirtualGearWithHysteresisV2(speedKmh, mCurrentVirtualGear);
                 if (gearIndex >= 0) {
                     VirtualGear gear = getActiveGearArray()[gearIndex];
@@ -515,131 +337,80 @@ public class EngineSoundManager {
 
                     float span = gear.maxSpeed - gear.minSpeed;
                     if (span < 1f) span = 1f;
-
-                    // O viteste yüzde kaçtayız? (0.0 = Vitesin başı, 1.0 = Kesici)
                     float t = (speedKmh - gear.minSpeed) / span;
                     t = Math.max(0f, Math.min(1f, t));
 
-                    // --- VİTES ATMA HİSSİ (PITCH) ---
-                    float minPitch;
-                    float maxPitch = 1.7f; // Vites sonu tiz LFA çığlığı
-
-                    if (gearIndex == 0) {
-                        minPitch = 0.5f;  // 1. Vites kalkış: Rölanti gibi çok kalın başlar
-                    } else {
-                        minPitch = 1.0f;  // 2,3,4. Vitesler: Devir çok düşmez, torkta kalır
-                    }
+                    float minPitch = (gearIndex == 0) ? 0.5f : 1.0f;
+                    float maxPitch = 1.7f;
 
                     pitch = minPitch + (t * (maxPitch - minPitch));
                     volume = VOLUME_MIN + (t * (VOLUME_MAX - VOLUME_MIN));
-
-                    // V2'de seekTo YOK! Seek işlemi yukarıdaki mPositionChecker'da
-                    // 2 saniyelik (4000-6000) geniş alanda yapılıyor.
-
                 } else {
                     pitch = 1.0f;
                     volume = VOLUME_MIN;
                 }
+
+                // Yük (Load) simülasyonu
+                float powerFactor = getPowerVolumeFactor();
+                volume *= powerFactor;
+                if (mPowerRatio >= 0f) {
+                    pitch *= (0.98f + 0.04f * mPowerRatio);
+                }
+
+                // SoundPool pitch değerleri sınırlandırılmıştır (0.5x - 2.0x)
+                float spPitch = Math.max(0.5f, Math.min(2.0f, pitch));
+
+                mSoundPool.setRate(mV2StreamId, spPitch);
+                mSoundPool.setVolume(mV2StreamId, volume, volume);
+                return; // MEDIAPLAYER KODLARINA GİRMEDEN ÇIK
             }
-            else {
-                // Normal mod: linear interpolation
-                float t = speedKmh / MAX_SPEED_KMH;
-                t = Math.max(0f, Math.min(1f, t));
-                pitch = PITCH_MIN + t * (PITCH_MAX - PITCH_MIN);
-                volume = VOLUME_MIN + t * (VOLUME_MAX - VOLUME_MIN);
+
+            // ==============================================================
+            // ASSETTO MODU (MEDIAPLAYER KONTROLÜ)
+            // ==============================================================
+            if (mMediaPlayer == null) return;
+
+            if (speedKmh < MIN_SPEED_TO_PLAY) {
+                mMediaPlayer.setVolume(0f, 0f);
+                mCurrentVirtualGear = -1;
+                return;
             }
-            
-            // Güç oranı varsa: 0% güç = sessiz/çok düşük, 100% = hesaplanan volume (tam gaz sesi)
+
+            // Assetto: hız → pitch/volume lineer map
+            float t = speedKmh / MAX_SPEED_KMH;
+            t = Math.max(0f, Math.min(1f, t));
+            pitch = PITCH_MIN + t * (PITCH_MAX - PITCH_MIN);
+            volume = VOLUME_MIN + t * (VOLUME_MAX - VOLUME_MIN);
+
             float powerFactor = getPowerVolumeFactor();
             volume *= powerFactor;
-            // İsteğe bağlı: yük altında hafif pitch artışı (tam gazda biraz daha tiz)
             if (mPowerRatio >= 0f && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                float loadPitch = 0.98f + 0.04f * mPowerRatio; // 0% → 0.98x, 100% → 1.02x
+                float loadPitch = 0.98f + 0.04f * mPowerRatio;
                 pitch *= loadPitch;
             }
-            
-            // PlaybackParams ile pitch ayarla (API 23+)
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 android.media.PlaybackParams params = mMediaPlayer.getPlaybackParams();
                 if (params != null) {
                     params.setSpeed(pitch);
                     mMediaPlayer.setPlaybackParams(params);
                 }
-            } else {
-                // API 23 altında pitch ayarı yok, sadece volume
-                Log.d(TAG, "Pitch ayarı desteklenmiyor (API < 23)");
             }
 
-            // updatePlaybackParams'ın sonlarına doğru volume ayarlanan yeri bul ve şöyle sar:
-            if (mIsLoopSeeking) {
-                mMediaPlayer.setVolume(0f, 0f);
-            } else {
-                mMediaPlayer.setVolume(volume, volume);
-            }
-            
-            if (mCurrentMode == SoundMode.VIRTUAL_GEAR && mCurrentVirtualGear >= 0) {
-                Log.d(TAG, String.format("Hız: %.0f km/h → %s (Pitch: %.2fx, Volume: %.2f)", 
-                        speedKmh, VIRTUAL_GEARS[mCurrentVirtualGear].name, pitch, volume));
-            } else {
-                Log.d(TAG, String.format("Hız: %.0f km/h → Pitch: %.2fx, Volume: %.2f", 
-                        speedKmh, pitch, volume));
-            }
-            
+            mMediaPlayer.setVolume(volume, volume);
+
         } catch (Exception e) {
             Log.e(TAG, "updatePlaybackParams hata: " + e.getMessage());
         }
     }
-    
-    /**
-     * Güç oranına göre volume çarpanı. Bilinmiyorsa 1.0.
-     * 0% güç = çok düşük ses (rölanti hissi), 100% = tam ses.
-     */
+
     private float getPowerVolumeFactor() {
         if (mPowerRatio < 0f) return 1f;
         return 0.2f + 0.8f * mPowerRatio;
     }
-    
-    /**
-     * Hıza göre yapay vites bulur (histerezis yok).
-     */
-    private int findVirtualGear(float speedKmh) {
-        for (int i = 0; i < VIRTUAL_GEARS.length; i++) {
-            VirtualGear gear = VIRTUAL_GEARS[i];
-            if (speedKmh >= gear.minSpeed && speedKmh <= gear.maxSpeed) {
-                return i;
-            }
-        }
-        return VIRTUAL_GEARS.length - 1;
-    }
 
-    /**
-     * Histerezis ile vites seçer: sınırda (örn. 40–41 km/h) sürekli vites atlaması olmaz.
-     * Yukarı vites için hız biraz üst eşiği geçmeli, aşağı vites için biraz alt eşiği geçmeli.
-     */
-    private int findVirtualGearWithHysteresis(float speedKmh, int currentGearIndex) {
-        int rawGear = findVirtualGear(speedKmh);
-        if (currentGearIndex < 0) return rawGear;
-
-        if (rawGear > currentGearIndex) {
-            // Yukarı vites: yeni vitesin min hızı + histerezis geçilmeli
-            float upThreshold = VIRTUAL_GEARS[rawGear].minSpeed + VIRTUAL_GEAR_HYSTERESIS_KMH;
-            if (speedKmh >= upThreshold) return rawGear;
-            return currentGearIndex;
-        }
-        if (rawGear < currentGearIndex) {
-            // Aşağı vites: mevcut vitesin min hızı - histerezis altına düşmeli
-            float downThreshold = VIRTUAL_GEARS[currentGearIndex].minSpeed - VIRTUAL_GEAR_HYSTERESIS_KMH;
-            if (speedKmh <= downThreshold) return rawGear;
-            return currentGearIndex;
-        }
-        return currentGearIndex;
-    }
-
-    /**
-     * V2 şanzımanı için hıza göre yapay vites bulur (histerezis yok).
-     */
     private int findVirtualGearV2(float speedKmh) {
-        VirtualGear[] activeGears = getActiveGearArray(); // Aktif diziyi al
+        VirtualGear[] activeGears = getActiveGearArray();
         for (int i = 0; i < activeGears.length; i++) {
             if (speedKmh >= activeGears[i].minSpeed && speedKmh <= activeGears[i].maxSpeed) {
                 return i;
@@ -649,7 +420,7 @@ public class EngineSoundManager {
     }
 
     private int findVirtualGearWithHysteresisV2(float speedKmh, int currentGearIndex) {
-        VirtualGear[] activeGears = getActiveGearArray(); // Aktif diziyi al
+        VirtualGear[] activeGears = getActiveGearArray();
         int rawGear = findVirtualGearV2(speedKmh);
         if (currentGearIndex < 0) return rawGear;
 
@@ -665,11 +436,11 @@ public class EngineSoundManager {
         }
         return currentGearIndex;
     }
-    
-    /**
-     * Ses motorunun çalışıp çalışmadığını kontrol eder.
-     */
+
     public boolean isPlaying() {
+        if (mCurrentMode == SoundMode.VIRTUAL_GEAR_V2) {
+            return mIsPlaying && mSoundPool != null && mV2StreamId != -1;
+        }
         return mIsPlaying && mMediaPlayer != null && mMediaPlayer.isPlaying();
     }
 }
