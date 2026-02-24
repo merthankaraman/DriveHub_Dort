@@ -888,9 +888,9 @@ public class MG4Hardware {
                                         }
                                         if (propId >= 0 && toCache instanceof Number) {
                                             sBmsCache.put(propId, toCache);
-                                            if (isBmsPropId(propId)) {
-                                                Log.i(TAG, "BMS CACHE OK 0x" + Integer.toHexString(propId) + " = " + toCache);
-                                            }
+                                            //if (isBmsPropId(propId)) {
+                                            //    Log.i(TAG, "BMS CACHE OK 0x" + Integer.toHexString(propId) + " = " + toCache);
+                                            //}
                                             if (propId == PROP_BATT_VOLT) {
                                                 long nowMs = android.os.SystemClock.elapsedRealtime();
                                                 long deltaMs = (sLastBmsEventMs > 0) ? (nowMs - sLastBmsEventMs) : 0;
@@ -967,7 +967,7 @@ public class MG4Hardware {
                                 }
                                 if (propId >= 0 && rawVal instanceof Number) {
                                     sBmsCache.put(propId, rawVal);
-                                    Log.i(TAG, "BMS CACHE OK 0x" + Integer.toHexString(propId) + " = " + rawVal);
+                                    //Log.i(TAG, "BMS CACHE OK 0x" + Integer.toHexString(propId) + " = " + rawVal);
                                     if (propId == PROP_BATT_VOLT) {
                                         long nowMs = android.os.SystemClock.elapsedRealtime();
                                         long deltaMs = (sLastBmsEventMs > 0) ? (nowMs - sLastBmsEventMs) : 0;
