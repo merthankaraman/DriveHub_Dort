@@ -144,6 +144,12 @@ public class EngineSoundManager {
 
     // Pozisyon kontrolü için timer interval
     private static final int POSITION_CHECK_INTERVAL_MS = 80;
+
+    // V2 Modu için sabit "Drone" döngü aralığı (Örn: 4. sn ile 6. sn arası)
+    private static final int V2_BASE_LOOP_START_MS = 4000;
+    private static final int V2_BASE_LOOP_END_MS = 6000;
+
+    private boolean mIsLoopSeeking = false; // Geçiş anında mıyız?
     
     private static EngineSoundManager sInstance = null;
     
@@ -159,15 +165,29 @@ public class EngineSoundManager {
             if (mMediaPlayer != null && mIsPlaying && mMediaPlayer.isPlaying()) {
                 try {
                     // LOOP ve VIRTUAL_GEAR modlarında pozisyon kontrolü yap
-                    if (mCurrentMode == SoundMode.LOOP || mCurrentMode == SoundMode.VIRTUAL_GEAR_V2) {
-                        int currentPos = mMediaPlayer.getCurrentPosition();
+                    int currentPos = mMediaPlayer.getCurrentPosition();
+                    if (mCurrentMode == SoundMode.LOOP) {
                         if (currentPos >= LOOP_END_MS) {
                             mMediaPlayer.seekTo(LOOP_START_MS);
                         }
                     } else if (mCurrentMode == SoundMode.VIRTUAL_GEAR) {
-                        int currentPos = mMediaPlayer.getCurrentPosition();
                         if (currentPos >= mVirtualGearLoopEndMs) {
                             mMediaPlayer.seekTo(mVirtualGearLoopStartMs);
+                        }
+                    }
+                    else if (mCurrentMode == SoundMode.VIRTUAL_GEAR_V2) {
+                        // Sona 150ms kala "yumuşak geçiş" işlemini başlat
+                        if (currentPos >= V2_BASE_LOOP_END_MS - 150 && !mIsLoopSeeking) {
+                            mIsLoopSeeking = true;
+
+                            mMediaPlayer.setVolume(0f, 0f);
+
+                            mMediaPlayer.seekTo(V2_BASE_LOOP_START_MS);
+
+                            mHandler.postDelayed(() -> {
+                                mIsLoopSeeking = false;
+                                onSpeedChanged(mCurrentSpeed);
+                            }, 150);
                         }
                     }
                 } catch (Exception e) {
@@ -440,32 +460,39 @@ public class EngineSoundManager {
                 if (gearIndex >= 0) {
                     VirtualGear gear = VIRTUAL_GEARS[gearIndex];
                     if (mCurrentVirtualGear != gearIndex && mCurrentVirtualGear >= 0) {
-                        Log.i(TAG, String.format("Vites: %s → %s (%.0f km/h)", 
+                        Log.i(TAG, String.format("Vites: %s → %s (%.0f km/h)",
                                 VIRTUAL_GEARS[mCurrentVirtualGear].name, gear.name, speedKmh));
                     }
                     mCurrentVirtualGear = gearIndex;
-                    
+
                     float span = gear.maxSpeed - gear.minSpeed;
                     if (span < 1f) span = 1f;
                     float t = (speedKmh - gear.minSpeed) / span;
                     t = Math.max(0f, Math.min(1f, t));
-                    
-                    // İstenen RPM (1000–10000)
-                    float desiredRpm = 1000f + 9000f * t;
+
+                    // --- İŞTE SENİN KODUNDAKİ DÜZELTME BURADA ---
+                    // Kalkışta (V1) devir 1000'den başlar.
+                    // Ancak 2, 3, 4. viteslere atıldığında devir 1000'e düşmesin, 4500 civarına düşsün!
+                    float minRpm = (mCurrentVirtualGear == 0) ? 1000f : 4500f;
+                    float maxRpm = 10000f;
+
+                    // İstenen RPM artık 1000'e çakılmayacak
+                    float desiredRpm = minRpm + (maxRpm - minRpm) * t;
+
                     // Dosyada bu RPM'nin olduğu an: 3sn=1000, 6sn=10000 → konum (ms)
                     int centerMs = 3000 + (int) (3000f * (desiredRpm - 1000f) / RPM_RANGE);
                     centerMs = Math.max(LOOP_START_MS, Math.min(LOOP_END_MS, centerMs));
-                    
+
                     mVirtualGearLoopStartMs = Math.max(LOOP_START_MS, centerMs - RPM_SLICE_HALF_MS);
                     mVirtualGearLoopEndMs = Math.min(LOOP_END_MS, centerMs + RPM_SLICE_HALF_MS);
                     if (mVirtualGearLoopEndMs - mVirtualGearLoopStartMs < 100) {
                         mVirtualGearLoopStartMs = centerMs - 50;
                         mVirtualGearLoopEndMs = centerMs + 50;
                     }
-                    
-                    pitch = 1.0f; // Doğru anı çalıyoruz, pitch değiştirme
+
+                    pitch = 1.0f; // Senin orijinal mantığındaki gibi sabit kalsın
                     volume = VOLUME_MIN + t * (VOLUME_MAX - VOLUME_MIN);
-                    
+
                     // Şu an loop diliminin dışındaysak, dilim başına seek et
                     int pos = mMediaPlayer.getCurrentPosition();
                     if (pos < mVirtualGearLoopStartMs || pos > mVirtualGearLoopEndMs) {
@@ -476,12 +503,12 @@ public class EngineSoundManager {
                     volume = VOLUME_MIN;
                 }
             } else if (mCurrentMode == SoundMode.VIRTUAL_GEAR_V2) {
-                // YENİ V2 PÜRÜZSÜZ VİTES MODU
+                // YENİ V2: SABİT UĞULTU + PITCH ŞANZIMANI
                 int gearIndex = findVirtualGearWithHysteresisV2(speedKmh, mCurrentVirtualGear);
                 if (gearIndex >= 0) {
                     VirtualGear gear = getActiveGearArray()[gearIndex];
                     if (mCurrentVirtualGear != gearIndex && mCurrentVirtualGear >= 0) {
-                        Log.i(TAG, String.format("V2 Vites Atıldı: %s → %s (%.0f km/h)",
+                        Log.i(TAG, String.format("V2 Vites: %s → %s (%.0f km/h)",
                                 getActiveGearArray()[mCurrentVirtualGear].name, gear.name, speedKmh));
                     }
                     mCurrentVirtualGear = gearIndex;
@@ -489,28 +516,25 @@ public class EngineSoundManager {
                     float span = gear.maxSpeed - gear.minSpeed;
                     if (span < 1f) span = 1f;
 
-                    // O viteste yüzde kaçtayız? (0.0 = Başlangıç, 1.0 = Kesici)
+                    // O viteste yüzde kaçtayız? (0.0 = Vitesin başı, 1.0 = Kesici)
                     float t = (speedKmh - gear.minSpeed) / span;
                     t = Math.max(0f, Math.min(1f, t));
 
-                    // --- DEVİR (PITCH) DÜZELTMESİ ---
+                    // --- VİTES ATMA HİSSİ (PITCH) ---
                     float minPitch;
-                    float maxPitch = 1.65f; // Motorun kesiciye girdiği tiz an (9000 RPM)
+                    float maxPitch = 1.7f; // Vites sonu tiz LFA çığlığı
 
-                    if (mCurrentVirtualGear == 0) {
-                        // Sadece 1. Vites: Araç dururken veya yeni kalkıyorken rölantiden başlar
-                        minPitch = 0.65f;
+                    if (gearIndex == 0) {
+                        minPitch = 0.5f;  // 1. Vites kalkış: Rölanti gibi çok kalın başlar
                     } else {
-                        // Diğer Vitesler (2, 3, 4, 5, 6): Vites atıldığında devir 1000'e DEĞİL,
-                        // torkun yüksek olduğu 4500-5000 devir civarına düşer.
-                        minPitch = 1.15f;
+                        minPitch = 1.0f;  // 2,3,4. Vitesler: Devir çok düşmez, torkta kalır
                     }
 
-                    // Güncel tonu hesapla
                     pitch = minPitch + (t * (maxPitch - minPitch));
-
-                    // Ses şiddeti vitesin devrine göre hesaplanır
                     volume = VOLUME_MIN + (t * (VOLUME_MAX - VOLUME_MIN));
+
+                    // V2'de seekTo YOK! Seek işlemi yukarıdaki mPositionChecker'da
+                    // 2 saniyelik (4000-6000) geniş alanda yapılıyor.
 
                 } else {
                     pitch = 1.0f;
@@ -545,9 +569,13 @@ public class EngineSoundManager {
                 // API 23 altında pitch ayarı yok, sadece volume
                 Log.d(TAG, "Pitch ayarı desteklenmiyor (API < 23)");
             }
-            
-            // Volume ayarla
-            mMediaPlayer.setVolume(volume, volume);
+
+            // updatePlaybackParams'ın sonlarına doğru volume ayarlanan yeri bul ve şöyle sar:
+            if (mIsLoopSeeking) {
+                mMediaPlayer.setVolume(0f, 0f);
+            } else {
+                mMediaPlayer.setVolume(volume, volume);
+            }
             
             if (mCurrentMode == SoundMode.VIRTUAL_GEAR && mCurrentVirtualGear >= 0) {
                 Log.d(TAG, String.format("Hız: %.0f km/h → %s (Pitch: %.2fx, Volume: %.2f)", 
