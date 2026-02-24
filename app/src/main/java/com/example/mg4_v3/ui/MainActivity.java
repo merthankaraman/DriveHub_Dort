@@ -864,7 +864,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void showSoundProfileDialog() {
-        final String[] options = {"McLaren", "LFA", "Agera"};
+        final String[] options = {"McLaren P1", "LFA", "Lamborghini Aventador", "BMW Z4", "Pagani Zonda R"};
 
         new AlertDialog.Builder(this)
                 .setTitle("Araç Sesi Profili")
@@ -883,10 +883,16 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         //mEngineSound = EngineSoundManager.getInstance(this);
         if (profile.equals("LFA")){
             mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LFA());
-        } else if (profile.equals("McLaren")) {
+        } else if (profile.equals("McLaren P1")) {
             mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_MCLAREN_P1());
+        } else if (profile.equals("Lamborghini Aventador")) {
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_Lamborghini_Aventador());
+        } else if (profile.equals("BMW Z4")) {
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_BMW_Z4());
+        } else if (profile.equals("Pagani Zonda R")) {
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_ZONDA_R());
         }
-        else mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LFA());
+        else mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_MCLAREN_P1());
     }
 
     /** Tema modunu kaydet, uygula ve ekranı yenile (Gündüz / Gece / Oto). */

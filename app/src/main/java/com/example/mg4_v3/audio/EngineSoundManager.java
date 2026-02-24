@@ -96,21 +96,52 @@ public class EngineSoundManager {
     // ==========================================
     public static VehicleProfile PROFILE_LFA() {
         return new VehicleProfile("Lexus LFA", 1000f, 9500f, 1,
-                R.raw.lfa_eng_idle,
-                R.raw.lfa_exh_acc_3784,
-                R.raw.lfa_exh_hi_detail_6301,
-                R.raw.lfa_exh_hi_detail_7076,
-                R.raw.lfa_exh_hi_detail_8135,
-                R.raw.lfa_exh_acc_5333
+                R.raw.lfa_idle,
+                R.raw.lfa_3784,
+                R.raw.lfa_6301,
+                R.raw.lfa_7076,
+                R.raw.lfa_8135,
+                R.raw.lfa_5333
         );
     }
     public static VehicleProfile PROFILE_MCLAREN_P1() {
         return new VehicleProfile("McLaren P1", 800f, 6000f, 1,
-                R.raw.mclaren_p1_in_idle,
-                R.raw.mclaren_p1_in_on_low_2000,
-                R.raw.mclaren_p1_in_on_lowmid_b_4000,
-                R.raw.mclaren_p1_in_on_high_b_2_5000,
-                R.raw.mclaren_p1_in_on_veryhigh_b_6000
+                R.raw.mclaren_p1_idle,
+                R.raw.mclaren_p1_2000,
+                R.raw.mclaren_p1_4000,
+                R.raw.mclaren_p1_5000,
+                R.raw.mclaren_p1_6000
+        );
+    }
+    public static VehicleProfile PROFILE_Lamborghini_Aventador() {
+        return new VehicleProfile("Lamborghini Aventador", 800f, 8000f, 1,
+                R.raw.lamborghini_aventador_idle,
+                R.raw.lamborghini_aventador_2000,
+                R.raw.lamborghini_aventador_4000,
+                R.raw.lamborghini_aventador_6000,
+                R.raw.lamborghini_aventador_8000
+        );
+    }
+    public static VehicleProfile PROFILE_BMW_Z4() {
+        return new VehicleProfile("BMW Z4", 800f, 6836, 1,
+                R.raw.bmw_z4_idle,
+                R.raw.bmw_z4_2800,
+                R.raw.bmw_z4_4000,
+                R.raw.bmw_z4_6000,
+                R.raw.bmw_z4_6029,
+                R.raw.bmw_z4_6836
+        );
+    }
+    public static VehicleProfile PROFILE_ZONDA_R() {
+        return new VehicleProfile("Pagani Zonda R", 1000f, 8250, 1,
+                R.raw.zonda_r_idle,
+                R.raw.zonda_r_3500,
+                R.raw.zonda_r_4250,
+                R.raw.zonda_r_5000,
+                R.raw.zonda_r_5500,
+                R.raw.zonda_r_6250,
+                R.raw.zonda_r_7000,
+                R.raw.zonda_r_8250
         );
     }
 
