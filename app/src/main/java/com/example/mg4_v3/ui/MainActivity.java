@@ -45,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_SOUND_ENABLED = "sound_enabled";
     private static final String PREF_SOUND_MODE = "sound_mode";
     private static final String PREF_OVERLAY_ENABLED = "overlay_enabled";
+    private static final String PREF_SOUND_PROFILE = "sound_profile";
+    private static final String PREF_SOUND_MASTER = "sound_master";
     private static final int COLOR_ACTIVE   = 0xFF1F6FEB; // mavi — seçili
     private static final int COLOR_INACTIVE = 0xFF21262D; // koyu gri — seçilmemiş
     private static final int COLOR_HEAT_ON  = 0xFF9E3333; // kırmızı — ısıtma aktif
@@ -60,10 +62,10 @@ public class MainActivity extends AppCompatActivity {
     // Yapay motor sesi
     private EngineSoundManager mEngineSound;
     private Button mBtnSoundToggle;
-    private Button mBtnSoundVirtualGear;   // Sanal vites
-    private Button mBtnSoundVirtualGearV2; // Assetto
+    private Button mBtnSoundProfile;
     private Button mBtnGearProfile;
     private Button mBtnSpeedTest;
+    private SeekBar mSeekSoundVolume;
     private boolean mSoundEnabled = false; // Varsayılan: kapalı (kalıcı tercih SharedPreferences'tan yüklenecek)
 
     // Ana ekran
@@ -175,11 +177,11 @@ public class MainActivity extends AppCompatActivity {
         
         // Motor sesi butonları
         mBtnSoundToggle = findViewById(R.id.btnSoundToggle);
-        mBtnSoundVirtualGear = findViewById(R.id.btnSoundVirtualGear);
-        mBtnSoundVirtualGearV2 = findViewById(R.id.btnSoundVirtualGearV2);
+        mBtnSoundProfile = findViewById(R.id.btnSoundProfile);
         mBtnGearProfile = findViewById(R.id.btnGearProfile);
         mBtnSpeedTest = findViewById(R.id.btnSpeedTest);
         mLayoutSpeedTest = findViewById(R.id.layoutSpeedTest);
+        mSeekSoundVolume = findViewById(R.id.seekSoundVolume);
 
         // Yapay motor sesi yöneticisini başlat (önce instance al)
         mEngineSound = EngineSoundManager.getInstance(this);
@@ -200,9 +202,9 @@ public class MainActivity extends AppCompatActivity {
         mSoundEnabled = prefsSound.getBoolean(PREF_SOUND_ENABLED, false);
         SoundMode savedMode = soundModeFromString(prefsSound.getString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2"));
         boolean logsEnabled = prefsSound.getBoolean("logs_enabled", true);
+        int savedMaster = prefsSound.getInt(PREF_SOUND_MASTER, 60);
         if (mSoundEnabled) mEngineSound.start();
         MG4Hardware.setLogEnabled(logsEnabled);
-        updateSoundModeButtons(savedMode);
         updateSoundToggleButton();
 
         // Hız test paneli (simülasyon)
@@ -251,6 +253,33 @@ public class MainActivity extends AppCompatActivity {
             updateSoundToggleButton();
         });
 
+        // Araç sesi profili seçimi (McLaren / LFA / Agera) — son konumu hatırla
+        if (mBtnSoundProfile != null) {
+            mBtnSoundProfile.setOnClickListener(v -> showSoundProfileDialog());
+            String savedSoundProfile = prefsSound.getString(PREF_SOUND_PROFILE, "LFA");
+            mBtnSoundProfile.setText("Araç Sesi: " + savedSoundProfile);
+            onSoundProfileSelected(savedSoundProfile);
+        }
+
+        // Master volume slider (0–100) — hafızalı
+        if (mSeekSoundVolume != null) {
+            int clamped = Math.max(0, Math.min(100, savedMaster));
+            mSeekSoundVolume.setProgress(clamped);
+            mEngineSound.setMasterVolume(clamped / 100f);
+
+            mSeekSoundVolume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    int p = Math.max(0, Math.min(100, progress));
+                    mEngineSound.setMasterVolume(p / 100f);
+                    prefsSound.edit().putInt(PREF_SOUND_MASTER, p).apply();
+                }
+
+                @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+            });
+        }
+
         // Log (detay) switch'i
         SwitchCompat swLogs = findViewById(R.id.switchLogs);
         if (swLogs != null) {
@@ -261,24 +290,6 @@ public class MainActivity extends AppCompatActivity {
                 MG4Hardware.setLogEnabled(isChecked);
             });
         }
-
-        // Motor sesi modu butonları
-        mBtnSoundVirtualGear.setOnClickListener(v -> {
-            if (mSoundEnabled) {
-                getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2").apply();
-                updateSoundModeButtons(SoundMode.VIRTUAL_GEAR_V2);
-                Toast.makeText(this, "Motor sesi: Sanal Vites", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        // YENİ V2 BUTONU TIKLAMA OLAYI
-        mBtnSoundVirtualGearV2.setOnClickListener(v -> {
-            if (mSoundEnabled) {
-                getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2").apply();
-                updateSoundModeButtons(SoundMode.VIRTUAL_GEAR_V2);
-                Toast.makeText(this, "Motor sesi: Assetto", Toast.LENGTH_SHORT).show();
-            }
-        });
 
         // Tema butonları: Gündüz / Gece / Oto (araç sistemine göre)
         Button btnThemeDay  = findViewById(R.id.btnThemeDay);
@@ -449,9 +460,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             mCurrentPanel = savedInstanceState.getInt(STATE_PANEL, PANEL_MAIN);
             restorePanelAfterRecreate();
         }
-
-        mEngineSound = EngineSoundManager.getInstance(this);
-        mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LFA());
     }
 
     @Override
@@ -791,8 +799,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     
     /** Kayıtlı string'den SoundMode (kalıcı tercih için). */
     private static SoundMode soundModeFromString(String s) {
-        if ("FULL".equals(s)) return SoundMode.VIRTUAL_GEAR_V2;
-        // Varsayılan ve eski kayıtlar için: sanal vites modu
+        // Tüm eski değerleri tek vites moduna eşliyoruz.
         return SoundMode.VIRTUAL_GEAR_V2;
     }
     private static EngineSoundManager.GearProfile gearProfileFromString(String s) {
@@ -809,17 +816,11 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             mBtnSoundToggle.setBackgroundTintList(
                     android.content.res.ColorStateList.valueOf(0xFF1A7F37)); // Yeşil
             mBtnSoundToggle.setTextColor(0xFFFFFFFF);
-            // Mod butonlarını aktif et
-            if (mBtnSoundVirtualGear != null)  mBtnSoundVirtualGear.setEnabled(true);
-            if (mBtnSoundVirtualGearV2 != null) mBtnSoundVirtualGearV2.setEnabled(true);
         } else {
             mBtnSoundToggle.setText("🔇 Ses Aç");
             mBtnSoundToggle.setBackgroundTintList(
                     android.content.res.ColorStateList.valueOf(COLOR_INACTIVE)); // Gri
             mBtnSoundToggle.setTextColor(0xFF8B949E);
-            // Mod butonlarını pasif et
-            if (mBtnSoundVirtualGear != null)  mBtnSoundVirtualGear.setEnabled(false);
-            if (mBtnSoundVirtualGearV2 != null) mBtnSoundVirtualGearV2.setEnabled(false);
         }
     }
 
@@ -862,6 +863,32 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         }
     }
 
+    private void showSoundProfileDialog() {
+        final String[] options = {"McLaren", "LFA", "Agera"};
+
+        new AlertDialog.Builder(this)
+                .setTitle("Araç Sesi Profili")
+                .setItems(options, (dialog, which) -> {
+                    String label = options[which];
+                    getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_PROFILE, label).apply();
+                    if (mBtnSoundProfile != null) {
+                        mBtnSoundProfile.setText("Araç Sesi: " + label);
+                    }
+                    onSoundProfileSelected(label);
+                })
+                .show();
+    }
+
+    private void onSoundProfileSelected(String profile) {
+        //mEngineSound = EngineSoundManager.getInstance(this);
+        if (profile.equals("LFA")){
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LFA());
+        } else if (profile.equals("McLaren")) {
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_MCLAREN_P1());
+        }
+        else mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LFA());
+    }
+
     /** Tema modunu kaydet, uygula ve ekranı yenile (Gündüz / Gece / Oto). */
     private void applyThemeMode(int mode) {
         mThemeMode = mode;
@@ -885,20 +912,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         btnNight.setTextColor(isNight ? 0xFFFFFFFF : 0xFF8B949E);
         btnAuto.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isAuto  ? COLOR_ACTIVE : COLOR_INACTIVE));
         btnAuto.setTextColor(isAuto  ? 0xFFFFFFFF : 0xFF8B949E);
-    }
-
-    private void updateSoundModeButtons(SoundMode activeMode) {
-        if (mBtnSoundVirtualGear == null || mBtnSoundVirtualGearV2 == null) return;
-
-        // Sanal vites = VIRTUAL_GEAR_V2, Assetto = FULL
-        boolean isSanal   = (activeMode == SoundMode.VIRTUAL_GEAR_V2);
-        boolean isAssetto = (activeMode == SoundMode.VIRTUAL_GEAR_V2);
-
-        mBtnSoundVirtualGear.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isSanal ? COLOR_ACTIVE : COLOR_INACTIVE));
-        mBtnSoundVirtualGear.setTextColor(isSanal ? 0xFFFFFFFF : 0xFF8B949E);
-
-        mBtnSoundVirtualGearV2.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isAssetto ? COLOR_ACTIVE : COLOR_INACTIVE));
-        mBtnSoundVirtualGearV2.setTextColor(isAssetto ? 0xFFFFFFFF : 0xFF8B949E);
     }
     
     // -------------------------------------------------------------------------

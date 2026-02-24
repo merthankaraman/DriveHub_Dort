@@ -38,8 +38,10 @@ public class EngineSoundManager {
     // --- MEVCUT ARAÇ VERİLERİ ---
     private EngineSample[] mCurrentSamples;
     private float mIdleRpm = 1000f;
+    private float mCurrentIdleVolumeScale = 1;
     private float mMaxRpm = 9000f;
     private Gearbox mActiveGearbox;
+    private float mMasterVolume = 0.6f;
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public enum GearProfile { CRUISER_4, SPORT_6, RALLY_8 }
@@ -50,11 +52,13 @@ public class EngineSoundManager {
         public final int[] resIds;
         public final float idleRpm;
         public final float maxRpm;
+        public final float idleVolumeScale;
 
-        public VehicleProfile(String name, float idleRpm, float maxRpm, int... resIds) {
+        public VehicleProfile(String name, float idleRpm, float maxRpm, float idleVolumeScale, int... resIds) {
             this.name = name;
             this.idleRpm = idleRpm;
             this.maxRpm = maxRpm;
+            this.idleVolumeScale = idleVolumeScale;
             this.resIds = resIds;
         }
     }
@@ -76,6 +80,10 @@ public class EngineSoundManager {
         }
     }
 
+    public void setMasterVolume(float volume01) {
+        mMasterVolume = Math.max(0f, Math.min(1f, volume01));
+    }
+
     // --- SABİT ŞANZIMANLAR ---
     private final Gearbox mGearSport6 = new Gearbox(20f, 45f, 75f, 110f, 140f, 160f);
     private final Gearbox mGearRally8 = new Gearbox(15f, 30f, 45f, 65f, 85f, 110f, 135f, 160f);
@@ -87,13 +95,22 @@ public class EngineSoundManager {
     // HAZIR ARAÇ TANIMLARI (STATİK)
     // ==========================================
     public static VehicleProfile PROFILE_LFA() {
-        return new VehicleProfile("Lexus LFA", 1000f, 9500f,
+        return new VehicleProfile("Lexus LFA", 1000f, 9500f, 1,
                 R.raw.lfa_eng_idle,
                 R.raw.lfa_exh_acc_3784,
                 R.raw.lfa_exh_hi_detail_6301,
                 R.raw.lfa_exh_hi_detail_7076,
                 R.raw.lfa_exh_hi_detail_8135,
                 R.raw.lfa_exh_acc_5333
+        );
+    }
+    public static VehicleProfile PROFILE_MCLAREN_P1() {
+        return new VehicleProfile("McLaren P1", 800f, 6000f, 1,
+                R.raw.mclaren_p1_in_idle,
+                R.raw.mclaren_p1_in_on_low_2000,
+                R.raw.mclaren_p1_in_on_lowmid_b_4000,
+                R.raw.mclaren_p1_in_on_high_b_2_5000,
+                R.raw.mclaren_p1_in_on_veryhigh_b_6000
         );
     }
 
@@ -120,6 +137,7 @@ public class EngineSoundManager {
 
         this.mIdleRpm = profile.idleRpm;
         this.mMaxRpm = profile.maxRpm;
+        this.mCurrentIdleVolumeScale = profile.idleVolumeScale;
         this.mCurrentSamples = buildSamples(profile.resIds);
 
         Log.i(TAG, "Profil yüklendi: " + profile.name);
@@ -236,29 +254,57 @@ public class EngineSoundManager {
     }
 
     private void updateAudioMixer() {
-        if (mSoundPool == null) return;
-        float rpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
+        if (mSoundPool == null || mCurrentSamples == null || mLoadedSamplesCount < mCurrentSamples.length) return;
 
+        float rpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
+        float masterVol = mMasterVolume;
+
+        // HIZ 1 KM/H ALTINDAYSA: TAM İZOLASYON MODU
+        boolean strictlyIdle = (mCurrentSpeedKmh < 1.0f);
+
+        if (strictlyIdle) {
+            for (int i = 0; i < mCurrentSamples.length; i++) {
+                EngineSample s = mCurrentSamples[i];
+                if (s.streamId == -1) continue;
+
+                if (i == 0) { // Sadece ilk dosya (Rölanti)
+                    float finalVol = masterVol * mCurrentIdleVolumeScale;
+                    mSoundPool.setVolume(s.streamId, finalVol, finalVol);
+                    mSoundPool.setRate(s.streamId, 1.0f); // Orijinal hız/ton
+                } else {
+                    mSoundPool.setVolume(s.streamId, 0f, 0f); // Diğer her şeyi sustur
+                }
+            }
+            return; // Fonksiyondan çık, aşağıdaki karmaşık matematiğe girme
+        }
+
+        // --- HAREKET HALİNDEYSE (ESKİ MATEMATİK DEVAM) ---
         EngineSample lower = mCurrentSamples[0];
         EngineSample upper = mCurrentSamples[mCurrentSamples.length - 1];
 
         for (int i = 0; i < mCurrentSamples.length - 1; i++) {
             if (rpm >= mCurrentSamples[i].baseRpm && rpm <= mCurrentSamples[i+1].baseRpm) {
-                lower = mCurrentSamples[i]; upper = mCurrentSamples[i+1]; break;
+                lower = mCurrentSamples[i];
+                upper = mCurrentSamples[i+1];
+                break;
             }
         }
 
         float blend = (upper.baseRpm == lower.baseRpm) ? 0 : (rpm - lower.baseRpm) / (upper.baseRpm - lower.baseRpm);
-        float masterVol = (mCurrentSpeedKmh < 3f) ? 0.2f : 0.6f;
 
         for (EngineSample s : mCurrentSamples) {
             if (s.streamId == -1) continue;
+
             float vol = (s == lower) ? (1f - blend) : (s == upper ? blend : 0f);
+
+            // Rölanti ölçeğini hareket halindeyken de uygula (geçiş yumuşak olsun diye)
+            if (s == mCurrentSamples[0]) vol *= mCurrentIdleVolumeScale;
+
+            float finalVolume = Math.max(0.0f, Math.min(1.0f, vol * masterVol));
             float pitch = Math.max(0.5f, Math.min(2.0f, rpm / s.baseRpm));
-            mSoundPool.setVolume(s.streamId, vol * masterVol, vol * masterVol);
+            mSoundPool.setVolume(s.streamId, finalVolume, finalVolume);
             mSoundPool.setRate(s.streamId, pitch);
         }
     }
-
     public boolean isPlaying() { return mIsPlaying; }
 }
