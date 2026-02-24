@@ -29,6 +29,8 @@ public class EngineSoundManager {
     private boolean mIsPlaying = false;
     private SoundPool mSoundPool;
     private int mLoadedSamplesCount = 0;
+    private long mLastMixerUpdateTime = 0;
+    private static final long MIXER_UPDATE_INTERVAL_MS = 16; // 60Hz güncelleme hızı
 
     private float mCurrentSpeedKmh = 0f;
     private float mSimulatedThrottle = 0f;
@@ -266,54 +268,57 @@ public class EngineSoundManager {
     }
 
     private void updateGearAndRpm() {
-        if (mCurrentSpeedKmh < 3f) {
-            mCurrentGear = 0; mCurrentRpm = mIdleRpm; return;
+        if (mCurrentSpeedKmh < 1.0f) {
+            mCurrentGear = 0;
+            mCurrentRpm = mIdleRpm;
+            return;
         }
+        mCurrentGear = getGearWithHysteresis(mCurrentSpeedKmh, mCurrentGear);
+        mCurrentGear = Math.max(1, mCurrentGear);
 
-        int targetGear = 0;
-        for (int i = 0; i < mActiveGearbox.maxSpeeds.length; i++) {
-            if (mCurrentSpeedKmh <= mActiveGearbox.maxSpeeds[i]) { targetGear = i; break; }
+        float gearMinSpeed = mActiveGearbox.maxSpeeds[mCurrentGear - 1];
+        float gearMaxSpeed = mActiveGearbox.maxSpeeds[mCurrentGear];
+        float speedDiff = gearMaxSpeed - gearMinSpeed;
+        float ratio = (speedDiff <= 0) ? 0 : (mCurrentSpeedKmh - gearMinSpeed) / speedDiff;
+        ratio = Math.max(0f, Math.min(1f, ratio));
+        float baseRpm = 4500f;
+        if (mCurrentSpeedKmh < 10f) {
+            // 1 km/h'de mIdleRpm (1000) ile başlar, 10 km/h'de 4500'e ulaşır
+            float startupRatio = (mCurrentSpeedKmh - 1f) / 9f;
+            startupRatio = Math.max(0f, Math.min(1f, startupRatio));
+            baseRpm = mIdleRpm + (startupRatio * (4500f - mIdleRpm));
         }
-        // Histerezis ve Kickdown buraya eklenebilir (Önceki mantıkla aynı)
-        mCurrentGear = targetGear;
-
-        float minS = (mCurrentGear == 0) ? 0f : mActiveGearbox.maxSpeeds[mCurrentGear - 1];
-        float maxS = mActiveGearbox.maxSpeeds[mCurrentGear];
-        float ratio = Math.max(0f, Math.min(1f, (mCurrentSpeedKmh - minS) / (maxS - minS)));
-        float baseRpm = (mCurrentGear == 0) ? mIdleRpm : 4500f;
         mCurrentRpm = baseRpm + (ratio * (mMaxRpm - baseRpm));
+        if (Float.isNaN(mCurrentRpm)) mCurrentRpm = mIdleRpm;
     }
 
     private void updateAudioMixer() {
         if (mSoundPool == null || mCurrentSamples == null || mLoadedSamplesCount < mCurrentSamples.length) return;
 
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - mLastMixerUpdateTime < MIXER_UPDATE_INTERVAL_MS) return;
+        mLastMixerUpdateTime = currentTime;
+
         float rpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
-        float masterVol = mMasterVolume;
+        float masterVol = Math.max(0f, Math.min(1.0f, mMasterVolume));
 
-        // HIZ 1 KM/H ALTINDAYSA: TAM İZOLASYON MODU
-        boolean strictlyIdle = (mCurrentSpeedKmh < 1.0f);
-
-        if (strictlyIdle) {
+        if (mCurrentSpeedKmh < 1.0f) {
             for (int i = 0; i < mCurrentSamples.length; i++) {
                 EngineSample s = mCurrentSamples[i];
                 if (s.streamId == -1) continue;
 
-                if (i == 0) { // Sadece ilk dosya (Rölanti)
-                    float finalVol = masterVol * mCurrentIdleVolumeScale;
-                    mSoundPool.setVolume(s.streamId, finalVol, finalVol);
-                    mSoundPool.setRate(s.streamId, 1.0f); // Orijinal hız/ton
-                } else {
-                    mSoundPool.setVolume(s.streamId, 0f, 0f); // Diğer her şeyi sustur
-                }
+                float targetVol = (i == 0) ? (masterVol * mCurrentIdleVolumeScale) : 0f;
+
+                mSoundPool.setVolume(s.streamId, targetVol, targetVol);
+                mSoundPool.setRate(s.streamId, 1.0f);
             }
-            return; // Fonksiyondan çık, aşağıdaki karmaşık matematiğe girme
+            return;
         }
 
-        // --- HAREKET HALİNDEYSE (ESKİ MATEMATİK DEVAM) ---
-        EngineSample lower = mCurrentSamples[0];
+        EngineSample lower = mCurrentSamples[1];
         EngineSample upper = mCurrentSamples[mCurrentSamples.length - 1];
 
-        for (int i = 0; i < mCurrentSamples.length - 1; i++) {
+        for (int i = 1; i < mCurrentSamples.length - 1; i++) {
             if (rpm >= mCurrentSamples[i].baseRpm && rpm <= mCurrentSamples[i+1].baseRpm) {
                 lower = mCurrentSamples[i];
                 upper = mCurrentSamples[i+1];
@@ -321,21 +326,79 @@ public class EngineSoundManager {
             }
         }
 
-        float blend = (upper.baseRpm == lower.baseRpm) ? 0 : (rpm - lower.baseRpm) / (upper.baseRpm - lower.baseRpm);
+        float rpmDiff = upper.baseRpm - lower.baseRpm;
+        float blend = (rpmDiff <= 0) ? 0 : (rpm - lower.baseRpm) / rpmDiff;
+        blend = Math.max(0f, Math.min(1f, blend));
 
-        for (EngineSample s : mCurrentSamples) {
+        for (int i = 0; i < mCurrentSamples.length; i++) {
+            EngineSample s = mCurrentSamples[i];
             if (s.streamId == -1) continue;
+            float rawVol = 0f;
 
-            float vol = (s == lower) ? (1f - blend) : (s == upper ? blend : 0f);
+            if (i > 0) { // Rölanti (0) sürüşte hep kapalı
+                rawVol = (s == lower) ? (1f - blend) : (s == upper ? blend : 0f);
+            }
 
-            // Rölanti ölçeğini hareket halindeyken de uygula (geçiş yumuşak olsun diye)
-            if (s == mCurrentSamples[0]) vol *= mCurrentIdleVolumeScale;
+            // 2. SİHİRLİ DOKUNUŞ: Karekök alarak Eşit Güç eğrisine çevir
+            // Bu, iki sesin birleştiği noktada toplam gücün sabit kalmasını sağlar ve "pıt pıt"ı bitirir.
+            float shapedVol = (float) Math.sqrt(rawVol);
+            if (Float.isNaN(shapedVol)) shapedVol = 0f;
 
-            float finalVolume = Math.max(0.0f, Math.min(1.0f, vol * masterVol));
-            float pitch = Math.max(0.5f, Math.min(2.0f, rpm / s.baseRpm));
+            // 3. Rölanti ölçeğini uygula
+            if (s == mCurrentSamples[0]) shapedVol *= mCurrentIdleVolumeScale;
+
+            // 4. Master Volume uygula ve sınırla (Clamping)
+            float finalVolume = Math.max(0.0f, Math.min(1.0f, shapedVol * masterVol));
+
+            float pitch = (s.baseRpm <= 0) ? 1.0f : rpm / s.baseRpm;
+            pitch = Math.max(0.5f, Math.min(2.0f, pitch));
+            if (Float.isNaN(pitch)) pitch = 1.0f;
+
             mSoundPool.setVolume(s.streamId, finalVolume, finalVolume);
             mSoundPool.setRate(s.streamId, pitch);
         }
     }
+    /**
+     * Ham (matematiksel) vitesi bulur.
+     */
+    private int getRawGear(float speedKmh) {
+        for (int i = 0; i < mActiveGearbox.maxSpeeds.length; i++) {
+            if (speedKmh <= mActiveGearbox.maxSpeeds[i]) {
+                return i;
+            }
+        }
+        return mActiveGearbox.maxSpeeds.length - 1; // Maksimum vites
+    }
+
+    /**
+     * Histerezis (Tolerans) ile vites seçer.
+     * Vites sınırında sesin sürekli gidip gelmesini (Gear Hunting) önler.
+     */
+    private int getGearWithHysteresis(float speedKmh, int currentGear) {
+        int rawGear = getRawGear(speedKmh);
+
+        // Eğer henüz vites atanmamışsa ham vitesi döndür
+        if (currentGear < 0) return rawGear;
+
+        if (rawGear > currentGear) {
+            // YUKARI VİTES: Yeni vitesin hızını histerezis kadar "net" geçmeli
+            float newGearMinSpeed = mActiveGearbox.maxSpeeds[rawGear - 1];
+            if (speedKmh >= newGearMinSpeed + VIRTUAL_GEAR_HYSTERESIS_KMH) {
+                return rawGear;
+            }
+            return currentGear; // Sınırı tam geçemediği için eski viteste tut
+        }
+        else if (rawGear < currentGear) {
+            // AŞAĞI VİTES: Mevcut vitesin hızının histerezis kadar altına düşmeli
+            float currentGearMinSpeed = mActiveGearbox.maxSpeeds[currentGear - 1];
+            if (speedKmh <= currentGearMinSpeed - VIRTUAL_GEAR_HYSTERESIS_KMH) {
+                return rawGear;
+            }
+            return currentGear;
+        }
+
+        return currentGear; // Zaten aynı vitesteyiz
+    }
+
     public boolean isPlaying() { return mIsPlaying; }
 }
