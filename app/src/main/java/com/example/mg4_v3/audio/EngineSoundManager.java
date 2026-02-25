@@ -36,8 +36,8 @@ public class EngineSoundManager {
     private float mSimulatedThrottle = 0f;
     private int mCurrentGear = 0;
     private float mCurrentRpm = 1000f;
-
-    // --- MEVCUT ARAÇ VERİLERİ ---
+    private float mDriveModeAggressiveness = 0.4f; // Varsayılan Normal
+    private VehicleProfile mActiveProfile;
     private EngineSample[] mCurrentSamples;
     private float mIdleRpm = 1000f;
     private float mCurrentIdleVolumeScale = 1;
@@ -47,20 +47,21 @@ public class EngineSoundManager {
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public enum GearProfile { CRUISER_4, SPORT_6, RALLY_8 }
-
-    // --- İÇ SINIFLAR ---
     public static class VehicleProfile {
         public final String name;
         public final int[] resIds;
         public final float idleRpm;
         public final float maxRpm;
         public final float idleVolumeScale;
+        // Her vitesin hız limitleri: { {vites1Min, vites1Max}, {vites2Min, vites2Max}, ... }
+        public final float[][] gearRanges;
 
-        public VehicleProfile(String name, float idleRpm, float maxRpm, float idleVolumeScale, int... resIds) {
+        public VehicleProfile(String name, float idleRpm, float maxRpm, float idleVolumeScale, float[][] gearRanges, int... resIds) {
             this.name = name;
             this.idleRpm = idleRpm;
             this.maxRpm = maxRpm;
             this.idleVolumeScale = idleVolumeScale;
+            this.gearRanges = gearRanges;
             this.resIds = resIds;
         }
     }
@@ -102,6 +103,14 @@ public class EngineSoundManager {
     // ==========================================
     public static VehicleProfile PROFILE_LFA() {
         return new VehicleProfile("Lexus LFA", 1000f, 9500f, 1,
+                new float[][]{
+                        {0f, 60f},   // 1. Vites
+                        {40f, 100f},  // 2. Vites
+                        {70f, 140f},  // 3. Vites
+                        {110f, 190f}, // 4. Vites
+                        {160f, 250f}, // 5. Vites
+                        {220f, 325f}  // 6. Vites
+                },
                 R.raw.lfa_idle,
                 R.raw.lfa_3784,
                 R.raw.lfa_6301,
@@ -112,6 +121,14 @@ public class EngineSoundManager {
     }
     public static VehicleProfile PROFILE_MCLAREN_P1() {
         return new VehicleProfile("McLaren P1", 800f, 6000f, 1,
+                new float[][]{
+                        {0f, 60f},   // 1. Vites
+                        {40f, 100f},  // 2. Vites
+                        {70f, 140f},  // 3. Vites
+                        {110f, 190f}, // 4. Vites
+                        {160f, 250f}, // 5. Vites
+                        {220f, 325f}  // 6. Vites
+                },
                 R.raw.mclaren_p1_idle,
                 R.raw.mclaren_p1_2000,
                 R.raw.mclaren_p1_4000,
@@ -121,6 +138,14 @@ public class EngineSoundManager {
     }
     public static VehicleProfile PROFILE_Lamborghini_Aventador() {
         return new VehicleProfile("Lamborghini Aventador", 800f, 8000f, 1,
+                new float[][]{
+                        {0f, 60f},   // 1. Vites
+                        {40f, 100f},  // 2. Vites
+                        {70f, 140f},  // 3. Vites
+                        {110f, 190f}, // 4. Vites
+                        {160f, 250f}, // 5. Vites
+                        {220f, 325f}  // 6. Vites
+                },
                 R.raw.lamborghini_aventador_idle,
                 R.raw.lamborghini_aventador_2000,
                 R.raw.lamborghini_aventador_4000,
@@ -130,6 +155,14 @@ public class EngineSoundManager {
     }
     public static VehicleProfile PROFILE_BMW_Z4() {
         return new VehicleProfile("BMW Z4", 800f, 6836, 1,
+                new float[][]{
+                        {0f, 60f},   // 1. Vites
+                        {40f, 100f},  // 2. Vites
+                        {70f, 140f},  // 3. Vites
+                        {110f, 190f}, // 4. Vites
+                        {160f, 250f}, // 5. Vites
+                        {220f, 325f}  // 6. Vites
+                },
                 R.raw.bmw_z4_idle,
                 R.raw.bmw_z4_2800,
                 R.raw.bmw_z4_4000,
@@ -140,6 +173,14 @@ public class EngineSoundManager {
     }
     public static VehicleProfile PROFILE_ZONDA_R() {
         return new VehicleProfile("Pagani Zonda R", 1000f, 8250, 1,
+                new float[][]{
+                        {0f, 60f},   // 1. Vites
+                        {40f, 100f},  // 2. Vites
+                        {70f, 140f},  // 3. Vites
+                        {110f, 190f}, // 4. Vites
+                        {160f, 250f}, // 5. Vites
+                        {220f, 325f}  // 6. Vites
+                },
                 R.raw.zonda_r_idle,
                 R.raw.zonda_r_3500,
                 R.raw.zonda_r_4250,
@@ -172,12 +213,14 @@ public class EngineSoundManager {
         boolean wasPlaying = mIsPlaying;
         if (mIsPlaying) stop();
 
+        this.mActiveProfile = profile; // Kritik: Artık fizik motoru hangi aracı kullandığını biliyor.
         this.mIdleRpm = profile.idleRpm;
         this.mMaxRpm = profile.maxRpm;
         this.mCurrentIdleVolumeScale = profile.idleVolumeScale;
         this.mCurrentSamples = buildSamples(profile.resIds);
 
         Log.i(TAG, "Profil yüklendi: " + profile.name);
+        mCurrentGear = 0; // Vitesi rölantiye çek
         if (wasPlaying) start();
     }
 
@@ -272,28 +315,50 @@ public class EngineSoundManager {
     }
 
     private void updateGearAndRpm() {
-        if (mCurrentSpeedKmh < 1.0f) {
+        if (mActiveProfile == null) return;
+        float speed = mCurrentSpeedKmh;
+
+        if (speed < 1.0f) {
             mCurrentGear = 0;
             mCurrentRpm = mIdleRpm;
             return;
         }
-        mCurrentGear = getGearWithHysteresis(mCurrentSpeedKmh, mCurrentGear);
-        mCurrentGear = Math.max(1, mCurrentGear);
 
-        float gearMinSpeed = mActiveGearbox.maxSpeeds[mCurrentGear - 1];
-        float gearMaxSpeed = mActiveGearbox.maxSpeeds[mCurrentGear];
-        float speedDiff = gearMaxSpeed - gearMinSpeed;
-        float ratio = (speedDiff <= 0) ? 0 : (mCurrentSpeedKmh - gearMinSpeed) / speedDiff;
-        ratio = Math.max(0f, Math.min(1f, ratio));
-        float baseRpm = 4500f;
-        if (mCurrentSpeedKmh < 10f) {
-            // 1 km/h'de mIdleRpm (1000) ile başlar, 10 km/h'de 4500'e ulaşır
-            float startupRatio = (mCurrentSpeedKmh - 1f) / 9f;
-            startupRatio = Math.max(0f, Math.min(1f, startupRatio));
-            baseRpm = mIdleRpm + (startupRatio * (4500f - mIdleRpm));
+        // 1. Hangi vitesteyiz? (Histerezis ile)
+        int targetGear = mCurrentGear;
+        // Vites büyütme kontrolü
+        if (mCurrentGear < mActiveProfile.gearRanges.length) {
+            float currentGearMax = mActiveProfile.gearRanges[mCurrentGear - 1][1];
+            if (speed > currentGearMax) targetGear++;
         }
-        mCurrentRpm = baseRpm + (ratio * (mMaxRpm - baseRpm));
-        if (Float.isNaN(mCurrentRpm)) mCurrentRpm = mIdleRpm;
+        // Vites küçültme kontrolü
+        if (mCurrentGear > 1) {
+            float currentGearMin = mActiveProfile.gearRanges[mCurrentGear - 1][0];
+            if (speed < currentGearMin) targetGear--;
+        }
+
+        if (targetGear == 0) targetGear = 1;
+        mCurrentGear = targetGear;
+
+        // 2. RPM Hesapla (Gaza Duyarlı)
+        float[] range = mActiveProfile.gearRanges[mCurrentGear - 1];
+        float minV = range[0];
+        float maxV = range[1];
+
+        // Hızın vites içindeki oranı (0.0 - 1.0)
+        float speedRatio = (speed - minV) / (maxV - minV);
+        speedRatio = Math.max(0f, Math.min(1f, speedRatio));
+
+        // EKO SÜRÜŞ SİHİRİ:
+        // Alt devir (vitesin başladığı devir) hıza göre değil, gaza göre değişsin.
+        // Az gazda araba 2000 devirde mırıldansın, tam gazda 5000 devirden başlasın.
+        float dynamicMinRpm = mIdleRpm + (mSimulatedThrottle * (mMaxRpm * mDriveModeAggressiveness));
+
+        // Final RPM: Alt devir ile Max devir arasında hız oranına göre belirle
+        mCurrentRpm = dynamicMinRpm + (speedRatio * (mMaxRpm - dynamicMinRpm));
+
+        // Güvenlik sınırlaması
+        mCurrentRpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
     }
 
     private void updateAudioMixer() {
