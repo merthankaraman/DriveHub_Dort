@@ -772,6 +772,15 @@
 
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/tvMotorState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:text="Motor durumu: --"
+            android:textColor="@color/status_value"
+            android:textSize="14sp" />
+
         <!-- Hız ve RPM değerleri (düz yazı) -->
         <LinearLayout
             android:layout_width="match_parent"

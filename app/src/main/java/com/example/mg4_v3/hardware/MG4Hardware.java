@@ -47,6 +47,8 @@ public class MG4Hardware {
     // Araç durum / BMS property'leri (VehicleConditionBinder + VehicleChargingBinder)
     // CarPropertyValue.getPropertyId() ile callback'te DÖNEN değerler (log 2302261219: 0x2160f406 vb.)
     private static final int PROP_SPEED          = 0x11600207; // 291504647 — float km/h (CarSensorManager)
+    private static final int PROP_VEHICLE_IGNITION = 289412477; // getVehicleIgnition(): 0=kapalı, 2=çalışıyor
+    private static final int PROP_ENGINE_STATE     = 557847932; // getEngineState(): 0=kapalı, >0=EV sistemi aktif
     private static final int PROP_SOC            = 560002052;   // float % (CarBMSManager)
     private static final int PROP_RANGE          = 0x214099DC; // 557904924 — int km (CarBMSManager)
     private static final int PROP_BATT_VOLT      = 0x2160f406;  // 560039942 — float V DC (callback'te gelen)
@@ -530,6 +532,24 @@ public class MG4Hardware {
     /** Araç hızı — km/h (araç doğrudan km/h gönderiyor, dönüşüm gereksiz) */
     public static float getSpeedKmh() {
         return getFloatPropertyCPM(PROP_SPEED, AREA_GLOBAL);
+    }
+
+    /** Araç "READY" mi? (EV sistemi aktif mi?) */
+    public static boolean isVehicleReady() {
+        // 1) Öncelik: Ignition (0=kapalı, 2=çalışıyor)
+        int ign = getIntPropertyCPM(PROP_VEHICLE_IGNITION, AREA_GLOBAL);
+        int eng = getIntPropertyCPM(PROP_ENGINE_STATE, AREA_GLOBAL);
+        Log.i(TAG, "READY CHECK → ign=" + ign + " engineState=" + eng);
+        if (ign == 2) return true;
+        if (ign == 0) return false;
+
+        // 2) Yedek: EngineState (0 = kapalı, >0 = aktif)
+        if (eng > 0) return true;
+        if (eng == 0) return false;
+
+        // 3) Son çare: hız > 0.5 km/h ise araç zaten hareket ediyor
+        float v = getSpeedKmh();
+        return !Float.isNaN(v) && v > 0.5f;
     }
 
     /** SOC — % (0.0–100.0). CPM'den oku, yoksa BMS cache'e bak. */

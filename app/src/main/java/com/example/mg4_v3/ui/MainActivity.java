@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvSpeedTestLabel;
     private TextView mTvGaugeRpm;
     private TextView mTvGaugeSpeed;
+    private TextView mTvMotorState;
     
     // Yapay motor sesi
     private EngineSoundManager mEngineSound;
@@ -149,6 +150,10 @@ public class MainActivity extends AppCompatActivity {
                 float rpm = mEngineSound.getCurrentRpm();
                 mTvGaugeRpm.setText(String.format("%.0f", rpm));
             }
+            if (mTvMotorState != null) {
+                boolean ready = MG4Hardware.isVehicleReady();
+                mTvMotorState.setText(ready ? "Motor durumu: READY" : "Motor durumu: Kapalı");
+            }
             // Yapay motor sesini güncelle
             if (mEngineSound != null) {
                 mEngineSound.onSpeedChanged(speed);
@@ -190,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
         mTvSpeedTestLabel = findViewById(R.id.tvSpeedTestLabel);
         mTvGaugeRpm = findViewById(R.id.tvGaugeRpm);
         mTvGaugeSpeed = findViewById(R.id.tvGaugeSpeed);
+        mTvMotorState = findViewById(R.id.tvMotorState);
         
         // Motor sesi butonları (ses paneli içinde)
         mBtnSoundToggle = findViewById(R.id.btnSoundToggle);
