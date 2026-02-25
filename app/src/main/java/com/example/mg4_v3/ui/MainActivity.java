@@ -153,7 +153,8 @@ public class MainActivity extends AppCompatActivity {
             if (mEngineSound != null) {
                 mEngineSound.onSpeedChanged(speed);
             }
-            mSpeedHandler.postDelayed(this, 500);
+            // 2 Hz yerine ~10 Hz güncelle (daha akıcı ses için)
+            mSpeedHandler.postDelayed(this, 100);
         }
     };
 
@@ -215,10 +216,10 @@ public class MainActivity extends AppCompatActivity {
         // Son kaydedilen motor sesi / log ayarlarını yükle (kalıcı)
         SharedPreferences prefsSound = getSharedPreferences("mg4_v3", MODE_PRIVATE);
         mSoundEnabled = prefsSound.getBoolean(PREF_SOUND_ENABLED, false);
+        if (mSoundEnabled) mEngineSound.start();
         SoundMode savedMode = soundModeFromString(prefsSound.getString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2"));
         boolean logsEnabled = prefsSound.getBoolean("logs_enabled", true);
         int savedMaster = prefsSound.getInt(PREF_SOUND_MASTER, 60);
-        if (mSoundEnabled) mEngineSound.start();
         MG4Hardware.setLogEnabled(logsEnabled);
         updateSoundToggleButton();
 
@@ -294,6 +295,9 @@ public class MainActivity extends AppCompatActivity {
                 @Override public void onStopTrackingTouch(SeekBar seekBar) {}
             });
         }
+
+        // Hız döngüsünü başlat (UI açık/kapalı fark etmeksizin sürekli çalışsın)
+        mSpeedHandler.post(mSpeedRunnable);
 
         // Log (detay) switch'i
         SwitchCompat swLogs = findViewById(R.id.switchLogs);
@@ -515,7 +519,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     protected void onResume() {
         super.onResume();
         mTvStatus.setText("✅ Servis çalışıyor. ★ tuşu aktif.");
-        mSpeedHandler.post(mSpeedRunnable);
         // Yapay motor sesini başlat (eğer açıksa)
         if (mEngineSound != null && mSoundEnabled) {
             mEngineSound.start();
@@ -534,8 +537,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     @Override
     protected void onPause() {
         super.onPause();
-        mSpeedHandler.removeCallbacks(mSpeedRunnable);
-        // Motor sesi arkada çalmaya devam etsin; onPause'da durdurmuyoruz
+        // Bilerek hiçbir şey yapmıyoruz: hız/ses döngüsü arka planda da devam etsin.
     }
 
     // -------------------------------------------------------------------------
@@ -939,7 +941,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putInt(PREF_THEME_MODE, mode).apply();
         AppCompatDelegate.setDefaultNightMode(mode);
         updateThemeButtons();
-        recreate(); // Tema renklerinin hemen uygulanması için
     }
 
     private void updateThemeButtons() {
