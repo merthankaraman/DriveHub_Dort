@@ -324,6 +324,9 @@ public class EngineSoundManager {
             return;
         }
 
+        // Vites 0'dan 1'e geçişte index -1 olmasın (ArrayIndexOutOfBoundsException önlemi)
+        if (mCurrentGear < 1) mCurrentGear = 1;
+
         // 1. Hangi vitesteyiz? (Histerezis ile)
         int targetGear = mCurrentGear;
         // Vites büyütme kontrolü
@@ -338,7 +341,8 @@ public class EngineSoundManager {
         }
 
         if (targetGear == 0) targetGear = 1;
-        mCurrentGear = targetGear;
+        int maxGear = mActiveProfile.gearRanges.length;
+        mCurrentGear = Math.min(Math.max(1, targetGear), maxGear);
 
         // 2. RPM Hesapla (Gaza Duyarlı)
         float[] range = mActiveProfile.gearRanges[mCurrentGear - 1];

@@ -150,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
                 float rpm = mEngineSound.getCurrentRpm();
                 mTvGaugeRpm.setText(String.format("%.0f", rpm));
             }
-            boolean ready = MG4Hardware.isVehicleReady();
+            boolean ready = (MG4Hardware.isVehicleReady() || mSimSpeedActive);
             if (mTvMotorState != null) {
                 mTvMotorState.setText(ready ? "Motor durumu: READY" : "Motor durumu: Kapalı");
             }
@@ -276,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
             if (mSoundEnabled) {
                 // Ses sadece araç READY olduğunda gerçekten çalsın;
                 // değilse tercih ON kalır, READY olunca mSpeedRunnable içinde otomatik başlar.
-                if (MG4Hardware.isVehicleReady() && !mEngineSound.isPlaying()) {
+                if ((MG4Hardware.isVehicleReady() || mSimSpeedActive) && !mEngineSound.isPlaying()) {
                     mEngineSound.start();
                 }
                 Toast.makeText(this, "Motor sesi: Açık (READY olunca devreye girecek)", Toast.LENGTH_SHORT).show();
