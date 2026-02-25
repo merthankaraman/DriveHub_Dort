@@ -58,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvBinder;
     private TextView mTvSpeed;
     private TextView mTvSpeedTestLabel;
+    private TextView mTvGaugeRpm;
+    private TextView mTvGaugeSpeed;
     
     // Yapay motor sesi
     private EngineSoundManager mEngineSound;
@@ -71,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
     // Ana ekran
     private View mLayoutMain;
     private View mLayoutSpeedTest;
+    private View mLayoutSoundPanel;
 
     // Hız simülasyonu (bilgisayarda test için)
     private boolean mSimSpeedActive = false;
@@ -119,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PANEL_STATUS  = 1;
     private static final int PANEL_REGEN   = 2;
     private static final int PANEL_CLIMATE = 3;
+    private static final int PANEL_SOUND   = 4;
     private int mCurrentPanel = PANEL_MAIN;
 
     // Hız güncelleme
@@ -135,6 +139,15 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     mTvSpeed.setText(String.format("%.0f km/h", speed));
                 }
+            }
+            if (!Float.isNaN(speed) && mTvGaugeSpeed != null) {
+                mTvGaugeSpeed.setText(String.format("%.0f", speed));
+            } else {
+                mTvGaugeSpeed.setText("-- km/h");
+            }
+            if (mEngineSound != null && mTvGaugeRpm != null) {
+                float rpm = mEngineSound.getCurrentRpm();
+                mTvGaugeRpm.setText(String.format("%.0f", rpm));
             }
             // Yapay motor sesini güncelle
             if (mEngineSound != null) {
@@ -174,8 +187,10 @@ public class MainActivity extends AppCompatActivity {
         mTvBinder = findViewById(R.id.tvBinderStatus);
         mTvSpeed  = findViewById(R.id.tvSpeed);
         mTvSpeedTestLabel = findViewById(R.id.tvSpeedTestLabel);
+        mTvGaugeRpm = findViewById(R.id.tvGaugeRpm);
+        mTvGaugeSpeed = findViewById(R.id.tvGaugeSpeed);
         
-        // Motor sesi butonları
+        // Motor sesi butonları (ses paneli içinde)
         mBtnSoundToggle = findViewById(R.id.btnSoundToggle);
         mBtnSoundProfile = findViewById(R.id.btnSoundProfile);
         mBtnGearProfile = findViewById(R.id.btnGearProfile);
@@ -313,6 +328,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Ana layout referansı
         mLayoutMain = findViewById(R.id.layoutMain);
+        mLayoutSoundPanel = findViewById(R.id.layoutSoundPanel);
 
         // Ana ekran butonları
         findViewById(R.id.btnTestBinder).setOnClickListener(v -> testCarProperty());
@@ -321,6 +337,8 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         findViewById(R.id.btnNormal).setOnClickListener(v    -> sendDriveMode(DriveMode.NORMAL));
         findViewById(R.id.btnSport).setOnClickListener(v     -> sendDriveMode(DriveMode.SPORT));
         findViewById(R.id.btnSnow).setOnClickListener(v      -> sendDriveMode(DriveMode.SNOW));
+        findViewById(R.id.btnSoundPanel).setOnClickListener(v -> openSoundPanel());
+        findViewById(R.id.btnSoundBack).setOnClickListener(v -> closeSoundPanel());
 
         // Şarj paneli
         mLayoutStatusPanel  = findViewById(R.id.layoutStatusPanel);
@@ -713,6 +731,26 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
     private void closeClimatePanel() {
         mLayoutClimatePanel.setVisibility(View.GONE);
+        mLayoutMain.setVisibility(View.VISIBLE);
+        mCurrentPanel = PANEL_MAIN;
+    }
+
+    // -------------------------------------------------------------------------
+    // Motor sesi paneli
+    // -------------------------------------------------------------------------
+
+    private void openSoundPanel() {
+        mCurrentPanel = PANEL_SOUND;
+        mLayoutMain.setVisibility(View.GONE);
+        if (mLayoutSoundPanel != null) {
+            mLayoutSoundPanel.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void closeSoundPanel() {
+        if (mLayoutSoundPanel != null) {
+            mLayoutSoundPanel.setVisibility(View.GONE);
+        }
         mLayoutMain.setVisibility(View.VISIBLE);
         mCurrentPanel = PANEL_MAIN;
     }

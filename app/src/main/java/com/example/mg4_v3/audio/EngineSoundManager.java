@@ -86,6 +86,10 @@ public class EngineSoundManager {
         mMasterVolume = Math.max(0f, Math.min(1f, volume01));
     }
 
+    public float getCurrentRpm() {
+        return mCurrentRpm;
+    }
+
     // --- SABİT ŞANZIMANLAR ---
     private final Gearbox mGearSport6 = new Gearbox(20f, 45f, 75f, 110f, 140f, 160f);
     private final Gearbox mGearRally8 = new Gearbox(15f, 30f, 45f, 65f, 85f, 110f, 135f, 160f);

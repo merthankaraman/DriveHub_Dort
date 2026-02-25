@@ -107,108 +107,16 @@
                 android:fontFamily="monospace"
                 android:layout_marginBottom="8dp"/>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="MOTOR SESİ"
-                android:textSize="11sp"
-                android:textColor="@color/status_value"
-                android:letterSpacing="0.1"
-                android:layout_marginBottom="6dp"/>
-
-            <!-- Hız simülasyon testi -->
+            <!-- Motor sesi ayarları ayrı panelde açılır -->
             <Button
-                android:id="@+id/btnSpeedTest"
+                android:id="@+id/btnSoundPanel"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:text="Hız Testi (Simülasyon)"
-                android:backgroundTint="#21262D"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
-                android:layout_marginBottom="6dp"/>
-
-            <LinearLayout
-                android:id="@+id/layoutSpeedTest"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="4dp"
-                android:background="@color/surface_variant"
-                android:visibility="gone"
-                android:layout_marginBottom="6dp">
-
-                <TextView
-                    android:id="@+id/tvSpeedTestLabel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Simüle hız: 0 km/h"
-                    android:textSize="12sp"
-                    android:textColor="@color/status_value"
-                    android:fontFamily="monospace"
-                    android:layout_marginBottom="4dp"/>
-
-                <SeekBar
-                    android:id="@+id/seekSpeedTest"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:max="170"/>
-
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/btnSoundToggle"
-                android:layout_width="match_parent"
-                android:layout_height="44dp"
-                android:text="🔊 Ses Aç"
+                android:layout_height="48dp"
+                android:text="MOTOR SESİ AYARLARI"
                 android:backgroundTint="#21262D"
                 android:textColor="#FFFFFF"
                 android:textSize="13sp"
-                android:layout_marginBottom="6dp"/>
-
-            <!-- Araç sesi profili (McLaren / LFA / Agera) -->
-            <Button
-                android:id="@+id/btnSoundProfile"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:text="Araç Sesi: LFA"
-                android:backgroundTint="#21262D"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
-                android:layout_marginBottom="8dp"/>
-
-            <!-- Motor sesi genel seviye -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Ses Seviyesi"
-                    android:textSize="11sp"
-                    android:textColor="@color/status_value"
-                    android:layout_marginEnd="8dp"/>
-
-                <SeekBar
-                    android:id="@+id/seekSoundVolume"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:max="100"/>
-
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/btnGearProfile"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:text="⚙️ Şanzıman: 6-İleri LFA"
-                android:backgroundTint="#21262D"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
+                android:textStyle="bold"
                 android:layout_marginBottom="12dp"/>
 
             <Button
@@ -814,6 +722,213 @@
                 android:textStyle="bold" />
 
         </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ============================================================ -->
+    <!-- MOTOR SESİ PANELİ (overlay — varsayılan gizli)              -->
+    <!-- ============================================================ -->
+    <LinearLayout
+        android:id="@+id/layoutSoundPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/surface"
+        android:orientation="vertical"
+        android:paddingStart="40dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="40dp"
+        android:paddingBottom="24dp"
+        android:visibility="gone">
+
+        <!-- Başlık + Geri -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnSoundBack"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_marginEnd="16dp"
+                android:backgroundTint="#21262D"
+                android:minWidth="0dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="←"
+                android:textColor="#C9D1D9"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="MOTOR SESİ"
+                android:textColor="@color/status_value"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Hız ve RPM değerleri (düz yazı) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="16dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="RPM"
+                    android:textColor="@color/status_value"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvGaugeRpm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="1000"
+                    android:textColor="@color/status_value"
+                    android:textSize="24sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="HIZ (km/h)"
+                    android:textColor="@color/status_value"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvGaugeSpeed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="0"
+                    android:textColor="@color/status_value"
+                    android:textSize="24sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Hız simülasyonu -->
+        <Button
+            android:id="@+id/btnSpeedTest"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginBottom="6dp"
+            android:backgroundTint="#21262D"
+            android:text="Hız Testi (Simülasyon)"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp" />
+
+        <LinearLayout
+            android:id="@+id/layoutSpeedTest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:background="@color/surface_variant"
+            android:orientation="vertical"
+            android:padding="4dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvSpeedTestLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:fontFamily="monospace"
+                android:text="Simüle hız: 0 km/h"
+                android:textColor="@color/status_value"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/seekSpeedTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="170" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnSoundToggle"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginBottom="6dp"
+            android:backgroundTint="#21262D"
+            android:text="🔊 Ses Aç"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/btnSoundProfile"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="#21262D"
+            android:text="Araç Sesi: LFA"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Ses Seviyesi"
+                android:textColor="@color/status_value"
+                android:textSize="11sp" />
+
+            <SeekBar
+                android:id="@+id/seekSoundVolume"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="100" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnGearProfile"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginBottom="12dp"
+            android:backgroundTint="#21262D"
+            android:text="⚙️ Şanzıman: 6-İleri LFA"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp" />
 
     </LinearLayout>
 
