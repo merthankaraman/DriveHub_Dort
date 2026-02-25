@@ -150,13 +150,22 @@ public class MainActivity extends AppCompatActivity {
                 float rpm = mEngineSound.getCurrentRpm();
                 mTvGaugeRpm.setText(String.format("%.0f", rpm));
             }
+            boolean ready = MG4Hardware.isVehicleReady();
             if (mTvMotorState != null) {
-                boolean ready = MG4Hardware.isVehicleReady();
                 mTvMotorState.setText(ready ? "Motor durumu: READY" : "Motor durumu: Kapalı");
             }
-            // Yapay motor sesini güncelle
+            // Yapay motor sesi: hem switch AÇIK olmalı hem araç READY olmalı
             if (mEngineSound != null) {
-                mEngineSound.onSpeedChanged(speed);
+                if (mSoundEnabled && ready) {
+                    if (!mEngineSound.isPlaying()) {
+                        mEngineSound.start();
+                    }
+                    mEngineSound.onSpeedChanged(speed);
+                } else {
+                    if (mEngineSound.isPlaying()) {
+                        mEngineSound.stop();
+                    }
+                }
             }
             // 2 Hz yerine ~10 Hz güncelle (daha akıcı ses için)
             mSpeedHandler.postDelayed(this, 100);
@@ -222,7 +231,6 @@ public class MainActivity extends AppCompatActivity {
         // Son kaydedilen motor sesi / log ayarlarını yükle (kalıcı)
         SharedPreferences prefsSound = getSharedPreferences("mg4_v3", MODE_PRIVATE);
         mSoundEnabled = prefsSound.getBoolean(PREF_SOUND_ENABLED, false);
-        if (mSoundEnabled) mEngineSound.start();
         SoundMode savedMode = soundModeFromString(prefsSound.getString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2"));
         boolean logsEnabled = prefsSound.getBoolean("logs_enabled", true);
         int savedMaster = prefsSound.getInt(PREF_SOUND_MASTER, 60);
@@ -266,10 +274,16 @@ public class MainActivity extends AppCompatActivity {
             mSoundEnabled = !mSoundEnabled;
             getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putBoolean(PREF_SOUND_ENABLED, mSoundEnabled).apply();
             if (mSoundEnabled) {
-                mEngineSound.start();
-                Toast.makeText(this, "Motor sesi açıldı", Toast.LENGTH_SHORT).show();
+                // Ses sadece araç READY olduğunda gerçekten çalsın;
+                // değilse tercih ON kalır, READY olunca mSpeedRunnable içinde otomatik başlar.
+                if (MG4Hardware.isVehicleReady() && !mEngineSound.isPlaying()) {
+                    mEngineSound.start();
+                }
+                Toast.makeText(this, "Motor sesi: Açık (READY olunca devreye girecek)", Toast.LENGTH_SHORT).show();
             } else {
-                mEngineSound.stop();
+                if (mEngineSound.isPlaying()) {
+                    mEngineSound.stop();
+                }
                 Toast.makeText(this, "Motor sesi kapatıldı", Toast.LENGTH_SHORT).show();
             }
             updateSoundToggleButton();

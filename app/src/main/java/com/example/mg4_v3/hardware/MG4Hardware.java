@@ -539,17 +539,15 @@ public class MG4Hardware {
         // 1) Öncelik: Ignition (0=kapalı, 2=çalışıyor)
         int ign = getIntPropertyCPM(PROP_VEHICLE_IGNITION, AREA_GLOBAL);
         int eng = getIntPropertyCPM(PROP_ENGINE_STATE, AREA_GLOBAL);
-        Log.i(TAG, "READY CHECK → ign=" + ign + " engineState=" + eng);
-        if (ign == 2) return true;
-        if (ign == 0) return false;
+        //engine state çalışınca 1
+        //frene basınca ign 3 oluyor onun dışında 2 koltuğa oturunca 2 oturmazsan araç kapalıysa 0
+        //Log.i(TAG, "READY CHECK → ign=" + ign + " engineState=" + eng);
+        //if (ign == 2) return true;
+        //if (ign == 0) return false;
 
         // 2) Yedek: EngineState (0 = kapalı, >0 = aktif)
-        if (eng > 0) return true;
-        if (eng == 0) return false;
-
-        // 3) Son çare: hız > 0.5 km/h ise araç zaten hareket ediyor
-        float v = getSpeedKmh();
-        return !Float.isNaN(v) && v > 0.5f;
+        if (eng == 1) return true;
+        else return false;
     }
 
     /** SOC — % (0.0–100.0). CPM'den oku, yoksa BMS cache'e bak. */
@@ -621,13 +619,31 @@ public class MG4Hardware {
     /** Araç şarjda mı? Önce PROP_CHG_STATUS; yoksa AC/DC akım ve voltajdan çıkarım. */
     private static boolean isCharging() {
         Object val = sBmsCache.get(PROP_CHG_STATUS);
-        if (val instanceof Number) return ((Number) val).intValue() > 0;
-        // Araç PROP_CHG_STATUS göndermiyorsa: AC'den anlamlı akım çekiliyorsa veya DC tarafında güç var ise şarjda say
         float acA = bmsFloat(PROP_AC_AMP);
         float dcA = bmsFloat(PROP_CHR_AMP_ACT);
         float dcV = bmsFloat(PROP_BATT_VOLT);
+        float speed = getSpeedKmh();
+
+        if (sLogEnabled) {
+            Log.i(TAG, "CHG CHECK → status=" + (val instanceof Number ? ((Number) val).intValue() : -1)
+                    + " acA=" + acA + " dcA=" + dcA + " dcV=" + dcV + " speed=" + speed);
+        }
+
+        /*if (val instanceof Number) {
+            int st = ((Number) val).intValue();// şarj olurken 1 şarj durunca 8 oldu
+            // status>0 olsa bile akımlar neredeyse 0 ise şarjda sayma
+            if (st > 0) {
+                boolean acAlive = !Float.isNaN(acA) && acA > 0.5f;
+                boolean dcAlive = !Float.isNaN(dcA) && Math.abs(dcA) > 1.0f && dcV > 200f;
+                if (acAlive || dcAlive) return true;
+                return false;
+            }
+            if (st == 0) return false;
+        }*/
+
+        // Araç PROP_CHG_STATUS göndermiyorsa: AC'den anlamlı akım çekiliyorsa veya DC tarafında güç var ise şarjda say
         if (!Float.isNaN(acA) && acA > 0.5f) return true;
-        if (!Float.isNaN(dcA) && !Float.isNaN(dcV) && dcV > 200f && dcA <= 0f && getSpeedKmh() == 0) return true;
+        if (!Float.isNaN(dcA) && !Float.isNaN(dcV) && dcV > 200f && dcA <= -5f && speed == 0) return true;
         return false;
     }
 
