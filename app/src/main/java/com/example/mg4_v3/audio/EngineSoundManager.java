@@ -34,6 +34,7 @@ public class EngineSoundManager {
 
     private float mCurrentSpeedKmh = 0f;
     private float mSimulatedThrottle = 0f;
+    private boolean mUseManualThrottle = false; // Sim panelinden gaz verildiğinde true
     private int mCurrentGear = 0;
     private float mCurrentRpm = 1000f;
     private float mDriveModeAggressiveness = 0.4f; // Varsayılan Normal
@@ -42,11 +43,9 @@ public class EngineSoundManager {
     private float mIdleRpm = 1000f;
     private float mCurrentIdleVolumeScale = 1;
     private float mMaxRpm = 9000f;
-    private Gearbox mActiveGearbox;
     private float mMasterVolume = 0.6f;
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
-    public enum GearProfile { CRUISER_4, SPORT_6, RALLY_8 }
     public static class VehicleProfile {
         public final String name;
         public final int[] resIds;
@@ -65,12 +64,6 @@ public class EngineSoundManager {
             this.resIds = resIds;
         }
     }
-
-    private static class Gearbox {
-        final float[] maxSpeeds;
-        Gearbox(float... speeds) { this.maxSpeeds = speeds; }
-    }
-
     private static class EngineSample {
         final int baseRpm;
         final int resourceId;
@@ -87,14 +80,24 @@ public class EngineSoundManager {
         mMasterVolume = Math.max(0f, Math.min(1f, volume01));
     }
 
+    /** Ses karakteri: Eco=0.25, Normal=0.4, Sport=0.7 (vites devir davranışı). */
+    public void setDriveModeAggressiveness(float aggressiveness01) {
+        mDriveModeAggressiveness = Math.max(0f, Math.min(1f, aggressiveness01));
+    }
+
+    /** Simüle gaz pedalı (0–1). Manuel modda onSpeedChanged throttle'ı güncellemez. */
+    public void setSimulatedThrottle(float throttle01) {
+        mSimulatedThrottle = Math.max(0.01f, Math.min(1f, throttle01));
+    }
+
+    /** Manuel gaz kullanılıyor mu (sim paneli açıkken true). */
+    public void setUseManualThrottle(boolean use) {
+        mUseManualThrottle = use;
+    }
+
     public float getCurrentRpm() {
         return mCurrentRpm;
     }
-
-    // --- SABİT ŞANZIMANLAR ---
-    private final Gearbox mGearSport6 = new Gearbox(20f, 45f, 75f, 110f, 140f, 160f);
-    private final Gearbox mGearRally8 = new Gearbox(15f, 30f, 45f, 65f, 85f, 110f, 135f, 160f);
-    private final Gearbox mGearCruiser4 = new Gearbox(35f, 80f, 125f, 160f);
 
     private static final float VIRTUAL_GEAR_HYSTERESIS_KMH = 4f;
 
@@ -198,7 +201,6 @@ public class EngineSoundManager {
     private EngineSoundManager(Context context) {
         this.mContext = context.getApplicationContext();
         this.mHandler = new Handler(Looper.getMainLooper());
-        this.mActiveGearbox = mGearSport6; // Varsayılan şanzıman
     }
 
     public static synchronized EngineSoundManager getInstance(Context context) {
@@ -222,15 +224,6 @@ public class EngineSoundManager {
         Log.i(TAG, "Profil yüklendi: " + profile.name);
         mCurrentGear = 0; // Vitesi rölantiye çek
         if (wasPlaying) start();
-    }
-
-    public void setGearProfile(GearProfile profile) {
-        switch (profile) {
-            case CRUISER_4: mActiveGearbox = mGearCruiser4; break;
-            case RALLY_8:   mActiveGearbox = mGearRally8;   break;
-            default:        mActiveGearbox = mGearSport6;   break;
-        }
-        mCurrentGear = 0;
     }
 
     // ==========================================
@@ -305,10 +298,10 @@ public class EngineSoundManager {
     public void onSpeedChanged(float speedKmh) {
         if (!mIsPlaying || mCurrentSamples == null || mLoadedSamplesCount < mCurrentSamples.length) return;
 
-        float speed = (Float.isNaN(speedKmh) || speedKmh < 0f) ? 0f : speedKmh;
-        float delta = speed - mCurrentSpeedKmh;
-        mSimulatedThrottle = (delta > 0.3f) ? 1.0f : (delta > 0f ? 0.5f : 0.0f);
-        mCurrentSpeedKmh = speed;
+        mCurrentSpeedKmh = (Float.isNaN(speedKmh) || speedKmh < 0f) ? 0f : speedKmh;
+        if (!mUseManualThrottle) {
+            mSimulatedThrottle = 0.5f;
+        }
 
         updateGearAndRpm();
         updateAudioMixer();
@@ -317,6 +310,7 @@ public class EngineSoundManager {
     private void updateGearAndRpm() {
         if (mActiveProfile == null) return;
         float speed = mCurrentSpeedKmh;
+        float throttle = mSimulatedThrottle;
 
         if (speed < 1.0f) {
             mCurrentGear = 0;
@@ -324,44 +318,60 @@ public class EngineSoundManager {
             return;
         }
 
-        // Vites 0'dan 1'e geçişte index -1 olmasın (ArrayIndexOutOfBoundsException önlemi)
         if (mCurrentGear < 1) mCurrentGear = 1;
 
-        // 1. Hangi vitesteyiz? (Histerezis ile)
         int targetGear = mCurrentGear;
-        // Vites büyütme kontrolü
-        if (mCurrentGear < mActiveProfile.gearRanges.length) {
-            float currentGearMax = mActiveProfile.gearRanges[mCurrentGear - 1][1];
-            if (speed > currentGearMax) targetGear++;
+        float[] currentRange = mActiveProfile.gearRanges[mCurrentGear - 1];
+        float minV = currentRange[0];
+        float maxV = currentRange[1];
+
+        // --- KARARLILIK GÜNCELLEMESİ ---
+
+        // 1. Vites Büyütme (Upshift) kararı için minimum bir eşik ekleyelim
+        // Gazı bıraksan bile vitesin max hızının %85'inden önce vites büyütemesin.
+        float upshiftMinLimit = maxV * 0.85f;
+        float upshiftPoint = maxV * (0.85f + (throttle * 0.15f));
+
+        if (speed > upshiftPoint && mCurrentGear < mActiveProfile.gearRanges.length) {
+            targetGear++;
         }
-        // Vites küçültme kontrolü
+
+        // 2. Vites Düşürme (Downshift) kararı
+        // Araba 140'la giderken vites düşürüp RPM'i 1500'e çekmesini engellemek için
+        // Mevcut vitesin min hızının altına düşmeden ASLA vites küçültme (kickdown hariç)
         if (mCurrentGear > 1) {
-            float currentGearMin = mActiveProfile.gearRanges[mCurrentGear - 1][0];
-            if (speed < currentGearMin) targetGear--;
+            float lowerGearMax = mActiveProfile.gearRanges[mCurrentGear - 2][1];
+
+            // Kickdown: Sadece gaza çok basılırsa vites düşür
+            boolean kickdownTrigger = (throttle > 0.85f && speed < lowerGearMax * 0.9f);
+            // Koruma: Hız vitesin minimumunun altına düşerse (Stall protection)
+            boolean engineStallProtect = (speed < minV * 0.95f);
+
+            if (kickdownTrigger || engineStallProtect) {
+                targetGear--;
+            }
         }
 
-        if (targetGear == 0) targetGear = 1;
-        int maxGear = mActiveProfile.gearRanges.length;
-        mCurrentGear = Math.min(Math.max(1, targetGear), maxGear);
+        mCurrentGear = Math.min(Math.max(1, targetGear), mActiveProfile.gearRanges.length);
 
-        // 2. RPM Hesapla (Gaza Duyarlı)
-        float[] range = mActiveProfile.gearRanges[mCurrentGear - 1];
-        float minV = range[0];
-        float maxV = range[1];
+        // --- RPM HESAPLAMA (Daha Kararlı) ---
+        float[] finalRange = mActiveProfile.gearRanges[mCurrentGear - 1];
+        // Hızın vites içindeki yeri (Clamping yapıyoruz ki 1.0'ı geçmesin)
+        float speedRatio = (speed - finalRange[0]) / (finalRange[1] - finalRange[0]);
+        speedRatio = Math.max(0.1f, Math.min(1.0f, speedRatio));
 
-        // Hızın vites içindeki oranı (0.0 - 1.0)
-        float speedRatio = (speed - minV) / (maxV - minV);
-        speedRatio = Math.max(0f, Math.min(1f, speedRatio));
+        // dynamicMinRpm'i %10'dan az gazda rölantiye yakın tutalım
+        float dynamicMinRpm;
+        if (throttle < 0.10f) {
+            dynamicMinRpm = mIdleRpm; // Gaz yoksa vitesin en düşük devrinde kalsın
+        } else {
+            dynamicMinRpm = mIdleRpm + (throttle * (mMaxRpm * mDriveModeAggressiveness));
+        }
 
-        // EKO SÜRÜŞ SİHİRİ:
-        // Alt devir (vitesin başladığı devir) hıza göre değil, gaza göre değişsin.
-        // Az gazda araba 2000 devirde mırıldansın, tam gazda 5000 devirden başlasın.
-        float dynamicMinRpm = mIdleRpm + (mSimulatedThrottle * (mMaxRpm * mDriveModeAggressiveness));
+        // RPM'in çok hızlı düşmesini engellemek için mevcut RPM ile yeni RPM'i hafifçe harmanla (Smoothing)
+        float targetRpm = dynamicMinRpm + (speedRatio * (mMaxRpm - dynamicMinRpm));
+        mCurrentRpm = (mCurrentRpm * 0.8f) + (targetRpm * 0.2f); // %20 yumuşatma
 
-        // Final RPM: Alt devir ile Max devir arasında hız oranına göre belirle
-        mCurrentRpm = dynamicMinRpm + (speedRatio * (mMaxRpm - dynamicMinRpm));
-
-        // Güvenlik sınırlaması
         mCurrentRpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
     }
 
@@ -430,47 +440,6 @@ public class EngineSoundManager {
             mSoundPool.setVolume(s.streamId, finalVolume, finalVolume);
             mSoundPool.setRate(s.streamId, pitch);
         }
-    }
-    /**
-     * Ham (matematiksel) vitesi bulur.
-     */
-    private int getRawGear(float speedKmh) {
-        for (int i = 0; i < mActiveGearbox.maxSpeeds.length; i++) {
-            if (speedKmh <= mActiveGearbox.maxSpeeds[i]) {
-                return i;
-            }
-        }
-        return mActiveGearbox.maxSpeeds.length - 1; // Maksimum vites
-    }
-
-    /**
-     * Histerezis (Tolerans) ile vites seçer.
-     * Vites sınırında sesin sürekli gidip gelmesini (Gear Hunting) önler.
-     */
-    private int getGearWithHysteresis(float speedKmh, int currentGear) {
-        int rawGear = getRawGear(speedKmh);
-
-        // Eğer henüz vites atanmamışsa ham vitesi döndür
-        if (currentGear < 0) return rawGear;
-
-        if (rawGear > currentGear) {
-            // YUKARI VİTES: Yeni vitesin hızını histerezis kadar "net" geçmeli
-            float newGearMinSpeed = mActiveGearbox.maxSpeeds[rawGear - 1];
-            if (speedKmh >= newGearMinSpeed + VIRTUAL_GEAR_HYSTERESIS_KMH) {
-                return rawGear;
-            }
-            return currentGear; // Sınırı tam geçemediği için eski viteste tut
-        }
-        else if (rawGear < currentGear) {
-            // AŞAĞI VİTES: Mevcut vitesin hızının histerezis kadar altına düşmeli
-            float currentGearMinSpeed = mActiveGearbox.maxSpeeds[currentGear - 1];
-            if (speedKmh <= currentGearMinSpeed - VIRTUAL_GEAR_HYSTERESIS_KMH) {
-                return rawGear;
-            }
-            return currentGear;
-        }
-
-        return currentGear; // Zaten aynı vitesteyiz
     }
 
     public boolean isPlaying() { return mIsPlaying; }

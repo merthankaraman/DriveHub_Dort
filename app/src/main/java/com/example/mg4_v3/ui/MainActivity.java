@@ -217,13 +217,11 @@ public class MainActivity extends AppCompatActivity {
         // Yapay motor sesi yöneticisini başlat (önce instance al)
         mEngineSound = EngineSoundManager.getInstance(this);
 
-        // Kayıtlı vites profili
-        String savedProfileStr = prefs.getString("gear_profile", "SPORT_6");
-        EngineSoundManager.GearProfile savedProfile = gearProfileFromString(savedProfileStr);
-        mEngineSound.setGearProfile(savedProfile);
-        updateGearProfileButtonText(savedProfile);
-        // Butona tıklandığında seçim penceresini aç
-        mBtnGearProfile.setOnClickListener(v -> showGearProfileDialog());
+        // Şanzıman karakteri: Eco / Normal / Sport (döngüsel)
+        String savedChar = getSharedPreferences("mg4_v3", MODE_PRIVATE).getString("sound_character", "NORMAL");
+        applySoundCharacter(savedChar);
+        updateSoundCharacterButtonText(savedChar);
+        mBtnGearProfile.setOnClickListener(v -> cycleSoundCharacter());
 
         // Araç servislerini başlat
         MG4Hardware.init(this);
@@ -237,15 +235,21 @@ public class MainActivity extends AppCompatActivity {
         MG4Hardware.setLogEnabled(logsEnabled);
         updateSoundToggleButton();
 
-        // Hız test paneli (simülasyon)
+        // Hız test paneli (simülasyon) — Ses Kapa'nın üstünde; simüle hız + simüle gaz
         SeekBar seekSpeedTest = findViewById(R.id.seekSpeedTest);
+        SeekBar seekThrottleTest = findViewById(R.id.seekThrottleTest);
         if (mBtnSpeedTest != null && seekSpeedTest != null && mLayoutSpeedTest != null) {
             mBtnSpeedTest.setOnClickListener(v -> {
                 boolean opening = mLayoutSpeedTest.getVisibility() != View.VISIBLE;
                 mLayoutSpeedTest.setVisibility(opening ? View.VISIBLE : View.GONE);
                 mSimSpeedActive = opening;
+                if (mEngineSound != null) {
+                    mEngineSound.setUseManualThrottle(opening);
+                    if (opening && seekThrottleTest != null) {
+                        mEngineSound.setSimulatedThrottle(seekThrottleTest.getProgress() / 100f);
+                    }
+                }
                 if (!opening) {
-                    // Panel kapandı → tekrar gerçek hızdan beslenecek
                     mSimSpeedKmh = 0f;
                 }
             });
@@ -253,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
             seekSpeedTest.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    float speed = progress; // 0–200 km/h
+                    float speed = progress;
                     mSimSpeedActive = true;
                     mSimSpeedKmh = speed;
                     if (mTvSpeedTestLabel != null) {
@@ -267,6 +271,23 @@ public class MainActivity extends AppCompatActivity {
                 @Override public void onStartTrackingTouch(SeekBar seekBar) {}
                 @Override public void onStopTrackingTouch(SeekBar seekBar) {}
             });
+
+            if (seekThrottleTest != null && mEngineSound != null) {
+                seekThrottleTest.setProgress(50); // Varsayılan %50
+                seekThrottleTest.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        float throttle = progress / 100f;
+                        mEngineSound.setSimulatedThrottle(throttle);
+                        if (mSoundEnabled) {
+                            mEngineSound.onSpeedChanged(mSimSpeedKmh);
+                        }
+                    }
+
+                    @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                    @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+                });
+            }
         }
 
         // Motor sesi aç/kapa butonu
@@ -862,10 +883,39 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         // Tüm eski değerleri tek vites moduna eşliyoruz.
         return SoundMode.VIRTUAL_GEAR_V2;
     }
-    private static EngineSoundManager.GearProfile gearProfileFromString(String s) {
-        if ("CRUISER_4".equals(s)) return EngineSoundManager.GearProfile.CRUISER_4;
-        if ("RALLY_8".equals(s)) return EngineSoundManager.GearProfile.RALLY_8;
-        return EngineSoundManager.GearProfile.SPORT_6; // Varsayılan güvenli değer
+    private static final String SOUND_CHAR_ECO = "ECO";
+    private static final String SOUND_CHAR_NORMAL = "NORMAL";
+    private static final String SOUND_CHAR_SPORT = "SPORT";
+    private static final String[] SOUND_CHAR_CYCLE = { SOUND_CHAR_ECO, SOUND_CHAR_NORMAL, SOUND_CHAR_SPORT };
+
+    private void applySoundCharacter(String character) {
+        float agg = 0.4f;
+        if (SOUND_CHAR_ECO.equals(character)) agg = 0.25f;
+        else if (SOUND_CHAR_SPORT.equals(character)) agg = 0.7f;
+        mEngineSound.setDriveModeAggressiveness(agg);
+    }
+
+    private void cycleSoundCharacter() {
+        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        String current = prefs.getString("sound_character", SOUND_CHAR_NORMAL);
+        int idx = 0;
+        for (int i = 0; i < SOUND_CHAR_CYCLE.length; i++) {
+            if (SOUND_CHAR_CYCLE[i].equals(current)) { idx = (i + 1) % SOUND_CHAR_CYCLE.length; break; }
+        }
+        String next = SOUND_CHAR_CYCLE[idx];
+        prefs.edit().putString("sound_character", next).apply();
+        applySoundCharacter(next);
+        updateSoundCharacterButtonText(next);
+        Toast.makeText(this, "Şanzıman: " + next, Toast.LENGTH_SHORT).show();
+    }
+
+    private void updateSoundCharacterButtonText(String character) {
+        if (mBtnGearProfile == null) return;
+        switch (character) {
+            case SOUND_CHAR_ECO:    mBtnGearProfile.setText("🟢 Şanzıman: Eco"); break;
+            case SOUND_CHAR_SPORT:  mBtnGearProfile.setText("🔴 Şanzıman: Sport"); break;
+            default:                mBtnGearProfile.setText("⚪ Şanzıman: Normal"); break;
+        }
     }
 
     private void updateSoundToggleButton() {
@@ -881,45 +931,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             mBtnSoundToggle.setBackgroundTintList(
                     android.content.res.ColorStateList.valueOf(COLOR_INACTIVE)); // Gri
             mBtnSoundToggle.setTextColor(0xFF8B949E);
-        }
-    }
-
-    private void showGearProfileDialog() {
-        String[] options = {"4-İleri Cruiser (Uzun Oran)", "6-İleri Spor LFA", "8-İleri Ralli (Kısa Oran)"};
-
-        new AlertDialog.Builder(this)
-                .setTitle("Şanzıman Profilini Seç")
-                .setItems(options, (dialog, which) -> {
-                    EngineSoundManager.GearProfile selectedProfile;
-                    switch (which) {
-                        case 0: selectedProfile = EngineSoundManager.GearProfile.CRUISER_4; break;
-                        case 2: selectedProfile = EngineSoundManager.GearProfile.RALLY_8; break;
-                        case 1:
-                        default: selectedProfile = EngineSoundManager.GearProfile.SPORT_6; break;
-                    }
-
-                    // Sesi güncelle
-                    mEngineSound.setGearProfile(selectedProfile);
-
-                    // Tercihi kaydet
-                    getSharedPreferences("mg4_v3", MODE_PRIVATE)
-                            .edit()
-                            .putString("gear_profile", selectedProfile.name())
-                            .apply();
-
-                    // Buton metnini güncelle
-                    updateGearProfileButtonText(selectedProfile);
-                    Toast.makeText(this, "Şanzıman değiştirildi", Toast.LENGTH_SHORT).show();
-                })
-                .show();
-    }
-
-    private void updateGearProfileButtonText(EngineSoundManager.GearProfile profile) {
-        if (mBtnGearProfile == null) return;
-        switch (profile) {
-            case CRUISER_4: mBtnGearProfile.setText("⚙️ Şanzıman: 4-İleri Cruiser"); break;
-            case RALLY_8:   mBtnGearProfile.setText("⚙️ Şanzıman: 8-İleri Ralli"); break;
-            case SPORT_6:   mBtnGearProfile.setText("⚙️ Şanzıman: 6-İleri Spor LFA"); break;
         }
     }
 

@@ -886,11 +886,57 @@
 
                 </LinearLayout>
 
+                <!-- Simüle hız + gaz (Ses Kapa'nın üstünde; Hız Testi ile açılır) -->
+                <LinearLayout
+                    android:id="@+id/layoutSpeedTest"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="14dp"
+                    android:background="@color/surface_variant"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvSpeedTestLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="6dp"
+                        android:fontFamily="monospace"
+                        android:text="Simüle hız: 0 km/h"
+                        android:textColor="@color/status_value"
+                        android:textSize="14sp" />
+
+                    <SeekBar
+                        android:id="@+id/seekSpeedTest"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:max="170"
+                        android:minHeight="32dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="6dp"
+                        android:text="Simüle gaz pedalı (%)"
+                        android:textColor="@color/status_value"
+                        android:textSize="14sp" />
+
+                    <SeekBar
+                        android:id="@+id/seekThrottleTest"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="100"
+                        android:minHeight="32dp" />
+
+                </LinearLayout>
+
                 <!-- 2x2 düğmeler (aşağıda, kare formda) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="12dp"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -950,41 +996,11 @@
                             android:layout_marginTop="10dp"
                             android:layout_weight="1"
                             android:backgroundTint="#21262D"
-                            android:text="⚙️ Şanzıman"
+                            android:text="⚪ Şanzıman: Normal"
                             android:textColor="#FFFFFF"
                             android:textSize="14sp" />
 
                     </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- Hız testi seekbar (gizli, açılınca gösterilir) -->
-                <LinearLayout
-                    android:id="@+id/layoutSpeedTest"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:background="@color/surface_variant"
-                    android:orientation="vertical"
-                    android:padding="12dp"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:id="@+id/tvSpeedTestLabel"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="6dp"
-                        android:fontFamily="monospace"
-                        android:text="Simüle hız: 0 km/h"
-                        android:textColor="@color/status_value"
-                        android:textSize="14sp" />
-
-                    <SeekBar
-                        android:id="@+id/seekSpeedTest"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:max="170"
-                        android:minHeight="32dp" />
 
                 </LinearLayout>
 
