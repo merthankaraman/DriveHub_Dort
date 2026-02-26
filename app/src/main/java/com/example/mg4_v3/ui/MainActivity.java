@@ -177,9 +177,11 @@ public class MainActivity extends AppCompatActivity {
             if (mTvMotorState != null) {
                 mTvMotorState.setText(ready ? "Motor durumu: READY" : "Motor durumu: Kapalı");
             }
-            // Yapay motor sesi: hem switch AÇIK olmalı hem araç READY olmalı
-            if (mEngineSound != null) {
-                if (mSoundEnabled && ready) {
+            // Yapay motor sesi:
+            // - Gerçek araçta: MG4ControlService'in mSoundRunnable'ı yönetiyor
+            // - Simülasyon modunda (mSimSpeedActive): Activity tarafı EngineSoundManager'ı beslesin
+            if (mEngineSound != null && mSimSpeedActive) {
+                if (mSoundEnabled) {
                     if (!mEngineSound.isPlaying()) {
                         mEngineSound.start();
                     }
@@ -502,7 +504,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         SwitchCompat swOverlay = findViewById(R.id.switchOverlay);
         if (swOverlay != null) {
             SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
-            boolean enabled = p.getBoolean(PREF_OVERLAY_ENABLED, true);
+            boolean enabled = p.getBoolean(PREF_OVERLAY_ENABLED, false);
             swOverlay.setChecked(enabled);
             swOverlay.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 p.edit().putBoolean(PREF_OVERLAY_ENABLED, isChecked).apply();

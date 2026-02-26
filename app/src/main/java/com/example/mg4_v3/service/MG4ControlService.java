@@ -30,6 +30,7 @@ import androidx.core.content.ContextCompat;
 
 import com.example.mg4_v3.R;
 import com.example.mg4_v3.hardware.MG4Hardware;
+import com.example.mg4_v3.audio.EngineSoundManager;
 import com.example.mg4_v3.model.DriveMode;
 import com.example.mg4_v3.model.RegenLevel;
 
@@ -89,6 +90,41 @@ public class MG4ControlService extends Service {
 
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
+    // Yapay motor sesi (sanal ses) – servis tarafında da yönet
+    private EngineSoundManager mEngineSound;
+    private final Handler mSoundHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mSoundRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mEngineSound == null) {
+                mSoundHandler.postDelayed(this, 1000);
+                return;
+            }
+
+            // Hız – servis tarafında sadece gerçek araç hızını kullan
+            float speed = MG4Hardware.getSpeedKmh();
+            boolean ready = MG4Hardware.isVehicleReady();
+
+            // Kullanıcının tercihine göre sesi aç/kapa
+            SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+            boolean soundEnabled = prefs.getBoolean("sound_enabled", false);
+
+            if (soundEnabled && ready) {
+                if (!mEngineSound.isPlaying()) {
+                    mEngineSound.start();
+                }
+                mEngineSound.onSpeedChanged(speed);
+            } else {
+                if (mEngineSound.isPlaying()) {
+                    mEngineSound.stop();
+                }
+            }
+
+            // ~10 Hz güncelle (MainActivity ile uyumlu)
+            mSoundHandler.postDelayed(this, 100);
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -105,6 +141,7 @@ public class MG4ControlService extends Service {
 
         updateNotification("Bağlanıyor...");
         registerHardkeyReceiver();
+
         SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
         boolean overlayEnabled = prefs.getBoolean("overlay_enabled", true);
         if (overlayEnabled) {
@@ -112,6 +149,43 @@ public class MG4ControlService extends Service {
         } else {
             Log.i(TAG, "Overlay kullanıcı ayarı nedeniyle kapalı (overlay_enabled=false)");
         }
+
+        // EngineSoundManager'ı her durumda servis tarafında başlat.
+        // Sesin açık/kapalı olması her 100 ms'de PREF_SOUND_ENABLED'den okunuyor.
+        Log.i(TAG, "EngineSound: service içinde init ediliyor");
+        mEngineSound = EngineSoundManager.getInstance(this);
+
+        // Ses profili (araç sesi)
+        String profile = prefs.getString("sound_profile", "McLaren P1");
+        if ("LFA".equals(profile)) {
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LFA());
+        } else if ("McLaren P1".equals(profile)) {
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_MCLAREN_P1());
+        } else if ("Lamborghini Aventador".equals(profile)) {
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_AVENTADOR());
+        } else if ("BMW Z4".equals(profile)) {
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_BMW_Z4());
+        } else if ("Pagani Zonda R".equals(profile)) {
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_ZONDA_R());
+        } else {
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_MCLAREN_P1());
+        }
+
+        // Şanzıman karakteri (Eco / Normal / Sport)
+        String charStr = prefs.getString("sound_character", "NORMAL");
+        float agg = 0.4f;
+        if ("ECO".equals(charStr)) agg = 0.25f;
+        else if ("SPORT".equals(charStr)) agg = 0.7f;
+        mEngineSound.setDriveModeAggressiveness(agg);
+
+        // Master volume
+        int master = prefs.getInt("sound_master", 60);
+        float masterClamped = Math.max(0, Math.min(100, master)) / 100f;
+        mEngineSound.setMasterVolume(masterClamped);
+
+        // Hız / READY durumuna göre sesi arka planda yönet
+        mSoundHandler.post(mSoundRunnable);
+
         Log.i(TAG, "=== onCreate tamamlandı ===");
     }
 
@@ -131,6 +205,7 @@ public class MG4ControlService extends Service {
         }
         removeOverlay();
         MG4Hardware.destroy();
+        mSoundHandler.removeCallbacks(mSoundRunnable);
     }
 
     @Override
