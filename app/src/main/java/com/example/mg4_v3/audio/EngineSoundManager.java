@@ -47,16 +47,20 @@ public class EngineSoundManager {
     private float mCurrentIdleVolumeScale = 1;
     private float mMaxRpm = 9000f;
     private float mMasterVolume = 0.6f;
+    private int mGearWhineSoundId = -1;
+    private int mGearWhineStreamId = -1;
+    private float mGearWhineMaxVol = 0.25f; // Çok baskın olmamalı, alttan gelmeli
 
     // --- TURBO DEĞİŞKENLERİ ---
     private int mTurboSoundId = -1;
     private int mTurboStreamId = -1;
     private float mCurrentTurboBoost = 0f; // 0.0 - 1.0 arası iç basınç simülasyonu
-    private float mTurboMaxSound = 0.7f;
+    private float mTurboMaxSound = 0.5f;
+    private boolean mEnableTurboSound = true;
     private long mLastShiftTime = 0;
-    private static final long MIN_SHIFT_INTERVAL_MS = 1000; // 1 saniye vites değiştirme yasağı
-    private boolean mEnableRevMatch = true; // Varsayılan olarak açık
+    private boolean mEnableRevMatch = true;
     private float mRevMatchBoost = 0f;
+    private boolean mGearWhineEnabled = true;
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public static class VehicleProfile {
@@ -109,6 +113,22 @@ public class EngineSoundManager {
         return mSimulatedThrottle;
     }
 
+    public boolean isRevMatchEnabled() {
+        return mEnableRevMatch;
+    }
+
+    public void setRevMatchEnabled(boolean enabled) {
+        mEnableRevMatch = enabled;
+    }
+
+    public boolean isGearWhineEnabled() {
+        return mGearWhineEnabled;
+    }
+
+    public void setGearWhineEnabled(boolean enabled) {
+        mGearWhineEnabled = enabled;
+    }
+
     /** Manuel gaz kullanılıyor mu (sim paneli açıkken true). */
     public void setUseManualThrottle(boolean use) {
         mUseManualThrottle = use;
@@ -131,13 +151,14 @@ public class EngineSoundManager {
         return new VehicleProfile("Lexus LFA", 1000f, 9500f, 1,
                 false,
                 new float[][]{
-                        {0f, 60f},   // 1. Vites
-                        {20f, 80f},  // 2. Vites
-                        {40f, 100f},  // 3. Vites
-                        {60f, 140f}, // 4. Vites
-                        {100f, 170f}, // 5. Vites
-                        {130f, 200f}, // 6. Vites
-                        {140f, 250f}, // 7. Vites
+                        {0f, 30f},
+                        {15f, 60f},
+                        {20f, 80f},
+                        {40f, 100f},
+                        {60f, 140f},
+                        {100f, 170f},
+                        {130f, 200f},
+                        {140f, 250f},
                 },
                 R.raw.lfa_idle,
                 R.raw.lfa_3784,
@@ -151,13 +172,14 @@ public class EngineSoundManager {
         return new VehicleProfile("McLaren P1", 800f, 9000f, 1,
                 true,
                 new float[][]{
-                        {0f, 60f},   // 1. Vites
-                        {20f, 80f},  // 2. Vites
-                        {40f, 100f},  // 3. Vites
-                        {60f, 140f}, // 4. Vites
-                        {100f, 170f}, // 5. Vites
-                        {130f, 200f}, // 6. Vites
-                        {140f, 250f}, // 7. Vites
+                        {0f, 30f},
+                        {15f, 60f},
+                        {20f, 80f},
+                        {40f, 100f},
+                        {60f, 140f},
+                        {100f, 170f},
+                        {130f, 200f},
+                        {140f, 250f},
                 },
                 R.raw.mclaren_p1_idle,
                 R.raw.mclaren_p1_1750,
@@ -172,13 +194,14 @@ public class EngineSoundManager {
         return new VehicleProfile("Lamborghini Aventador", 800f, 8500f, 1,
                 false,
                 new float[][]{
-                        {0f, 60f},   // 1. Vites
-                        {20f, 80f},  // 2. Vites
-                        {40f, 100f},  // 3. Vites
-                        {60f, 140f}, // 4. Vites
-                        {100f, 170f}, // 5. Vites
-                        {130f, 200f}, // 6. Vites
-                        {140f, 250f}, // 7. Vites
+                        {0f, 30f},
+                        {15f, 60f},
+                        {20f, 80f},
+                        {40f, 100f},
+                        {60f, 140f},
+                        {100f, 170f},
+                        {130f, 200f},
+                        {140f, 250f},
                 },
                 R.raw.lamborghini_aventador_idle,
                 R.raw.lamborghini_aventador_2500,
@@ -191,13 +214,14 @@ public class EngineSoundManager {
         return new VehicleProfile("BMW Z4", 800f, 6836, 1,
                 true,
                 new float[][]{
-                        {0f, 60f},   // 1. Vites
-                        {20f, 80f},  // 2. Vites
-                        {40f, 100f},  // 3. Vites
-                        {60f, 140f}, // 4. Vites
-                        {100f, 170f}, // 5. Vites
-                        {130f, 200f}, // 6. Vites
-                        {140f, 250f}, // 7. Vites
+                        {0f, 30f},
+                        {15f, 60f},
+                        {20f, 80f},
+                        {40f, 100f},
+                        {60f, 140f},
+                        {100f, 170f},
+                        {130f, 200f},
+                        {140f, 250f},
                 },
                 R.raw.bmw_z4_idle,
                 R.raw.bmw_z4_2800,
@@ -211,13 +235,14 @@ public class EngineSoundManager {
         return new VehicleProfile("Pagani Zonda R", 1000f, 8250, 1,
                 false,
                 new float[][]{
-                        {0f, 60f},   // 1. Vites
-                        {20f, 80f},  // 2. Vites
-                        {40f, 100f},  // 3. Vites
-                        {60f, 140f}, // 4. Vites
-                        {100f, 170f}, // 5. Vites
-                        {130f, 200f}, // 6. Vites
-                        {140f, 250f}, // 7. Vites
+                        {0f, 30f},
+                        {15f, 60f},
+                        {20f, 80f},
+                        {40f, 100f},
+                        {60f, 140f},
+                        {100f, 170f},
+                        {130f, 200f},
+                        {140f, 250f},
                 },
                 R.raw.zonda_r_idle,
                 R.raw.zonda_r_3500,
@@ -269,7 +294,7 @@ public class EngineSoundManager {
         mIsPlaying = true;
         mLoadedSamplesCount = 0;
 
-        int maxStreams = mCurrentSamples.length + 3;
+        int maxStreams = mCurrentSamples.length + 5;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             AudioAttributes attrs = new AudioAttributes.Builder()
@@ -287,6 +312,10 @@ public class EngineSoundManager {
                 mTurboStreamId = mSoundPool.play(mTurboSoundId, 0f, 0f, 1, -1, 1.0f);
                 return;
             }
+            if (sampleId == mGearWhineSoundId) {
+                mGearWhineStreamId = mSoundPool.play(mGearWhineSoundId, 0f, 0f, 1, -1, 1.0f);
+            }
+
             mLoadedSamplesCount++;
             if (mLoadedSamplesCount == mCurrentSamples.length && mIsPlaying) {
                 for (EngineSample sample : mCurrentSamples) {
@@ -300,6 +329,9 @@ public class EngineSoundManager {
             sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
         }
         mTurboSoundId = mSoundPool.load(mContext, R.raw.turbo, 1);
+        mGearWhineSoundId = mSoundPool.load(mContext, R.raw.sin5, 1);
+
+        // OnLoadCompleteListener içinde turbo gibi başlat:
     }
 
     public void stop() {
@@ -471,7 +503,7 @@ public class EngineSoundManager {
             if (mActiveProfile == null || !mActiveProfile.hasTurbo) {
                 mSoundPool.setVolume(mTurboStreamId, 0f, 0f);
                 mCurrentTurboBoost = 0f;
-            } else {
+            } else if(mEnableTurboSound){
                 float throttle = mSimulatedThrottle;
 
                 // RPM 0.10 oranının altındaysa boost her zaman 0 olur (Fiziksel kural)
@@ -489,6 +521,10 @@ public class EngineSoundManager {
                 mSoundPool.setVolume(mTurboStreamId, turboVol, turboVol);
                 mSoundPool.setRate(mTurboStreamId, turboPitch);
             }
+            else {
+                mSoundPool.setVolume(mTurboStreamId, 0, 0);
+                mSoundPool.setRate(mTurboStreamId, 1);
+            }
         }
 
         if (mCurrentSpeedKmh < 1.0f) {
@@ -504,10 +540,10 @@ public class EngineSoundManager {
             return;
         }
 
-        EngineSample lower = mCurrentSamples[1];
-        EngineSample upper = mCurrentSamples[mCurrentSamples.length - 1];
+        EngineSample lower = mCurrentSamples[0];
+        EngineSample upper = mCurrentSamples[1];
 
-        for (int i = 1; i < mCurrentSamples.length - 1; i++) {
+        for (int i = 0; i < mCurrentSamples.length - 1; i++) {
             if (rpm >= mCurrentSamples[i].baseRpm && rpm <= mCurrentSamples[i+1].baseRpm) {
                 lower = mCurrentSamples[i];
                 upper = mCurrentSamples[i+1];
@@ -524,8 +560,10 @@ public class EngineSoundManager {
             if (s.streamId == -1) continue;
             float rawVol = 0f;
 
-            if (i > 0) { // Rölanti (0) sürüşte hep kapalı
-                rawVol = (s == lower) ? (1f - blend) : (s == upper ? blend : 0f);
+            if (s == lower) {
+                rawVol = 1f - blend;
+            } else if (s == upper) {
+                rawVol = blend;
             }
 
             // 2. SİHİRLİ DOKUNUŞ: Karekök alarak Eşit Güç eğrisine çevir
@@ -556,6 +594,25 @@ public class EngineSoundManager {
 
             mSoundPool.setVolume(s.streamId, finalVolume, finalVolume);
             mSoundPool.setRate(s.streamId, pitch);
+        }
+        if (mGearWhineStreamId != -1 && mGearWhineEnabled) {
+            // Hız 0 ise ses kapalı, 170 km/h (veya max) ise tam hacim
+            float speedRatio = mCurrentSpeedKmh / 170f; // Aracının max hızı 170 demiştin
+            speedRatio = Math.max(0f, Math.min(1f, speedRatio));
+
+            // Ses seviyesi: Hızlandıkça artar, master volume ile çarpılır
+            float whineVol = speedRatio * masterVol * mGearWhineMaxVol;
+
+            // PERDE (Pitch): Hızlandıkça ıslık tizleşir.
+            // 0.5f (kalın) başlar, hızlandıkça 2.0f (çok tiz) seviyesine çıkar.
+            float whinePitch = 0.5f + (speedRatio * 1.5f);
+
+            mSoundPool.setVolume(mGearWhineStreamId, whineVol, whineVol);
+            mSoundPool.setRate(mGearWhineStreamId, whinePitch);
+        } else if(!mGearWhineEnabled){
+            mSoundPool.setVolume(mGearWhineStreamId, 0, 0);
+            mSoundPool.setRate(mGearWhineStreamId, 1);
+
         }
     }
 

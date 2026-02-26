@@ -70,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnSoundToggle;
     private Button mBtnSoundProfile;
     private Button mBtnGearProfile;
+    private Button mBtnRevMatch;
+    private Button mBtnGearWhine;
     private Button mBtnSpeedTest;
     private SeekBar mSeekSoundVolume;
     private boolean mSoundEnabled = false; // Varsayılan: kapalı (kalıcı tercih SharedPreferences'tan yüklenecek)
@@ -238,6 +240,8 @@ public class MainActivity extends AppCompatActivity {
         mBtnSoundToggle = findViewById(R.id.btnSoundToggle);
         mBtnSoundProfile = findViewById(R.id.btnSoundProfile);
         mBtnGearProfile = findViewById(R.id.btnGearProfile);
+        mBtnRevMatch = findViewById(R.id.btnRevMatch);
+        mBtnGearWhine = findViewById(R.id.btnGearWhine);
         mBtnSpeedTest = findViewById(R.id.btnSpeedTest);
         mLayoutSpeedTest = findViewById(R.id.layoutSpeedTest);
         mSeekSoundVolume = findViewById(R.id.seekSoundVolume);
@@ -245,8 +249,10 @@ public class MainActivity extends AppCompatActivity {
         // Yapay motor sesi yöneticisini başlat (önce instance al)
         mEngineSound = EngineSoundManager.getInstance(this);
 
+        SharedPreferences prefsApp = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+
         // Şanzıman karakteri: Eco / Normal / Sport (döngüsel)
-        String savedChar = getSharedPreferences("mg4_v3", MODE_PRIVATE).getString("sound_character", "NORMAL");
+        String savedChar = prefsApp.getString("sound_character", "NORMAL");
         applySoundCharacter(savedChar);
         updateSoundCharacterButtonText(savedChar);
         mBtnGearProfile.setOnClickListener(v -> cycleSoundCharacter());
@@ -255,10 +261,11 @@ public class MainActivity extends AppCompatActivity {
         MG4Hardware.init(this);
 
         // Son kaydedilen motor sesi / log ayarlarını yükle (kalıcı)
-        SharedPreferences prefsSound = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefsSound = prefsApp;
         mSoundEnabled = prefsSound.getBoolean(PREF_SOUND_ENABLED, false);
         SoundMode savedMode = soundModeFromString(prefsSound.getString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2"));
-        boolean logsEnabled = prefsSound.getBoolean("logs_enabled", true);
+        // Loglar varsayılan olarak KAPALI olsun
+        boolean logsEnabled = prefsSound.getBoolean("logs_enabled", false);
         int savedMaster = prefsSound.getInt(PREF_SOUND_MASTER, 60);
         MG4Hardware.setLogEnabled(logsEnabled);
         updateSoundToggleButton();
@@ -292,6 +299,9 @@ public class MainActivity extends AppCompatActivity {
                         mTvSpeedTestLabel.setText(String.format("Simüle hız: %.0f km/h", speed));
                     }
                     if (mSoundEnabled && mEngineSound != null) {
+                        if (!mEngineSound.isPlaying()) {
+                            mEngineSound.start();
+                        }
                         mEngineSound.onSpeedChanged(speed);
                     }
                 }
@@ -308,6 +318,9 @@ public class MainActivity extends AppCompatActivity {
                         float throttle = progress / 100f;
                         mEngineSound.setSimulatedThrottle(throttle);
                         if (mSoundEnabled) {
+                            if (!mEngineSound.isPlaying()) {
+                                mEngineSound.start();
+                            }
                             mEngineSound.onSpeedChanged(mSimSpeedKmh);
                         }
                     }
@@ -344,6 +357,34 @@ public class MainActivity extends AppCompatActivity {
             String savedSoundProfile = prefsSound.getString(PREF_SOUND_PROFILE, "LFA");
             mBtnSoundProfile.setText("Araç Sesi: " + savedSoundProfile);
             onSoundProfileSelected(savedSoundProfile);
+        }
+
+        // Devir eşleme toggle (hafızalı)
+        if (mBtnRevMatch != null) {
+            boolean revMatchEnabled = prefsApp.getBoolean("rev_match_enabled", true);
+            mEngineSound.setRevMatchEnabled(revMatchEnabled);
+            updateRevMatchButtonText(revMatchEnabled);
+            mBtnRevMatch.setOnClickListener(v -> {
+                boolean current = mEngineSound.isRevMatchEnabled();
+                boolean next = !current;
+                mEngineSound.setRevMatchEnabled(next);
+                prefsApp.edit().putBoolean("rev_match_enabled", next).apply();
+                updateRevMatchButtonText(next);
+            });
+        }
+
+        // Dişli ıslığı toggle (hafızalı)
+        if (mBtnGearWhine != null) {
+            boolean whineEnabled = prefsApp.getBoolean("gear_whine_enabled", false);
+            mEngineSound.setGearWhineEnabled(whineEnabled);
+            updateGearWhineButtonText(whineEnabled);
+            mBtnGearWhine.setOnClickListener(v -> {
+                boolean current = mEngineSound.isGearWhineEnabled();
+                boolean next = !current;
+                mEngineSound.setGearWhineEnabled(next);
+                prefsApp.edit().putBoolean("gear_whine_enabled", next).apply();
+                updateGearWhineButtonText(next);
+            });
         }
 
         // Master volume slider (0–100) — hafızalı
@@ -921,6 +962,16 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         if (SOUND_CHAR_ECO.equals(character)) agg = 0.25f;
         else if (SOUND_CHAR_SPORT.equals(character)) agg = 0.7f;
         mEngineSound.setDriveModeAggressiveness(agg);
+    }
+
+    private void updateRevMatchButtonText(boolean enabled) {
+        if (mBtnRevMatch == null) return;
+        mBtnRevMatch.setText(enabled ? "Devir eşleme: Açık" : "Devir eşleme: Kapalı");
+    }
+
+    private void updateGearWhineButtonText(boolean enabled) {
+        if (mBtnGearWhine == null) return;
+        mBtnGearWhine.setText(enabled ? "Dişli ıslığı: Açık" : "Dişli ıslığı: Kapalı");
     }
 
     private void cycleSoundCharacter() {

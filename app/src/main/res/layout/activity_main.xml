@@ -1008,7 +1008,7 @@
 
                 </LinearLayout>
 
-                <!-- 2x2 düğmeler (aşağıda, kare formda) -->
+                <!-- 2x3 düğmeler (aşağıda, kare formda) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -1073,6 +1073,37 @@
                             android:layout_weight="1"
                             android:backgroundTint="#21262D"
                             android:text="⚪ Şanzıman: Normal"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                    </LinearLayout>
+
+                    <!-- 3. satır: Devir eşleme | Dişli ıslığı -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnRevMatch"
+                            android:layout_width="0dp"
+                            android:layout_height="120dp"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:backgroundTint="#21262D"
+                            android:text="Devir eşleme"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                        <Button
+                            android:id="@+id/btnGearWhine"
+                            android:layout_width="0dp"
+                            android:layout_height="120dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:backgroundTint="#21262D"
+                            android:text="Dişli ıslığını aktif et"
                             android:textColor="#FFFFFF"
                             android:textSize="14sp" />
 

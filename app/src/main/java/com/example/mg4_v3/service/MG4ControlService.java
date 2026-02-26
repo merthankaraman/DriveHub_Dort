@@ -183,8 +183,15 @@ public class MG4ControlService extends Service {
         float masterClamped = Math.max(0, Math.min(100, master)) / 100f;
         mEngineSound.setMasterVolume(masterClamped);
 
-        // Hız / READY durumuna göre sesi arka planda yönet
-        mSoundHandler.post(mSoundRunnable);
+        // Hız / READY durumuna göre sesi arka planda yönet.
+        // Gerçek araçta servis döngüsü aktif olsun; emülatörde (sdk_gphone / emu64xa) sadece Activity simülasyonu kullansın.
+        String device = android.os.Build.DEVICE != null ? android.os.Build.DEVICE : "";
+        boolean isEmulator = device.contains("emu") || device.contains("sdk_gphone");
+        if (!isEmulator) {
+            mSoundHandler.post(mSoundRunnable);
+        } else {
+            Log.i(TAG, "EngineSound: emulator tespit edildi (" + device + "), servis ses döngüsü devre dışı. Simülasyon sadece Activity tarafında çalışacak.");
+        }
 
         Log.i(TAG, "=== onCreate tamamlandı ===");
     }
