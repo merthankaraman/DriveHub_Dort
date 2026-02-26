@@ -793,26 +793,25 @@
                     android:textColor="@color/status_value"
                     android:textSize="15sp" />
 
-                <!-- RPM ve Hız (önceki büyüklükler korundu) -->
+                <!-- 4 kadran: RPM | Vites | Hız | Pedal (eşit genişlik, eşit aralık) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    android:gravity="center"
                     android:orientation="horizontal">
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="12dp"
                         android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
                         android:gravity="center"
                         android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="8dp"
+                            android:layout_marginBottom="6dp"
                             android:text="RPM"
                             android:textColor="@color/status_value"
                             android:textSize="13sp" />
@@ -830,15 +829,41 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
                         android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
                         android:gravity="center"
                         android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="8dp"
+                            android:layout_marginBottom="6dp"
+                            android:text="VİTES"
+                            android:textColor="@color/status_value"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvGaugeGear"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="monospace"
+                            android:text="A0"
+                            android:textColor="@color/status_value"
+                            android:textSize="26sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="6dp"
                             android:text="HIZ (km/h)"
                             android:textColor="@color/status_value"
                             android:textSize="13sp" />
@@ -849,6 +874,31 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="monospace"
                             android:text="0"
+                            android:textColor="@color/status_value"
+                            android:textSize="26sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="6dp"
+                            android:text="PEDAL"
+                            android:textColor="@color/status_value"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvGaugeThrottle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="monospace"
+                            android:text="0%"
                             android:textColor="@color/status_value"
                             android:textSize="26sp" />
                     </LinearLayout>

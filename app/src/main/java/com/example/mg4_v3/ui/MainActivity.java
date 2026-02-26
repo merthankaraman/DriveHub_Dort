@@ -60,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvSpeedTestLabel;
     private TextView mTvGaugeRpm;
     private TextView mTvGaugeSpeed;
+    private TextView mTvGaugeGear;
+    private TextView mTvGaugeThrottle;
     private TextView mTvMotorState;
     
     // Yapay motor sesi
@@ -146,9 +148,19 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 mTvGaugeSpeed.setText("-- km/h");
             }
-            if (mEngineSound != null && mTvGaugeRpm != null) {
-                float rpm = mEngineSound.getCurrentRpm();
-                mTvGaugeRpm.setText(String.format("%.0f", rpm));
+            if (mEngineSound != null) {
+                if (mTvGaugeRpm != null) {
+                    float rpm = mEngineSound.getCurrentRpm();
+                    mTvGaugeRpm.setText(String.format("%.0f", rpm));
+                }
+                if (mTvGaugeGear != null) {
+                    mTvGaugeGear.setText("A" + mEngineSound.getCurrentGear());
+                }
+                if (mTvGaugeThrottle != null) {
+                    float throttle = mEngineSound.getSimulatedThrottle();
+                    int pct = Math.round(throttle * 100f);
+                    mTvGaugeThrottle.setText(pct + "%");
+                }
             }
             boolean ready = (MG4Hardware.isVehicleReady() || mSimSpeedActive);
             if (mTvMotorState != null) {
@@ -204,6 +216,8 @@ public class MainActivity extends AppCompatActivity {
         mTvSpeedTestLabel = findViewById(R.id.tvSpeedTestLabel);
         mTvGaugeRpm = findViewById(R.id.tvGaugeRpm);
         mTvGaugeSpeed = findViewById(R.id.tvGaugeSpeed);
+        mTvGaugeGear = findViewById(R.id.tvGaugeGear);
+        mTvGaugeThrottle = findViewById(R.id.tvGaugeThrottle);
         mTvMotorState = findViewById(R.id.tvMotorState);
         
         // Motor sesi butonları (ses paneli içinde)

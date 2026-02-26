@@ -50,6 +50,8 @@ public class EngineSoundManager {
     private int mTurboStreamId = -1;
     private float mCurrentTurboBoost = 0f; // 0.0 - 1.0 arası iç basınç simülasyonu
     private float mTurboMaxSound = 0.7f;
+    private long mLastShiftTime = 0;
+    private static final long MIN_SHIFT_INTERVAL_MS = 1000; // 1 saniye vites değiştirme yasağı
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public static class VehicleProfile {
@@ -98,6 +100,10 @@ public class EngineSoundManager {
         mSimulatedThrottle = Math.max(0.01f, Math.min(1f, throttle01));
     }
 
+    public float getSimulatedThrottle() {
+        return mSimulatedThrottle;
+    }
+
     /** Manuel gaz kullanılıyor mu (sim paneli açıkken true). */
     public void setUseManualThrottle(boolean use) {
         mUseManualThrottle = use;
@@ -105,6 +111,10 @@ public class EngineSoundManager {
 
     public float getCurrentRpm() {
         return mCurrentRpm;
+    }
+
+    public int getCurrentGear() {
+        return mCurrentGear;
     }
 
     private static final float VIRTUAL_GEAR_HYSTERESIS_KMH = 4f;
@@ -117,11 +127,12 @@ public class EngineSoundManager {
                 false,
                 new float[][]{
                         {0f, 60f},   // 1. Vites
-                        {40f, 100f},  // 2. Vites
-                        {70f, 140f},  // 3. Vites
-                        {110f, 190f}, // 4. Vites
-                        {160f, 250f}, // 5. Vites
-                        {220f, 325f}  // 6. Vites
+                        {20f, 80f},  // 2. Vites
+                        {40f, 100f},  // 3. Vites
+                        {60f, 140f}, // 4. Vites
+                        {100f, 170f}, // 5. Vites
+                        {130f, 200f}, // 6. Vites
+                        {140f, 250f}, // 7. Vites
                 },
                 R.raw.lfa_idle,
                 R.raw.lfa_3784,
@@ -136,11 +147,12 @@ public class EngineSoundManager {
                 true,
                 new float[][]{
                         {0f, 60f},   // 1. Vites
-                        {40f, 100f},  // 2. Vites
-                        {70f, 140f},  // 3. Vites
-                        {110f, 190f}, // 4. Vites
-                        {160f, 250f}, // 5. Vites
-                        {220f, 325f}  // 6. Vites
+                        {20f, 80f},  // 2. Vites
+                        {40f, 100f},  // 3. Vites
+                        {60f, 140f}, // 4. Vites
+                        {100f, 170f}, // 5. Vites
+                        {130f, 200f}, // 6. Vites
+                        {140f, 250f}, // 7. Vites
                 },
                 R.raw.mclaren_p1_idle,
                 R.raw.mclaren_p1_1750,
@@ -155,13 +167,13 @@ public class EngineSoundManager {
         return new VehicleProfile("Lamborghini Aventador", 800f, 8500f, 1,
                 false,
                 new float[][]{
-                        {0f, 75f},    // 1. Vites (V12'de 1. vites uzundur)
-                        {50f, 115f},  // 2. Vites
-                        {90f, 165f},  // 3. Vites
-                        {130f, 220f}, // 4. Vites
-                        {180f, 275f}, // 5. Vites
-                        {240f, 320f}, // 6. Vites
-                        {290f, 355f}  // 7. Vites (ISR Şanzıman)
+                        {0f, 60f},   // 1. Vites
+                        {20f, 80f},  // 2. Vites
+                        {40f, 100f},  // 3. Vites
+                        {60f, 140f}, // 4. Vites
+                        {100f, 170f}, // 5. Vites
+                        {130f, 200f}, // 6. Vites
+                        {140f, 250f}, // 7. Vites
                 },
                 R.raw.lamborghini_aventador_idle,
                 R.raw.lamborghini_aventador_2500,
@@ -175,11 +187,12 @@ public class EngineSoundManager {
                 true,
                 new float[][]{
                         {0f, 60f},   // 1. Vites
-                        {40f, 100f},  // 2. Vites
-                        {70f, 140f},  // 3. Vites
-                        {110f, 190f}, // 4. Vites
-                        {160f, 250f}, // 5. Vites
-                        {220f, 325f}  // 6. Vites
+                        {20f, 80f},  // 2. Vites
+                        {40f, 100f},  // 3. Vites
+                        {60f, 140f}, // 4. Vites
+                        {100f, 170f}, // 5. Vites
+                        {130f, 200f}, // 6. Vites
+                        {140f, 250f}, // 7. Vites
                 },
                 R.raw.bmw_z4_idle,
                 R.raw.bmw_z4_2800,
@@ -194,11 +207,12 @@ public class EngineSoundManager {
                 false,
                 new float[][]{
                         {0f, 60f},   // 1. Vites
-                        {40f, 100f},  // 2. Vites
-                        {70f, 140f},  // 3. Vites
-                        {110f, 190f}, // 4. Vites
-                        {160f, 250f}, // 5. Vites
-                        {220f, 325f}  // 6. Vites
+                        {20f, 80f},  // 2. Vites
+                        {40f, 100f},  // 3. Vites
+                        {60f, 140f}, // 4. Vites
+                        {100f, 170f}, // 5. Vites
+                        {130f, 200f}, // 6. Vites
+                        {140f, 250f}, // 7. Vites
                 },
                 R.raw.zonda_r_idle,
                 R.raw.zonda_r_3500,
@@ -333,7 +347,8 @@ public class EngineSoundManager {
     private void updateGearAndRpm() {
         if (mActiveProfile == null) return;
         float speed = mCurrentSpeedKmh;
-        float throttle = mSimulatedThrottle;
+        float throttle = mSimulatedThrottle; // 0.01 - 1.0
+        long currentTime = System.currentTimeMillis();
 
         if (speed < 1.0f) {
             mCurrentGear = 0;
@@ -341,59 +356,69 @@ public class EngineSoundManager {
             return;
         }
 
-        if (mCurrentGear < 1) mCurrentGear = 1;
+        // 1. ADIM: Sürücünün İstediği "İdeal Devir" (Target RPM)
+        // Gaz %10 ise -> 2500 RPM civarı (Ekonomik)
+        // Gaz %50 ise -> 5000 RPM civarı (Orta/Canlı)
+        // Gaz %100 ise -> 9000 RPM (Maksimum Güç)
+        float targetRpmRange = mMaxRpm - mIdleRpm;
+        float desiredRpm = mIdleRpm + (targetRpmRange * (0.3f + (throttle * 0.7f) * mDriveModeAggressiveness * 1.2f));
+        desiredRpm = Math.max(mIdleRpm, Math.min(mMaxRpm, desiredRpm));
 
-        int targetGear = mCurrentGear;
-        float[] currentRange = mActiveProfile.gearRanges[mCurrentGear - 1];
-        float minV = currentRange[0];
-        float maxV = currentRange[1];
+        // 2. ADIM: Vites Kararı (Sadece 1 saniyede bir karar verir)
+        if (currentTime - mLastShiftTime > 1200) {
+            int bestGear = mCurrentGear > 0 ? mCurrentGear : 1;
+            float bestRpmDiff = Float.MAX_VALUE;
 
-        // --- KARARLILIK GÜNCELLEMESİ ---
+            // Tüm vitesleri tara, hangisi bizi "desiredRpm"e en yakın tutuyor?
+            for (int g = 1; g <= mActiveProfile.gearRanges.length; g++) {
+                float[] range = mActiveProfile.gearRanges[g - 1];
 
-        // 1. Vites Büyütme (Upshift) kararı için minimum bir eşik ekleyelim
-        // Gazı bıraksan bile vitesin max hızının %85'inden önce vites büyütemesin.
-        float upshiftMinLimit = maxV * 0.85f;
-        float upshiftPoint = maxV * (0.85f + (throttle * 0.15f));
+                // Eğer hız bu vitesin limitleri dışındaysa bu vitesi geç (Toleranslı)
+                if (speed < range[0] * 0.8f || speed > range[1] * 1.1f) continue;
 
-        if (speed > upshiftPoint && mCurrentGear < mActiveProfile.gearRanges.length) {
-            targetGear++;
-        }
+                // Bu vitesteki tahmini devri hesapla
+                float ratio = (speed - range[0]) / (range[1] - range[0]);
+                float estimatedRpm = mIdleRpm + (ratio * targetRpmRange);
 
-        // 2. Vites Düşürme (Downshift) kararı
-        // Araba 140'la giderken vites düşürüp RPM'i 1500'e çekmesini engellemek için
-        // Mevcut vitesin min hızının altına düşmeden ASLA vites küçültme (kickdown hariç)
-        if (mCurrentGear > 1) {
-            float lowerGearMax = mActiveProfile.gearRanges[mCurrentGear - 2][1];
+                float diff = Math.abs(estimatedRpm - desiredRpm);
 
-            // Kickdown: Sadece gaza çok basılırsa vites düşür
-            boolean kickdownTrigger = (throttle > 0.85f && speed < lowerGearMax * 0.9f);
-            // Koruma: Hız vitesin minimumunun altına düşerse (Stall protection)
-            boolean engineStallProtect = (speed < minV * 0.95f);
+                // Vites büyütme eğilimi (Histerezis):
+                // Mevcut vitesten memnunsa, çok büyük fark yoksa vites değiştirme
+                float threshold = (g > mCurrentGear) ? 1500f : 800f;
 
-            if (kickdownTrigger || engineStallProtect) {
-                targetGear--;
+                if (diff < bestRpmDiff - threshold) {
+                    bestRpmDiff = diff;
+                    bestGear = g;
+                }
+            }
+
+            if (bestGear != mCurrentGear) {
+                // Vites küçültme (Örn: 3'ten 2'ye): bestGear < mCurrentGear -> RPM artmalı
+                // Vites büyütme (Örn: 3'ten 4'e): bestGear > mCurrentGear -> RPM düşmeli
+                if (bestGear < mCurrentGear) {
+                    mCurrentRpm *= 1.15f; // Ara gazı (Rev-match)
+                } else {
+                    mCurrentRpm *= 0.85f; // Vites yığılması
+                }
+
+                mLastShiftTime = currentTime;
+                mCurrentGear = bestGear;
             }
         }
 
-        mCurrentGear = Math.min(Math.max(1, targetGear), mActiveProfile.gearRanges.length);
+        // 3. ADIM: Mevcut Vitesteki Gerçek RPM'i Hesapla
+        if (mCurrentGear > 0) {
+            float[] finalRange = mActiveProfile.gearRanges[mCurrentGear - 1];
+            float speedRatio = (speed - finalRange[0]) / (finalRange[1] - finalRange[0]);
+            speedRatio = Math.max(0.05f, Math.min(0.95f, speedRatio));
 
-        // --- RPM HESAPLAMA (Daha Kararlı) ---
-        float[] finalRange = mActiveProfile.gearRanges[mCurrentGear - 1];
-        // Hızın vites içindeki yeri (Clamping yapıyoruz ki 1.0'ı geçmesin)
-        float speedRatio = (speed - finalRange[0]) / (finalRange[1] - finalRange[0]);
-        speedRatio = Math.max(0.1f, Math.min(1.0f, speedRatio));
+            // Gaz pedalına göre RPM tavanını esnet (Bağırma hissi)
+            float dynamicMax = mIdleRpm + (targetRpmRange * (0.5f + throttle * 0.5f));
+            float targetRpmFinal = mIdleRpm + (speedRatio * (dynamicMax - mIdleRpm));
 
-        // dynamicMinRpm'i %10'dan az gazda rölantiye yakın tutalım
-        float dynamicMinRpm;
-        if (throttle < 0.10f) {
-            dynamicMinRpm = mIdleRpm; // Gaz yoksa vitesin en düşük devrinde kalsın
-        } else {
-            dynamicMinRpm = mIdleRpm + (throttle * (mMaxRpm * mDriveModeAggressiveness));
+            // Yumuşatma
+            mCurrentRpm = (mCurrentRpm * 0.85f) + (targetRpmFinal * 0.15f);
         }
-
-        // RPM'in çok hızlı düşmesini engellemek için mevcut RPM ile yeni RPM'i hafifçe harmanla (Smoothing)
-        float targetRpm = dynamicMinRpm + (speedRatio * (mMaxRpm - dynamicMinRpm));
-        mCurrentRpm = (mCurrentRpm * 0.8f) + (targetRpm * 0.2f); // %20 yumuşatma
 
         mCurrentRpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
     }
@@ -480,10 +505,20 @@ public class EngineSoundManager {
             // 3. Rölanti ölçeğini uygula
             if (s == mCurrentSamples[0]) shapedVol *= mCurrentIdleVolumeScale;
 
-            // 4. Master Volume uygula ve sınırla (Clamping)
-            float finalVolume = Math.max(0.0f, Math.min(1.0f, shapedVol * masterVol));
+            // 1. YÜK HACMİ (Volume Load):
+            // Gaz bırakıldığında ses tamamen ölmez ama daha derinden gelir.
+            // Gaz %100 olduğunda ise tam kapasite çalar.
+            float loadVolumeFactor = 0.5f + (mSimulatedThrottle * 0.5f);
 
-            float pitch = (s.baseRpm <= 0) ? 1.0f : rpm / s.baseRpm;
+            // 2. YÜK PERDESİ (Pitch Load):
+            // Gaza basıldığında motorun "zorlanma" sesini taklit etmek için
+            // pitch'i çok hafif (maksimum %3) yukarı esnetiyoruz.
+            float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
+
+            // Şimdi bu çarpanı mevcut hesaplamana dahil et:
+            float finalVolume = Math.max(0.0f, Math.min(1.0f, shapedVol * masterVol * loadVolumeFactor));
+            float pitch = (rpm / s.baseRpm) * loadPitchFactor;
+
             pitch = Math.max(0.5f, Math.min(2.0f, pitch));
             if (Float.isNaN(pitch)) pitch = 1.0f;
 
