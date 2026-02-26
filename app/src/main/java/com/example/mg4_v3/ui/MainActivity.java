@@ -957,7 +957,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         } else if (profile.equals("McLaren P1")) {
             mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_MCLAREN_P1());
         } else if (profile.equals("Lamborghini Aventador")) {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_Lamborghini_Aventador());
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_AVENTADOR());
         } else if (profile.equals("BMW Z4")) {
             mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_BMW_Z4());
         } else if (profile.equals("Pagani Zonda R")) {

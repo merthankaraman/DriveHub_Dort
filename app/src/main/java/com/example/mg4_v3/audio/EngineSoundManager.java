@@ -45,6 +45,12 @@ public class EngineSoundManager {
     private float mMaxRpm = 9000f;
     private float mMasterVolume = 0.6f;
 
+    // --- TURBO DEĞİŞKENLERİ ---
+    private int mTurboSoundId = -1;
+    private int mTurboStreamId = -1;
+    private float mCurrentTurboBoost = 0f; // 0.0 - 1.0 arası iç basınç simülasyonu
+    private float mTurboMaxSound = 0.7f;
+
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public static class VehicleProfile {
         public final String name;
@@ -141,7 +147,7 @@ public class EngineSoundManager {
                 R.raw.mclaren_p1_9000
         );
     }
-    public static VehicleProfile PROFILE_Lamborghini_Aventador() {
+    public static VehicleProfile PROFILE_AVENTADOR() {
         return new VehicleProfile("Lamborghini Aventador", 800f, 8000f, 1,
                 new float[][]{
                         {0f, 60f},   // 1. Vites
@@ -236,7 +242,7 @@ public class EngineSoundManager {
         mIsPlaying = true;
         mLoadedSamplesCount = 0;
 
-        int maxStreams = mCurrentSamples.length + 2;
+        int maxStreams = mCurrentSamples.length + 3;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             AudioAttributes attrs = new AudioAttributes.Builder()
@@ -249,6 +255,11 @@ public class EngineSoundManager {
         }
 
         mSoundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
+            if (sampleId == mTurboSoundId) {
+                // Turbo yüklendiğinde sonsuz döngüde ve 0 sesle başlat
+                mTurboStreamId = mSoundPool.play(mTurboSoundId, 0f, 0f, 1, -1, 1.0f);
+                return;
+            }
             mLoadedSamplesCount++;
             if (mLoadedSamplesCount == mCurrentSamples.length && mIsPlaying) {
                 for (EngineSample sample : mCurrentSamples) {
@@ -261,6 +272,7 @@ public class EngineSoundManager {
         for (EngineSample sample : mCurrentSamples) {
             sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
         }
+        mTurboSoundId = mSoundPool.load(mContext, R.raw.turbo, 1);
     }
 
     public void stop() {
@@ -272,6 +284,7 @@ public class EngineSoundManager {
         if (mCurrentSamples != null) {
             for (EngineSample s : mCurrentSamples) s.streamId = -1;
         }
+        mTurboStreamId = -1; // Turbo sıfırla
     }
 
     // ==========================================
@@ -386,6 +399,28 @@ public class EngineSoundManager {
 
         float rpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
         float masterVol = Math.max(0f, Math.min(1.0f, mMasterVolume));
+        float rpmRatio = (rpm - mIdleRpm) / (mMaxRpm - mIdleRpm);
+        rpmRatio = Math.max(0f, Math.min(1f, rpmRatio));
+
+        // --- TURBO HESAPLAMASI (Hızdan Bağımsız, RPM'e Tam Bağımlı) ---
+        if (mTurboStreamId != -1) {
+            float throttle = mSimulatedThrottle;
+
+            // RPM 0.10 oranının altındaysa boost her zaman 0 olur (Fiziksel kural)
+            float boostFactor = (rpmRatio > 0.10f) ? (rpmRatio - 0.10f) * 1.12f : 0f;
+            boostFactor = Math.max(0f, Math.min(1f, boostFactor));
+
+            float targetBoost = throttle * boostFactor;
+
+            // Hız 0 olsa bile bu hesaplama çalışır, rölantide boost 0'a iner
+            mCurrentTurboBoost = (mCurrentTurboBoost * 0.90f) + (targetBoost * 0.10f);
+
+            float turboVol = mCurrentTurboBoost * masterVol * mTurboMaxSound;
+            float turboPitch = 0.8f + (rpmRatio * 1.2f);
+
+            mSoundPool.setVolume(mTurboStreamId, turboVol, turboVol);
+            mSoundPool.setRate(mTurboStreamId, turboPitch);
+        }
 
         if (mCurrentSpeedKmh < 1.0f) {
             for (int i = 0; i < mCurrentSamples.length; i++) {
