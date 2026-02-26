@@ -60,12 +60,14 @@ public class EngineSoundManager {
         public final float idleVolumeScale;
         // Her vitesin hız limitleri: { {vites1Min, vites1Max}, {vites2Min, vites2Max}, ... }
         public final float[][] gearRanges;
+        public final boolean hasTurbo;
 
-        public VehicleProfile(String name, float idleRpm, float maxRpm, float idleVolumeScale, float[][] gearRanges, int... resIds) {
+        public VehicleProfile(String name, float idleRpm, float maxRpm, float idleVolumeScale, boolean hasTurbo, float[][] gearRanges, int... resIds) {
             this.name = name;
             this.idleRpm = idleRpm;
             this.maxRpm = maxRpm;
             this.idleVolumeScale = idleVolumeScale;
+            this.hasTurbo = hasTurbo;
             this.gearRanges = gearRanges;
             this.resIds = resIds;
         }
@@ -112,6 +114,7 @@ public class EngineSoundManager {
     // ==========================================
     public static VehicleProfile PROFILE_LFA() {
         return new VehicleProfile("Lexus LFA", 1000f, 9500f, 1,
+                false,
                 new float[][]{
                         {0f, 60f},   // 1. Vites
                         {40f, 100f},  // 2. Vites
@@ -130,6 +133,7 @@ public class EngineSoundManager {
     }
     public static VehicleProfile PROFILE_MCLAREN_P1() {
         return new VehicleProfile("McLaren P1", 800f, 9000f, 1,
+                true,
                 new float[][]{
                         {0f, 60f},   // 1. Vites
                         {40f, 100f},  // 2. Vites
@@ -148,24 +152,27 @@ public class EngineSoundManager {
         );
     }
     public static VehicleProfile PROFILE_AVENTADOR() {
-        return new VehicleProfile("Lamborghini Aventador", 800f, 8000f, 1,
+        return new VehicleProfile("Lamborghini Aventador", 800f, 8500f, 1,
+                false,
                 new float[][]{
-                        {0f, 60f},   // 1. Vites
-                        {40f, 100f},  // 2. Vites
-                        {70f, 140f},  // 3. Vites
-                        {110f, 190f}, // 4. Vites
-                        {160f, 250f}, // 5. Vites
-                        {220f, 325f}  // 6. Vites
+                        {0f, 75f},    // 1. Vites (V12'de 1. vites uzundur)
+                        {50f, 115f},  // 2. Vites
+                        {90f, 165f},  // 3. Vites
+                        {130f, 220f}, // 4. Vites
+                        {180f, 275f}, // 5. Vites
+                        {240f, 320f}, // 6. Vites
+                        {290f, 355f}  // 7. Vites (ISR Şanzıman)
                 },
                 R.raw.lamborghini_aventador_idle,
-                R.raw.lamborghini_aventador_2000,
-                R.raw.lamborghini_aventador_4000,
-                R.raw.lamborghini_aventador_6000,
-                R.raw.lamborghini_aventador_8000
+                R.raw.lamborghini_aventador_2500,
+                R.raw.lamborghini_aventador_4500,
+                R.raw.lamborghini_aventador_6500,
+                R.raw.lamborghini_aventador_8250
         );
     }
     public static VehicleProfile PROFILE_BMW_Z4() {
         return new VehicleProfile("BMW Z4", 800f, 6836, 1,
+                true,
                 new float[][]{
                         {0f, 60f},   // 1. Vites
                         {40f, 100f},  // 2. Vites
@@ -184,6 +191,7 @@ public class EngineSoundManager {
     }
     public static VehicleProfile PROFILE_ZONDA_R() {
         return new VehicleProfile("Pagani Zonda R", 1000f, 8250, 1,
+                false,
                 new float[][]{
                         {0f, 60f},   // 1. Vites
                         {40f, 100f},  // 2. Vites
@@ -404,22 +412,27 @@ public class EngineSoundManager {
 
         // --- TURBO HESAPLAMASI (Hızdan Bağımsız, RPM'e Tam Bağımlı) ---
         if (mTurboStreamId != -1) {
-            float throttle = mSimulatedThrottle;
+            if (mActiveProfile == null || !mActiveProfile.hasTurbo) {
+                mSoundPool.setVolume(mTurboStreamId, 0f, 0f);
+                mCurrentTurboBoost = 0f;
+            } else {
+                float throttle = mSimulatedThrottle;
 
-            // RPM 0.10 oranının altındaysa boost her zaman 0 olur (Fiziksel kural)
-            float boostFactor = (rpmRatio > 0.10f) ? (rpmRatio - 0.10f) * 1.12f : 0f;
-            boostFactor = Math.max(0f, Math.min(1f, boostFactor));
+                // RPM 0.10 oranının altındaysa boost her zaman 0 olur (Fiziksel kural)
+                float boostFactor = (rpmRatio > 0.10f) ? (rpmRatio - 0.10f) * 1.12f : 0f;
+                boostFactor = Math.max(0f, Math.min(1f, boostFactor));
 
-            float targetBoost = throttle * boostFactor;
+                float targetBoost = throttle * boostFactor;
 
-            // Hız 0 olsa bile bu hesaplama çalışır, rölantide boost 0'a iner
-            mCurrentTurboBoost = (mCurrentTurboBoost * 0.90f) + (targetBoost * 0.10f);
+                // Hız 0 olsa bile bu hesaplama çalışır, rölantide boost 0'a iner
+                mCurrentTurboBoost = (mCurrentTurboBoost * 0.90f) + (targetBoost * 0.10f);
 
-            float turboVol = mCurrentTurboBoost * masterVol * mTurboMaxSound;
-            float turboPitch = 0.8f + (rpmRatio * 1.2f);
+                float turboVol = mCurrentTurboBoost * masterVol * mTurboMaxSound;
+                float turboPitch = 0.8f + (rpmRatio * 1.2f);
 
-            mSoundPool.setVolume(mTurboStreamId, turboVol, turboVol);
-            mSoundPool.setRate(mTurboStreamId, turboPitch);
+                mSoundPool.setVolume(mTurboStreamId, turboVol, turboVol);
+                mSoundPool.setRate(mTurboStreamId, turboPitch);
+            }
         }
 
         if (mCurrentSpeedKmh < 1.0f) {
