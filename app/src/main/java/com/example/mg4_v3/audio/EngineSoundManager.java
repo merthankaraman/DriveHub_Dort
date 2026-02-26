@@ -49,7 +49,8 @@ public class EngineSoundManager {
     private float mMasterVolume = 0.6f;
     private int mGearWhineSoundId = -1;
     private int mGearWhineStreamId = -1;
-    private float mGearWhineMaxVol = 0.25f; // Çok baskın olmamalı, alttan gelmeli
+    private float mGearWhineMaxVol = 0.05f;
+    private float mWhineMaxSpeed = 200;
 
     // --- TURBO DEĞİŞKENLERİ ---
     private int mTurboSoundId = -1;
@@ -142,13 +143,11 @@ public class EngineSoundManager {
         return mCurrentGear;
     }
 
-    private static final float VIRTUAL_GEAR_HYSTERESIS_KMH = 4f;
-
     // ==========================================
     // HAZIR ARAÇ TANIMLARI (STATİK)
     // ==========================================
     public static VehicleProfile PROFILE_LFA() {
-        return new VehicleProfile("Lexus LFA", 1000f, 9500f, 1,
+        return new VehicleProfile("Lexus LFA", 1000f, 8300f, 1,
                 false,
                 new float[][]{
                         {0f, 30f},
@@ -162,10 +161,10 @@ public class EngineSoundManager {
                 },
                 R.raw.lfa_idle,
                 R.raw.lfa_3784,
+                R.raw.lfa_5333,
                 R.raw.lfa_6301,
                 R.raw.lfa_7076,
-                R.raw.lfa_8135,
-                R.raw.lfa_5333
+                R.raw.lfa_8135
         );
     }
     public static VehicleProfile PROFILE_MCLAREN_P1() {
@@ -329,7 +328,7 @@ public class EngineSoundManager {
             sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
         }
         mTurboSoundId = mSoundPool.load(mContext, R.raw.turbo, 1);
-        mGearWhineSoundId = mSoundPool.load(mContext, R.raw.sin5, 1);
+        mGearWhineSoundId = mSoundPool.load(mContext, R.raw.transmission, 1);
 
         // OnLoadCompleteListener içinde turbo gibi başlat:
     }
@@ -596,15 +595,11 @@ public class EngineSoundManager {
             mSoundPool.setRate(s.streamId, pitch);
         }
         if (mGearWhineStreamId != -1 && mGearWhineEnabled) {
-            // Hız 0 ise ses kapalı, 170 km/h (veya max) ise tam hacim
-            float speedRatio = mCurrentSpeedKmh / 170f; // Aracının max hızı 170 demiştin
+            float speedRatio = mCurrentSpeedKmh / mWhineMaxSpeed;
             speedRatio = Math.max(0f, Math.min(1f, speedRatio));
 
             // Ses seviyesi: Hızlandıkça artar, master volume ile çarpılır
             float whineVol = speedRatio * masterVol * mGearWhineMaxVol;
-
-            // PERDE (Pitch): Hızlandıkça ıslık tizleşir.
-            // 0.5f (kalın) başlar, hızlandıkça 2.0f (çok tiz) seviyesine çıkar.
             float whinePitch = 0.5f + (speedRatio * 1.5f);
 
             mSoundPool.setVolume(mGearWhineStreamId, whineVol, whineVol);
