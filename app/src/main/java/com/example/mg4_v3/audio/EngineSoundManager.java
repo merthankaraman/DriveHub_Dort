@@ -123,7 +123,7 @@ public class EngineSoundManager {
         );
     }
     public static VehicleProfile PROFILE_MCLAREN_P1() {
-        return new VehicleProfile("McLaren P1", 800f, 6000f, 1,
+        return new VehicleProfile("McLaren P1", 800f, 9000f, 1,
                 new float[][]{
                         {0f, 60f},   // 1. Vites
                         {40f, 100f},  // 2. Vites
@@ -133,10 +133,12 @@ public class EngineSoundManager {
                         {220f, 325f}  // 6. Vites
                 },
                 R.raw.mclaren_p1_idle,
-                R.raw.mclaren_p1_2000,
-                R.raw.mclaren_p1_4000,
-                R.raw.mclaren_p1_5000,
-                R.raw.mclaren_p1_6000
+                R.raw.mclaren_p1_1750,
+                R.raw.mclaren_p1_2750,
+                R.raw.mclaren_p1_4500,
+                R.raw.mclaren_p1_6000,
+                R.raw.mclaren_p1_7500,
+                R.raw.mclaren_p1_9000
         );
     }
     public static VehicleProfile PROFILE_Lamborghini_Aventador() {
