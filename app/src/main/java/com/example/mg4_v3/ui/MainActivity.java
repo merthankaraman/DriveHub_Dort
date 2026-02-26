@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvGaugeRpm;
     private TextView mTvGaugeSpeed;
     private TextView mTvGaugeGear;
+    private TextView mTvGaugePower;
     private TextView mTvGaugeThrottle;
     private TextView mTvMotorState;
     
@@ -156,6 +157,16 @@ public class MainActivity extends AppCompatActivity {
                 if (mTvGaugeGear != null) {
                     mTvGaugeGear.setText("A" + mEngineSound.getCurrentGear());
                 }
+                if (mTvGaugePower != null) {
+                    float dcVolt = MG4Hardware.getDcVoltage();
+                    float dcAmpAct = MG4Hardware.getDcCurrentActual();
+                    float kw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? Float.NaN : (dcVolt * dcAmpAct) / 1000f;
+                    if (Float.isNaN(kw)) {
+                        mTvGaugePower.setText("0.0");
+                    } else {
+                        mTvGaugePower.setText(String.format("%.2f", kw));
+                    }
+                }
                 if (mTvGaugeThrottle != null) {
                     float throttle = mEngineSound.getSimulatedThrottle();
                     int pct = Math.round(throttle * 100f);
@@ -217,6 +228,7 @@ public class MainActivity extends AppCompatActivity {
         mTvGaugeRpm = findViewById(R.id.tvGaugeRpm);
         mTvGaugeSpeed = findViewById(R.id.tvGaugeSpeed);
         mTvGaugeGear = findViewById(R.id.tvGaugeGear);
+        mTvGaugePower = findViewById(R.id.tvGaugePower);
         mTvGaugeThrottle = findViewById(R.id.tvGaugeThrottle);
         mTvMotorState = findViewById(R.id.tvMotorState);
         

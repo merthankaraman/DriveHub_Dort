@@ -793,7 +793,7 @@
                     android:textColor="@color/status_value"
                     android:textSize="15sp" />
 
-                <!-- 4 kadran: RPM | Vites | Hız | Pedal (eşit genişlik, eşit aralık) -->
+                <!-- 5 kadran: RPM | Vites | Hız | Güç | Pedal -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -874,6 +874,32 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="monospace"
                             android:text="0"
+                            android:textColor="@color/status_value"
+                            android:textSize="26sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="6dp"
+                            android:text="GÜÇ (kW)"
+                            android:textColor="@color/status_value"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvGaugePower"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="monospace"
+                            android:text="0.0"
                             android:textColor="@color/status_value"
                             android:textSize="26sp" />
                     </LinearLayout>

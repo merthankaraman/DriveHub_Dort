@@ -10,6 +10,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.mg4_v3.R;
+import com.example.mg4_v3.hardware.MG4Hardware;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,9 @@ public class EngineSoundManager {
     private static final long MIXER_UPDATE_INTERVAL_MS = 16; // 60Hz güncelleme hızı
 
     private float mCurrentSpeedKmh = 0f;
-    private float mSimulatedThrottle = 0f;
+    private float mSimulatedThrottle = 0f; // 0–1
+    private float mMotorMaxPower = 130f;   // kW, pedal oranına map için üst sınır
+    private float mCurrentDcPowerKw = 0f;  // (dcVolt * dcAmpAct) / 1000f
     private boolean mUseManualThrottle = false; // Sim panelinden gaz verildiğinde true
     private int mCurrentGear = 0;
     private float mCurrentRpm = 1000f;
@@ -52,6 +55,8 @@ public class EngineSoundManager {
     private float mTurboMaxSound = 0.7f;
     private long mLastShiftTime = 0;
     private static final long MIN_SHIFT_INTERVAL_MS = 1000; // 1 saniye vites değiştirme yasağı
+    private boolean mEnableRevMatch = true; // Varsayılan olarak açık
+    private float mRevMatchBoost = 0f;
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public static class VehicleProfile {
@@ -337,7 +342,11 @@ public class EngineSoundManager {
 
         mCurrentSpeedKmh = (Float.isNaN(speedKmh) || speedKmh < 0f) ? 0f : speedKmh;
         if (!mUseManualThrottle) {
-            mSimulatedThrottle = 0.5f;
+            float dcVolt = MG4Hardware.getDcVoltage();
+            float dcAmpAct = MG4Hardware.getDcCurrentActual();
+            mCurrentDcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
+            mCurrentDcPowerKw = mCurrentDcPowerKw < 5f ? 0f : mCurrentDcPowerKw;
+            mSimulatedThrottle = Math.min(1f,(Math.max(0f,(mCurrentDcPowerKw / mMotorMaxPower))));
         }
 
         updateGearAndRpm();
@@ -361,7 +370,8 @@ public class EngineSoundManager {
         // Gaz %50 ise -> 5000 RPM civarı (Orta/Canlı)
         // Gaz %100 ise -> 9000 RPM (Maksimum Güç)
         float targetRpmRange = mMaxRpm - mIdleRpm;
-        float desiredRpm = mIdleRpm + (targetRpmRange * (0.3f + (throttle * 0.7f) * mDriveModeAggressiveness * 1.2f));
+        float baseTarget = 1500f + (mDriveModeAggressiveness * 3500f);
+        float desiredRpm = baseTarget + (throttle * (mMaxRpm - baseTarget));
         desiredRpm = Math.max(mIdleRpm, Math.min(mMaxRpm, desiredRpm));
 
         // 2. ADIM: Vites Kararı (Sadece 1 saniyede bir karar verir)
@@ -374,7 +384,7 @@ public class EngineSoundManager {
                 float[] range = mActiveProfile.gearRanges[g - 1];
 
                 // Eğer hız bu vitesin limitleri dışındaysa bu vitesi geç (Toleranslı)
-                if (speed < range[0] * 0.8f || speed > range[1] * 1.1f) continue;
+                if (speed < range[0] * 1.2f || speed > range[1] * 1.05f) continue;
 
                 // Bu vitesteki tahmini devri hesapla
                 float ratio = (speed - range[0]) / (range[1] - range[0]);
@@ -384,7 +394,7 @@ public class EngineSoundManager {
 
                 // Vites büyütme eğilimi (Histerezis):
                 // Mevcut vitesten memnunsa, çok büyük fark yoksa vites değiştirme
-                float threshold = (g > mCurrentGear) ? 1500f : 800f;
+                float threshold = (g > mCurrentGear) ? (1000f + mDriveModeAggressiveness * 6000f) : 800f;
 
                 if (diff < bestRpmDiff - threshold) {
                     bestRpmDiff = diff;
@@ -393,12 +403,25 @@ public class EngineSoundManager {
             }
 
             if (bestGear != mCurrentGear) {
-                // Vites küçültme (Örn: 3'ten 2'ye): bestGear < mCurrentGear -> RPM artmalı
-                // Vites büyütme (Örn: 3'ten 4'e): bestGear > mCurrentGear -> RPM düşmeli
+                // --- VİTES KÜÇÜLTME (Downshift) ---
                 if (bestGear < mCurrentGear) {
-                    mCurrentRpm *= 1.15f; // Ara gazı (Rev-match)
-                } else {
-                    mCurrentRpm *= 0.85f; // Vites yığılması
+                    if (mEnableRevMatch) {
+                        // Ara gazı (Blip): Devri anlık fırlat
+                        mRevMatchBoost = mMaxRpm * 0.15f;
+
+                        // Kesici koruması
+                        if (mCurrentRpm + mRevMatchBoost > mMaxRpm) {
+                            mRevMatchBoost = mMaxRpm - mCurrentRpm;
+                        }
+                    } else {
+                        // Rev-match kapalıysa sadece normal vites küçültme artışı yap
+                        mCurrentRpm *= 1.10f;
+                    }
+                }
+                // --- VİTES BÜYÜTME (Upshift) ---
+                else {
+                    mRevMatchBoost = 0;
+                    mCurrentRpm *= 0.88f;
                 }
 
                 mLastShiftTime = currentTime;
@@ -412,12 +435,20 @@ public class EngineSoundManager {
             float speedRatio = (speed - finalRange[0]) / (finalRange[1] - finalRange[0]);
             speedRatio = Math.max(0.05f, Math.min(0.95f, speedRatio));
 
-            // Gaz pedalına göre RPM tavanını esnet (Bağırma hissi)
             float dynamicMax = mIdleRpm + (targetRpmRange * (0.5f + throttle * 0.5f));
             float targetRpmFinal = mIdleRpm + (speedRatio * (dynamicMax - mIdleRpm));
 
-            // Yumuşatma
+            // 1. Önce ara gazı sıçramasını (boost) sönümlendir
+            mRevMatchBoost *= 0.85f;
+            if (mRevMatchBoost < 5f) mRevMatchBoost = 0;
+
+            // 2. RPM Yumuşatması (Normal motor karakteri)
             mCurrentRpm = (mCurrentRpm * 0.85f) + (targetRpmFinal * 0.15f);
+
+            // 3. Ara gazı etkisini final RPM'e ekle (Eğer açıksa)
+            if (mEnableRevMatch && mRevMatchBoost > 0) {
+                mCurrentRpm += mRevMatchBoost;
+            }
         }
 
         mCurrentRpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
@@ -515,8 +546,9 @@ public class EngineSoundManager {
             // pitch'i çok hafif (maksimum %3) yukarı esnetiyoruz.
             float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
 
-            // Şimdi bu çarpanı mevcut hesaplamana dahil et:
-            float finalVolume = Math.max(0.0f, Math.min(1.0f, shapedVol * masterVol * loadVolumeFactor));
+            // Sport modunda motor sesi %20 daha yüksek ve ham gelir
+            float modeVolumeBoost = (mDriveModeAggressiveness > 0.5f) ? 1.2f : 1.0f;
+            float finalVolume = Math.max(0.0f, Math.min(1.0f, shapedVol * masterVol * loadVolumeFactor * modeVolumeBoost));
             float pitch = (rpm / s.baseRpm) * loadPitchFactor;
 
             pitch = Math.max(0.5f, Math.min(2.0f, pitch));
