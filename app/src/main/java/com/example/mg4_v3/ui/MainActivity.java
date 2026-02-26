@@ -351,10 +351,9 @@ public class MainActivity extends AppCompatActivity {
             updateSoundToggleButton();
         });
 
-        // Araç sesi profili seçimi (McLaren / LFA / Agera) — son konumu hatırla
         if (mBtnSoundProfile != null) {
             mBtnSoundProfile.setOnClickListener(v -> showSoundProfileDialog());
-            String savedSoundProfile = prefsSound.getString(PREF_SOUND_PROFILE, "LFA");
+            String savedSoundProfile = prefsSound.getString(PREF_SOUND_PROFILE, "McLaren P1");
             mBtnSoundProfile.setText("Araç Sesi: " + savedSoundProfile);
             onSoundProfileSelected(savedSoundProfile);
         }
@@ -1014,7 +1013,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void showSoundProfileDialog() {
-        final String[] options = {"McLaren P1", "LFA", "Lamborghini Aventador", "BMW Z4", "Pagani Zonda R"};
+        final String[] options = {"McLaren P1", "LFA", "Lamborghini Aventador", "BMW Z4", "Pagani Zonda R", "Lotus Exige"};
 
         new AlertDialog.Builder(this)
                 .setTitle("Araç Sesi Profili")
@@ -1041,6 +1040,8 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_BMW_Z4());
         } else if (profile.equals("Pagani Zonda R")) {
             mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_ZONDA_R());
+        } else if (profile.equals("Lotus Exige")) {
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LOTUS_EXIGE());
         }
         else mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_MCLAREN_P1());
     }

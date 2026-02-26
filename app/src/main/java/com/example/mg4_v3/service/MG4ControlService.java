@@ -167,6 +167,8 @@ public class MG4ControlService extends Service {
             mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_BMW_Z4());
         } else if ("Pagani Zonda R".equals(profile)) {
             mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_ZONDA_R());
+        } else if ("Lotus Exige".equals(profile)) {
+            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LOTUS_EXIGE());
         } else {
             mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_MCLAREN_P1());
         }
