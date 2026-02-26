@@ -179,15 +179,16 @@ public class MainActivity extends AppCompatActivity {
             if (mTvMotorState != null) {
                 mTvMotorState.setText(ready ? "Motor durumu: READY" : "Motor durumu: Kapalı");
             }
-            // Yapay motor sesi:
-            // - Gerçek araçta: MG4ControlService'in mSoundRunnable'ı yönetiyor
-            // - Simülasyon modunda (mSimSpeedActive): Activity tarafı EngineSoundManager'ı beslesin
+            // Kadranlar (RPM, vites, pedal) güncel kalsın diye EngineSoundManager her zaman hız ile beslenir
+            if (mEngineSound != null) {
+                mEngineSound.onSpeedChanged(speed);
+            }
+            // Ses çalma: sadece ses açıksa ve (READY veya sim) ise start, değilse stop
             if (mEngineSound != null && mSimSpeedActive) {
                 if (mSoundEnabled) {
                     if (!mEngineSound.isPlaying()) {
                         mEngineSound.start();
                     }
-                    mEngineSound.onSpeedChanged(speed);
                 } else {
                     if (mEngineSound.isPlaying()) {
                         mEngineSound.stop();

@@ -49,7 +49,7 @@ public class EngineSoundManager {
     private float mMasterVolume = 0.6f;
     private int mGearWhineSoundId = -1;
     private int mGearWhineStreamId = -1;
-    private float mGearWhineMaxVol = 0.05f;
+    private float mGearWhineMaxVol = 0.15f;
     private float mWhineMaxSpeed = 200;
 
     // --- TURBO DEĞİŞKENLERİ ---
