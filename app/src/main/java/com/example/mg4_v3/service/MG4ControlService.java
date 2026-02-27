@@ -162,36 +162,8 @@ public class MG4ControlService extends Service {
             Log.i(TAG, "EngineSound: service içinde init ediliyor");
         }
         mEngineSound = EngineSoundManager.getInstance(this);
-
-        // Ses profili (araç sesi)
-        String profile = prefs.getString("sound_profile", "McLaren P1");
-        if ("LFA".equals(profile)) {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LFA());
-        } else if ("McLaren P1".equals(profile)) {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_MCLAREN_P1());
-        } else if ("Lamborghini Aventador".equals(profile)) {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_AVENTADOR());
-        } else if ("BMW Z4".equals(profile)) {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_BMW_Z4());
-        } else if ("Pagani Zonda R".equals(profile)) {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_ZONDA_R());
-        } else if ("Lotus Exige".equals(profile)) {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LOTUS_EXIGE());
-        } else {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_MCLAREN_P1());
-        }
-
-        // Şanzıman karakteri (Eco / Normal / Sport)
-        String charStr = prefs.getString("sound_character", "NORMAL");
-        float agg = 0.4f;
-        if ("ECO".equals(charStr)) agg = 0.25f;
-        else if ("SPORT".equals(charStr)) agg = 0.7f;
-        mEngineSound.setDriveModeAggressiveness(agg);
-
-        // Master volume
-        int master = prefs.getInt("sound_master", 60);
-        float masterClamped = Math.max(0, Math.min(100, master)) / 100f;
-        mEngineSound.setMasterVolume(masterClamped);
+        // Tüm ses ayarlarını (profil, karakter, master) EngineSoundManager yönetsin
+        mEngineSound.initFromPreferences(this);
 
         // Hız / READY durumuna göre sesi arka planda yönet.
         // Gerçek araçta servis döngüsü aktif olsun; emülatörde (sdk_gphone / emu64xa) sadece Activity simülasyonu kullansın.

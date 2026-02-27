@@ -356,7 +356,8 @@ public class MainActivity extends AppCompatActivity {
             mBtnSoundProfile.setOnClickListener(v -> showSoundProfileDialog());
             String savedSoundProfile = prefsSound.getString(PREF_SOUND_PROFILE, "McLaren P1");
             mBtnSoundProfile.setText("Araç Sesi: " + savedSoundProfile);
-            onSoundProfileSelected(savedSoundProfile);
+            // EngineSoundManager tek kaynak olsun
+            mEngineSound.applyProfileLabel(savedSoundProfile);
         }
 
         // Devir eşleme toggle (hafızalı)
@@ -1024,28 +1025,13 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
                     if (mBtnSoundProfile != null) {
                         mBtnSoundProfile.setText("Araç Sesi: " + label);
                     }
-                    onSoundProfileSelected(label);
+                    // Profil eşlemesini EngineSoundManager yönetsin
+                    mEngineSound.applyProfileLabel(label);
                 })
                 .show();
     }
 
-    private void onSoundProfileSelected(String profile) {
-        //mEngineSound = EngineSoundManager.getInstance(this);
-        if (profile.equals("LFA")){
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LFA());
-        } else if (profile.equals("McLaren P1")) {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_MCLAREN_P1());
-        } else if (profile.equals("Lamborghini Aventador")) {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_AVENTADOR());
-        } else if (profile.equals("BMW Z4")) {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_BMW_Z4());
-        } else if (profile.equals("Pagani Zonda R")) {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_ZONDA_R());
-        } else if (profile.equals("Lotus Exige")) {
-            mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_LOTUS_EXIGE());
-        }
-        else mEngineSound.setVehicleProfile(EngineSoundManager.PROFILE_MCLAREN_P1());
-    }
+    // Profil seçimi artık EngineSoundManager.applyProfileLabel içinde yönetiliyor.
 
     /** Tema modunu kaydet, uygula ve ekranı yenile (Gündüz / Gece / Oto). */
     private void applyThemeMode(int mode) {

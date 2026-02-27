@@ -101,6 +101,53 @@ public class EngineSoundManager {
         mMasterVolume = Math.max(0f, Math.min(1f, volume01));
     }
 
+    /**
+     * SharedPreferences içinden ses profilini, şanzıman karakterini ve master volume'ü yükler.
+     * Böylece profil eşleme mantığı tek yerde tutulur.
+     */
+    public void initFromPreferences(Context context) {
+        android.content.SharedPreferences prefs =
+                context.getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
+
+        // Ses profili (araç sesi)
+        String profile = prefs.getString("sound_profile", "McLaren P1");
+        applyProfileLabel(profile);
+
+        // Şanzıman karakteri (Eco / Normal / Sport)
+        String charStr = prefs.getString("sound_character", "NORMAL");
+        float agg = 0.4f;
+        if ("ECO".equals(charStr)) agg = 0.25f;
+        else if ("SPORT".equals(charStr)) agg = 0.7f;
+        setDriveModeAggressiveness(agg);
+
+        // Master volume
+        int master = prefs.getInt("sound_master", 60);
+        float masterClamped = Math.max(0, Math.min(100, master)) / 100f;
+        setMasterVolume(masterClamped);
+    }
+
+    /**
+     * Verilen profil etiketine göre uygun VehicleProfile'ı seçer.
+     * Activity ve Service tarafı aynı mapping'i paylaşsın diye burada tutuluyor.
+     */
+    public void applyProfileLabel(String profile) {
+        if ("LFA".equals(profile)) {
+            setVehicleProfile(PROFILE_LFA());
+        } else if ("McLaren P1".equals(profile)) {
+            setVehicleProfile(PROFILE_MCLAREN_P1());
+        } else if ("Lamborghini Aventador".equals(profile)) {
+            setVehicleProfile(PROFILE_AVENTADOR());
+        } else if ("BMW Z4".equals(profile)) {
+            setVehicleProfile(PROFILE_BMW_Z4());
+        } else if ("Pagani Zonda R".equals(profile)) {
+            setVehicleProfile(PROFILE_ZONDA_R());
+        } else if ("Lotus Exige".equals(profile)) {
+            setVehicleProfile(PROFILE_LOTUS_EXIGE());
+        } else {
+            setVehicleProfile(PROFILE_MCLAREN_P1());
+        }
+    }
+
     /** Ses karakteri: Eco=0.25, Normal=0.4, Sport=0.7 (vites devir davranışı). */
     public void setDriveModeAggressiveness(float aggressiveness01) {
         mDriveModeAggressiveness = Math.max(0f, Math.min(1f, aggressiveness01));
