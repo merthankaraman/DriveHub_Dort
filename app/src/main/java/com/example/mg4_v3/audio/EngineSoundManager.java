@@ -300,7 +300,9 @@ public class EngineSoundManager {
         this.mCurrentIdleVolumeScale = profile.idleVolumeScale;
         this.mCurrentSamples = buildSamples(profile.resIds);
 
-        Log.i(TAG, "Profil yüklendi: " + profile.name);
+        if (MG4Hardware.isLogEnabled()) {
+            Log.i(TAG, "Profil yüklendi: " + profile.name);
+        }
         mCurrentGear = 0; // Vitesi rölantiye çek
         if (wasPlaying) start();
     }

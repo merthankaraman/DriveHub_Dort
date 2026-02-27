@@ -128,16 +128,20 @@ public class MG4ControlService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.i(TAG, "=== onCreate başladı ===");
-        Log.i(TAG, "  Android SDK: " + android.os.Build.VERSION.SDK_INT
-                + " (" + android.os.Build.VERSION.RELEASE + ")");
-        Log.i(TAG, "  Cihaz: " + android.os.Build.MODEL + " / " + android.os.Build.DEVICE);
+        if (MG4Hardware.isLogEnabled()) {
+            Log.i(TAG, "=== onCreate başladı ===");
+            Log.i(TAG, "  Android SDK: " + android.os.Build.VERSION.SDK_INT
+                    + " (" + android.os.Build.VERSION.RELEASE + ")");
+            Log.i(TAG, "  Cihaz: " + android.os.Build.MODEL + " / " + android.os.Build.DEVICE);
+        }
 
         createNotificationChannel();
         startForeground(NOTIF_ID, buildNotification("Başlatılıyor..."));
 
         MG4Hardware.init(this);
-        Log.i(TAG, "MG4Hardware.init() çağrıldı");
+        if (MG4Hardware.isLogEnabled()) {
+            Log.i(TAG, "MG4Hardware.init() çağrıldı");
+        }
 
         updateNotification("Bağlanıyor...");
         registerHardkeyReceiver();
@@ -147,12 +151,16 @@ public class MG4ControlService extends Service {
         if (overlayEnabled) {
             showOverlay();
         } else {
-            Log.i(TAG, "Overlay kullanıcı ayarı nedeniyle kapalı (overlay_enabled=false)");
+            if (MG4Hardware.isLogEnabled()) {
+                Log.i(TAG, "Overlay kullanıcı ayarı nedeniyle kapalı (overlay_enabled=false)");
+            }
         }
 
         // EngineSoundManager'ı her durumda servis tarafında başlat.
         // Sesin açık/kapalı olması her 100 ms'de PREF_SOUND_ENABLED'den okunuyor.
-        Log.i(TAG, "EngineSound: service içinde init ediliyor");
+        if (MG4Hardware.isLogEnabled()) {
+            Log.i(TAG, "EngineSound: service içinde init ediliyor");
+        }
         mEngineSound = EngineSoundManager.getInstance(this);
 
         // Ses profili (araç sesi)
@@ -192,10 +200,14 @@ public class MG4ControlService extends Service {
         if (!isEmulator) {
             mSoundHandler.post(mSoundRunnable);
         } else {
-            Log.i(TAG, "EngineSound: emulator tespit edildi (" + device + "), servis ses döngüsü devre dışı. Simülasyon sadece Activity tarafında çalışacak.");
+            if (MG4Hardware.isLogEnabled()) {
+                Log.i(TAG, "EngineSound: emulator tespit edildi (" + device + "), servis ses döngüsü devre dışı. Simülasyon sadece Activity tarafında çalışacak.");
+            }
         }
 
-        Log.i(TAG, "=== onCreate tamamlandı ===");
+        if (MG4Hardware.isLogEnabled()) {
+            Log.i(TAG, "=== onCreate tamamlandı ===");
+        }
     }
 
     @Override
@@ -294,8 +306,10 @@ public class MG4ControlService extends Service {
             // CarHvacManager callback'ini kayıt et
             MG4Hardware.setHvacListener(mHvacListener);
 
-            Log.i(TAG, "Overlay eklendi — sol x=" + (-OVERLAY_OFFSET_PX)
-                    + "  sağ x=+" + OVERLAY_OFFSET_PX);
+            if (MG4Hardware.isLogEnabled()) {
+                Log.i(TAG, "Overlay eklendi — sol x=" + (-OVERLAY_OFFSET_PX)
+                        + "  sağ x=+" + OVERLAY_OFFSET_PX);
+            }
         } catch (Exception e) {
             Log.e(TAG, "Overlay eklenemedi: " + e.getMessage());
         }
@@ -479,7 +493,9 @@ public class MG4ControlService extends Service {
                     for (String key : extras.keySet()) {
                         sb.append("[").append(key).append("=").append(extras.get(key)).append("] ");
                     }
-                    Log.i(TAG, sb.toString());
+                    if (MG4Hardware.isLogEnabled()) {
+                        Log.i(TAG, sb.toString());
+                    }
                 }
 
                 // Logcat'te doğrulanan gerçek key adları (1902260031.txt):
@@ -496,10 +512,12 @@ public class MG4ControlService extends Service {
                 boolean isLong = intent.getBooleanExtra("android.intent.extra.hardkey.longpress", false);
                 if (!isLong) isLong = intent.getBooleanExtra("longpress", false);
 
-                Log.i(TAG, "HARDKEY >>> keycode=" + keyCode
-                        + " down=" + isDown
-                        + " longpress=" + isLong
-                        + " label=" + keycodeLabel(keyCode));
+                if (MG4Hardware.isLogEnabled()) {
+                    Log.i(TAG, "HARDKEY >>> keycode=" + keyCode
+                            + " down=" + isDown
+                            + " longpress=" + isLong
+                            + " label=" + keycodeLabel(keyCode));
+                }
 
                 if (keyCode == KEYCODE_STAR) {
                     // ★ tuşu: hem down hem up olayını işle (basış süresi ölçümü için)
@@ -518,10 +536,12 @@ public class MG4ControlService extends Service {
         IntentFilter filter = new IntentFilter(HARDKEY_ACTION);
         ContextCompat.registerReceiver(this, mHardkeyReceiver, filter,
                 ContextCompat.RECEIVER_EXPORTED);
-        Log.i(TAG, "Hardkey receiver kayıt edildi — action=" + HARDKEY_ACTION);
-        Log.i(TAG, "  ★ kısa (keycode=17)      → Tek Pedal açıksa KAPAT");
-        Log.i(TAG, "  ★ uzun ≥2sn (keycode=17) → Tek Pedal AÇ");
-        Log.i(TAG, "  Vol↑+Vol↓ combo (300ms)  → müzik pause/play");
+        if (MG4Hardware.isLogEnabled()) {
+            Log.i(TAG, "Hardkey receiver kayıt edildi — action=" + HARDKEY_ACTION);
+            Log.i(TAG, "  ★ kısa (keycode=17)      → Tek Pedal açıksa KAPAT");
+            Log.i(TAG, "  ★ uzun ≥2sn (keycode=17) → Tek Pedal AÇ");
+            Log.i(TAG, "  Vol↑+Vol↓ combo (300ms)  → müzik pause/play");
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -540,18 +560,24 @@ public class MG4ControlService extends Service {
 
             new Thread(() -> {
                 long startTime = System.currentTimeMillis();
-                Log.i(TAG, "★ Tuş basılı tutuluyor, süre ölçülüyor...");
+                if (MG4Hardware.isLogEnabled()) {
+                    Log.i(TAG, "★ Tuş basılı tutuluyor, süre ölçülüyor...");
+                }
 
                 while (mStarPressed) {
                     long duration = System.currentTimeMillis() - startTime;
 
                     // 1. Durum: Belirlediğin süreyi geçti mi? (Parmağını çekmeni beklemez)
                     if (duration >= STAR_LONG_PRESS_MS) {
-                        Log.i(TAG, "★ EŞİK AŞILDI! (" + duration + "ms) -> Tek Pedal AÇILIYOR");
+                        if (MG4Hardware.isLogEnabled()) {
+                            Log.i(TAG, "★ EŞİK AŞILDI! (" + duration + "ms) -> Tek Pedal AÇILIYOR");
+                        }
 
                         MG4Hardware.setOnePedal(true);
                         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                            Log.i(TAG, "★ Tek Pedal TAKVİYE gönderildi");
+                            if (MG4Hardware.isLogEnabled()) {
+                                Log.i(TAG, "★ Tek Pedal TAKVİYE gönderildi");
+                            }
                             MG4Hardware.setOnePedal(true);
                         }, 250);
                         updateNotification("Tek Pedal: Açık");
@@ -569,7 +595,9 @@ public class MG4ControlService extends Service {
             if (mStarPressed) {
                 mStarPressed = false; // Döngüyü kırar
 
-                Log.i(TAG, "★ Tuş erken bırakıldı -> Kısa basış (Kapatma) işlemi");
+                if (MG4Hardware.isLogEnabled()) {
+                    Log.i(TAG, "★ Tuş erken bırakıldı -> Kısa basış (Kapatma) işlemi");
+                }
                 if (MG4Hardware.getOnePedal() == 1) {
                     MG4Hardware.setOnePedal(false);
                     updateNotification("Tek Pedal: Kapalı");
@@ -603,7 +631,9 @@ public class MG4ControlService extends Service {
     private void checkCombo() {
         long gap = Math.abs(mVolUpDownTime - mVolDownDownTime);
         if (mVolUpDownTime > 0 && mVolDownDownTime > 0 && gap <= COMBO_WINDOW_MS) {
-            Log.i(TAG, "Vol↑+Vol↓ COMBO tetiklendi (gap=" + gap + "ms) → toggleMusicPlayback");
+            if (MG4Hardware.isLogEnabled()) {
+                Log.i(TAG, "Vol↑+Vol↓ COMBO tetiklendi (gap=" + gap + "ms) → toggleMusicPlayback");
+            }
             mVolUpDownTime   = 0;
             mVolDownDownTime = 0;
             toggleMusicPlayback();
@@ -627,26 +657,34 @@ public class MG4ControlService extends Service {
         try {
             List<MediaController> controllers = msm.getActiveSessions(null);
             if (!controllers.isEmpty()) {
-                Log.i(TAG, "MEDIA: getActiveSessions(null) → " + controllers.size()
-                        + " oturum bulundu");
+                if (MG4Hardware.isLogEnabled()) {
+                    Log.i(TAG, "MEDIA: getActiveSessions(null) → " + controllers.size()
+                            + " oturum bulundu");
+                }
                 for (int i = 0; i < controllers.size(); i++) {
                     MediaController mc = controllers.get(i);
                     PlaybackState ps = mc.getPlaybackState();
                     int st = (ps != null) ? ps.getState() : -1;
-                    Log.i(TAG, "  [" + i + "] pkg=" + mc.getPackageName()
-                            + " state=" + playbackStateLabel(st));
+                    if (MG4Hardware.isLogEnabled()) {
+                        Log.i(TAG, "  [" + i + "] pkg=" + mc.getPackageName()
+                                + " state=" + playbackStateLabel(st));
+                    }
                 }
                 // Önce PLAYING durumundaki oturumu bul
                 for (MediaController mc : controllers) {
                     PlaybackState ps = mc.getPlaybackState();
                     if (ps != null && ps.getState() == PlaybackState.STATE_PLAYING) {
-                        Log.i(TAG, "MEDIA: PLAYING oturum seçildi → " + mc.getPackageName());
+                        if (MG4Hardware.isLogEnabled()) {
+                            Log.i(TAG, "MEDIA: PLAYING oturum seçildi → " + mc.getPackageName());
+                        }
                         return mc;
                     }
                 }
                 // PLAYING yoksa ilkini döndür (pause → play için)
-                Log.i(TAG, "MEDIA: PLAYING yok, ilk oturum seçildi → "
-                        + controllers.get(0).getPackageName());
+                if (MG4Hardware.isLogEnabled()) {
+                    Log.i(TAG, "MEDIA: PLAYING yok, ilk oturum seçildi → "
+                            + controllers.get(0).getPackageName());
+                }
                 return controllers.get(0);
             } else {
                 Log.w(TAG, "MEDIA: getActiveSessions(null) → boş liste döndü");
@@ -663,7 +701,9 @@ public class MG4ControlService extends Service {
     }
 
     private void toggleMusicPlayback() {
-        Log.i(TAG, "MEDIA: toggleMusicPlayback çağrıldı");
+        if (MG4Hardware.isLogEnabled()) {
+            Log.i(TAG, "MEDIA: toggleMusicPlayback çağrıldı");
+        }
         MediaController mc = getActiveMediaController();
         if (mc == null) {
             Log.w(TAG, "MEDIA: medya kontrolcüsü yok → işlem iptal");
@@ -679,15 +719,21 @@ public class MG4ControlService extends Service {
             return;
         }
         int ps = state.getState();
-        Log.i(TAG, "MEDIA: playbackState=" + playbackStateLabel(ps)
-                + " (" + ps + ") pkg=" + mc.getPackageName());
+        if (MG4Hardware.isLogEnabled()) {
+            Log.i(TAG, "MEDIA: playbackState=" + playbackStateLabel(ps)
+                    + " (" + ps + ") pkg=" + mc.getPackageName());
+        }
         if (ps == PlaybackState.STATE_PLAYING) {
             mc.getTransportControls().pause();
-            Log.i(TAG, "MEDIA: → pause() gönderildi");
+            if (MG4Hardware.isLogEnabled()) {
+                Log.i(TAG, "MEDIA: → pause() gönderildi");
+            }
             updateNotification("Müzik: ⏸ Durduruldu");
         } else {
             mc.getTransportControls().play();
-            Log.i(TAG, "MEDIA: → play() gönderildi");
+            if (MG4Hardware.isLogEnabled()) {
+                Log.i(TAG, "MEDIA: → play() gönderildi");
+            }
             updateNotification("Müzik: ▶ Oynatılıyor");
         }
     }

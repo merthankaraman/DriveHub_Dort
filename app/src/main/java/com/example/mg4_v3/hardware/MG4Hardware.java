@@ -153,7 +153,7 @@ public class MG4Hardware {
         sChargingStartWallMs = 0L;
         sInitialized        = false;
         sCarBindAttempted   = false;
-        Log.i(TAG, "destroy()");
+        if (sLogEnabled) Log.i(TAG, "destroy()");
     }
 
     // -------------------------------------------------------------------------
@@ -165,28 +165,28 @@ public class MG4Hardware {
         sCarBindAttempted = true;
         try {
             Class<?> carClass = Class.forName("android.car.Car");
-            Log.i(TAG, "  Katman1: android.car.Car sınıfı bulundu ✓");
+            if (sLogEnabled) Log.i(TAG, "  Katman1: android.car.Car sınıfı bulundu ✓");
 
             // Yöntem A: createCar(Context, Handler) — SDK 28 için en güvenilir
             // Handler null → main thread callback
             java.lang.reflect.Method createCarA = null;
             try {
                 createCarA = carClass.getMethod("createCar", Context.class, android.os.Handler.class);
-                Log.i(TAG, "  Katman1: createCar(Context, Handler) metodu bulundu");
+                if (sLogEnabled) Log.i(TAG, "  Katman1: createCar(Context, Handler) metodu bulundu");
             } catch (NoSuchMethodException ignored) {}
 
             // Yöntem B: createCar(Context) — en basit
             java.lang.reflect.Method createCarB = null;
             try {
                 createCarB = carClass.getMethod("createCar", Context.class);
-                Log.i(TAG, "  Katman1: createCar(Context) metodu bulundu");
+                if (sLogEnabled) Log.i(TAG, "  Katman1: createCar(Context) metodu bulundu");
             } catch (NoSuchMethodException ignored) {}
 
             // Yöntem C: createCar(Context, ServiceConnection)
             java.lang.reflect.Method createCarC = null;
             try {
                 createCarC = carClass.getMethod("createCar", Context.class, ServiceConnection.class);
-                Log.i(TAG, "  Katman1: createCar(Context, ServiceConnection) metodu bulundu");
+                if (sLogEnabled) Log.i(TAG, "  Katman1: createCar(Context, ServiceConnection) metodu bulundu");
             } catch (NoSuchMethodException ignored) {}
 
             Object car = null;
@@ -195,7 +195,7 @@ public class MG4Hardware {
             if (createCarB != null) {
                 try {
                     car = createCarB.invoke(null, context);
-                    if (car != null) Log.i(TAG, "  Katman1: createCar(Context) → başarılı");
+                    if (car != null && sLogEnabled) Log.i(TAG, "  Katman1: createCar(Context) → başarılı");
                 } catch (Exception e) {
                     Log.w(TAG, "  createCar(Context) hata: " + e.getMessage());
                     car = null;
@@ -206,7 +206,7 @@ public class MG4Hardware {
             if (car == null && createCarA != null) {
                 try {
                     car = createCarA.invoke(null, context, (android.os.Handler) null);
-                    if (car != null) Log.i(TAG, "  Katman1: createCar(Context, Handler) → başarılı");
+                    if (car != null && sLogEnabled) Log.i(TAG, "  Katman1: createCar(Context, Handler) → başarılı");
                 } catch (Exception e) {
                     Log.w(TAG, "  createCar(Context, Handler) hata: " + e.getMessage());
                     car = null;
@@ -218,7 +218,7 @@ public class MG4Hardware {
                 ServiceConnection carConnection = new ServiceConnection() {
                     @Override
                     public void onServiceConnected(ComponentName name, IBinder service) {
-                        Log.i(TAG, "  Katman1: ServiceConnection.onServiceConnected → " + name);
+                        if (sLogEnabled) Log.i(TAG, "  Katman1: ServiceConnection.onServiceConnected → " + name);
                         tryGetManagersFromCar(carClass);
                     }
                     @Override
@@ -230,7 +230,7 @@ public class MG4Hardware {
                 };
                 try {
                     car = createCarC.invoke(null, context, carConnection);
-                    if (car != null) Log.i(TAG, "  Katman1: createCar(Context,SC) → callback bekleniyor");
+                    if (car != null && sLogEnabled) Log.i(TAG, "  Katman1: createCar(Context,SC) → callback bekleniyor");
                 } catch (Exception e) {
                     Log.w(TAG, "  createCar(Context,SC) hata: " + e.getMessage());
                     car = null;
@@ -248,9 +248,9 @@ public class MG4Hardware {
             try {
                 java.lang.reflect.Method connectMethod = carClass.getMethod("connect");
                 connectMethod.invoke(car);
-                Log.i(TAG, "  Katman1: car.connect() çağrıldı");
+                if (sLogEnabled) Log.i(TAG, "  Katman1: car.connect() çağrıldı");
             } catch (NoSuchMethodException e) {
-                Log.i(TAG, "  Katman1: connect() metodu yok (beklenen)");
+                if (sLogEnabled) Log.i(TAG, "  Katman1: connect() metodu yok (beklenen)");
             } catch (Exception e) {
                 Log.w(TAG, "  Katman1: connect() hata: " + e.getMessage());
             }
@@ -260,7 +260,7 @@ public class MG4Hardware {
             try {
                 java.lang.reflect.Method isConnected = carClass.getMethod("isConnected");
                 connected = (Boolean) isConnected.invoke(car);
-                Log.i(TAG, "  Katman1: isConnected() → " + connected);
+                if (sLogEnabled) Log.i(TAG, "  Katman1: isConnected() → " + connected);
             } catch (Exception e) {
                 Log.w(TAG, "  Katman1: isConnected() yok/hata: " + e.getMessage());
             }
@@ -270,7 +270,7 @@ public class MG4Hardware {
                 tryGetManagersFromCar(carClass);
             } else {
                 // Bağlı değilse kısa bekle sonra tekrar dene (Handler ile)
-                Log.i(TAG, "  Katman1: Henüz bağlı değil, 500ms sonra tekrar deneniyor...");
+                if (sLogEnabled) Log.i(TAG, "  Katman1: Henüz bağlı değil, 500ms sonra tekrar deneniyor...");
                 final Class<?> carClassFinal = carClass;
                 new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                     boolean c2 = false;
@@ -278,13 +278,13 @@ public class MG4Hardware {
                         java.lang.reflect.Method isConn = carClassFinal.getMethod("isConnected");
                         c2 = (Boolean) isConn.invoke(sCar);
                     } catch (Exception ignored) {}
-                    Log.i(TAG, "  Katman1: [retry] isConnected() → " + c2);
+                    if (sLogEnabled) Log.i(TAG, "  Katman1: [retry] isConnected() → " + c2);
                     if (c2) {
                         tryGetManagersFromCar(carClassFinal);
                     } else {
                         // Son deneme: 2 saniye sonra
                         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                            Log.i(TAG, "  Katman1: [retry2] getManagersFromCar deneniyor...");
+                            if (sLogEnabled) Log.i(TAG, "  Katman1: [retry2] getManagersFromCar deneniyor...");
                             tryGetManagersFromCar(carClassFinal);
                         }, 2000);
                     }
@@ -306,13 +306,13 @@ public class MG4Hardware {
             Log.e(TAG, "  tryGetManagersFromCar: sCar null!");
             return;
         }
-        Log.i(TAG, "  tryGetManagersFromCar çağrıldı");
+        if (sLogEnabled) Log.i(TAG, "  tryGetManagersFromCar çağrıldı");
 
         // isConnected kontrolü
         try {
             java.lang.reflect.Method isConn = carClass.getMethod("isConnected");
             boolean connected = (Boolean) isConn.invoke(sCar);
-            Log.i(TAG, "  isConnected() → " + connected);
+            if (sLogEnabled) Log.i(TAG, "  isConnected() → " + connected);
             if (!connected) {
                 Log.w(TAG, "  Car henüz bağlı değil — manager alınamaz");
                 return;
@@ -329,11 +329,11 @@ public class MG4Hardware {
             // CarPropertyManager
             java.lang.reflect.Field propField = carClass.getField("PROPERTY_SERVICE");
             String propertyService = (String) propField.get(null);
-            Log.i(TAG, "  PROPERTY_SERVICE = " + propertyService);
+            if (sLogEnabled) Log.i(TAG, "  PROPERTY_SERVICE = " + propertyService);
             Object cpm = getCarManager.invoke(sCar, propertyService);
             if (cpm != null) {
                 sCarPropertyManager = cpm;
-                Log.i(TAG, "  ✓ CarPropertyManager HAZIR: " + cpm.getClass().getName());
+                if (sLogEnabled) Log.i(TAG, "  ✓ CarPropertyManager HAZIR: " + cpm.getClass().getName());
             } else {
                 Log.e(TAG, "  ✗ CarPropertyManager null (izin yok?)");
             }
@@ -345,7 +345,7 @@ public class MG4Hardware {
                 Object chm = getCarManager.invoke(sCar, hvacService);
                 if (chm != null) {
                     sCarHvacManager = chm;
-                    Log.i(TAG, "  ✓ CarHvacManager HAZIR: " + chm.getClass().getName());
+                    if (sLogEnabled) Log.i(TAG, "  ✓ CarHvacManager HAZIR: " + chm.getClass().getName());
                     registerHvacCallback(chm);
                 } else {
                     Log.w(TAG, "  ✗ CarHvacManager null");
@@ -358,7 +358,7 @@ public class MG4Hardware {
             try {
                 Object cbm = getCarManager.invoke(sCar, "bms");
                 if (cbm != null) {
-                    Log.i(TAG, "  ✓ CarBMSManager HAZIR: " + cbm.getClass().getName());
+                    if (sLogEnabled) Log.i(TAG, "  ✓ CarBMSManager HAZIR: " + cbm.getClass().getName());
                     registerBmsCallback(cbm);
                 } else {
                     Log.w(TAG, "  ✗ CarBMSManager null");
@@ -388,20 +388,20 @@ public class MG4Hardware {
     // -------------------------------------------------------------------------
 
     public static boolean setDriveMode(DriveMode mode) {
-        Log.i(TAG, "setDriveMode → " + mode.label + " (" + mode.value + ")");
+        if (sLogEnabled) Log.i(TAG, "setDriveMode → " + mode.label + " (" + mode.value + ")");
         if (setIntPropertyCPM(PROP_DRIVE_MODE, AREA_GLOBAL, mode.value)) return true;
         return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_DRIVE_MODE, mode.value);
     }
 
     public static boolean setRegenLevel(RegenLevel level) {
-        Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
+        if (sLogEnabled) Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
 
         binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 1);
         return setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
     }
 
     public static boolean setOnePedal(boolean enabled) {
-        Log.i(TAG, "setOnePedal → " + (enabled ? "Açık" : "Kapalı"));
+        if (sLogEnabled) Log.i(TAG, "setOnePedal → " + (enabled ? "Açık" : "Kapalı"));
         if (setIntPropertyCPM(PROP_ONE_PEDAL, AREA_GLOBAL, enabled ? 1 : 0)) return true;
         return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_ONE_PEDAL, enabled ? 1 : 0);
     }
@@ -414,28 +414,28 @@ public class MG4Hardware {
         // currentStatus: 0 ise Kapalı, 1 veya daha büyükse Açık
         boolean isActuallyOn = (currentStatus > 0);
 
-        Log.i(TAG, "Direksiyon Isıtma Durumu: " + currentStatus + " | Hedef: " + targetOn);
+        if (sLogEnabled) Log.i(TAG, "Direksiyon Isıtma Durumu: " + currentStatus + " | Hedef: " + targetOn);
 
         // 2. Eğer araba zaten istediğin durumdaysa hiçbir şey yapma
         if (isActuallyOn == targetOn) {
-            Log.i(TAG, "Zaten hedef durumda, komut gönderilmedi.");
+            if (sLogEnabled) Log.i(TAG, "Zaten hedef durumda, komut gönderilmedi.");
             return true;
         }
 
         // 3. Durum farklıysa "1" göndererek toggle yap (durumu değiştir)
-        Log.i(TAG, "Durum değişiyor, toggle komutu gönderiliyor...");
+        if (sLogEnabled) Log.i(TAG, "Durum değişiyor, toggle komutu gönderiliyor...");
         return setIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC, 1);
     }
 
     /** Sol koltuk ısıtma seviyesi (0=kapalı, 1/2/3=seviye) */
     public static boolean setSeatHeatLeft(int level) {
-        Log.i(TAG, "setSeatHeatLeft → " + level);
+        if (sLogEnabled) Log.i(TAG, "setSeatHeatLeft → " + level);
         return setHvacLevelWithToggle(PROP_SEAT_HEAT_L, AREA_HVAC, level);
     }
 
     /** Sağ koltuk ısıtma seviyesi (0=kapalı, 1/2/3=seviye) */
     public static boolean setSeatHeatRight(int level) {
-        Log.i(TAG, "setSeatHeatRight → " + level);
+        if (sLogEnabled) Log.i(TAG, "setSeatHeatRight → " + level);
         return setHvacLevelWithToggle(PROP_SEAT_HEAT_R, AREA_HVAC, level);
     }
 
@@ -454,14 +454,14 @@ public class MG4Hardware {
 
             // 1. Hedefe ulaşıldı mı?
             if (current == targetLevel) {
-                Log.i(TAG, "HVAC Hedefe ulaşıldı: " + targetLevel);
+                if (sLogEnabled) Log.i(TAG, "HVAC Hedefe ulaşıldı: " + targetLevel);
                 return true;
             }
 
             // 2. Tık gönderme zamanı geldi mi? (500ms bekleme)
             long now = System.currentTimeMillis();
             if (now - lastStepTime >= stepInterval) {
-                Log.i(TAG, "HVAC Tık gönderiliyor... Mevcut: " + current);
+                if (sLogEnabled) Log.i(TAG, "HVAC Tık gönderiliyor... Mevcut: " + current);
                 setIntPropertyHvac(propId, area, 1);
                 lastStepTime = now;
 
@@ -625,7 +625,7 @@ public class MG4Hardware {
         float speed = getSpeedKmh();
 
         if (sLogEnabled) {
-            Log.i(TAG, "CHG CHECK → status=" + (val instanceof Number ? ((Number) val).intValue() : -1)
+            if (sLogEnabled) Log.i(TAG, "CHG CHECK → status=" + (val instanceof Number ? ((Number) val).intValue() : -1)
                     + " acA=" + acA + " dcA=" + dcA + " dcV=" + dcV + " speed=" + speed);
         }
 
@@ -693,7 +693,7 @@ public class MG4Hardware {
         sDcEnergyKwh         = 0f;
         sLastBmsEventMs      = 0L;
         sChargingStartWallMs = 0L;
-        Log.i(TAG, "resetEnergy() çağrıldı");
+        if (sLogEnabled) Log.i(TAG, "resetEnergy() çağrıldı");
     }
 
     // -------------------------------------------------------------------------
@@ -709,7 +709,7 @@ public class MG4Hardware {
             java.lang.reflect.Method setInt = sCarPropertyManager.getClass()
                     .getMethod("setIntProperty", int.class, int.class, int.class);
             setInt.invoke(sCarPropertyManager, propId, area, value);
-            Log.i(TAG, "  CPM setInt 0x" + Integer.toHexString(propId)
+            if (sLogEnabled) Log.i(TAG, "  CPM setInt 0x" + Integer.toHexString(propId)
                     + " area=0x" + Integer.toHexString(area) + " value=" + value + " ✓");
             return true;
         } catch (java.lang.reflect.InvocationTargetException e) {
@@ -737,7 +737,7 @@ public class MG4Hardware {
                 java.lang.reflect.Method setInt = sCarHvacManager.getClass()
                         .getMethod("setIntProperty", int.class, int.class, int.class);
                 setInt.invoke(sCarHvacManager, propId, area, value);
-                Log.i(TAG, "  HVAC setIntProperty 0x" + Integer.toHexString(propId)
+                if (sLogEnabled) Log.i(TAG, "  HVAC setIntProperty 0x" + Integer.toHexString(propId)
                         + " area=0x" + Integer.toHexString(area) + " value=" + value + " ✓");
                 return true;
             } catch (java.lang.reflect.InvocationTargetException e) {
@@ -756,7 +756,7 @@ public class MG4Hardware {
                     java.lang.reflect.Method setBool = sCarHvacManager.getClass()
                             .getMethod("setBooleanProperty", int.class, int.class, boolean.class);
                     setBool.invoke(sCarHvacManager, propId, area, value == 1);
-                    Log.i(TAG, "  HVAC setBooleanProperty 0x" + Integer.toHexString(propId)
+                    if (sLogEnabled) Log.i(TAG, "  HVAC setBooleanProperty 0x" + Integer.toHexString(propId)
                             + " area=0x" + Integer.toHexString(area) + " value=" + (value==1) + " ✓");
                     return true;
                 } catch (java.lang.reflect.InvocationTargetException e) {
@@ -838,7 +838,7 @@ public class MG4Hardware {
             for (java.lang.reflect.Method m : methods) {
                 String n = m.getName();
                 if (n.contains("register") || n.contains("Register")) {
-                    Log.i(TAG, "  BMS register metodu: " + n
+                    if (sLogEnabled) Log.i(TAG, "  BMS register metodu: " + n
                             + " params=" + java.util.Arrays.toString(m.getParameterTypes()));
                     if (registerMethod == null) registerMethod = m;
                 }
@@ -856,7 +856,7 @@ public class MG4Hardware {
             }
 
             Class<?> callbackClass = paramTypes[0];
-            Log.i(TAG, "  BMS: callback sınıfı = " + callbackClass.getName()
+            if (sLogEnabled) Log.i(TAG, "  BMS: callback sınıfı = " + callbackClass.getName()
                     + " isInterface=" + callbackClass.isInterface());
 
             if (!callbackClass.isInterface()) {
@@ -875,7 +875,7 @@ public class MG4Hardware {
                             if (args.length == 1 && args[0] != null) {
                                 if (!sBmsFirstEventLogged) {
                                     sBmsFirstEventLogged = true;
-                                    Log.i(TAG, "BMS callback ilk event args=1 [0]=" + (args[0] != null ? args[0].getClass().getName() : "null"));
+                                    if (sLogEnabled) Log.i(TAG, "BMS callback ilk event args=1 [0]=" + (args[0] != null ? args[0].getClass().getName() : "null"));
                                 }
                                 Object event = args[0];
                                 Class<?> clazz = event.getClass();
@@ -1037,7 +1037,7 @@ public class MG4Hardware {
                     });
 
             registerMethod.invoke(bmsManager, proxy);
-            Log.i(TAG, "  ✓ BMS callback kayıt edildi");
+            if (sLogEnabled) Log.i(TAG, "  ✓ BMS callback kayıt edildi");
 
         } catch (Exception e) {
             Log.w(TAG, "  BMS registerCallback hata: "
@@ -1059,7 +1059,7 @@ public class MG4Hardware {
             java.lang.reflect.Method registerMethod = null;
             for (java.lang.reflect.Method m : methods) {
                 if (m.getName().contains("register") || m.getName().contains("Register")) {
-                    Log.i(TAG, "  HVAC register metodu: " + m.getName()
+                    if (sLogEnabled) Log.i(TAG, "  HVAC register metodu: " + m.getName()
                             + " params=" + java.util.Arrays.toString(m.getParameterTypes()));
                     if (registerMethod == null) registerMethod = m;
                 }
@@ -1078,7 +1078,7 @@ public class MG4Hardware {
             }
 
             Class<?> callbackClass = paramTypes[0];
-            Log.i(TAG, "  HVAC: callback sınıfı = " + callbackClass.getName()
+            if (sLogEnabled) Log.i(TAG, "  HVAC: callback sınıfı = " + callbackClass.getName()
                     + " isInterface=" + callbackClass.isInterface());
 
             if (!callbackClass.isInterface()) {
@@ -1130,7 +1130,7 @@ public class MG4Hardware {
                     });
 
             registerMethod.invoke(hvacManager, proxy);
-            Log.i(TAG, "  ✓ HVAC callback kayıt edildi");
+            if (sLogEnabled) Log.i(TAG, "  ✓ HVAC callback kayıt edildi");
 
         } catch (Exception e) {
             Log.w(TAG, "  HVAC registerCallback hata: "
@@ -1144,8 +1144,8 @@ public class MG4Hardware {
             java.lang.reflect.Method listServices = sm.getMethod("listServices");
             String[] services = (String[]) listServices.invoke(null);
             if (services == null) { Log.w(TAG, "listServices null"); return; }
-            Log.i(TAG, "Servisler toplam: " + services.length);
-            Log.i(TAG, "Servisler (vehicle/air/saic/setting/car içerenler):");
+            if (sLogEnabled) Log.i(TAG, "Servisler toplam: " + services.length);
+            if (sLogEnabled) Log.i(TAG, "Servisler (vehicle/air/saic/setting/car içerenler):");
             int found = 0;
             for (String s : services) {
                 if (s != null && (s.toLowerCase().contains("vehicle")
@@ -1153,7 +1153,7 @@ public class MG4Hardware {
                         || s.toLowerCase().contains("saic")
                         || s.toLowerCase().contains("setting")
                         || s.toLowerCase().contains("car"))) {
-                    Log.i(TAG, "  [servis] " + s);
+                    if (sLogEnabled) Log.i(TAG, "  [servis] " + s);
                     found++;
                 }
             }
@@ -1198,7 +1198,7 @@ public class MG4Hardware {
             binder.transact(txId, data, reply, 0);
             int replySize = reply.dataAvail();
             int status = reply.readInt();
-            Log.i(TAG, "  Binder TX=" + txId + " value=" + value
+            if (sLogEnabled) Log.i(TAG, "  Binder TX=" + txId + " value=" + value
                     + " → status=" + status + " replyBytes=" + replySize
                     + (status == 0 ? " ✓" : " ✗ REDDEDİLDİ"));
             return status == 0;
