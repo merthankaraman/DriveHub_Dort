@@ -71,10 +71,20 @@ public class MG4Hardware {
         void onHvacPropertyChanged(int propId, int value);
     }
 
-    private static volatile HvacListener sHvacListener = null;
+    /** Sürüş modu (drive mode) değişikliğini dinlemek için listener. */
+    public interface DriveModeListener {
+        void onDriveModeChanged(int modeValue);
+    }
+
+    private static volatile HvacListener      sHvacListener      = null;
+    private static volatile DriveModeListener sDriveModeListener = null;
 
     public static void setHvacListener(HvacListener listener) {
         sHvacListener = listener;
+    }
+
+    public static void setDriveModeListener(DriveModeListener listener) {
+        sDriveModeListener = listener;
     }
 
     // BMS cache — CarBMSManager onChangeEvent callback'ten gelen son değerler
@@ -334,6 +344,8 @@ public class MG4Hardware {
             if (cpm != null) {
                 sCarPropertyManager = cpm;
                 if (sLogEnabled) Log.i(TAG, "  ✓ CarPropertyManager HAZIR: " + cpm.getClass().getName());
+                // Sürüş modu gibi CPM tabanlı event'ler için callback kaydı
+                registerDriveModeCallback(cpm);
             } else {
                 Log.e(TAG, "  ✗ CarPropertyManager null (izin yok?)");
             }
@@ -1134,6 +1146,101 @@ public class MG4Hardware {
 
         } catch (Exception e) {
             Log.w(TAG, "  HVAC registerCallback hata: "
+                    + e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * CarPropertyManager'a callback kayıt eder ve sürüş modu (PROP_DRIVE_MODE) değişince
+     * sDriveModeListener'ı tetikler.
+     */
+    private static void registerDriveModeCallback(Object carPropertyManager) {
+        if (carPropertyManager == null) return;
+        try {
+            java.lang.reflect.Method[] methods = carPropertyManager.getClass().getMethods();
+            java.lang.reflect.Method registerMethod = null;
+            for (java.lang.reflect.Method m : methods) {
+                String n = m.getName();
+                if (n.contains("register") || n.contains("Register")) {
+                    if (sLogEnabled) Log.i(TAG, "  CPM register metodu: " + n
+                            + " params=" + java.util.Arrays.toString(m.getParameterTypes()));
+                    if (registerMethod == null) registerMethod = m;
+                }
+            }
+
+            if (registerMethod == null) {
+                Log.w(TAG, "  CPM: registerCallback metodu bulunamadı — drive mode callback devre dışı");
+                return;
+            }
+
+            Class<?>[] paramTypes = registerMethod.getParameterTypes();
+            if (paramTypes.length == 0) {
+                Log.w(TAG, "  CPM: register metodu parametre almıyor — atlanıyor");
+                return;
+            }
+
+            Class<?> callbackClass = paramTypes[0];
+            if (!callbackClass.isInterface()) {
+                Log.w(TAG, "  CPM: callback sınıfı interface değil — proxy oluşturulamaz");
+                return;
+            }
+
+            Object proxy = java.lang.reflect.Proxy.newProxyInstance(
+                    callbackClass.getClassLoader(),
+                    new Class<?>[]{ callbackClass },
+                    (proxyObj, method, args) -> {
+                        String mName = method.getName();
+                        if (mName.contains("Change") || mName.contains("Property")
+                                || mName.contains("Event") || mName.contains("Update")) {
+                            DriveModeListener listener = sDriveModeListener;
+                            if (listener != null && args != null) {
+                                Integer propId = null;
+                                Integer value  = null;
+
+                                // Case 1: Tek argüman CarPropertyValue benzeri obje
+                                if (args.length == 1 && args[0] != null) {
+                                    Object event = args[0];
+                                    Class<?> clazz = event.getClass();
+                                    java.lang.reflect.Method getPropIdM = null;
+                                    java.lang.reflect.Method getValM    = null;
+                                    try { getPropIdM = clazz.getMethod("getPropertyId"); } catch (NoSuchMethodException ignored) {}
+                                    if (getPropIdM == null) try { getPropIdM = clazz.getMethod("getPropId"); } catch (NoSuchMethodException ignored) {}
+                                    try { getValM = clazz.getMethod("getIntValue"); } catch (NoSuchMethodException ignored) {}
+                                    if (getValM == null) try { getValM = clazz.getMethod("getValue"); } catch (NoSuchMethodException ignored) {}
+                                    if (getPropIdM != null && getValM != null) {
+                                        try {
+                                            Object pidObj = getPropIdM.invoke(event);
+                                            Object valObj = getValM.invoke(event);
+                                            if (pidObj instanceof Number) propId = ((Number) pidObj).intValue();
+                                            if (valObj instanceof Number) value = ((Number) valObj).intValue();
+                                        } catch (Exception ignored) {}
+                                    }
+                                } else if (args.length >= 2) {
+                                    // Case 2: propId ve value doğrudan int olarak gelebilir
+                                    for (Object a : args) {
+                                        if (a instanceof Integer) {
+                                            if (propId == null) propId = (Integer) a;
+                                            else if (value == null)  value  = (Integer) a;
+                                        }
+                                    }
+                                }
+
+                                if (propId != null && value != null && propId == PROP_DRIVE_MODE) {
+                                    listener.onDriveModeChanged(value);
+                                }
+                            }
+                        }
+                        if ("equals".equals(mName)) return args != null && args.length == 1 && proxyObj == args[0];
+                        if ("hashCode".equals(mName)) return System.identityHashCode(proxyObj);
+                        if ("toString".equals(mName)) return "DriveModeCallbackProxy";
+                        return null;
+                    });
+
+            registerMethod.invoke(carPropertyManager, proxy);
+            if (sLogEnabled) Log.i(TAG, "  ✓ CPM drive mode callback kayıt edildi");
+
+        } catch (Exception e) {
+            Log.w(TAG, "  CPM registerDriveModeCallback hata: "
                     + e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }

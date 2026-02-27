@@ -156,6 +156,12 @@ public class MG4ControlService extends Service {
             }
         }
 
+        // Araçtaki gerçek sürüş modu değişince haberdar ol (Eco/Normal/Sport düğmesi dışından da)
+        MG4Hardware.setDriveModeListener(modeValue -> {
+            mCurrentDriveMode = DriveMode.fromValue(modeValue);
+            updateNotification("Sürüş: " + mCurrentDriveMode.label);
+        });
+
         // EngineSoundManager'ı her durumda servis tarafında başlat.
         // Sesin açık/kapalı olması her 100 ms'de PREF_SOUND_ENABLED'den okunuyor.
         if (MG4Hardware.isLogEnabled()) {

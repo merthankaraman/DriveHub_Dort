@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvGaugePower;
     private TextView mTvGaugeThrottle;
     private TextView mTvMotorState;
+    private TextView mTvDriveModeAuto;
     
     // Yapay motor sesi
     private EngineSoundManager mEngineSound;
@@ -236,6 +237,7 @@ public class MainActivity extends AppCompatActivity {
         mTvGaugePower = findViewById(R.id.tvGaugePower);
         mTvGaugeThrottle = findViewById(R.id.tvGaugeThrottle);
         mTvMotorState = findViewById(R.id.tvMotorState);
+        mTvDriveModeAuto = findViewById(R.id.tvDriveModeAuto);
         
         // Motor sesi butonları (ses paneli içinde)
         mBtnSoundToggle = findViewById(R.id.btnSoundToggle);
@@ -953,16 +955,19 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         // Tüm eski değerleri tek vites moduna eşliyoruz.
         return SoundMode.VIRTUAL_GEAR_V2;
     }
-    private static final String SOUND_CHAR_ECO = "ECO";
+    private static final String SOUND_CHAR_ECO    = "ECO";
     private static final String SOUND_CHAR_NORMAL = "NORMAL";
-    private static final String SOUND_CHAR_SPORT = "SPORT";
-    private static final String[] SOUND_CHAR_CYCLE = { SOUND_CHAR_ECO, SOUND_CHAR_NORMAL, SOUND_CHAR_SPORT };
+    private static final String SOUND_CHAR_SPORT  = "SPORT";
+    private static final String SOUND_CHAR_AUTO   = "AUTO"; // Araç modunu takip et
+    private static final String[] SOUND_CHAR_CYCLE = {
+            SOUND_CHAR_ECO, SOUND_CHAR_NORMAL, SOUND_CHAR_SPORT, SOUND_CHAR_AUTO
+    };
 
     private void applySoundCharacter(String character) {
-        float agg = 0.4f;
-        if (SOUND_CHAR_ECO.equals(character)) agg = 0.25f;
-        else if (SOUND_CHAR_SPORT.equals(character)) agg = 0.7f;
-        mEngineSound.setDriveModeAggressiveness(agg);
+        // Mapping tek yerde: EngineSoundManager.applySoundCharacterFromString
+        if (mEngineSound != null) {
+            mEngineSound.applySoundCharacterFromString(character);
+        }
     }
 
     private void updateRevMatchButtonText(boolean enabled) {
@@ -991,9 +996,19 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
     private void updateSoundCharacterButtonText(String character) {
         if (mBtnGearProfile == null) return;
+        if (mTvDriveModeAuto != null) {
+            if (SOUND_CHAR_AUTO.equals(character)) {
+                int modeVal = MG4Hardware.getDriveMode();
+                DriveMode dm = DriveMode.fromValue(modeVal);
+                mTvDriveModeAuto.setText("Araç modu: " + dm.label);
+            } else {
+                mTvDriveModeAuto.setText("");
+            }
+        }
         switch (character) {
             case SOUND_CHAR_ECO:    mBtnGearProfile.setText("🟢 Şanzıman: Eco"); break;
             case SOUND_CHAR_SPORT:  mBtnGearProfile.setText("🔴 Şanzıman: Sport"); break;
+            case SOUND_CHAR_AUTO:   mBtnGearProfile.setText("🚗 Şanzıman: Araç"); break;
             default:                mBtnGearProfile.setText("⚪ Şanzıman: Normal"); break;
         }
     }

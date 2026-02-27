@@ -113,17 +113,40 @@ public class EngineSoundManager {
         String profile = prefs.getString("sound_profile", "McLaren P1");
         applyProfileLabel(profile);
 
-        // Şanzıman karakteri (Eco / Normal / Sport)
+        // Şanzıman karakteri (Eco / Normal / Sport / Araç) — mapping tek yerde dursun
         String charStr = prefs.getString("sound_character", "NORMAL");
-        float agg = 0.4f;
-        if ("ECO".equals(charStr)) agg = 0.25f;
-        else if ("SPORT".equals(charStr)) agg = 0.7f;
-        setDriveModeAggressiveness(agg);
+        applySoundCharacterFromString(charStr);
 
         // Master volume
         int master = prefs.getInt("sound_master", 60);
         float masterClamped = Math.max(0, Math.min(100, master)) / 100f;
         setMasterVolume(masterClamped);
+    }
+
+    /**
+     * Verilen karakter string'ine göre şanzıman agresifliğini belirler.
+     * ECO/NORMAL/SPORT/AUTO mapping'ini tek yerde toplar.
+     */
+    public void applySoundCharacterFromString(String character) {
+        float agg = 0.4f;
+        if ("ECO".equals(character)) {
+            agg = 0.25f;
+        } else if ("SPORT".equals(character)) {
+            agg = 0.7f;
+        } else if ("AUTO".equals(character)) {
+            int modeVal = MG4Hardware.getDriveMode();
+            com.example.mg4_v3.model.DriveMode dm =
+                    com.example.mg4_v3.model.DriveMode.fromValue(modeVal);
+            switch (dm) {
+                case ECO:    agg = 0.25f; break;
+                case SPORT:  agg = 0.7f;  break;
+                case SNOW:
+                case NORMAL:
+                case CUSTOM:
+                default:     agg = 0.4f;  break;
+            }
+        }
+        setDriveModeAggressiveness(agg);
     }
 
     /**
