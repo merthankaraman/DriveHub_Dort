@@ -101,6 +101,10 @@ public class EngineSoundManager {
         mMasterVolume = Math.max(0f, Math.min(1f, volume01));
     }
 
+    public void setMotorMaxPower(float powerKw) {
+        mMotorMaxPower = (Math.max(50f, Math.min(200f, powerKw)) - 20f);
+    }
+
     /**
      * SharedPreferences içinden ses profilini, şanzıman karakterini ve master volume'ü yükler.
      * Böylece profil eşleme mantığı tek yerde tutulur.

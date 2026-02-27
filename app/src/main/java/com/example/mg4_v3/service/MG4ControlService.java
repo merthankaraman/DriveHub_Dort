@@ -147,7 +147,7 @@ public class MG4ControlService extends Service {
         registerHardkeyReceiver();
 
         SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
-        boolean overlayEnabled = prefs.getBoolean("overlay_enabled", true);
+        boolean overlayEnabled = prefs.getBoolean("overlay_enabled", false);
         if (overlayEnabled) {
             showOverlay();
         } else {

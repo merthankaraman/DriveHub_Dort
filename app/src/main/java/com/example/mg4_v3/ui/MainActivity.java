@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_OVERLAY_ENABLED = "overlay_enabled";
     private static final String PREF_SOUND_PROFILE = "sound_profile";
     private static final String PREF_SOUND_MASTER = "sound_master";
+    private static final String PREF_MOTOR_POWER = "motor_power_kw";
     private static final int COLOR_ACTIVE   = 0xFF1F6FEB; // mavi — seçili
     private static final int COLOR_INACTIVE = 0xFF21262D; // koyu gri — seçilmemiş
     private static final int COLOR_HEAT_ON  = 0xFF9E3333; // kırmızı — ısıtma aktif
@@ -81,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
     private View mLayoutMain;
     private View mLayoutSpeedTest;
     private View mLayoutSoundPanel;
+    private Button mBtnMotorPower;
 
     // Hız simülasyonu (bilgisayarda test için)
     private boolean mSimSpeedActive = false;
@@ -248,6 +250,7 @@ public class MainActivity extends AppCompatActivity {
         mBtnSpeedTest = findViewById(R.id.btnSpeedTest);
         mLayoutSpeedTest = findViewById(R.id.layoutSpeedTest);
         mSeekSoundVolume = findViewById(R.id.seekSoundVolume);
+        mBtnMotorPower = findViewById(R.id.btnMotorPower);
 
         // Yapay motor sesi yöneticisini başlat (önce instance al)
         mEngineSound = EngineSoundManager.getInstance(this);
@@ -270,8 +273,36 @@ public class MainActivity extends AppCompatActivity {
         // Loglar varsayılan olarak KAPALI olsun
         boolean logsEnabled = prefsSound.getBoolean("logs_enabled", false);
         int savedMaster = prefsSound.getInt(PREF_SOUND_MASTER, 60);
+        float savedMotorPower = prefsSound.getFloat(PREF_MOTOR_POWER, 150f);
         MG4Hardware.setLogEnabled(logsEnabled);
         updateSoundToggleButton();
+
+        // Motor gücü düğmesi (125 kW / 150 kW, hafızalı)
+        if (mBtnMotorPower != null) {
+            // Başlangıç text'i
+            float initialPower = savedMotorPower;
+            if (initialPower < 50f || initialPower > 200f) {
+                initialPower = 150f;
+            }
+            int displayKw = (int) initialPower;
+            mBtnMotorPower.setText("Motor Gücü: " + displayKw + " kW");
+            if (mEngineSound != null) {
+                mEngineSound.setMotorMaxPower(initialPower);
+            }
+
+            final float currentPowerInit = initialPower;
+            mBtnMotorPower.setOnClickListener(v -> {
+                SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+                float current = p.getFloat(PREF_MOTOR_POWER, currentPowerInit);
+                float next = (current >= 149f) ? 125f : 150f;
+                int showKw = (int) next;
+                mBtnMotorPower.setText("Motor Gücü: " + showKw + " kW");
+                if (mEngineSound != null) {
+                    mEngineSound.setMotorMaxPower(next);
+                }
+                p.edit().putFloat(PREF_MOTOR_POWER, next).apply();
+            });
+        }
 
         // Hız test paneli (simülasyon) — Ses Kapa'nın üstünde; simüle hız + simüle gaz
         SeekBar seekSpeedTest = findViewById(R.id.seekSpeedTest);

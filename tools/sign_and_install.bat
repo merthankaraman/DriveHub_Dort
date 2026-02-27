@@ -77,6 +77,10 @@ if errorlevel 1 (
 )
 echo [1/2] Imzalama tamamlandi.
 
+:: -------- tools/ klasorune kopyala --------
+copy /Y "%APK_OUT%" "%SCRIPT_DIR%app-debug-signed.apk" >nul
+echo       Kopya: %SCRIPT_DIR%app-debug-signed.apk
+
 :: -------- ADB kontrol --------
 adb devices 2>nul | findstr /v "List" | findstr "device" >nul
 if errorlevel 1 (

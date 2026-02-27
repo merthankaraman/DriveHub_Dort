@@ -28,9 +28,10 @@ public class MG4Hardware {
     private static final String TAG = "MG4_HW";
 
     // Sürüş kontrol property'leri (logdan doğrulandı)
-    private static final int PROP_DRIVE_MODE    = 0x2140a17c; //557883772
-    private static final int PROP_REGEN_LEVEL   = 0x2140a191; //557883793
-    private static final int PROP_ONE_PEDAL     = 0x2140a193; //557883795
+    private static final int PROP_DRIVE_MODE         = 0x2140a17c; //557883772
+    private static final int PROP_REGEN_LEVEL        = 0x2140a191; //557883793
+    private static final int PROP_REGEN_BRAKE_SWITCH = 0x2140a18f; //557883791 — regen ana switch (JADX analizi)
+    private static final int PROP_ONE_PEDAL          = 0x2140a193; //557883795
 
     private static final int AREA_GLOBAL        = 0x01000000;
 
@@ -404,18 +405,34 @@ public class MG4Hardware {
         if (setIntPropertyCPM(PROP_DRIVE_MODE, AREA_GLOBAL, mode.value)) return true;
         return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_DRIVE_MODE, mode.value);
     }
-
-    public static boolean setRegenLevel(RegenLevel level) {
-        if (sLogEnabled) Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
-
-        binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 1);
-        return setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
-    }
-
     public static boolean setOnePedal(boolean enabled) {
         if (sLogEnabled) Log.i(TAG, "setOnePedal → " + (enabled ? "Açık" : "Kapalı"));
         if (setIntPropertyCPM(PROP_ONE_PEDAL, AREA_GLOBAL, enabled ? 1 : 0)) return true;
         return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_ONE_PEDAL, enabled ? 1 : 0);
+    }
+
+    public static boolean setRegenLevel(RegenLevel level) {
+        if (sLogEnabled) Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
+
+        if (level == RegenLevel.OFF) {
+            // Regen tamamen kapat: brake switch=0 gönder
+            // Önce CPM dene (0x2140a18f), çalışmazsa binder TX=159
+            setOnePedal(false);
+            if (sLogEnabled) Log.i(TAG, "setRegenLevel: KAPALI — brake switch=0 (CPM önce, binder yedek)");
+            boolean cpmOk = setIntPropertyCPM(PROP_REGEN_BRAKE_SWITCH, AREA_GLOBAL, 0);
+            if (sLogEnabled) Log.i(TAG, "setRegenLevel: KAPALI CPM=" + cpmOk);
+            if (cpmOk) return true;
+            return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 0);
+        }
+
+        // Diğer seviyeler: önce brake switch=1 aç, sonra seviyeyi ayarla
+        // Brake switch: CPM dene, çalışmazsa binder TX
+        boolean switchOk = setIntPropertyCPM(PROP_REGEN_BRAKE_SWITCH, AREA_GLOBAL, 1);
+        if (sLogEnabled) Log.i(TAG, "setRegenLevel: switch=1 CPM=" + switchOk);
+        if (!switchOk) binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 1);
+        boolean ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
+        if (sLogEnabled) Log.i(TAG, "setRegenLevel: seviye=" + level.value + " CPM=" + ok);
+        return ok;
     }
 
     /** Direksiyon ısıtma — aç/kapat (0=kapat, 1=aç) */

@@ -107,6 +107,18 @@
                 android:fontFamily="monospace"
                 android:layout_marginBottom="8dp"/>
 
+            <!-- Motor gücü seçimi (125 kW / 150 kW) -->
+            <Button
+                android:id="@+id/btnMotorPower"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Motor Gücü: 125 kW"
+                android:backgroundTint="#30363D"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
             <!-- Motor sesi ayarları ayrı panelde açılır -->
             <Button
                 android:id="@+id/btnSoundPanel"
