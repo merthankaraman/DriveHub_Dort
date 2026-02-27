@@ -375,31 +375,41 @@ public class EngineSoundManager {
         }
 
         mSoundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
-            if (sampleId == mTurboSoundId) {
-                mTurboStreamId = mSoundPool.play(mTurboSoundId, 0f, 0f, 1, -1, 1.0f);
-                return;
-            }
-            if (sampleId == mGearWhineSoundId) {
-                mGearWhineStreamId = mSoundPool.play(mGearWhineSoundId, 0f, 0f, 1, -1, 1.0f);
-            }
+            if (status != 0) return; // Yükleme hatası varsa çık
+
+            // Toplam beklenen dosya sayısı: EngineSamples + Turbo + Transmission
+            int totalExpected = mCurrentSamples.length + 2;
+
             mLoadedSamplesCount++;
-            if (mLoadedSamplesCount == mCurrentSamples.length && mIsPlaying) {
+
+            // TÜM DOSYALAR YÜKLENDİĞİNDE:
+            if (mLoadedSamplesCount >= totalExpected && mIsPlaying) {
+                // Ana Motor Sesleri
                 for (EngineSample sample : mCurrentSamples) {
                     sample.streamId = mSoundPool.play(sample.soundId, 0f, 0f, 1, -1, 1.0f);
                 }
+                // Turbo / Compressor
+                mTurboStreamId = mSoundPool.play(mTurboSoundId, 0f, 0f, 1, -1, 1.0f);
+                // Şanzıman Islığı
+                mGearWhineStreamId = mSoundPool.play(mGearWhineSoundId, 0f, 0f, 1, -1, 1.0f);
+
                 onSpeedChanged(mCurrentSpeedKmh);
             }
         });
 
-        for (EngineSample sample : mCurrentSamples) {
-            sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
-        }
+        // 3. YÜKLEME SIRALAMASI (Load): ID'leri şimdi alıyoruz
+        // Önce özel sesleri yükle (ID'ler oluşsun)
         if (mActiveProfile.hasTurbo == 2)
             mTurboSoundId = mSoundPool.load(mContext, R.raw.compressor, 1);
         else
             mTurboSoundId = mSoundPool.load(mContext, R.raw.turbo, 1);
+
         mGearWhineSoundId = mSoundPool.load(mContext, R.raw.transmission, 1);
 
+        // Sonra motor seslerini yükle
+        for (EngineSample sample : mCurrentSamples) {
+            sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
+        }
     }
 
     public void stop() {
