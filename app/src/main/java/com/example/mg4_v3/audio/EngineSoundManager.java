@@ -64,10 +64,6 @@ public class EngineSoundManager {
     private float mRevMatchBoost = 0f;
     private boolean mGearWhineEnabled = true;
 
-    // Audio focus yönetimi (araç boot sonrası sesin açılması için)
-    private AudioManager mAudioManager;
-    private boolean mHasAudioFocus = false;
-
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public static class VehicleProfile {
         public final String name;
@@ -358,7 +354,6 @@ public class EngineSoundManager {
     private EngineSoundManager(Context context) {
         this.mContext = context.getApplicationContext();
         this.mHandler = new Handler(Looper.getMainLooper());
-        this.mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
     }
 
     public static synchronized EngineSoundManager getInstance(Context context) {
@@ -394,20 +389,7 @@ public class EngineSoundManager {
         mIsPlaying = true;
         mLoadedSamplesCount = 0;
 
-        // Araç boot ettiğinde başka medya uygulaması açılmamış olsa bile,
-        // media çıkış kanalını aktif etmek için audio focus iste.
-        if (mAudioManager != null && !mHasAudioFocus) {
-            int res = mAudioManager.requestAudioFocus(
-                    null,
-                    AudioManager.STREAM_MUSIC,
-                    AudioManager.AUDIOFOCUS_GAIN
-            );
-            mHasAudioFocus = (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED);
-            if (MG4Hardware.isLogEnabled()) {
-                Log.i(TAG, "AudioFocus isteği sonucu=" + res + " granted=" + mHasAudioFocus);
-            }
-        }
-
+        // Audio focus istemiyoruz: müzik focus'ta kalsın, motor sesi müzikle birlikte mixlensin.
         int maxStreams = mCurrentSamples.length + 5;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -468,12 +450,6 @@ public class EngineSoundManager {
             for (EngineSample s : mCurrentSamples) s.streamId = -1;
         }
         mTurboStreamId = -1; // Turbo sıfırla
-
-        // Ses tamamen kapandığında audio focus'u bırak
-        if (mAudioManager != null && mHasAudioFocus) {
-            mAudioManager.abandonAudioFocus(null);
-            mHasAudioFocus = false;
-        }
     }
 
     // ==========================================

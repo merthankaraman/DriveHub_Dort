@@ -43,6 +43,8 @@ public class MG4ControlService extends Service {
     private static final String TAG = "MG4_SERVICE";
     private static final String CHANNEL_ID = "mg4_channel";
     private static final int    NOTIF_ID   = 1001;
+    /** Ekrandan müzik duraklat/devam için Activity'nin servise gönderdiği action */
+    public static final String ACTION_TOGGLE_MUSIC = "com.example.mg4_v3.TOGGLE_MUSIC";
 
     // Hardkey broadcast — logcat'ten doğrulandı (1902260031.txt):
     //   action: com.saic.keyevent.hardkey.report
@@ -57,6 +59,7 @@ public class MG4ControlService extends Service {
     //   ★ tuşu (17)             → regen döngüsü (SystemUI da aynı tuşla regen yapıyor;
     //                              biz 150ms geciktirip araçtan mevcut değeri okuyup +1 yazıyoruz)
     //   Vol↑+Vol↓ combo (300ms) → müzik pause/play
+    //   Direksiyon müzik tuşu (log’da keycode=301) → müzik pause/play
     private static final String HARDKEY_ACTION      = "com.saic.keyevent.hardkey.report";
     private static final int    KEYCODE_STAR        = 17;
     private static final int    KEYCODE_VOLUME_UP   = 24;
@@ -625,10 +628,11 @@ public class MG4ControlService extends Service {
         }
     }
 
+    /** Log’da direksiyon müzik tuşu keycode=301 ile geliyor; müzik uygulaması buna tepki veriyor. */
+
     /**
-     * Aktif MediaSession bulunamazsa, müzik duraklat/başlat için iki yol dene:
-     * 1) AudioManager.dispatchMediaKeyEvent
-     * 2) ACTION_MEDIA_BUTTON broadcast (birçok araç müzik uygulaması bunu dinler)
+     * Ses kısma+açma (Vol↑+Vol↓) combo’da müzik duraklat/başlat.
+     * MG4 müzik uygulaması SAIC hardkey 301’i dinliyor, o yüzden önce onu gönderiyoruz.
      */
     private void sendMediaPlayPauseKey() {
         if (mAudioManager == null) {
@@ -639,13 +643,10 @@ public class MG4ControlService extends Service {
                 KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
         KeyEvent up = new KeyEvent(now + 50, now + 50,
                 KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
-
         if (mAudioManager != null) {
             mAudioManager.dispatchMediaKeyEvent(down);
             mAudioManager.dispatchMediaKeyEvent(up);
         }
-
-        // Araç sistemlerinde sık kullanılan eski yöntem: MEDIA_BUTTON broadcast
         sendMediaButtonBroadcast(down);
         sendMediaButtonBroadcast(up);
         if (MG4Hardware.isLogEnabled()) {
@@ -838,6 +839,9 @@ public class MG4ControlService extends Service {
                 updateNotification("Sağ Koltuk: " + (seatRLevel == 0 ? "Kapalı" : "Sev." + seatRLevel));
                 break;
             }
+            case ACTION_TOGGLE_MUSIC:
+                toggleMusicPlayback();
+                break;
             case "OVERLAY_ON":
                 showOverlay();
                 updateNotification("Overlay: Açık");

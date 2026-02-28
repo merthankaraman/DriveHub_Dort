@@ -528,6 +528,22 @@ public class MG4Hardware {
         }
     }
 
+    /** Katman 3: sVehicleSettingService üzerinde metod adıyla int getter çağır. */
+    private static int vsGetInt(String methodName) {
+        Object vs = sVehicleSettingService;
+        if (vs == null) return -1;
+        try {
+            java.lang.reflect.Method m = vs.getClass().getMethod(methodName);
+            Object result = m.invoke(vs);
+            int val = ((Number) result).intValue();
+            if (sLogEnabled) Log.i(TAG, "  Katman3: " + methodName + "() = " + val);
+            return val;
+        } catch (Throwable t) {
+            Log.e(TAG, "  Katman3: " + methodName + "() HATA: " + t);
+            return -1;
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Setter'lar
     // -------------------------------------------------------------------------
@@ -548,15 +564,25 @@ public class MG4Hardware {
 
         if (level == RegenLevel.OFF) {
             setOnePedal(false);
-            if (sLogEnabled) Log.i(TAG, "setRegenLevel: KAPALI — setRegenerativeBrakeSwitch(0) deneniyor");
-            // Katman 3: VehicleService direct (Hüseyin yöntemi) — en güvenilir
-            if (vsSetInt("setRegenerativeBrakeSwitch", 0)) return true;
-            // Katman 1: CPM (PROP_REGEN_BRAKE_SWITCH)
+            if (sLogEnabled) {
+                int lvBefore = vsGetInt("getRegenerativeLevel");
+                int swBefore = vsGetInt("getRegenerativeBrakeSwitch");
+                Log.i(TAG, "setRegenLevel: KAPALI — önceki level=" + lvBefore + " switch=" + swBefore);
+            }
+            // Katman 3: switch=0 (her durumda dene, erken çıkma)
+            boolean swOk = vsSetInt("setRegenerativeBrakeSwitch", 0);
+            // Katman 1: CPM PROP_REGEN_BRAKE_SWITCH=0 (Katman3'ten bağımsız her zaman dene)
             boolean cpmOk = setIntPropertyCPM(PROP_REGEN_BRAKE_SWITCH, AREA_GLOBAL, 0);
-            if (sLogEnabled) Log.i(TAG, "setRegenLevel: KAPALI CPM=" + cpmOk);
-            if (cpmOk) return true;
-            // Katman 2: Binder TX
-            return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 0);
+            // Katman 2: Binder TX (yedek)
+            boolean txOk = false;
+            if (!cpmOk) txOk = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 0);
+            if (sLogEnabled) {
+                int lvAfter = vsGetInt("getRegenerativeLevel");
+                int swAfter = vsGetInt("getRegenerativeBrakeSwitch");
+                Log.i(TAG, "setRegenLevel: KAPALI sw=" + swOk + " cpm=" + cpmOk + " tx=" + txOk
+                        + " sonraki level=" + lvAfter + " switch=" + swAfter);
+            }
+            return swOk || cpmOk || txOk;
         }
 
         // Diğer seviyeler: önce brake switch=1 aç, sonra seviyeyi ayarla
