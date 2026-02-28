@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             if (mChargingPanelOpen) {
                 refreshStatusPanel();
-                mChargingHandler.postDelayed(this, 1000);
+                mChargingHandler.postDelayed(this, 100);
             }
         }
     };
@@ -154,7 +154,11 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 mTvGaugeSpeed.setText("-- km/h");
             }
+            float dcPowerKw = Float.NaN;
             if (mEngineSound != null) {
+                float dcVolt = MG4Hardware.getDcVoltage();
+                float dcAmpAct = MG4Hardware.getDcCurrentActual();
+                dcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
                 if (mTvGaugeRpm != null) {
                     float rpm = mEngineSound.getCurrentRpm();
                     mTvGaugeRpm.setText(String.format("%.0f", rpm));
@@ -163,28 +167,18 @@ public class MainActivity extends AppCompatActivity {
                     mTvGaugeGear.setText("A" + mEngineSound.getCurrentGear());
                 }
                 if (mTvGaugePower != null) {
-                    float dcVolt = MG4Hardware.getDcVoltage();
-                    float dcAmpAct = MG4Hardware.getDcCurrentActual();
-                    float kw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? Float.NaN : (dcVolt * dcAmpAct) / 1000f;
-                    if (Float.isNaN(kw)) {
-                        mTvGaugePower.setText("0.0");
-                    } else {
-                        mTvGaugePower.setText(String.format("%.2f", kw));
-                    }
+                    mTvGaugePower.setText(String.format("%.2f", dcPowerKw));
                 }
                 if (mTvGaugeThrottle != null) {
                     float throttle = mEngineSound.getSimulatedThrottle();
                     int pct = Math.round(throttle * 100f);
                     mTvGaugeThrottle.setText(pct + "%");
                 }
+                mEngineSound.onSpeedChanged(speed, dcPowerKw);
             }
             boolean ready = (MG4Hardware.isVehicleReady() || mSimSpeedActive);
             if (mTvMotorState != null) {
                 mTvMotorState.setText(ready ? "Motor durumu: READY" : "Motor durumu: Kapalı");
-            }
-            // Kadranlar (RPM, vites, pedal) güncel kalsın diye EngineSoundManager her zaman hız ile beslenir
-            if (mEngineSound != null) {
-                mEngineSound.onSpeedChanged(speed);
             }
             // Ses çalma: sadece ses açıksa ve (READY veya sim) ise start, değilse stop
             if (mEngineSound != null && mSimSpeedActive) {
@@ -753,7 +747,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mChargingPanelOpen = true;
         refreshStatusPanel();
         refreshChargingHistoryTable();
-        mChargingHandler.postDelayed(mChargingRunnable, 1000);
+        mChargingHandler.postDelayed(mChargingRunnable, 100);
     }
 
     private void closeStatusPanel() {

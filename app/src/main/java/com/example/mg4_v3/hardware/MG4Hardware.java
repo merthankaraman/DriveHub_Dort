@@ -30,7 +30,6 @@ public class MG4Hardware {
     // Sürüş kontrol property'leri (logdan doğrulandı)
     private static final int PROP_DRIVE_MODE         = 0x2140a17c; //557883772
     private static final int PROP_REGEN_LEVEL        = 0x2140a191; //557883793
-    private static final int PROP_REGEN_BRAKE_SWITCH = 0x2140a18f; //557883791 — regen ana switch (JADX analizi)
     private static final int PROP_ONE_PEDAL          = 0x2140a193; //557883795
 
     private static final int AREA_GLOBAL        = 0x01000000;
@@ -102,7 +101,10 @@ public class MG4Hardware {
     // Enerji birikimi — UI kapalı olsa bile BMS callback içinde güncellenir
     private static volatile float sAcEnergyKwh       = 0f;
     private static volatile float sDcEnergyKwh       = 0f;
-    private static volatile long  sLastBmsEventMs    = 0L;
+    private static volatile long  sLastBmsEventMs   = 0L;
+    /** Son event'teki güç (kW); deltaMs aralığı için bunu kullanıyoruz, yeni gelen değeri değil. */
+    private static volatile float sLastAcKw          = 0f;
+    private static volatile float sLastDcKw          = 0f;
     // Şarj süresi için basit sayaç — şarj başladığı anda sistem saatini tutar
     private static volatile long  sChargingStartWallMs = 0L;
     // Detay log açık mı? (BMS/StatusPanel spam'i için)
@@ -171,6 +173,8 @@ public class MG4Hardware {
         sAcEnergyKwh         = 0f;
         sDcEnergyKwh         = 0f;
         sLastBmsEventMs      = 0L;
+        sLastAcKw             = 0f;
+        sLastDcKw             = 0f;
         sChargingStartWallMs = 0L;
         sInitialized        = false;
         sCarBindAttempted   = false;
@@ -528,22 +532,6 @@ public class MG4Hardware {
         }
     }
 
-    /** Katman 3: sVehicleSettingService üzerinde metod adıyla int getter çağır. */
-    private static int vsGetInt(String methodName) {
-        Object vs = sVehicleSettingService;
-        if (vs == null) return -1;
-        try {
-            java.lang.reflect.Method m = vs.getClass().getMethod(methodName);
-            Object result = m.invoke(vs);
-            int val = ((Number) result).intValue();
-            if (sLogEnabled) Log.i(TAG, "  Katman3: " + methodName + "() = " + val);
-            return val;
-        } catch (Throwable t) {
-            Log.e(TAG, "  Katman3: " + methodName + "() HATA: " + t);
-            return -1;
-        }
-    }
-
     // -------------------------------------------------------------------------
     // Setter'lar
     // -------------------------------------------------------------------------
@@ -561,34 +549,9 @@ public class MG4Hardware {
 
     public static boolean setRegenLevel(RegenLevel level) {
         if (sLogEnabled) Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
-
-        if (level == RegenLevel.OFF) {
+        if (level != RegenLevel.ONE_PEDAL){
             setOnePedal(false);
-            if (sLogEnabled) {
-                int lvBefore = vsGetInt("getRegenerativeLevel");
-                int swBefore = vsGetInt("getRegenerativeBrakeSwitch");
-                Log.i(TAG, "setRegenLevel: KAPALI — önceki level=" + lvBefore + " switch=" + swBefore);
-            }
-            // Katman 3: switch=0 (her durumda dene, erken çıkma)
-            boolean swOk = vsSetInt("setRegenerativeBrakeSwitch", 0);
-            // Katman 1: CPM PROP_REGEN_BRAKE_SWITCH=0 (Katman3'ten bağımsız her zaman dene)
-            boolean cpmOk = setIntPropertyCPM(PROP_REGEN_BRAKE_SWITCH, AREA_GLOBAL, 0);
-            // Katman 2: Binder TX (yedek)
-            boolean txOk = false;
-            if (!cpmOk) txOk = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 0);
-            if (sLogEnabled) {
-                int lvAfter = vsGetInt("getRegenerativeLevel");
-                int swAfter = vsGetInt("getRegenerativeBrakeSwitch");
-                Log.i(TAG, "setRegenLevel: KAPALI sw=" + swOk + " cpm=" + cpmOk + " tx=" + txOk
-                        + " sonraki level=" + lvAfter + " switch=" + swAfter);
-            }
-            return swOk || cpmOk || txOk;
         }
-
-        // Diğer seviyeler: önce brake switch=1 aç, sonra seviyeyi ayarla
-        boolean switchOk = setIntPropertyCPM(PROP_REGEN_BRAKE_SWITCH, AREA_GLOBAL, 1);
-        if (sLogEnabled) Log.i(TAG, "setRegenLevel: switch=1 CPM=" + switchOk);
-        if (!switchOk) binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 1);
         boolean ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
         if (sLogEnabled) Log.i(TAG, "setRegenLevel: seviye=" + level.value + " CPM=" + ok);
         if (!ok) ok = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_LEVEL, level.value);
@@ -874,6 +837,8 @@ public class MG4Hardware {
         sAcEnergyKwh         = 0f;
         sDcEnergyKwh         = 0f;
         sLastBmsEventMs      = 0L;
+        sLastAcKw             = 0f;
+        sLastDcKw             = 0f;
     }
 
     /** Enerji ve süre sayaçlarını sıfırla */
@@ -881,6 +846,8 @@ public class MG4Hardware {
         sAcEnergyKwh         = 0f;
         sDcEnergyKwh         = 0f;
         sLastBmsEventMs      = 0L;
+        sLastAcKw             = 0f;
+        sLastDcKw             = 0f;
         sChargingStartWallMs = 0L;
         if (sLogEnabled) Log.i(TAG, "resetEnergy() çağrıldı");
     }
@@ -1119,19 +1086,17 @@ public class MG4Hardware {
                                             if (propId == PROP_BATT_VOLT) {
                                                 long nowMs = android.os.SystemClock.elapsedRealtime();
                                                 long deltaMs = (sLastBmsEventMs > 0) ? (nowMs - sLastBmsEventMs) : 0;
-                                                sLastBmsEventMs = nowMs;
                                                 if (deltaMs > 0 && deltaMs < 5000 && isCharging()) {
-                                                    float acV = bmsFloat(PROP_AC_VOLT);
-                                                    float acA = bmsFloat(PROP_AC_AMP);
-                                                    if (!Float.isNaN(acV) && !Float.isNaN(acA) && acA > 0f) {
-                                                        sAcEnergyKwh += (acV * acA / 1000f) * deltaMs / 3_600_000f;
-                                                    }
-                                                    float dcV = ((Number) toCache).floatValue();
-                                                    float dcA = bmsFloat(PROP_CHR_AMP_ACT);
-                                                    if (!Float.isNaN(dcA) && Math.abs(dcA) > 0.01f) {
-                                                        sDcEnergyKwh += (dcV * Math.abs(dcA) / 1000f) * deltaMs / 3_600_000f;
-                                                    }
+                                                    sAcEnergyKwh += sLastAcKw * deltaMs / 3_600_000f;
+                                                    sDcEnergyKwh += sLastDcKw * deltaMs / 3_600_000f;
                                                 }
+                                                sLastBmsEventMs = nowMs;
+                                                float acV = bmsFloat(PROP_AC_VOLT);
+                                                float acA = bmsFloat(PROP_AC_AMP);
+                                                sLastAcKw = (!Float.isNaN(acV) && !Float.isNaN(acA) && acA > 0f) ? (acV * acA / 1000f) : 0f;
+                                                float dcV = ((Number) toCache).floatValue();
+                                                float dcA = bmsFloat(PROP_CHR_AMP_ACT);
+                                                sLastDcKw = (!Float.isNaN(dcA) && Math.abs(dcA) > 0.01f) ? (dcV * Math.abs(dcA) / 1000f) : 0f;
                                             }
                                         } else if (isBmsPropId(propId)) {
                                             Log.w(TAG, "BMS parse value tipi desteklenmiyor: propId=0x" + Integer.toHexString(propId) + " value=" + (valueObj != null ? valueObj.getClass().getName() : "null"));
@@ -1196,19 +1161,17 @@ public class MG4Hardware {
                                     if (propId == PROP_BATT_VOLT) {
                                         long nowMs = android.os.SystemClock.elapsedRealtime();
                                         long deltaMs = (sLastBmsEventMs > 0) ? (nowMs - sLastBmsEventMs) : 0;
-                                        sLastBmsEventMs = nowMs;
                                         if (deltaMs > 0 && deltaMs < 5000 && isCharging()) {
-                                            float acV = bmsFloat(PROP_AC_VOLT);
-                                            float acA = bmsFloat(PROP_AC_AMP);
-                                            if (!Float.isNaN(acV) && !Float.isNaN(acA) && acA > 0f) {
-                                                sAcEnergyKwh += (acV * acA / 1000f) * deltaMs / 3_600_000f;
-                                            }
-                                            float dcV = ((Number) rawVal).floatValue();
-                                            float dcA = bmsFloat(PROP_CHR_AMP_ACT);
-                                            if (!Float.isNaN(dcA) && dcA < 0f) {
-                                                sDcEnergyKwh += (dcV * Math.abs(dcA) / 1000f) * deltaMs / 3_600_000f;
-                                            }
+                                            sAcEnergyKwh += sLastAcKw * deltaMs / 3_600_000f;
+                                            sDcEnergyKwh += sLastDcKw * deltaMs / 3_600_000f;
                                         }
+                                        sLastBmsEventMs = nowMs;
+                                        float acV = bmsFloat(PROP_AC_VOLT);
+                                        float acA = bmsFloat(PROP_AC_AMP);
+                                        sLastAcKw = (!Float.isNaN(acV) && !Float.isNaN(acA) && acA > 0f) ? (acV * acA / 1000f) : 0f;
+                                        float dcV = ((Number) rawVal).floatValue();
+                                        float dcA = bmsFloat(PROP_CHR_AMP_ACT);
+                                        sLastDcKw = (!Float.isNaN(dcA) && Math.abs(dcA) > 0.01f) ? (dcV * Math.abs(dcA) / 1000f) : 0f;
                                     }
                                 } else {
                                     Log.w(TAG, "BMS callback SKIP: propId=" + propId + " rawVal=" + rawVal);

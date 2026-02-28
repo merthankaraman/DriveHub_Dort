@@ -392,14 +392,15 @@ public class EngineSoundManager {
         // Audio focus istemiyoruz: müzik focus'ta kalsın, motor sesi müzikle birlikte mixlensin.
         int maxStreams = mCurrentSamples.length + 5;
 
+        // Medya değil, alarm sesi: ses kısma/açma sadece müziği etkiler, motor sesi sadece uygulama slider'ına göre.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             AudioAttributes attrs = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .build();
             mSoundPool = new SoundPool.Builder().setMaxStreams(maxStreams).setAudioAttributes(attrs).build();
         } else {
-            mSoundPool = new SoundPool(maxStreams, AudioManager.STREAM_MUSIC, 0);
+            mSoundPool = new SoundPool(maxStreams, AudioManager.STREAM_ALARM, 0);
         }
 
         mSoundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
@@ -475,16 +476,33 @@ public class EngineSoundManager {
     // ==========================================
     // TCU & MIXER (ANA MANTIK)
     // ==========================================
+    /** Hız değişti; kW verilmezse Hardware cache'den okunur (tek yerden çekmek için MainActivity'den geçirilebilir). */
     public void onSpeedChanged(float speedKmh) {
+        if (mUseManualThrottle) {
+            onSpeedChanged(speedKmh, Float.NaN);
+            return;
+        }
+        float dcVolt = MG4Hardware.getDcVoltage();
+        float dcAmpAct = MG4Hardware.getDcCurrentActual();
+        float kw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
+        onSpeedChanged(speedKmh, kw);
+    }
+
+    /** Hız + DC güç (kW). MainActivity zaten gauge için çektiyse aynı değeri geçir; ikinci kez hat çekilmez. */
+    public void onSpeedChanged(float speedKmh, float dcPowerKw) {
         if (!mIsPlaying || mCurrentSamples == null || mLoadedSamplesCount < mCurrentSamples.length) return;
 
         mCurrentSpeedKmh = (Float.isNaN(speedKmh) || speedKmh < 0f) ? 0f : speedKmh;
         if (!mUseManualThrottle) {
-            float dcVolt = MG4Hardware.getDcVoltage();
-            float dcAmpAct = MG4Hardware.getDcCurrentActual();
-            mCurrentDcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
-            mCurrentDcPowerKw = mCurrentDcPowerKw < 5f ? 0f : mCurrentDcPowerKw;
-            mSimulatedThrottle = Math.min(1f,(Math.max(0f,(mCurrentDcPowerKw / mMotorMaxPower))));
+            if (!Float.isNaN(dcPowerKw)) {
+                mCurrentDcPowerKw = dcPowerKw < 5f ? 0f : dcPowerKw;
+            } else {
+                float dcVolt = MG4Hardware.getDcVoltage();
+                float dcAmpAct = MG4Hardware.getDcCurrentActual();
+                mCurrentDcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
+                mCurrentDcPowerKw = mCurrentDcPowerKw < 5f ? 0f : mCurrentDcPowerKw;
+            }
+            mSimulatedThrottle = Math.min(1f, Math.max(0f, (mCurrentDcPowerKw / mMotorMaxPower)));
         }
 
         updateGearAndRpm();

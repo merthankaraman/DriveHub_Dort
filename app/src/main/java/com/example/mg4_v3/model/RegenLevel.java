@@ -1,13 +1,13 @@
 package com.example.mg4_v3.model;
 
 public enum RegenLevel {
-    // Araçta doğrulanan değerler (log 1902260053):
-    // setProperty value:0 → Düşük, value:1 → Orta, value:2 → Yüksek, value:3 → Adaptif
+    // VehicleSettingService setRegenerativeLevel() değerleri (araçta doğrulandı):
     LOW(0,      "Düşük"),
     MEDIUM(1,   "Orta"),
     HIGH(2,     "Yüksek"),
     ADAPTIVE(3, "Adaptif"),
-    OFF(99,     "Kapalı"); // Kapalı için ayrı property (onePedal) kullanılıyor
+    OFF(5,       "Kapalı"),      // setRegenerativeLevel(5) = regen tamamen kapalı
+    ONE_PEDAL(6, "Tek Pedal");  // setRegenerativeLevel(6) = tek pedal modu
 
     public final int    value;
     public final String label;
