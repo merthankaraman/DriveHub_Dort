@@ -139,26 +139,26 @@ public class MainActivity extends AppCompatActivity {
     private final Runnable mSpeedRunnable = new Runnable() {
         @Override
         public void run() {
-            // Simülasyon açıksa slider hızını, değilse araç hızını kullan
-            float speed = mSimSpeedActive ? mSimSpeedKmh : MG4Hardware.getSpeedKmh();
+            // Hız tek kaynak: MG4Hardware (servis oradan okuyor). UI için sim açıksa sim, değilse son okunan gerçek hız.
+            MG4Hardware.setSimSpeed(mSimSpeedActive, mSimSpeedKmh);
+            float speedForDisplay = mSimSpeedActive ? mSimSpeedKmh : MG4Hardware.getLastSpeedForDisplay();
 
             if (mTvSpeed != null) {
-                if (Float.isNaN(speed)) {
+                if (Float.isNaN(speedForDisplay)) {
                     mTvSpeed.setText("-- km/h");
                 } else {
-                    mTvSpeed.setText(String.format("%.0f km/h", speed));
+                    mTvSpeed.setText(String.format("%.2f km/h", speedForDisplay));
                 }
             }
-            if (!Float.isNaN(speed) && mTvGaugeSpeed != null) {
-                mTvGaugeSpeed.setText(String.format("%.0f", speed));
+            if (!Float.isNaN(speedForDisplay) && mTvGaugeSpeed != null) {
+                mTvGaugeSpeed.setText(String.format("%.2f", speedForDisplay));
             } else {
                 mTvGaugeSpeed.setText("-- km/h");
             }
-            float dcPowerKw = Float.NaN;
             if (mEngineSound != null) {
                 float dcVolt = MG4Hardware.getDcVoltage();
                 float dcAmpAct = MG4Hardware.getDcCurrentActual();
-                dcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
+                float dcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
                 if (mTvGaugeRpm != null) {
                     float rpm = mEngineSound.getCurrentRpm();
                     mTvGaugeRpm.setText(String.format("%.0f", rpm));
@@ -174,7 +174,6 @@ public class MainActivity extends AppCompatActivity {
                     int pct = Math.round(throttle * 100f);
                     mTvGaugeThrottle.setText(pct + "%");
                 }
-                mEngineSound.onSpeedChanged(speed, dcPowerKw);
             }
             boolean ready = (MG4Hardware.isVehicleReady() || mSimSpeedActive);
             if (mTvMotorState != null) {
@@ -306,6 +305,9 @@ public class MainActivity extends AppCompatActivity {
                 boolean opening = mLayoutSpeedTest.getVisibility() != View.VISIBLE;
                 mLayoutSpeedTest.setVisibility(opening ? View.VISIBLE : View.GONE);
                 mSimSpeedActive = opening;
+                if (opening && seekSpeedTest != null) {
+                    mSimSpeedKmh = seekSpeedTest.getProgress();
+                }
                 if (mEngineSound != null) {
                     mEngineSound.setUseManualThrottle(opening);
                     if (opening && seekThrottleTest != null) {
@@ -326,11 +328,8 @@ public class MainActivity extends AppCompatActivity {
                     if (mTvSpeedTestLabel != null) {
                         mTvSpeedTestLabel.setText(String.format("Simüle hız: %.0f km/h", speed));
                     }
-                    if (mSoundEnabled && mEngineSound != null) {
-                        if (!mEngineSound.isPlaying()) {
-                            mEngineSound.start();
-                        }
-                        mEngineSound.onSpeedChanged(speed);
+                    if (mSoundEnabled && mEngineSound != null && !mEngineSound.isPlaying()) {
+                        mEngineSound.start();
                     }
                 }
 
@@ -345,11 +344,8 @@ public class MainActivity extends AppCompatActivity {
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                         float throttle = progress / 100f;
                         mEngineSound.setSimulatedThrottle(throttle);
-                        if (mSoundEnabled) {
-                            if (!mEngineSound.isPlaying()) {
-                                mEngineSound.start();
-                            }
-                            mEngineSound.onSpeedChanged(mSimSpeedKmh);
+                        if (mSoundEnabled && mEngineSound != null && !mEngineSound.isPlaying()) {
+                            mEngineSound.start();
                         }
                     }
 

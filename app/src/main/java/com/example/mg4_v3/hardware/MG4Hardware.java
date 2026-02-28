@@ -681,9 +681,33 @@ public class MG4Hardware {
     // Getter'lar — Araç Durum / BMS (float dönerler, hata: Float.NaN)
     // -------------------------------------------------------------------------
 
-    /** Araç hızı — km/h (araç doğrudan km/h gönderiyor, dönüşüm gereksiz) */
+    /** Araç hızı — km/h (araç doğrudan km/h gönderiyor, dönüşüm gereksiz). Mümkünse getSpeedForEngine() kullan (tek okuma). */
     public static float getSpeedKmh() {
         return getFloatPropertyCPM(PROP_SPEED, AREA_GLOBAL);
+    }
+
+    // Hız tek kaynak: sim açıksa sim, değilse gerçek; sadece getSpeedForEngine() hattan okur
+    private static volatile boolean sSimSpeedActive = false;
+    private static volatile float   sSimSpeedKmh   = 0f;
+    private static volatile float   sLastSpeedForDisplay = 0f;
+
+    /** MainActivity hız testi açınca/kapayınca veya slider değişince çağrılır. */
+    public static void setSimSpeed(boolean active, float kmh) {
+        sSimSpeedActive = active;
+        sSimSpeedKmh = (kmh >= 0f && kmh <= 500f) ? kmh : 0f;
+    }
+
+    /** Motor sesi için hız — tek yerden okuma. Sim açıksa sim hız, değilse hattan okuyup sLastSpeedForDisplay günceller. */
+    public static float getSpeedForEngine() {
+        if (sSimSpeedActive) return sSimSpeedKmh;
+        float s = getSpeedKmh();
+        sLastSpeedForDisplay = Float.isNaN(s) ? 0f : s;
+        return sLastSpeedForDisplay;
+    }
+
+    /** UI için son okunan gerçek hız (getSpeedForEngine tarafından güncellenir; hattan ek okuma yapmaz). */
+    public static float getLastSpeedForDisplay() {
+        return sLastSpeedForDisplay;
     }
 
     /** Araç "READY" mi? (EV sistemi aktif mi?) */

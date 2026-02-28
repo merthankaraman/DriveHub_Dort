@@ -109,11 +109,13 @@ public class MG4ControlService extends Service {
                 return;
             }
 
-            // Hız – servis tarafında sadece gerçek araç hızını kullan
-            float speed = MG4Hardware.getSpeedKmh();
+            // Hız tek kaynak: sim açıksa sim, değilse hattan tek okuma (getSpeedForEngine)
+            float speed = MG4Hardware.getSpeedForEngine();
             boolean ready = MG4Hardware.isVehicleReady();
+            float dcVolt = MG4Hardware.getDcVoltage();
+            float dcAmpAct = MG4Hardware.getDcCurrentActual();
+            float dcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
 
-            // Kullanıcının tercihine göre sesi aç/kapa
             SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
             boolean soundEnabled = prefs.getBoolean("sound_enabled", false);
 
@@ -121,7 +123,7 @@ public class MG4ControlService extends Service {
                 if (!mEngineSound.isPlaying()) {
                     mEngineSound.start();
                 }
-                mEngineSound.onSpeedChanged(speed);
+                mEngineSound.onSpeedChanged(speed, dcPowerKw);
             } else {
                 if (mEngineSound.isPlaying()) {
                     mEngineSound.stop();
