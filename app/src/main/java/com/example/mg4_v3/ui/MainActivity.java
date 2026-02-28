@@ -1,10 +1,13 @@
 package com.example.mg4_v3.ui;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -48,6 +51,13 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_SOUND_PROFILE = "sound_profile";
     private static final String PREF_SOUND_MASTER = "sound_master";
     private static final String PREF_MOTOR_POWER = "motor_power_kw";
+    /** Tek pedal atanacak tuş: -1=Kapalı, 5=Telefon, 17=Sol yıldız, 18=Sağ yıldız (hafızalı) */
+    private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
+    /** Basma tipi: "single", "long", "double" */
+    private static final String PREF_ONE_PEDAL_PRESS_TYPE = "one_pedal_press_type";
+    /** Varsayılan: kapalı — kullanıcı bir tuş seçene kadar tek pedal tetiklenmez */
+    private static final int DEFAULT_ONE_PEDAL_KEY = -1;
+    private static final String DEFAULT_ONE_PEDAL_PRESS_TYPE = "long";
     private static final int COLOR_ACTIVE   = 0xFF1F6FEB; // mavi — seçili
     private static final int COLOR_INACTIVE = 0xFF21262D; // koyu gri — seçilmemiş
     private static final int COLOR_HEAT_ON  = 0xFF9E3333; // kırmızı — ısıtma aktif
@@ -76,7 +86,18 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnGearWhine;
     private Button mBtnSpeedTest;
     private SeekBar mSeekSoundVolume;
+    private TextView mTvAlarmVolumeHint;
     private boolean mSoundEnabled = false; // Varsayılan: kapalı (kalıcı tercih SharedPreferences'tan yüklenecek)
+    private final Handler mAlarmVolumeHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mAlarmVolumeRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mCurrentPanel == PANEL_SOUND && mTvAlarmVolumeHint != null) {
+                refreshAlarmVolumeHint();
+                mAlarmVolumeHandler.postDelayed(this, 1500);
+            }
+        }
+    };
 
     // Ana ekran
     private View mLayoutMain;
@@ -97,6 +118,13 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnRegenAdaptive;
     private Button mBtnRegenOnePedal;
     private TextView mTvRegenCurrent;
+    private Button mBtnOnePedalKeyOff;
+    private Button mBtnOnePedalKeyPhone;
+    private Button mBtnOnePedalKeyLeftStar;
+    private Button mBtnOnePedalKeyRightStar;
+    private Button mBtnOnePedalPressSingle;
+    private Button mBtnOnePedalPressLong;
+    private Button mBtnOnePedalPressDouble;
 
     // Şarj paneli
     private View     mLayoutStatusPanel;
@@ -243,6 +271,11 @@ public class MainActivity extends AppCompatActivity {
         mBtnSpeedTest = findViewById(R.id.btnSpeedTest);
         mLayoutSpeedTest = findViewById(R.id.layoutSpeedTest);
         mSeekSoundVolume = findViewById(R.id.seekSoundVolume);
+        mTvAlarmVolumeHint = findViewById(R.id.tvAlarmVolumeHint);
+        Button btnAlarmVolumeMax = findViewById(R.id.btnAlarmVolumeMax);
+        if (btnAlarmVolumeMax != null) {
+            btnAlarmVolumeMax.setOnClickListener(v -> trySetAlarmVolumeMax());
+        }
         mBtnMotorPower = findViewById(R.id.btnMotorPower);
 
         // Yapay motor sesi yöneticisini başlat (önce instance al)
@@ -549,6 +582,15 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             mTvRegenCurrent.setText("Aktif: Tek Pedal");
         });
 
+        mBtnOnePedalKeyOff      = findViewById(R.id.btnOnePedalKeyOff);
+        mBtnOnePedalKeyPhone    = findViewById(R.id.btnOnePedalKeyPhone);
+        mBtnOnePedalKeyLeftStar = findViewById(R.id.btnOnePedalKeyLeftStar);
+        mBtnOnePedalKeyRightStar= findViewById(R.id.btnOnePedalKeyRightStar);
+        mBtnOnePedalPressSingle = findViewById(R.id.btnOnePedalPressSingle);
+        mBtnOnePedalPressLong   = findViewById(R.id.btnOnePedalPressLong);
+        mBtnOnePedalPressDouble = findViewById(R.id.btnOnePedalPressDouble);
+        setupOnePedalKeyPrefs();
+
         // ---- Klima paneli ----
         mLayoutClimatePanel = findViewById(R.id.layoutClimatePanel);
         // Direksiyon
@@ -692,6 +734,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         } else {
             mTvRegenCurrent.setText("");
         }
+        refreshOnePedalKeyHighlight();
     }
 
     private void closeRegenPanel() {
@@ -729,6 +772,68 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             case ADAPTIVE: return mBtnRegenAdaptive;
             default:       return mBtnRegenMedium;
         }
+    }
+
+    private void setupOnePedalKeyPrefs() {
+        if (mBtnOnePedalKeyOff == null) return;
+        SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        mBtnOnePedalKeyOff.setOnClickListener(v -> {
+            p.edit().putInt(PREF_ONE_PEDAL_KEY, -1).apply();
+            refreshOnePedalKeyHighlight();
+        });
+        mBtnOnePedalKeyPhone.setOnClickListener(v -> {
+            p.edit().putInt(PREF_ONE_PEDAL_KEY, 5).apply();
+            refreshOnePedalKeyHighlight();
+        });
+        mBtnOnePedalKeyLeftStar.setOnClickListener(v -> {
+            p.edit().putInt(PREF_ONE_PEDAL_KEY, 17).apply();
+            refreshOnePedalKeyHighlight();
+        });
+        mBtnOnePedalKeyRightStar.setOnClickListener(v -> {
+            p.edit().putInt(PREF_ONE_PEDAL_KEY, 18).apply();
+            refreshOnePedalKeyHighlight();
+        });
+        mBtnOnePedalPressSingle.setOnClickListener(v -> {
+            p.edit().putString(PREF_ONE_PEDAL_PRESS_TYPE, "single").apply();
+            refreshOnePedalKeyHighlight();
+        });
+        mBtnOnePedalPressLong.setOnClickListener(v -> {
+            p.edit().putString(PREF_ONE_PEDAL_PRESS_TYPE, "long").apply();
+            refreshOnePedalKeyHighlight();
+        });
+        mBtnOnePedalPressDouble.setOnClickListener(v -> {
+            p.edit().putString(PREF_ONE_PEDAL_PRESS_TYPE, "double").apply();
+            refreshOnePedalKeyHighlight();
+        });
+        refreshOnePedalKeyHighlight();
+    }
+
+    private void refreshOnePedalKeyHighlight() {
+        if (mBtnOnePedalKeyOff == null) return;
+        SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        int key = p.getInt(PREF_ONE_PEDAL_KEY, DEFAULT_ONE_PEDAL_KEY);
+        String type = p.getString(PREF_ONE_PEDAL_PRESS_TYPE, DEFAULT_ONE_PEDAL_PRESS_TYPE);
+        int keyColor = key == -1 ? COLOR_ACTIVE : COLOR_INACTIVE;
+        mBtnOnePedalKeyOff.setBackgroundTintList(android.content.res.ColorStateList.valueOf(keyColor));
+        mBtnOnePedalKeyOff.setTextColor(key == -1 ? 0xFFFFFFFF : 0xFF8B949E);
+        keyColor = key == 5 ? COLOR_ACTIVE : COLOR_INACTIVE;
+        mBtnOnePedalKeyPhone.setBackgroundTintList(android.content.res.ColorStateList.valueOf(keyColor));
+        mBtnOnePedalKeyPhone.setTextColor(key == 5 ? 0xFFFFFFFF : 0xFF8B949E);
+        keyColor = key == 17 ? COLOR_ACTIVE : COLOR_INACTIVE;
+        mBtnOnePedalKeyLeftStar.setBackgroundTintList(android.content.res.ColorStateList.valueOf(keyColor));
+        mBtnOnePedalKeyLeftStar.setTextColor(key == 17 ? 0xFFFFFFFF : 0xFF8B949E);
+        keyColor = key == 18 ? COLOR_ACTIVE : COLOR_INACTIVE;
+        mBtnOnePedalKeyRightStar.setBackgroundTintList(android.content.res.ColorStateList.valueOf(keyColor));
+        mBtnOnePedalKeyRightStar.setTextColor(key == 18 ? 0xFFFFFFFF : 0xFF8B949E);
+        int typeColor = "single".equals(type) ? COLOR_ACTIVE : COLOR_INACTIVE;
+        mBtnOnePedalPressSingle.setBackgroundTintList(android.content.res.ColorStateList.valueOf(typeColor));
+        mBtnOnePedalPressSingle.setTextColor("single".equals(type) ? 0xFFFFFFFF : 0xFF8B949E);
+        typeColor = "long".equals(type) ? COLOR_ACTIVE : COLOR_INACTIVE;
+        mBtnOnePedalPressLong.setBackgroundTintList(android.content.res.ColorStateList.valueOf(typeColor));
+        mBtnOnePedalPressLong.setTextColor("long".equals(type) ? 0xFFFFFFFF : 0xFF8B949E);
+        typeColor = "double".equals(type) ? COLOR_ACTIVE : COLOR_INACTIVE;
+        mBtnOnePedalPressDouble.setBackgroundTintList(android.content.res.ColorStateList.valueOf(typeColor));
+        mBtnOnePedalPressDouble.setTextColor("double".equals(type) ? 0xFFFFFFFF : 0xFF8B949E);
     }
 
     // -------------------------------------------------------------------------
@@ -881,14 +986,69 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         if (mLayoutSoundPanel != null) {
             mLayoutSoundPanel.setVisibility(View.VISIBLE);
         }
+        refreshAlarmVolumeHint();
+        mAlarmVolumeHandler.removeCallbacks(mAlarmVolumeRunnable);
+        mAlarmVolumeHandler.postDelayed(mAlarmVolumeRunnable, 1500);
     }
 
     private void closeSoundPanel() {
+        mAlarmVolumeHandler.removeCallbacks(mAlarmVolumeRunnable);
         if (mLayoutSoundPanel != null) {
             mLayoutSoundPanel.setVisibility(View.GONE);
         }
         mLayoutMain.setVisibility(View.VISIBLE);
         mCurrentPanel = PANEL_MAIN;
+    }
+
+    /** Motor sesi STREAM_ALARM kullanır; araç alarm sesi kısıksa ses de kısık çıkar. Bu değeri gösteriyoruz. */
+    private void refreshAlarmVolumeHint() {
+        if (mTvAlarmVolumeHint == null) return;
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) {
+            mTvAlarmVolumeHint.setText("Alarm sesi: okunamadı");
+            return;
+        }
+        int cur = am.getStreamVolume(AudioManager.STREAM_ALARM);
+        int max = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+        if (max <= 0) {
+            mTvAlarmVolumeHint.setText("Alarm sesi: --");
+            return;
+        }
+        String msg = "Alarm sesi (araç): " + cur + "/" + max;
+        if (cur >= max) {
+            msg += " — Maksimumda";
+        } else {
+            msg += " — Araç ayarlarından artırın";
+        }
+        mTvAlarmVolumeHint.setText(msg);
+    }
+
+    /** MODIFY_AUDIO_SETTINGS + sistem UID ile deniyor; araç izin vermeyebilir. */
+    private void trySetAlarmVolumeMax() {
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) {
+            Toast.makeText(this, "Ses servisi yok", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        int max = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+        if (max <= 0) {
+            Toast.makeText(this, "Alarm sesi desteklenmiyor", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            am.setStreamVolume(AudioManager.STREAM_ALARM, max, 0);
+            int now = am.getStreamVolume(AudioManager.STREAM_ALARM);
+            refreshAlarmVolumeHint();
+            if (now >= max) {
+                Toast.makeText(this, "Alarm sesi maksimuma alındı", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Araç alarm sesini değiştirmeye izin vermiyor olabilir", Toast.LENGTH_LONG).show();
+            }
+        } catch (SecurityException e) {
+            Toast.makeText(this, "Yetki yok: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Hata: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override

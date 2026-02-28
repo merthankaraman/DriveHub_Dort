@@ -61,7 +61,9 @@ public class MG4ControlService extends Service {
     //   Vol↑+Vol↓ combo (300ms) → müzik pause/play
     //   Direksiyon müzik tuşu (log’da keycode=301) → müzik pause/play
     private static final String HARDKEY_ACTION      = "com.saic.keyevent.hardkey.report";
+    private static final int    KEYCODE_PHONE       = 5;
     private static final int    KEYCODE_STAR        = 17;
+    private static final int    KEYCODE_STAR_RIGHT  = 18;
     private static final int    KEYCODE_VOLUME_UP   = 24;
     private static final int    KEYCODE_VOLUME_DOWN = 25;
     // Vol↑+Vol↓ combo → müzik pause/play (300ms pencere)
@@ -69,8 +71,19 @@ public class MG4ControlService extends Service {
     private long mVolUpDownTime   = 0L;
     private long mVolDownDownTime = 0L;
 
-    // ★ Tuşu uzun basış eşiği (ms) — kullanıcı ayarlayabilir
-    private static final long STAR_LONG_PRESS_MS = 1200;
+    // Tek pedal atama (Regen panelinden ayarlanır)
+    private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
+    private static final String PREF_ONE_PEDAL_PRESS_TYPE = "one_pedal_press_type";
+    /** -1 = kapalı (varsayılan); hiçbir tuş tek pedal tetiklemez */
+    private static final int DEFAULT_ONE_PEDAL_KEY = -1;
+    private static final String DEFAULT_ONE_PEDAL_PRESS_TYPE = "long";
+    private static final long ONE_PEDAL_LONG_PRESS_MS = 1200;
+    private static final long ONE_PEDAL_DOUBLE_TAP_MS = 400;
+
+    private volatile boolean mOnePedalKeyPressed = false;
+    private volatile boolean mOnePedalLongTriggered = false;
+    private long mOnePedalLastTapTime = 0L;
+    private int mOnePedalLastTapKeyCode = -1;
 
     private DriveMode mCurrentDriveMode = DriveMode.NORMAL;
     private BroadcastReceiver mHardkeyReceiver;
@@ -509,11 +522,13 @@ public class MG4ControlService extends Service {
                             + " label=" + keycodeLabel(keyCode));
                 }
 
-                if (keyCode == KEYCODE_STAR) {
-                    // ★ tuşu: hem down hem up olayını işle (basış süresi ölçümü için)
-                    onStarKey(isDown);
+                SharedPreferences prefs = getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
+                int assignedKey = prefs.getInt(PREF_ONE_PEDAL_KEY, DEFAULT_ONE_PEDAL_KEY);
+                if (assignedKey >= 0 && keyCode == assignedKey) {
+                    String pressType = prefs.getString(PREF_ONE_PEDAL_PRESS_TYPE, DEFAULT_ONE_PEDAL_PRESS_TYPE);
+                    onOnePedalKey(keyCode, isDown, isLong, pressType);
                 } else {
-                    if (!isDown) return; // Diğer tuşlar için sadece down olayına bak
+                    if (!isDown) return;
                     if (keyCode == KEYCODE_VOLUME_UP) {
                         onVolumeUp();
                     } else if (keyCode == KEYCODE_VOLUME_DOWN) {
@@ -528,69 +543,62 @@ public class MG4ControlService extends Service {
                 ContextCompat.RECEIVER_EXPORTED);
         if (MG4Hardware.isLogEnabled()) {
             Log.i(TAG, "Hardkey receiver kayıt edildi — action=" + HARDKEY_ACTION);
-            Log.i(TAG, "  ★ kısa (keycode=17)      → Tek Pedal açıksa KAPAT");
-            Log.i(TAG, "  ★ uzun ≥2sn (keycode=17) → Tek Pedal AÇ");
+            Log.i(TAG, "  Tek Pedal tuşu/basma tipi Regen panelinden atanır.");
             Log.i(TAG, "  Vol↑+Vol↓ combo (300ms)  → müzik pause/play");
         }
     }
 
     // -------------------------------------------------------------------------
-    // ★ Tuşu — basış süresi ile kısa/uzun ayırt et
-    //   Uzun basış (≥2sn) → Tek Pedal AÇ
-    //   Kısa basış         → Tek Pedal açıksa KAPAT, kapalıysa hiçbir şey yapma
-    //                        (regen döngüsü aracın kendi özelliğine bırakıldı)
+    // Tek Pedal atanmış tuş — Regen panelinde seçilen tuş (Telefon/Sol yıldız/Sağ yıldız) ve basma tipi (Tek/Uzun/Çift)
     // -------------------------------------------------------------------------
 
-    private volatile boolean mStarPressed = false; // Parmağın tuşta olup olmadığını tutar
-
-    private void onStarKey(boolean isDown) {
+    private void onOnePedalKey(int keyCode, boolean isDown, boolean isLong, String pressType) {
         if (isDown) {
-            // --- TUŞA BASILDI ---
-            mStarPressed = true;
-
-            new Thread(() -> {
-                long startTime = System.currentTimeMillis();
-                if (MG4Hardware.isLogEnabled()) {
-                    Log.i(TAG, "★ Tuş basılı tutuluyor, süre ölçülüyor...");
-                }
-
-                while (mStarPressed) {
-                    long duration = System.currentTimeMillis() - startTime;
-
-                    // 1. Durum: Belirlediğin süreyi geçti mi? (Parmağını çekmeni beklemez)
-                    if (duration >= STAR_LONG_PRESS_MS) {
-                        if (MG4Hardware.isLogEnabled()) {
-                            Log.i(TAG, "★ EŞİK AŞILDI! (" + duration + "ms) -> Tek Pedal AÇILIYOR");
-                        }
-
-                        MG4Hardware.setOnePedal(true);
-                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                            if (MG4Hardware.isLogEnabled()) {
-                                Log.i(TAG, "★ Tek Pedal TAKVİYE gönderildi");
-                            }
+            mOnePedalKeyPressed = true;
+            mOnePedalLongTriggered = false;
+            if ("long".equals(pressType)) {
+                new Thread(() -> {
+                    long start = System.currentTimeMillis();
+                    while (mOnePedalKeyPressed) {
+                        if (System.currentTimeMillis() - start >= ONE_PEDAL_LONG_PRESS_MS) {
+                            mOnePedalLongTriggered = true;
                             MG4Hardware.setOnePedal(true);
-                        }, 250);
-                        updateNotification("Tek Pedal: Açık");
-
-                        mStarPressed = false; // İşlem yapıldı, döngüden zorla çık
-                        break;
+                            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> MG4Hardware.setOnePedal(true), 250);
+                            updateNotification("Tek Pedal: Açık");
+                            mOnePedalKeyPressed = false;
+                            break;
+                        }
+                        try { Thread.sleep(50); } catch (Exception ignored) {}
                     }
-
-                    try { Thread.sleep(50); } catch (Exception ignored) {}
-                }
-            }).start();
-
+                }).start();
+            }
         } else {
-
-            if (mStarPressed) {
-                mStarPressed = false; // Döngüyü kırar
-
-                if (MG4Hardware.isLogEnabled()) {
-                    Log.i(TAG, "★ Tuş erken bırakıldı -> Kısa basış (Kapatma) işlemi");
+            mOnePedalKeyPressed = false;
+            if ("single".equals(pressType)) {
+                if (!mOnePedalLongTriggered) {
+                    if (MG4Hardware.getOnePedal() == 1) {
+                        MG4Hardware.setOnePedal(false);
+                        updateNotification("Tek Pedal: Kapalı");
+                    } else {
+                        MG4Hardware.setOnePedal(true);
+                        updateNotification("Tek Pedal: Açık");
+                    }
                 }
-                if (MG4Hardware.getOnePedal() == 1) {
-                    MG4Hardware.setOnePedal(false);
-                    updateNotification("Tek Pedal: Kapalı");
+            } else if ("double".equals(pressType)) {
+                long now = System.currentTimeMillis();
+                if (mOnePedalLastTapKeyCode == keyCode && (now - mOnePedalLastTapTime) <= ONE_PEDAL_DOUBLE_TAP_MS) {
+                    mOnePedalLastTapTime = 0;
+                    mOnePedalLastTapKeyCode = -1;
+                    if (MG4Hardware.getOnePedal() == 1) {
+                        MG4Hardware.setOnePedal(false);
+                        updateNotification("Tek Pedal: Kapalı");
+                    } else {
+                        MG4Hardware.setOnePedal(true);
+                        updateNotification("Tek Pedal: Açık");
+                    }
+                } else {
+                    mOnePedalLastTapTime = now;
+                    mOnePedalLastTapKeyCode = keyCode;
                 }
             }
         }
@@ -867,7 +875,9 @@ public class MG4ControlService extends Service {
      */
     private static String keycodeLabel(int keycode) {
         switch (keycode) {
+            case 5:   return "PHONE";
             case 17:  return "STAR/FAV";
+            case 18:  return "STAR_RIGHT";
             case 24:  return "VOLUME_UP";
             case 25:  return "VOLUME_DOWN";
             case 66:  return "ENTER";

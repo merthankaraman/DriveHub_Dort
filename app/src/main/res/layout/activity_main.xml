@@ -499,6 +499,116 @@
 
         </LinearLayout>
 
+        <!-- Tek pedalı düğmeye ata -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"
+            android:text="Tek pedalı düğmeye ata"
+            android:textColor="#8B949E"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnOnePedalKeyOff"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="#21262D"
+                android:text="Kapalı"
+                android:textColor="#C9D1D9"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/btnOnePedalKeyPhone"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="#21262D"
+                android:text="Telefon"
+                android:textColor="#C9D1D9"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/btnOnePedalKeyLeftStar"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="#21262D"
+                android:text="Sol yıldız"
+                android:textColor="#C9D1D9"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/btnOnePedalKeyRightStar"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="#21262D"
+                android:text="Sağ yıldız"
+                android:textColor="#C9D1D9"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            android:text="Basma tipi"
+            android:textColor="#8B949E"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnOnePedalPressSingle"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="#21262D"
+                android:text="Tek"
+                android:textColor="#C9D1D9"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/btnOnePedalPressLong"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="#21262D"
+                android:text="Uzun"
+                android:textColor="#C9D1D9"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/btnOnePedalPressDouble"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="#21262D"
+                android:text="Çift"
+                android:textColor="#C9D1D9"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
     <!-- ============================================================ -->
@@ -981,6 +1091,37 @@
                         android:layout_weight="1"
                         android:max="100"
                         android:minHeight="32dp" />
+
+                </LinearLayout>
+
+                <!-- Motor sesi STREAM_ALARM kullanır; araç alarm sesi kısıksa motor sesi de kısık çıkar -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tvAlarmVolumeHint"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Alarm sesi (araç): --"
+                        android:textColor="#8B949E"
+                        android:textSize="12sp" />
+
+                    <Button
+                        android:id="@+id/btnAlarmVolumeMax"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:minWidth="0dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:backgroundTint="#21262D"
+                        android:text="Max yap"
+                        android:textColor="#C9D1D9"
+                        android:textSize="12sp" />
 
                 </LinearLayout>
 
