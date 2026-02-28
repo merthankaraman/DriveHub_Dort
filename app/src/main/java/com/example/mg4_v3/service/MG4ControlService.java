@@ -12,6 +12,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.PixelFormat;
+import android.media.AudioManager;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
@@ -20,6 +21,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
@@ -90,6 +92,9 @@ public class MG4ControlService extends Service {
 
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
+    // Sistem medya sesini kontrol etmek için
+    private AudioManager mAudioManager;
+
     // Yapay motor sesi (sanal ses) – servis tarafında da yönet
     private EngineSoundManager mEngineSound;
     private final Handler mSoundHandler = new Handler(Looper.getMainLooper());
@@ -134,6 +139,8 @@ public class MG4ControlService extends Service {
                     + " (" + android.os.Build.VERSION.RELEASE + ")");
             Log.i(TAG, "  Cihaz: " + android.os.Build.MODEL + " / " + android.os.Build.DEVICE);
         }
+
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
         createNotificationChannel();
         startForeground(NOTIF_ID, buildNotification("Başlatılıyor..."));
@@ -618,6 +625,42 @@ public class MG4ControlService extends Service {
         }
     }
 
+    /**
+     * Aktif MediaSession bulunamazsa, müzik duraklat/başlat için iki yol dene:
+     * 1) AudioManager.dispatchMediaKeyEvent
+     * 2) ACTION_MEDIA_BUTTON broadcast (birçok araç müzik uygulaması bunu dinler)
+     */
+    private void sendMediaPlayPauseKey() {
+        if (mAudioManager == null) {
+            mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        }
+        long now = System.currentTimeMillis();
+        KeyEvent down = new KeyEvent(now, now,
+                KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
+        KeyEvent up = new KeyEvent(now + 50, now + 50,
+                KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
+
+        if (mAudioManager != null) {
+            mAudioManager.dispatchMediaKeyEvent(down);
+            mAudioManager.dispatchMediaKeyEvent(up);
+        }
+
+        // Araç sistemlerinde sık kullanılan eski yöntem: MEDIA_BUTTON broadcast
+        sendMediaButtonBroadcast(down);
+        sendMediaButtonBroadcast(up);
+        if (MG4Hardware.isLogEnabled()) {
+            Log.i(TAG, "MEDIA: PLAY_PAUSE gönderildi (dispatch + broadcast)");
+        }
+    }
+
+    /** ACTION_MEDIA_BUTTON broadcast — MG4 dahil birçok araç müzik uygulaması bunu dinler. */
+    private void sendMediaButtonBroadcast(KeyEvent keyEvent) {
+        Intent intent = new Intent(Intent.ACTION_MEDIA_BUTTON);
+        intent.putExtra(Intent.EXTRA_KEY_EVENT, keyEvent);
+        intent.setPackage(null); // Tüm dinleyicilere gitmesi için
+        sendOrderedBroadcast(intent, null);
+    }
+
     // -------------------------------------------------------------------------
     // Medya kontrolü — MediaSessionManager
     // -------------------------------------------------------------------------
@@ -684,8 +727,9 @@ public class MG4ControlService extends Service {
         }
         MediaController mc = getActiveMediaController();
         if (mc == null) {
-            Log.w(TAG, "MEDIA: medya kontrolcüsü yok → işlem iptal");
-            updateNotification("Müzik: aktif oturum bulunamadı");
+            Log.w(TAG, "MEDIA: medya kontrolcüsü yok → KEYCODE_MEDIA_PLAY_PAUSE fallback");
+            updateNotification("Müzik: aktif oturum yok, global PLAY/PAUSE gönderildi");
+            sendMediaPlayPauseKey();
             return;
         }
         PlaybackState state = mc.getPlaybackState();

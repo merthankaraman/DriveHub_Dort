@@ -62,9 +62,10 @@ public class MG4Hardware {
     // Katman 2 — Binder (yedek, uid.system gerektirir)
     private static final String DESCRIPTOR_VEHICLE =
             "com.saicmotor.sdk.vehiclesettings.IVehicleSettingService";
-    private static final int TX_SET_DRIVE_MODE         = 151;
-    private static final int TX_SET_ONE_PEDAL          = 181;
-    private static final int TX_SET_REGEN_BRAKE_SWITCH = 159;
+    private static final int TX_SET_DRIVE_MODE         = 130; // 0x82 — Hüseyin smali analizi
+    private static final int TX_SET_REGEN_BRAKE_SWITCH = 138; // 0x8A — Hüseyin smali analizi
+    private static final int TX_SET_REGEN_LEVEL        = 161; // 0xA1 — Hüseyin smali analizi
+    private static final int TX_SET_ONE_PEDAL          = 164; // 0xA4 — Hüseyin smali analizi
     private static final int COUNT = 1;
 
     /** HVAC property değişikliğini dinlemek isteyen servis buraya register olur. */
@@ -108,11 +109,15 @@ public class MG4Hardware {
     private static volatile boolean sLogEnabled = true;
 
     // State
-    private static Object  sCarPropertyManager = null;
-    private static Object  sCarHvacManager     = null;
-    private static boolean sCarBindAttempted   = false;
-    private static IBinder sVehicleBinder      = null;
-    private static boolean sInitialized        = false;
+    private static Object  sCarPropertyManager     = null;
+    private static Object  sCarHvacManager         = null;
+    private static boolean sCarBindAttempted       = false;
+    private static IBinder sVehicleBinder          = null;
+    private static boolean sInitialized            = false;
+
+    // Katman 3 — VehicleService direct bind (Hüseyin yöntemi)
+    private static volatile Object  sVehicleSettingService = null;
+    private static volatile boolean sVsBindAttempted       = false;
 
     // -------------------------------------------------------------------------
     // Init / Destroy
@@ -132,6 +137,9 @@ public class MG4Hardware {
 
         // Katman 1: CarPropertyManager — com.android.car'a bind ol
         bindCarService(appContext);
+
+        // Katman 3: VehicleService direct bind (Hüseyin yöntemi)
+        bindVehicleService(appContext);
 
         // Katman 2: Binder (yedek)
         if (sLogEnabled) logAvailableVehicleServices();
@@ -154,9 +162,11 @@ public class MG4Hardware {
     public static void setLogEnabled(boolean enabled) { sLogEnabled = enabled; }
 
     public static void destroy() {
-        sCarPropertyManager = null;
-        sCarHvacManager     = null;
-        sVehicleBinder      = null;
+        sCarPropertyManager    = null;
+        sCarHvacManager        = null;
+        sVehicleBinder         = null;
+        sVehicleSettingService = null;
+        sVsBindAttempted       = false;
         sBmsCache.clear();
         sAcEnergyKwh         = 0f;
         sDcEnergyKwh         = 0f;
@@ -397,6 +407,128 @@ public class MG4Hardware {
     }
 
     // -------------------------------------------------------------------------
+    // Katman 3 — VehicleService direct bind (Hüseyin yöntemi)
+    // bindService → DexClassLoader → IHubService$Stub → hub.getService("vehiclesetting")
+    // → IVehicleSettingService$Stub.asInterface → doğrudan metod çağrısı
+    // -------------------------------------------------------------------------
+
+    private static void bindVehicleService(Context context) {
+        if (sVsBindAttempted) return;
+        sVsBindAttempted = true;
+        try {
+            android.content.Intent intent = new android.content.Intent();
+            intent.setComponent(new ComponentName(
+                    "com.saicmotor.service.vehicle",
+                    "com.saicmotor.service.vehicle.VehicleService"
+            ));
+            boolean ok = context.bindService(intent, new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName name, IBinder service) {
+                    try {
+                        java.util.List<ClassLoader> loaders = buildVsClassLoaders(context);
+
+                        // Hub stub
+                        Class<?> hubStub = findVsClass(loaders, java.util.Arrays.asList(
+                                "com.saicmotor.sdk.vehiclesettings.IHubService$Stub",
+                                "com.saicvehicleservice.IHubService$Stub",
+                                "com.saicvehicleservice.sdk.IHubService$Stub",
+                                "com.saicmotor.service.vehicle.IHubService$Stub"
+                        ));
+                        if (hubStub == null) throw new ClassNotFoundException("IHubService$Stub bulunamadı");
+
+                        java.lang.reflect.Method asInterface = hubStub.getMethod("asInterface", IBinder.class);
+                        Object hub = asInterface.invoke(null, service);
+
+                        // vehiclesetting binder'ı hub üzerinden al
+                        java.lang.reflect.Method getService = hub.getClass().getMethod("getService", String.class);
+                        IBinder vsBinder = null;
+                        for (String key : new String[]{"vehiclesetting", "vehicle_settings", "vehicle_setting_service"}) {
+                            try {
+                                IBinder b = (IBinder) getService.invoke(hub, key);
+                                if (b != null) { vsBinder = b; Log.i(TAG, "  Katman3: vsBinder key=" + key + " ✓"); break; }
+                            } catch (Throwable ignored) {}
+                        }
+                        if (vsBinder == null) throw new IllegalStateException("vehiclesetting binder null");
+
+                        // IVehicleSettingService$Stub ile wrap et
+                        Class<?> vsStub = findVsClass(loaders, java.util.Arrays.asList(
+                                "com.saicmotor.sdk.vehiclesettings.IVehicleSettingService$Stub",
+                                "com.saicvehicleservice.sdk.vehiclesettings.IVehicleSettingService$Stub"
+                        ));
+                        if (vsStub == null) throw new ClassNotFoundException("IVehicleSettingService$Stub bulunamadı");
+
+                        java.lang.reflect.Method vsAsIface = vsStub.getMethod("asInterface", IBinder.class);
+                        sVehicleSettingService = vsAsIface.invoke(null, vsBinder);
+                        Log.i(TAG, "  ✓ Katman3: VehicleSettingService HAZIR: "
+                                + sVehicleSettingService.getClass().getName());
+                    } catch (Throwable t) {
+                        Log.e(TAG, "  ✗ Katman3: onServiceConnected hata: " + t);
+                    }
+                }
+                @Override
+                public void onServiceDisconnected(ComponentName name) {
+                    sVehicleSettingService = null;
+                    Log.w(TAG, "  Katman3: VehicleSettingService bağlantısı kesildi");
+                }
+            }, Context.BIND_AUTO_CREATE);
+            if (sLogEnabled) {
+                if (ok) Log.i(TAG, "  Katman3: bindService gönderildi, callback bekleniyor...");
+                else    Log.w(TAG, "  Katman3: bindService başarısız (paket yok?)");
+            }
+        } catch (Throwable t) {
+            Log.e(TAG, "  Katman3: bindVehicleService hata: " + t);
+        }
+    }
+
+    private static java.util.List<ClassLoader> buildVsClassLoaders(Context context) {
+        java.util.List<ClassLoader> loaders = new java.util.ArrayList<>();
+        for (String pkg : new String[]{"com.saicmotor.service.vehicle", "com.saicvehicleservice"}) {
+            try {
+                android.content.pm.ApplicationInfo ai =
+                        context.getPackageManager().getApplicationInfo(pkg, 0);
+                if (ai.sourceDir == null) continue;
+                java.io.File optDir = new java.io.File(context.getCodeCacheDir(), "dexopt_" + pkg);
+                optDir.mkdirs();
+                ClassLoader cl = new dalvik.system.DexClassLoader(
+                        ai.sourceDir, optDir.getAbsolutePath(), null, context.getClassLoader());
+                loaders.add(cl);
+                Log.i(TAG, "  Katman3: DexClassLoader hazır: " + pkg);
+            } catch (Throwable t) {
+                Log.w(TAG, "  Katman3: DexClassLoader başarısız: " + pkg + " → " + t);
+            }
+        }
+        loaders.add(context.getClassLoader()); // fallback
+        return loaders;
+    }
+
+    private static Class<?> findVsClass(java.util.List<ClassLoader> loaders, java.util.List<String> candidates) {
+        for (String name : candidates) {
+            for (ClassLoader cl : loaders) {
+                try { return Class.forName(name, false, cl); } catch (Throwable ignored) {}
+            }
+        }
+        return null;
+    }
+
+    /** Katman 3: sVehicleSettingService üzerinde metod adıyla int setter çağır. */
+    private static boolean vsSetInt(String methodName, int value) {
+        Object vs = sVehicleSettingService;
+        if (vs == null) {
+            if (sLogEnabled) Log.w(TAG, "  Katman3: vsSetInt — servis bağlı değil");
+            return false;
+        }
+        try {
+            java.lang.reflect.Method m = vs.getClass().getMethod(methodName, int.class);
+            m.invoke(vs, value);
+            if (sLogEnabled) Log.i(TAG, "  Katman3: " + methodName + "(" + value + ") ✓");
+            return true;
+        } catch (Throwable t) {
+            Log.e(TAG, "  Katman3: " + methodName + "(" + value + ") HATA: " + t);
+            return false;
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Setter'lar
     // -------------------------------------------------------------------------
 
@@ -415,23 +547,25 @@ public class MG4Hardware {
         if (sLogEnabled) Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
 
         if (level == RegenLevel.OFF) {
-            // Regen tamamen kapat: brake switch=0 gönder
-            // Önce CPM dene (0x2140a18f), çalışmazsa binder TX=159
             setOnePedal(false);
-            if (sLogEnabled) Log.i(TAG, "setRegenLevel: KAPALI — brake switch=0 (CPM önce, binder yedek)");
+            if (sLogEnabled) Log.i(TAG, "setRegenLevel: KAPALI — setRegenerativeBrakeSwitch(0) deneniyor");
+            // Katman 3: VehicleService direct (Hüseyin yöntemi) — en güvenilir
+            if (vsSetInt("setRegenerativeBrakeSwitch", 0)) return true;
+            // Katman 1: CPM (PROP_REGEN_BRAKE_SWITCH)
             boolean cpmOk = setIntPropertyCPM(PROP_REGEN_BRAKE_SWITCH, AREA_GLOBAL, 0);
             if (sLogEnabled) Log.i(TAG, "setRegenLevel: KAPALI CPM=" + cpmOk);
             if (cpmOk) return true;
+            // Katman 2: Binder TX
             return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 0);
         }
 
         // Diğer seviyeler: önce brake switch=1 aç, sonra seviyeyi ayarla
-        // Brake switch: CPM dene, çalışmazsa binder TX
         boolean switchOk = setIntPropertyCPM(PROP_REGEN_BRAKE_SWITCH, AREA_GLOBAL, 1);
         if (sLogEnabled) Log.i(TAG, "setRegenLevel: switch=1 CPM=" + switchOk);
         if (!switchOk) binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_BRAKE_SWITCH, 1);
         boolean ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
         if (sLogEnabled) Log.i(TAG, "setRegenLevel: seviye=" + level.value + " CPM=" + ok);
+        if (!ok) ok = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_LEVEL, level.value);
         return ok;
     }
 

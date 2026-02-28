@@ -901,6 +901,26 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mCurrentPanel = PANEL_MAIN;
     }
 
+    @Override
+    public void onBackPressed() {
+        // İç paneller açıksa önce bir seviye geri gel
+        if (mCurrentPanel == PANEL_SOUND) {
+            closeSoundPanel();
+            return;
+        } else if (mCurrentPanel == PANEL_CLIMATE) {
+            closeClimatePanel();
+            return;
+        } else if (mCurrentPanel == PANEL_REGEN) {
+            closeRegenPanel();
+            return;
+        } else if (mCurrentPanel == PANEL_STATUS) {
+            closeStatusPanel();
+            return;
+        }
+        // Ana ekrandaysak normal davran (Activity kapanır)
+        super.onBackPressed();
+    }
+
     // Direksiyon
     private void selectSteerHeat(int level) {
         sendHeatSteer(level);
