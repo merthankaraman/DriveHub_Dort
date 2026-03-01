@@ -13,6 +13,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -723,7 +724,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     @Override
     protected void onPause() {
         super.onPause();
-        // Bilerek hiçbir şey yapmıyoruz: hız/ses döngüsü arka planda da devam etsin.
+        // Arka plana geçince ekran uyuma flag'ini kaldır (şarj ekranı açık olsa bile)
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); //new_flag
+        // Bilerek hız/ses döngüsünü durdurmuyoruz: arka planda da devam etsin.
     }
 
     // -------------------------------------------------------------------------
@@ -926,15 +929,29 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mLayoutStatusPanel.setVisibility(View.VISIBLE);
         mChargingPanelOpen = true;
         refreshStatusPanel();
+        updateKeepScreenOn();//new_flag
         mChargingHandler.postDelayed(mChargingRunnable, 100);
     }
 
     private void closeStatusPanel() {
         mChargingPanelOpen = false;
         mChargingHandler.removeCallbacks(mChargingRunnable);
+        updateKeepScreenOn();//new_flag
         mLayoutStatusPanel.setVisibility(View.GONE);
         mLayoutMain.setVisibility(View.VISIBLE);
         mCurrentPanel = PANEL_MAIN;
+    }
+
+    /** Şarj paneli açık + ayar açık + şarjda ise ekran uyumasın (FLAG_KEEP_SCREEN_ON). */
+    private void updateKeepScreenOn() {//new_flag
+        boolean keepOn = mChargingPanelOpen
+                && getSharedPreferences("mg4_v3", MODE_PRIVATE).getBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, false)
+                && MG4Hardware.isChargingNow();
+        if (keepOn) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
     }
 
     private void refreshStatusPanel() {
@@ -999,6 +1016,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         } else {
             mTvChargingDuration.setText("--:--:--");
         }
+
+        // Şarjdayken + ayar açıksa ekran uyanık kalsın
+        updateKeepScreenOn();//new_flag
     }
 
     // -------------------------------------------------------------------------
