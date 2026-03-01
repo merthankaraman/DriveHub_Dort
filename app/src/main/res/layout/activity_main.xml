@@ -33,13 +33,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginBottom="10dp">
+                android:layout_marginBottom="6dp">
                 <Button
                     android:id="@+id/btnThemeDay"
                     android:layout_width="0dp"
                     android:layout_height="36dp"
                     android:layout_weight="1"
-                    android:text="Gündüz"
+                    android:text="@string/theme_day"
                     android:textSize="11sp"
                     android:layout_marginEnd="4dp"/>
                 <Button
@@ -47,7 +47,7 @@
                     android:layout_width="0dp"
                     android:layout_height="36dp"
                     android:layout_weight="1"
-                    android:text="Gece"
+                    android:text="@string/theme_night"
                     android:textSize="11sp"
                     android:layout_marginEnd="4dp"/>
                 <Button
@@ -55,14 +55,40 @@
                     android:layout_width="0dp"
                     android:layout_height="36dp"
                     android:layout_weight="1"
-                    android:text="Oto"
+                    android:text="@string/theme_auto"
+                    android:textSize="11sp"/>
+            </LinearLayout>
+            <!-- Dil: TR / EN -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="10dp">
+                <Button
+                    android:id="@+id/btnLangTr"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:backgroundTint="#21262D"
+                    android:text="@string/lang_tr"
+                    android:textColor="#C9D1D9"
+                    android:textSize="11sp"/>
+                <Button
+                    android:id="@+id/btnLangEn"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="#21262D"
+                    android:text="@string/lang_en"
+                    android:textColor="#C9D1D9"
                     android:textSize="11sp"/>
             </LinearLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="MG4 Controller"
+                android:text="@string/main_title"
                 android:textSize="22sp"
                 android:textColor="@color/status_value"
                 android:textStyle="bold"
@@ -72,7 +98,7 @@
                 android:id="@+id/tvVersion"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="EH32 · Android Automotive"
+                android:text="@string/main_version"
                 android:textSize="11sp"
                 android:textColor="@color/status_value"
                 android:layout_marginBottom="14dp"/>
@@ -81,7 +107,7 @@
                 android:id="@+id/btnPermission"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:text="WRITE_SETTINGS Izni Ver"
+                android:text="@string/permission_write_settings"
                 android:backgroundTint="#DA3633"
                 android:textColor="#FFFFFF"
                 android:textSize="13sp"
@@ -92,7 +118,7 @@
                 android:id="@+id/tvStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Hazirlanıyor..."
+                android:text="@string/status_loading"
                 android:textSize="13sp"
                 android:textColor="@color/status_value"
                 android:layout_marginBottom="10dp"/>
@@ -101,7 +127,7 @@
                 android:id="@+id/tvSpeed"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="-- km/h"
+                android:text="@string/speed_placeholder"
                 android:textSize="20sp"
                 android:textColor="@color/status_value"
                 android:fontFamily="monospace"
@@ -112,7 +138,7 @@
                 android:id="@+id/btnMotorPower"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="Motor Gücü: 125 kW"
+                android:text="@string/motor_power_default"
                 android:backgroundTint="#30363D"
                 android:textColor="#FFFFFF"
                 android:textSize="13sp"
@@ -124,7 +150,7 @@
                 android:id="@+id/btnSoundPanel"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="MOTOR SESİ AYARLARI"
+                android:text="@string/btn_motor_sound_settings"
                 android:backgroundTint="#21262D"
                 android:textColor="#FFFFFF"
                 android:textSize="13sp"
@@ -135,7 +161,7 @@
                 android:id="@+id/btnShortcuts"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="Düğme kısayolları"
+                android:text="@string/btn_shortcuts"
                 android:backgroundTint="#1F6FEB"
                 android:textColor="#FFFFFF"
                 android:textSize="13sp"
@@ -163,7 +189,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Loglar (detay)"
+                    android:text="@string/logs_detail"
                     android:textSize="11sp"
                     android:textColor="@color/status_value" />
 
@@ -200,7 +226,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="SURUS MODU"
+                android:text="@string/drive_mode"
                 android:gravity="center_horizontal"
                 android:textSize="20sp"
                 android:textColor="@color/status_value"
@@ -218,7 +244,7 @@
                     android:layout_width="0dp"
                     android:layout_height="56dp"
                     android:layout_weight="1"
-                    android:text="ECO"
+                    android:text="@string/drive_eco"
                     android:backgroundTint="#1A7F37"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
@@ -230,7 +256,7 @@
                     android:layout_width="0dp"
                     android:layout_height="56dp"
                     android:layout_weight="1"
-                    android:text="NORMAL"
+                    android:text="@string/drive_normal"
                     android:backgroundTint="#1F6FEB"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
@@ -248,7 +274,7 @@
                     android:layout_width="0dp"
                     android:layout_height="56dp"
                     android:layout_weight="1"
-                    android:text="SPORT"
+                    android:text="@string/drive_sport"
                     android:backgroundTint="#9E3333"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
@@ -260,7 +286,7 @@
                     android:layout_width="0dp"
                     android:layout_height="56dp"
                     android:layout_weight="1"
-                    android:text="KAR"
+                    android:text="@string/drive_snow"
                     android:backgroundTint="#388BFD"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
@@ -271,7 +297,7 @@
                 android:id="@+id/btnDrive"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="ÖZEL"
+                android:text="@string/drive_custom"
                 android:backgroundTint="#6B3FA0"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
@@ -302,7 +328,7 @@
                 android:id="@+id/btnRegenPanel"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="⚡  Regen Ayarları"
+                android:text="@string/regen_settings"
                 android:backgroundTint="#21262D"
                 android:textColor="#C9D1D9"
                 android:gravity="center_horizontal"
@@ -324,7 +350,7 @@
                 android:id="@+id/btnClimatePanel"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:text="♨  Isitma Ayarlari"
+                android:text="@string/climate_settings"
                 android:backgroundTint="#21262D"
                 android:textColor="#C9D1D9"
                 android:gravity="center_horizontal"
@@ -346,7 +372,7 @@
                 android:id="@+id/btnConsumptionPanel"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:text="📊  Tüketim Ekranı"
+                android:text="@string/consumption_screen"
                 android:backgroundTint="#21262D"
                 android:textColor="#C9D1D9"
                 android:gravity="center_horizontal"
@@ -368,7 +394,7 @@
                 android:id="@+id/btnStatusPanel"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:text="📊  Sarj ve Durum"
+                android:text="@string/status_charging"
                 android:backgroundTint="#21262D"
                 android:textColor="#C9D1D9"
                 android:gravity="center_horizontal"
@@ -420,7 +446,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:letterSpacing="0.08"
-                android:text="REGEN AYARLARI"
+                android:text="@string/regen_panel_title"
                 android:textColor="@color/status_value"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -449,7 +475,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="KAPALI"
+                android:text="@string/regen_off"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -462,7 +488,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="DUSUK"
+                android:text="@string/regen_low"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -475,7 +501,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="ORTA"
+                android:text="@string/regen_medium"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -488,7 +514,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="YUKSEK"
+                android:text="@string/regen_high"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -501,7 +527,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="ADAPTIF"
+                android:text="@string/regen_adaptive"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -514,7 +540,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="TEK PEDAL"
+                android:text="@string/regen_one_pedal"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -564,7 +590,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:letterSpacing="0.08"
-                android:text="DÜĞME KISAYOLLARI"
+                android:text="@string/shortcuts_panel_title"
                 android:textColor="@color/status_value"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -831,7 +857,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:letterSpacing="0.08"
-                android:text="ISITMA AYARLARI"
+                android:text="@string/climate_panel_title"
                 android:textColor="@color/status_value"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -886,7 +912,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="KAPALI"
+                android:text="@string/regen_off"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -927,7 +953,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="KAPALI"
+                android:text="@string/regen_off"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -991,7 +1017,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="KAPALI"
+                android:text="@string/regen_off"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -1049,7 +1075,7 @@
         android:paddingTop="16dp"
         android:paddingEnd="24dp"
         android:paddingBottom="20dp"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <ScrollView
             android:layout_width="match_parent"
@@ -1087,7 +1113,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="MOTOR SESİ"
+                        android:text="@string/motor_sound_title"
                         android:textColor="@color/status_value"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -1100,7 +1126,7 @@
                     android:layout_marginBottom="12dp"
                     android:background="@color/surface_variant"
                     android:padding="10dp"
-                    android:text="Ana ekran ve ses kısma tuşlarına aynı anda basarsanız ses modu açılıp kapanır."
+                    android:text="@string/motor_sound_combo_hint"
                     android:textColor="#8B949E"
                     android:textSize="13sp" />
 
@@ -1475,7 +1501,7 @@
                             android:backgroundTint="#21262D"
                             android:ellipsize="end"
                             android:maxLines="1"
-                            android:text="Rölanti ayarları"
+                            android:text="@string/btn_idle_settings"
                             android:textColor="#FFFFFF"
                             android:textSize="14sp" />
 
@@ -1531,7 +1557,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Rölanti ayarları"
+                android:text="@string/btn_idle_settings"
                 android:textColor="@color/status_value"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -1550,7 +1576,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="Rölanti sesinin maksimum seviyesi (araç dururken)"
+            android:text="@string/idle_volume_hint"
             android:textColor="#8B949E"
             android:textSize="13sp" />
 
@@ -1575,7 +1601,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="Rölanti perdesi (pitch): 1.0 = orijinal"
+            android:text="@string/idle_pitch_hint"
             android:textColor="#8B949E"
             android:textSize="13sp" />
 
@@ -1601,7 +1627,7 @@
             android:layout_height="48dp"
             android:layout_marginTop="24dp"
             android:backgroundTint="#DA3633"
-            android:text="Tüm rölanti profillerini sıfırla"
+            android:text="@string/btn_idle_reset_all"
             android:textColor="#FFFFFF"
             android:textSize="14sp" />
     </LinearLayout>

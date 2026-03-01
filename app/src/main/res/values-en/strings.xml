@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MG4 V3</string>
+
+    <!-- Language -->
+    <string name="lang_tr">Türkçe</string>
+    <string name="lang_en">English</string>
+
+    <!-- Theme -->
+    <string name="theme_day">Day</string>
+    <string name="theme_night">Night</string>
+    <string name="theme_auto">Auto</string>
+
+    <!-- Main screen -->
+    <string name="main_title">MG4 Controller</string>
+    <string name="main_version">EH32 · Android Automotive</string>
+    <string name="permission_write_settings">Grant WRITE_SETTINGS</string>
+    <string name="status_loading">Loading…</string>
+    <string name="status_service_ok">Service running. ★ key active.</string>
+    <string name="speed_placeholder">-- km/h</string>
+    <string name="motor_power_format">Motor power: %d kW</string>
+    <string name="motor_power_default">Motor power: 125 kW</string>
+    <string name="btn_motor_sound_settings">MOTOR SOUND SETTINGS</string>
+    <string name="btn_shortcuts">Button shortcuts</string>
+    <string name="logs_detail">Logs (detail)</string>
+
+    <!-- Drive mode -->
+    <string name="drive_mode">DRIVE MODE</string>
+    <string name="drive_eco">ECO</string>
+    <string name="drive_normal">NORMAL</string>
+    <string name="drive_sport">SPORT</string>
+    <string name="drive_snow">SNOW</string>
+    <string name="drive_custom">CUSTOM</string>
+    <string name="drive_vehicle_mode">Vehicle mode: %s</string>
+
+    <!-- Regen -->
+    <string name="regen">REGEN</string>
+    <string name="regen_settings">⚡ Regen settings</string>
+    <string name="regen_panel_title">REGEN SETTINGS</string>
+    <string name="regen_off">OFF</string>
+    <string name="regen_low">LOW</string>
+    <string name="regen_medium">MEDIUM</string>
+    <string name="regen_high">HIGH</string>
+    <string name="regen_adaptive">ADAPTIVE</string>
+    <string name="regen_one_pedal">ONE PEDAL</string>
+    <string name="regen_active">Active: %s</string>
+    <string name="one_pedal_active">Active: One Pedal</string>
+
+    <!-- Climate -->
+    <string name="climate">HEATING</string>
+    <string name="climate_settings">♨ Heating settings</string>
+    <string name="climate_panel_title">HEATING SETTINGS</string>
+    <string name="climate_overlay_hint">Heating shortcut on overlay</string>
+    <string name="heating_steering">STEERING HEAT</string>
+    <string name="heating_seat_left">LEFT SEAT</string>
+    <string name="heating_seat_right">RIGHT SEAT</string>
+    <string name="level_off">OFF</string>
+    <string name="level_on">ON</string>
+    <string name="level_sev">LV. %d</string>
+
+    <!-- Consumption / Status -->
+    <string name="consumption">CONSUMPTION</string>
+    <string name="consumption_screen">📊 Consumption screen</string>
+    <string name="status">STATUS</string>
+    <string name="status_charging">📊 Charging &amp; status</string>
+    <string name="charging_status_title">CHARGING STATUS</string>
+    <string name="charging_status_label">Charging status: --</string>
+    <string name="charging_duration_placeholder">--:--:--</string>
+    <string name="charging_wake_lock">Keep screen on while charging</string>
+    <string name="btn_charging_history">Show charging history</string>
+    <string name="expected_charge_power">Expected charge power:  -- kW</string>
+    <string name="expected_charge_power_format">Expected charge power:  %.2f kW</string>
+    <string name="charging">Charging</string>
+    <string name="not_charging">Not charging</string>
+
+    <!-- Shortcuts panel -->
+    <string name="shortcuts_panel_title">BUTTON SHORTCUTS</string>
+    <string name="one_pedal_label">One pedal</string>
+    <string name="one_pedal_assign">Assign one pedal to button</string>
+    <string name="press_type_on">Press type to turn on</string>
+    <string name="press_type_off">Press type to turn off</string>
+    <string name="camera_360_label">360 camera</string>
+    <string name="camera_360_assign">Assign 360 to button</string>
+
+    <!-- Motor sound panel -->
+    <string name="motor_sound_title">MOTOR SOUND</string>
+    <string name="motor_sound_combo_hint">Press home and volume down together to toggle sound mode.</string>
+    <string name="motor_state_placeholder">Motor state: --</string>
+    <string name="gauge_rpm">RPM</string>
+    <string name="gauge_gear">GEAR</string>
+    <string name="gauge_speed">SPEED (km/h)</string>
+    <string name="gauge_power">POWER (kW)</string>
+    <string name="gauge_pedal">PEDAL</string>
+    <string name="sound_volume">Volume</string>
+    <string name="notification_volume">Notification volume (vehicle): --</string>
+    <string name="btn_max_volume">Max</string>
+    <string name="sim_speed_label">Simulated speed: 0 km/h</string>
+    <string name="sim_throttle_label">Simulated throttle (%)</string>
+    <string name="btn_sound_on">🔊 Sound on</string>
+    <string name="btn_sound_off">🔇 Sound on</string>
+    <string name="btn_sound_close">🔊 Sound off</string>
+    <string name="vehicle_sound_format">Vehicle sound: %s</string>
+    <string name="btn_speed_test">Speed test</string>
+    <string name="gearbox_normal">⚪ Gearbox: Normal</string>
+    <string name="gearbox_eco">🟢 Gearbox: Eco</string>
+    <string name="gearbox_sport">🔴 Gearbox: Sport</string>
+    <string name="gearbox_vehicle">🚗 Gearbox: Vehicle</string>
+    <string name="rev_match">Rev match</string>
+    <string name="rev_match_on">Rev match: On</string>
+    <string name="rev_match_off">Rev match: Off</string>
+    <string name="gear_whine">Enable gear whine</string>
+    <string name="gear_whine_on">Gear whine: On</string>
+    <string name="gear_whine_off">Gear whine: Off</string>
+    <string name="btn_idle_settings">Idle settings</string>
+
+    <!-- Idle panel -->
+    <string name="idle_panel_title">Idle settings</string>
+    <string name="idle_vehicle_format">Vehicle: %s</string>
+    <string name="idle_volume_hint">Idle sound max level (when vehicle stopped)</string>
+    <string name="idle_pitch_hint">Idle pitch: 1.0 = original</string>
+    <string name="btn_idle_reset_all">Reset all idle profiles</string>
+
+    <!-- Toasts -->
+    <string name="toast_motor_sound_on">Motor sound: On (activates when READY)</string>
+    <string name="toast_motor_sound_off">Motor sound off</string>
+    <string name="toast_one_pedal_on">One Pedal: On</string>
+    <string name="toast_one_pedal_off">One Pedal: Off</string>
+    <string name="toast_trip_reset">Trip and energy reset</string>
+    <string name="toast_idle_reset">All idle settings reset.</string>
+    <string name="toast_gearbox">Gearbox: %s</string>
+    <string name="toast_heating_steering">Steering: %s</string>
+    <string name="toast_heating_seat">%s</string>
+    <string name="toast_volume_max">Notification volume set to max</string>
+    <string name="toast_volume_no_permission">Vehicle may not allow changing notification volume</string>
+    <string name="toast_no_audio_service">No audio service</string>
+    <string name="toast_volume_unsupported">Notification volume not supported</string>
+    <string name="toast_permission_denied">Permission denied: %s</string>
+    <string name="toast_error">Error: %s</string>
+
+    <!-- Dialog -->
+    <string name="dialog_vehicle_sound_title">Vehicle sound profile</string>
+
+    <!-- Notification volume -->
+    <string name="notification_volume_okunamadi">Notification volume: read failed</string>
+    <string name="notification_volume_na">Notification volume: --</string>
+    <string name="notification_volume_max_suffix"> — Max</string>
+    <string name="notification_volume_hint_suffix"> — Increase in vehicle settings</string>
+
+    <!-- General -->
+    <string name="back">←</string>
+    <string name="unit_kmh"> km/h</string>
+    <string name="unit_kw"> kW</string>
+    <string name="unit_kwh"> kWh</string>
+    <string name="unit_v">V</string>
+    <string name="unit_a">A</string>
+    <string name="batarya">Battery</string>
+</resources>

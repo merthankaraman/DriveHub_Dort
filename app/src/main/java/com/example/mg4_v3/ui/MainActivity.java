@@ -27,6 +27,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.os.LocaleListCompat;
 
 import com.example.mg4_v3.R;
 import com.example.mg4_v3.audio.EngineSoundManager;
@@ -57,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MG4_UI";
     private static final String PREF_THEME_MODE = "theme_mode";
+    /** Dil: \"tr\", \"en\" veya \"\" (sistem) */
+    private static final String PREF_LANGUAGE = "app_language";
     private static final String PREF_SOUND_ENABLED = "sound_enabled";
     private static final String PREF_SOUND_MODE = "sound_mode";
     private static final String PREF_OVERLAY_ENABLED = "overlay_enabled";
@@ -312,10 +315,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Kayıtlı tema modunu uygula (setContentView öncesi)
         SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
         mThemeMode = prefs.getInt(PREF_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         AppCompatDelegate.setDefaultNightMode(mThemeMode);
+        String lang = prefs.getString(PREF_LANGUAGE, "");
+        if (!lang.isEmpty()) {
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(lang));
+        }
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -381,7 +387,7 @@ public class MainActivity extends AppCompatActivity {
                 initialPower = 150f;
             }
             int displayKw = (int) initialPower;
-            mBtnMotorPower.setText("Motor Gücü: " + displayKw + " kW");
+            mBtnMotorPower.setText(getString(R.string.motor_power_format, displayKw));
             if (mEngineSound != null) {
                 mEngineSound.setMotorMaxPower(initialPower);
             }
@@ -392,7 +398,7 @@ public class MainActivity extends AppCompatActivity {
                 float current = p.getFloat(PREF_MOTOR_POWER, currentPowerInit);
                 float next = (current >= 149f) ? 125f : 150f;
                 int showKw = (int) next;
-                mBtnMotorPower.setText("Motor Gücü: " + showKw + " kW");
+                mBtnMotorPower.setText(getString(R.string.motor_power_format, showKw));
                 if (mEngineSound != null) {
                     mEngineSound.setMotorMaxPower(next);
                 }
@@ -468,12 +474,12 @@ public class MainActivity extends AppCompatActivity {
                 if ((MG4Hardware.isVehicleReady() || mSimSpeedActive) && !mEngineSound.isPlaying()) {
                     mEngineSound.start();
                 }
-                Toast.makeText(this, "Motor sesi: Açık (READY olunca devreye girecek)", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.toast_motor_sound_on), Toast.LENGTH_SHORT).show();
             } else {
                 if (mEngineSound.isPlaying()) {
                     mEngineSound.stop();
                 }
-                Toast.makeText(this, "Motor sesi kapatıldı", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.toast_motor_sound_off), Toast.LENGTH_SHORT).show();
             }
             updateSoundToggleButton();
         });
@@ -481,7 +487,7 @@ public class MainActivity extends AppCompatActivity {
         if (mBtnSoundProfile != null) {
             mBtnSoundProfile.setOnClickListener(v -> showSoundProfileDialog());
             String savedSoundProfile = prefsSound.getString(PREF_SOUND_PROFILE, "McLaren P1");
-            mBtnSoundProfile.setText("Araç Sesi: " + savedSoundProfile);
+            mBtnSoundProfile.setText(getString(R.string.vehicle_sound_format, savedSoundProfile));
             // Tema değişimi (kullanıcı butonu veya Oto'da araç/sistem teması) ile recreate olduysa sese dokunma
             boolean skipSoundBecauseRecreate = sRecreatedDueToThemeChange || (savedInstanceState != null);
             if (!skipSoundBecauseRecreate) {
@@ -560,6 +566,11 @@ public class MainActivity extends AppCompatActivity {
         btnThemeNight.setOnClickListener(v -> applyThemeMode(AppCompatDelegate.MODE_NIGHT_YES));
         btnThemeAuto.setOnClickListener(v  -> applyThemeMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM));
         updateThemeButtons();
+        Button btnLangTr = findViewById(R.id.btnLangTr);
+        Button btnLangEn = findViewById(R.id.btnLangEn);
+        if (btnLangTr != null) btnLangTr.setOnClickListener(v -> applyLanguage("tr"));
+        if (btnLangEn != null) btnLangEn.setOnClickListener(v -> applyLanguage("en"));
+        updateLanguageButtons();
 
         // Versiyon numarasını göster
         try {
@@ -570,7 +581,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Servisi otomatik başlat
         startForegroundService(new Intent(this, MG4ControlService.class));
-        mTvStatus.setText("✅ Servis çalışıyor. ★ tuşu aktif.");
+        mTvStatus.setText("✅ " + getString(R.string.status_service_ok));
 
         // Ana layout referansı
         mLayoutMain = findViewById(R.id.layoutMain);
@@ -775,7 +786,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     @Override
     protected void onResume() {
         super.onResume();
-        mTvStatus.setText("✅ Servis çalışıyor. ★ tuşu aktif.");
+        mTvStatus.setText("✅ " + getString(R.string.status_service_ok));
         // Yapay motor sesini başlat (eğer açıksa)
         if (mEngineSound != null && mSoundEnabled) {
             mEngineSound.start();
@@ -1324,7 +1335,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         pitchProgress = Math.max(0, Math.min(150, pitchProgress));
 
         TextView tvIdleProfile = findViewById(R.id.tvIdleProfile);
-        if (tvIdleProfile != null) tvIdleProfile.setText("Araç: " + profileName);
+        if (tvIdleProfile != null) tvIdleProfile.setText(getString(R.string.idle_vehicle_format, profileName));
 
         SeekBar seekVol = findViewById(R.id.seekIdleVolume);
         SeekBar seekPitch = findViewById(R.id.seekIdlePitch);
@@ -1387,7 +1398,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             mEngineSound.loadIdleSettingsForProfile(this, currentProfile);
         }
         setupIdlePanelFromPrefs();
-        Toast.makeText(this, "Tüm rölanti ayarları sıfırlandı.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.toast_idle_reset), Toast.LENGTH_SHORT).show();
     }
 
     /** Motor sesi STREAM_NOTIFICATION kullanır; araç bildirim sesi kısıksa ses de kısık çıkar. */
@@ -1571,12 +1582,12 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
     private void updateRevMatchButtonText(boolean enabled) {
         if (mBtnRevMatch == null) return;
-        mBtnRevMatch.setText(enabled ? "Devir eşleme: Açık" : "Devir eşleme: Kapalı");
+        mBtnRevMatch.setText(enabled ? getString(R.string.rev_match_on) : getString(R.string.rev_match_off));
     }
 
     private void updateGearWhineButtonText(boolean enabled) {
         if (mBtnGearWhine == null) return;
-        mBtnGearWhine.setText(enabled ? "Dişli ıslığı: Açık" : "Dişli ıslığı: Kapalı");
+        mBtnGearWhine.setText(enabled ? getString(R.string.gear_whine_on) : getString(R.string.gear_whine_off));
     }
 
     private void cycleSoundCharacter() {
@@ -1605,10 +1616,10 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             }
         }
         switch (character) {
-            case SOUND_CHAR_ECO:    mBtnGearProfile.setText("🟢 Şanzıman: Eco"); break;
-            case SOUND_CHAR_SPORT:  mBtnGearProfile.setText("🔴 Şanzıman: Sport"); break;
-            case SOUND_CHAR_AUTO:   mBtnGearProfile.setText("🚗 Şanzıman: Araç"); break;
-            default:                mBtnGearProfile.setText("⚪ Şanzıman: Normal"); break;
+            case SOUND_CHAR_ECO:    mBtnGearProfile.setText(getString(R.string.gearbox_eco)); break;
+            case SOUND_CHAR_SPORT:  mBtnGearProfile.setText(getString(R.string.gearbox_sport)); break;
+            case SOUND_CHAR_AUTO:   mBtnGearProfile.setText(getString(R.string.gearbox_vehicle)); break;
+            default:                mBtnGearProfile.setText(getString(R.string.gearbox_normal)); break;
         }
     }
 
@@ -1616,12 +1627,12 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         if (mBtnSoundToggle == null) return;
 
         if (mSoundEnabled) {
-            mBtnSoundToggle.setText("🔊 Ses Kapa");
+            mBtnSoundToggle.setText(getString(R.string.btn_sound_close));
             mBtnSoundToggle.setBackgroundTintList(
                     android.content.res.ColorStateList.valueOf(0xFF1A7F37)); // Yeşil
             mBtnSoundToggle.setTextColor(0xFFFFFFFF);
         } else {
-            mBtnSoundToggle.setText("🔇 Ses Aç");
+            mBtnSoundToggle.setText(getString(R.string.btn_sound_off));
             mBtnSoundToggle.setBackgroundTintList(
                     android.content.res.ColorStateList.valueOf(COLOR_INACTIVE)); // Gri
             mBtnSoundToggle.setTextColor(0xFF8B949E);
@@ -1632,12 +1643,12 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         final String[] options = EngineSoundManager.getProfileLabels();
 
         new AlertDialog.Builder(this)
-                .setTitle("Araç Sesi Profili")
+                .setTitle(getString(R.string.dialog_vehicle_sound_title))
                 .setItems(options, (dialog, which) -> {
                     String label = options[which];
                     getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_PROFILE, label).apply();
                     if (mBtnSoundProfile != null) {
-                        mBtnSoundProfile.setText("Araç Sesi: " + label);
+                        mBtnSoundProfile.setText(getString(R.string.vehicle_sound_format, label));
                     }
                     // Profil eşlemesini EngineSoundManager yönetsin; rölanti ayarları bu araça özel yüklensin
                     mEngineSound.applyProfileLabel(label);
@@ -1657,6 +1668,13 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         updateThemeButtons();
     }
 
+    /** Dili kaydet, uygula ve Activity’yi yeniden oluştur. */
+    private void applyLanguage(String lang) {
+        getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_LANGUAGE, lang).apply();
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(lang));
+        recreate();
+    }
+
     private void updateThemeButtons() {
         Button btnDay  = findViewById(R.id.btnThemeDay);
         Button btnNight = findViewById(R.id.btnThemeNight);
@@ -1672,7 +1690,23 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         btnAuto.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isAuto  ? COLOR_ACTIVE : COLOR_INACTIVE));
         btnAuto.setTextColor(isAuto  ? 0xFFFFFFFF : 0xFF8B949E);
     }
-    
+
+    private void updateLanguageButtons() {
+        String lang = getSharedPreferences("mg4_v3", MODE_PRIVATE).getString(PREF_LANGUAGE, "");
+        Button btnTr = findViewById(R.id.btnLangTr);
+        Button btnEn = findViewById(R.id.btnLangEn);
+        if (btnTr != null) {
+            boolean trActive = "tr".equals(lang);
+            btnTr.setBackgroundTintList(android.content.res.ColorStateList.valueOf(trActive ? COLOR_ACTIVE : COLOR_INACTIVE));
+            btnTr.setTextColor(trActive ? 0xFFFFFFFF : 0xFF8B949E);
+        }
+        if (btnEn != null) {
+            boolean enActive = "en".equals(lang);
+            btnEn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(enActive ? COLOR_ACTIVE : COLOR_INACTIVE));
+            btnEn.setTextColor(enActive ? 0xFFFFFFFF : 0xFF8B949E);
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Binder test
     // -------------------------------------------------------------------------
