@@ -57,6 +57,10 @@ public class MG4Hardware {
     private static final int PROP_AC_AMP        = 0x2160f43c;  // 560039996 — float A AC giriş (callback'te gelen)
     private static final int PROP_AC_VOLT      = 0x2160f43d;  // 560039997 — float V AC giriş (callback'te gelen)
     private static final int PROP_CHG_STATUS    = 557904905;   // şarj durumu (0=şarjda değil)
+    // Tüketim ekranı (VehicleConditionBinder / BMS — MG4_BINDER_REFERENCE.md)
+    private static final int PROP_TOTAL_MILEAGE = 557873939;   // getTotalMileage() — toplam km (VendorInstrumentCluster)
+    private static final int PROP_GEAR         = 557847918;    // getCarGear() — vites konumu
+    private static final int PROP_ELEC_CSUMP_PER_KM = 560002077; // getElecCsumpPerKm() — kWh/km tüketim
 
     // Katman 2 — Binder (yedek, uid.system gerektirir)
     private static final String DESCRIPTOR_VEHICLE =
@@ -784,6 +788,80 @@ public class MG4Hardware {
         }
         return v;
     }
+
+    /** Toplam km (kilometre sayacı). -1 = okunamadı. */
+    public static int getTotalMileage() {
+        return getIntPropertyCPM(PROP_TOTAL_MILEAGE, AREA_GLOBAL);
+    }
+
+    /** Vites konumu (getCarGear). Araç üreticisine göre değerler (P/R/N/D vb. sayısal). -1 = okunamadı. */
+    public static int getGear() {
+        return getIntPropertyCPM(PROP_GEAR, AREA_GLOBAL);
+    }
+
+    /** Anlık tüketim — kWh/km. Float.NaN = okunamadı. Güç: P(kW) = consumption * speed(km/h). */
+    public static float getConsumptionKwhPerKm() {
+        float v = getFloatPropertyCPM(PROP_ELEC_CSUMP_PER_KM, AREA_GLOBAL);
+        if (Float.isNaN(v)) v = bmsFloat(PROP_ELEC_CSUMP_PER_KM);
+        return v;
+    }
+
+    // -------------------------------------------------------------------------
+    // Tüketim integrasyonu (serviste 100ms'de bir çalışır; uygulama açık olmasa da boot'tan itibaren)
+    // -------------------------------------------------------------------------
+    private static volatile double sTripEnergyKwh = 0.0;
+    private static volatile int sMileageAtConsumptionStart = -1;
+    private static volatile long sConsumptionLastUpdateMs = 0;
+    private static volatile float sLastSpeedKmh = Float.NaN;
+    private static volatile float sLastConsumption = Float.NaN;
+    private static volatile float sLastPowerKw = Float.NaN;
+    private static volatile int sLastTotalKm = -1;
+    private static volatile int sLastGear = -1;
+
+    /** Serviste 100ms'de bir çağrılır: oku, güç hesapla, enerji integre et, önbelleğe yaz. */
+    public static void integrateConsumptionData() {
+        float speedKmh = getSpeedKmh();
+        if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
+        float consumption = getConsumptionKwhPerKm();
+        float powerKw = (!Float.isNaN(consumption) && !Float.isNaN(speedKmh) && speedKmh >= 0f)
+                ? (consumption * speedKmh) : Float.NaN;
+
+        long nowMs = System.currentTimeMillis();
+        double dtHours = (sConsumptionLastUpdateMs > 0) ? (nowMs - sConsumptionLastUpdateMs) / 3600000.0 : 0.0;
+        sConsumptionLastUpdateMs = nowMs;
+        if (!Float.isNaN(powerKw) && dtHours > 0) {
+            sTripEnergyKwh += powerKw * dtHours;
+        }
+
+        sLastSpeedKmh = speedKmh;
+        sLastConsumption = consumption;
+        sLastPowerKw = powerKw;
+        sLastTotalKm = getTotalMileage();
+        sLastGear = getGear();
+    }
+
+    /** Yol sıfırla: trip başlangıç km = şimdiki toplam km, enerji = 0. */
+    public static void resetConsumptionTrip() {
+        sMileageAtConsumptionStart = getTotalMileage();
+        sTripEnergyKwh = 0.0;
+        sConsumptionLastUpdateMs = System.currentTimeMillis();
+    }
+
+    /** İlk kez trip başlat (panel açıldığında veya servis ilk çalıştığında; -1 ise şimdiki km'den başlat). */
+    public static void ensureConsumptionTripStarted() {
+        if (sMileageAtConsumptionStart < 0) {
+            sMileageAtConsumptionStart = getTotalMileage();
+            sConsumptionLastUpdateMs = System.currentTimeMillis();
+        }
+    }
+
+    public static double getTripEnergyKwh() { return sTripEnergyKwh; }
+    public static int getMileageAtConsumptionStart() { return sMileageAtConsumptionStart; }
+    public static float getLastSpeedKmh() { return sLastSpeedKmh; }
+    public static float getLastConsumption() { return sLastConsumption; }
+    public static float getLastPowerKw() { return sLastPowerKw; }
+    public static int getLastTotalKm() { return sLastTotalKm; }
+    public static int getLastGear() { return sLastGear; }
 
     /** DC batarya voltajı — V. Önce BMS cache (canlı callback), yoksa CPM. */
     public static float getDcVoltage() {

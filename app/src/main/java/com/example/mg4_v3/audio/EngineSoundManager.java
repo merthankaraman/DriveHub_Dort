@@ -170,6 +170,12 @@ public class EngineSoundManager {
             setVehicleProfile(PROFILE_LOTUS_EXIGE());
         } else if ("MCLAREN P1 Stereo".equals(profile)) {
             setVehicleProfile(PROFILE_MCLAREN_P1_ST());
+        } else if ("Porsche 911 GT3 RS".equals(profile)) {
+            setVehicleProfile(PROFILE_911_GT3_RS());
+        } else if ("Porsche 918 Spyder".equals(profile)) {
+            setVehicleProfile(PROFILE_918_SPYDER());
+        } else if ("Praga R1".equals(profile)) {
+            setVehicleProfile(PROFILE_PRAGA_R1());
         } else {
             setVehicleProfile(PROFILE_MCLAREN_P1());
         }
@@ -346,6 +352,74 @@ public class EngineSoundManager {
                 R.raw.zonda_r_6250,
                 R.raw.zonda_r_7000,
                 R.raw.zonda_r_8250
+        );
+    }
+    public static VehicleProfile PROFILE_911_GT3_RS() {
+        return new VehicleProfile("Porsche 911 GT3 RS", 900, 9000, 1,
+                0,
+                new float[][]{
+                        {0f, 30f},
+                        {15f, 60f},
+                        {20f, 80f},
+                        {40f, 100f},
+                        {60f, 140f},
+                        {100f, 170f},
+                        {130f, 200f},
+                        {140f, 250f},
+                },
+                R.raw.porsche_911_gt3_rs_idle,
+                R.raw.porsche_911_gt3_rs_2500,
+                R.raw.porsche_911_gt3_rs_3500,
+                R.raw.porsche_911_gt3_rs_4500,
+                R.raw.porsche_911_gt3_rs_6500,
+                R.raw.porsche_911_gt3_rs_7500,
+                R.raw.porsche_911_gt3_rs_8500,
+                R.raw.porsche_911_gt3_rs_9000
+        );
+    }
+    public static VehicleProfile PROFILE_918_SPYDER() {
+        return new VehicleProfile("Porsche 918 Spyder", 900, 9000, 1,
+                0,
+                new float[][]{
+                        {0f, 30f},
+                        {15f, 60f},
+                        {20f, 80f},
+                        {40f, 100f},
+                        {60f, 140f},
+                        {100f, 170f},
+                        {130f, 200f},
+                        {140f, 250f},
+                },
+                R.raw.porsche_918_spyder_idle,
+                R.raw.porsche_918_spyder_2500,
+                R.raw.porsche_918_spyder_3000,
+                R.raw.porsche_918_spyder_4500,
+                R.raw.porsche_918_spyder_7000,
+                R.raw.porsche_918_spyder_7800,
+                R.raw.porsche_918_spyder_8500,
+                R.raw.porsche_918_spyder_8600
+        );
+    }
+    public static VehicleProfile PROFILE_PRAGA_R1() {
+        return new VehicleProfile("Praga R1", 1000f, 8500f, 1,
+                1,
+                new float[][]{
+                        {0f, 30f},
+                        {15f, 60f},
+                        {20f, 80f},
+                        {40f, 100f},
+                        {60f, 140f},
+                        {100f, 170f},
+                        {130f, 200f},
+                        {140f, 250f},
+                },
+                R.raw.praga_r1_idle,
+                R.raw.praga_r1_2000,
+                R.raw.praga_r1_3500,
+                R.raw.praga_r1_4500,
+                R.raw.praga_r1_5500,
+                R.raw.praga_r1_7000,
+                R.raw.praga_r1_8500
         );
     }
 

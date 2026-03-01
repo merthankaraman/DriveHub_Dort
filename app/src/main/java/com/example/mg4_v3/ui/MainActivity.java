@@ -192,7 +192,31 @@ public class MainActivity extends AppCompatActivity {
     private static final int PANEL_CLIMATE = 3;
     private static final int PANEL_SOUND   = 4;
     private static final int PANEL_SHORTCUTS = 5;
+    private static final int PANEL_CONSUMPTION = 6;
     private int mCurrentPanel = PANEL_MAIN;
+
+    // Tüketim paneli
+    private View mLayoutConsumptionPanel;
+    private TextView mTvConsumptionGear;
+    private TextView mTvConsumptionTotalKm;
+    private TextView mTvConsumptionKwhPerKm;
+    private TextView mTvConsumptionSpeed;
+    private TextView mTvConsumptionPower;
+    private TextView mTvConsumptionTripKm;
+    private TextView mTvConsumptionEnergy;
+    private TextView mTvConsumptionAvgKwhPer100km;
+
+    private final Handler mConsumptionHandler = new Handler();
+    /** Sadece panel açıkken UI güncellemesi (seyrek yeterli); veri serviste 100ms'de bir zaten okunuyor. */
+    private final Runnable mConsumptionUiRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mCurrentPanel == PANEL_CONSUMPTION) {
+                refreshConsumptionPanel();
+                mConsumptionHandler.postDelayed(this, 500);
+            }
+        }
+    };
 
     // Hız güncelleme
     private final Handler mSpeedHandler = new Handler();
@@ -513,6 +537,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Hız döngüsünü başlat (UI açık/kapalı fark etmeksizin sürekli çalışsın)
         mSpeedHandler.post(mSpeedRunnable);
+        // Tüketim integrasyonu serviste 100ms'de bir (boot'tan itibaren); burada sadece UI döngüsü panel açıkken
 
         // Log (detay) switch'i
         SwitchCompat swLogs = findViewById(R.id.switchLogs);
@@ -577,8 +602,20 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
         findViewById(R.id.btnStatusPanel).setOnClickListener(v -> openStatusPanel());
         findViewById(R.id.btnStatusBack).setOnClickListener(v  -> closeStatusPanel());
-        // Klima paneli açma butonu
         findViewById(R.id.btnClimatePanel).setOnClickListener(v -> openClimatePanel());
+
+        // ---- Tüketim paneli ----
+        mLayoutConsumptionPanel   = findViewById(R.id.layoutConsumptionPanel);
+        mTvConsumptionGear        = findViewById(R.id.tvConsumptionGear);
+        mTvConsumptionTotalKm     = findViewById(R.id.tvConsumptionTotalKm);
+        mTvConsumptionKwhPerKm    = findViewById(R.id.tvConsumptionKwhPerKm);
+        mTvConsumptionSpeed       = findViewById(R.id.tvConsumptionSpeed);
+        mTvConsumptionPower       = findViewById(R.id.tvConsumptionPower);
+        mTvConsumptionTripKm      = findViewById(R.id.tvConsumptionTripKm);
+        mTvConsumptionEnergy      = findViewById(R.id.tvConsumptionEnergy);
+        findViewById(R.id.btnConsumptionPanel).setOnClickListener(v -> openConsumptionPanel());
+        findViewById(R.id.btnConsumptionBack).setOnClickListener(v -> closeConsumptionPanel());
+        findViewById(R.id.btnConsumptionResetTrip).setOnClickListener(v -> resetConsumptionTrip());
 
         // ---- Regen paneli ----
         mLayoutRegenPanel = findViewById(R.id.layoutRegenPanel);
@@ -711,16 +748,20 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             case PANEL_SHORTCUTS:
                 openShortcutsPanel();
                 break;
+            case PANEL_CONSUMPTION:
+                openConsumptionPanel();
+                break;
             case PANEL_MAIN:
             default:
-                // Varsayılan: ana ekran açık kalsın; diğer paneller gizli
                 mLayoutMain.setVisibility(View.VISIBLE);
                 mLayoutStatusPanel.setVisibility(View.GONE);
                 if (mLayoutRegenPanel != null) mLayoutRegenPanel.setVisibility(View.GONE);
                 if (mLayoutShortcutsPanel != null) mLayoutShortcutsPanel.setVisibility(View.GONE);
                 if (mLayoutClimatePanel != null) mLayoutClimatePanel.setVisibility(View.GONE);
+                if (mLayoutConsumptionPanel != null) mLayoutConsumptionPanel.setVisibility(View.GONE);
                 mChargingPanelOpen = false;
                 mChargingHandler.removeCallbacks(mChargingRunnable);
+                mConsumptionHandler.removeCallbacks(mConsumptionUiRunnable);
                 break;
         }
     }
@@ -739,6 +780,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     protected void onDestroy() {
         super.onDestroy();
         mChargingHandler.removeCallbacks(mChargingRunnable);
+        mConsumptionHandler.removeCallbacks(mConsumptionUiRunnable);
         mSpeedHandler.removeCallbacks(mSpeedRunnable);
         // Motor sesini durdurmuyoruz: açıksa arkada çalmaya devam etsin (sadece kullanıcı kapatınca dursun)
         mEngineSound = null;
@@ -1152,6 +1194,74 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     // -------------------------------------------------------------------------
+    // Tüketim paneli (hız, güç, yol km, enerji integre, vites)
+    // -------------------------------------------------------------------------
+
+    private void openConsumptionPanel() {
+        mCurrentPanel = PANEL_CONSUMPTION;
+        mLayoutMain.setVisibility(View.GONE);
+        mLayoutConsumptionPanel.setVisibility(View.VISIBLE);
+        MG4Hardware.ensureConsumptionTripStarted();
+        refreshConsumptionPanel();
+        mConsumptionHandler.postDelayed(mConsumptionUiRunnable, 500);
+    }
+
+    private void closeConsumptionPanel() {
+        mConsumptionHandler.removeCallbacks(mConsumptionUiRunnable);
+        mLayoutConsumptionPanel.setVisibility(View.GONE);
+        mLayoutMain.setVisibility(View.VISIBLE);
+        mCurrentPanel = PANEL_MAIN;
+    }
+
+    private void resetConsumptionTrip() {
+        MG4Hardware.resetConsumptionTrip();
+        Toast.makeText(this, "Yol ve enerji sıfırlandı", Toast.LENGTH_SHORT).show();
+    }
+
+    /** Panelde servisin güncellediği önbellek + trip enerji gösterilir (UI 500ms'de bir). */
+    private void refreshConsumptionPanel() {
+        int totalKm = MG4Hardware.getLastTotalKm();
+        int mileageStart = MG4Hardware.getMileageAtConsumptionStart();
+        int tripKm = (mileageStart >= 0 && totalKm >= 0) ? Math.max(0, totalKm - mileageStart) : -1;
+        float speedKmh = MG4Hardware.getLastSpeedKmh();
+        float consumption = MG4Hardware.getLastConsumption();
+        float powerKw = MG4Hardware.getLastPowerKw();
+        int gear = MG4Hardware.getLastGear();
+        double tripEnergyKwh = MG4Hardware.getTripEnergyKwh();
+
+        if (mTvConsumptionGear != null) {
+            mTvConsumptionGear.setText(gear < 0 ? "--" : String.valueOf(gear));
+        }
+        if (mTvConsumptionTotalKm != null) {
+            mTvConsumptionTotalKm.setText(totalKm < 0 ? "--" : String.valueOf(totalKm));
+        }
+        if (mTvConsumptionKwhPerKm != null) {
+            mTvConsumptionKwhPerKm.setText(Float.isNaN(consumption) ? "--" : String.format(Locale.US, "%.3f", consumption));
+        }
+        if (mTvConsumptionSpeed != null) {
+            mTvConsumptionSpeed.setText(Float.isNaN(speedKmh) ? "--" : String.format(Locale.US, "%.2f", speedKmh));
+        }
+        if (mTvConsumptionPower != null) {
+            mTvConsumptionPower.setText(Float.isNaN(powerKw) ? "--" : String.format(Locale.US, "%.2f", powerKw));
+        }
+        if (mTvConsumptionTripKm != null) {
+            mTvConsumptionTripKm.setText(tripKm < 0 ? "--" : String.valueOf(tripKm));
+        }
+        if (mTvConsumptionEnergy != null) {
+            mTvConsumptionEnergy.setText(String.format(Locale.US, "%.3f", tripEnergyKwh));
+        }
+        // Ortalama tüketim (kWh/100km) = hesaplanan enerji / yol * 100
+        if (mTvConsumptionAvgKwhPer100km != null) {
+            if (tripKm > 0 && tripEnergyKwh >= 0) {
+                double avgKwhPer100 = (tripEnergyKwh / tripKm) * 100.0;
+                mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.1f", avgKwhPer100));
+            } else {
+                mTvConsumptionAvgKwhPer100km.setText("--");
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Motor sesi paneli
     // -------------------------------------------------------------------------
 
@@ -1244,8 +1354,10 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         } else if (mCurrentPanel == PANEL_SHORTCUTS) {
             closeShortcutsPanel();
             return;
+        } else if (mCurrentPanel == PANEL_CONSUMPTION) {
+            closeConsumptionPanel();
+            return;
         }
-        // Ana ekrandaysak normal davran (Activity kapanır)
         super.onBackPressed();
     }
 
@@ -1409,7 +1521,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void showSoundProfileDialog() {
-        final String[] options = {"McLaren P1", "MCLAREN P1 Stereo", "Lamborghini Aventador", "BMW Z4", "Pagani Zonda R", "Lotus Exige"};
+        final String[] options = {"McLaren P1", "MCLAREN P1 Stereo", "Lamborghini Aventador", "BMW Z4", "Pagani Zonda R", "Lotus Exige", "Porsche 911 GT3 RS"};//, "Praga R1"};//, "Porsche 918 Spyder"};
 
         new AlertDialog.Builder(this)
                 .setTitle("Araç Sesi Profili")

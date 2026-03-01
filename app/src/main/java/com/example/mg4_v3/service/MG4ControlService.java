@@ -194,6 +194,17 @@ public class MG4ControlService extends Service {
         }
     };
 
+    /** Tüketim verisi + enerji integrasyonu (100ms); boot'tan itibaren, uygulama açılmasa da. */
+    private static final int CONSUMPTION_INTEGRATION_INTERVAL_MS = 100;
+    private final Handler mConsumptionHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mConsumptionIntegrationRunnable = new Runnable() {
+        @Override
+        public void run() {
+            MG4Hardware.integrateConsumptionData();
+            mConsumptionHandler.postDelayed(this, CONSUMPTION_INTEGRATION_INTERVAL_MS);
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -262,6 +273,10 @@ public class MG4ControlService extends Service {
         // Şarj bittiğinde oturumu hafızaya kaydet (uygulama kapalı veya başka ekrandayken de)
         mChargingCheckHandler.post(mChargingCheckRunnable);
 
+        // Tüketim: boot'tan itibaren 100ms'de bir oku + enerji integre et (uygulama açılmasa da)
+        MG4Hardware.ensureConsumptionTripStarted();
+        mConsumptionHandler.post(mConsumptionIntegrationRunnable);
+
         if (MG4Hardware.isLogEnabled()) {
             Log.i(TAG, "=== onCreate tamamlandı ===");
         }
@@ -286,6 +301,7 @@ public class MG4ControlService extends Service {
         MG4Hardware.destroy();
         mSoundHandler.removeCallbacks(mSoundRunnable);
         mChargingCheckHandler.removeCallbacks(mChargingCheckRunnable);
+        mConsumptionHandler.removeCallbacks(mConsumptionIntegrationRunnable);
     }
 
     /** Şarjdayken PARTIAL_WAKE_LOCK al (ekran kapanabilir, CPU uyumaz). Ayar SharedPreferences'tan okunur. */
