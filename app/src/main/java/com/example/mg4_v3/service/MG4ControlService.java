@@ -35,6 +35,7 @@ import com.example.mg4_v3.hardware.MG4Hardware;
 import com.example.mg4_v3.audio.EngineSoundManager;
 import com.example.mg4_v3.model.DriveMode;
 import com.example.mg4_v3.model.RegenLevel;
+import com.example.mg4_v3.util.ChargingHistory;
 
 import java.util.List;
 
@@ -52,6 +53,12 @@ public class MG4ControlService extends Service {
     //           android.intent.extra.hardkey.down (boolean)
     //           android.intent.extra.hardkey.longpress (boolean)
     //
+    // InputReader (tag:InputReader, system_server) — D-Bus com.yfve.ivi.hmi.respond, processKey (doğrulandı 2026-03-01):
+    //   keyCode=17  scanCode=89  dbus 0x96 → Sol yıldız
+    //   keyCode=286 scanCode=86  dbus 0x98 → Sağ yıldız
+    //   keyCode=291 scanCode=149 dbus 0x95 → Telefon
+    //   keyCode=287 scanCode=87  dbus 0x97 → Sesli asistan
+    //   keyCode=301 scanCode=68  dbus 0x44 → Duraklat / Devam ettir (müzik)
     // ★ tuşu (keycode=17) — broadcast GELİYOR ✓ (log 1902260100)
     // Vol↑ (24) ve Vol↓ (25) — broadcast GELİYOR ✓
     //
@@ -66,6 +73,8 @@ public class MG4ControlService extends Service {
     private static final int    KEYCODE_STAR_RIGHT  = 18;
     private static final int    KEYCODE_VOLUME_UP   = 24;
     private static final int    KEYCODE_VOLUME_DOWN = 25;
+    /** Direksiyondaki duraklat/devam tuşu — SAIC hardkey keyCode (log’da 301). */
+    private static final int    KEYCODE_SAIC_MEDIA_PLAY_PAUSE = 301;
     // Vol↑+Vol↓ combo → müzik pause/play (300ms pencere)
     private static final long COMBO_WINDOW_MS = 300;
     private long mVolUpDownTime   = 0L;
@@ -74,9 +83,11 @@ public class MG4ControlService extends Service {
     // Tek pedal atama (Regen panelinden ayarlanır)
     private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
     private static final String PREF_ONE_PEDAL_PRESS_TYPE = "one_pedal_press_type";
+    private static final String PREF_ONE_PEDAL_PRESS_TYPE_OFF = "one_pedal_press_type_off";
     /** -1 = kapalı (varsayılan); hiçbir tuş tek pedal tetiklemez */
     private static final int DEFAULT_ONE_PEDAL_KEY = -1;
     private static final String DEFAULT_ONE_PEDAL_PRESS_TYPE = "long";
+    private static final String DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF = "single";
     private static final long ONE_PEDAL_LONG_PRESS_MS = 1200;
     private static final long ONE_PEDAL_DOUBLE_TAP_MS = 400;
 
@@ -148,6 +159,21 @@ public class MG4ControlService extends Service {
         }
     };
 
+    /** Şarj bittiğinde oturumu hafızaya kaydet; uygulama kapalı veya başka ekrandayken de çalışır. */
+    private static final long CHARGING_CHECK_INTERVAL_MS = 10_000L;
+    private final Handler mChargingCheckHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mChargingCheckRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (ChargingHistory.checkAndSaveSessionIfEnded(MG4ControlService.this)) {
+                if (MG4Hardware.isLogEnabled()) {
+                    Log.i(TAG, "Şarj oturumu arka planda kaydedildi.");
+                }
+            }
+            mChargingCheckHandler.postDelayed(this, CHARGING_CHECK_INTERVAL_MS);
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -208,6 +234,9 @@ public class MG4ControlService extends Service {
             }
         }
 
+        // Şarj bittiğinde oturumu hafızaya kaydet (uygulama kapalı veya başka ekrandayken de)
+        mChargingCheckHandler.post(mChargingCheckRunnable);
+
         if (MG4Hardware.isLogEnabled()) {
             Log.i(TAG, "=== onCreate tamamlandı ===");
         }
@@ -230,6 +259,7 @@ public class MG4ControlService extends Service {
         removeOverlay();
         MG4Hardware.destroy();
         mSoundHandler.removeCallbacks(mSoundRunnable);
+        mChargingCheckHandler.removeCallbacks(mChargingCheckRunnable);
     }
 
     @Override
@@ -524,9 +554,12 @@ public class MG4ControlService extends Service {
 
                 SharedPreferences prefs = getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
                 int assignedKey = prefs.getInt(PREF_ONE_PEDAL_KEY, DEFAULT_ONE_PEDAL_KEY);
-                if (assignedKey >= 0 && keyCode == assignedKey) {
-                    String pressType = prefs.getString(PREF_ONE_PEDAL_PRESS_TYPE, DEFAULT_ONE_PEDAL_PRESS_TYPE);
-                    onOnePedalKey(keyCode, isDown, isLong, pressType);
+                // Eski tercih: 18→286 (Sağ yıldız), 5→291 (Telefon) — araç InputReader keyCode ile eşleşir
+                int keyToMatch = (assignedKey == 18) ? 286 : (assignedKey == 5) ? 291 : assignedKey;
+                if (assignedKey >= 0 && keyCode == keyToMatch) {
+                    String pressOn = prefs.getString(PREF_ONE_PEDAL_PRESS_TYPE, DEFAULT_ONE_PEDAL_PRESS_TYPE);
+                    String pressOff = prefs.getString(PREF_ONE_PEDAL_PRESS_TYPE_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF);
+                    onOnePedalKey(keyCode, isDown, isLong, pressOn, pressOff);
                 } else {
                     if (!isDown) return;
                     if (keyCode == KEYCODE_VOLUME_UP) {
@@ -552,19 +585,26 @@ public class MG4ControlService extends Service {
     // Tek Pedal atanmış tuş — Regen panelinde seçilen tuş (Telefon/Sol yıldız/Sağ yıldız) ve basma tipi (Tek/Uzun/Çift)
     // -------------------------------------------------------------------------
 
-    private void onOnePedalKey(int keyCode, boolean isDown, boolean isLong, String pressType) {
+    private void onOnePedalKey(int keyCode, boolean isDown, boolean isLong, String pressTypeOn, String pressTypeOff) {
         if (isDown) {
             mOnePedalKeyPressed = true;
             mOnePedalLongTriggered = false;
-            if ("long".equals(pressType)) {
+            boolean needLong = "long".equals(pressTypeOn) || "long".equals(pressTypeOff);
+            if (needLong) {
                 new Thread(() -> {
                     long start = System.currentTimeMillis();
                     while (mOnePedalKeyPressed) {
                         if (System.currentTimeMillis() - start >= ONE_PEDAL_LONG_PRESS_MS) {
                             mOnePedalLongTriggered = true;
-                            MG4Hardware.setOnePedal(true);
-                            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> MG4Hardware.setOnePedal(true), 250);
-                            updateNotification("Tek Pedal: Açık");
+                            if ("long".equals(pressTypeOn) && MG4Hardware.getOnePedal() != 1) {
+                                MG4Hardware.setOnePedal(true);
+                                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> MG4Hardware.setOnePedal(true), 250);
+                                updateNotification("Tek Pedal: Açık");
+                            }
+                            if ("long".equals(pressTypeOff) && MG4Hardware.getOnePedal() == 1) {
+                                MG4Hardware.setOnePedal(false);
+                                updateNotification("Tek Pedal: Kapalı");
+                            }
                             mOnePedalKeyPressed = false;
                             break;
                         }
@@ -574,37 +614,29 @@ public class MG4ControlService extends Service {
             }
         } else {
             mOnePedalKeyPressed = false;
-            if ("single".equals(pressType)) {
-                if (!mOnePedalLongTriggered) {
-                    if (MG4Hardware.getOnePedal() == 1) {
-                        MG4Hardware.setOnePedal(false);
-                        updateNotification("Tek Pedal: Kapalı");
-                    } else {
-                        MG4Hardware.setOnePedal(true);
-                        updateNotification("Tek Pedal: Açık");
-                    }
-                }
-            } else if ("long".equals(pressType)) {
-                // Uzun basma seçiliyken: kısa basış = tek pedalı kapat
-                if (!mOnePedalLongTriggered && MG4Hardware.getOnePedal() == 1) {
-                    MG4Hardware.setOnePedal(false);
-                    updateNotification("Tek Pedal: Kapalı");
-                }
-            } else if ("double".equals(pressType)) {
+            if (!mOnePedalLongTriggered) {
                 long now = System.currentTimeMillis();
-                if (mOnePedalLastTapKeyCode == keyCode && (now - mOnePedalLastTapTime) <= ONE_PEDAL_DOUBLE_TAP_MS) {
+                boolean isDouble = (mOnePedalLastTapKeyCode == keyCode && (now - mOnePedalLastTapTime) <= ONE_PEDAL_DOUBLE_TAP_MS);
+                if (isDouble) {
                     mOnePedalLastTapTime = 0;
                     mOnePedalLastTapKeyCode = -1;
-                    if (MG4Hardware.getOnePedal() == 1) {
-                        MG4Hardware.setOnePedal(false);
-                        updateNotification("Tek Pedal: Kapalı");
-                    } else {
+                    if ("double".equals(pressTypeOn) && MG4Hardware.getOnePedal() != 1) {
                         MG4Hardware.setOnePedal(true);
                         updateNotification("Tek Pedal: Açık");
+                    } else if ("double".equals(pressTypeOff) && MG4Hardware.getOnePedal() == 1) {
+                        MG4Hardware.setOnePedal(false);
+                        updateNotification("Tek Pedal: Kapalı");
                     }
                 } else {
                     mOnePedalLastTapTime = now;
                     mOnePedalLastTapKeyCode = keyCode;
+                    if ("single".equals(pressTypeOn) && MG4Hardware.getOnePedal() != 1) {
+                        MG4Hardware.setOnePedal(true);
+                        updateNotification("Tek Pedal: Açık");
+                    } else if ("single".equals(pressTypeOff) && MG4Hardware.getOnePedal() == 1) {
+                        MG4Hardware.setOnePedal(false);
+                        updateNotification("Tek Pedal: Kapalı");
+                    }
                 }
             }
         }
@@ -636,19 +668,37 @@ public class MG4ControlService extends Service {
         long gap = Math.abs(mVolUpDownTime - mVolDownDownTime);
         if (mVolUpDownTime > 0 && mVolDownDownTime > 0 && gap <= COMBO_WINDOW_MS) {
             if (MG4Hardware.isLogEnabled()) {
-                Log.i(TAG, "Vol↑+Vol↓ COMBO tetiklendi (gap=" + gap + "ms) → toggleMusicPlayback");
+                Log.i(TAG, "Vol↑+Vol↓ COMBO tetiklendi (gap=" + gap + "ms) → direksiyon duraklat/devam taklidi");
             }
             mVolUpDownTime   = 0;
             mVolDownDownTime = 0;
-            toggleMusicPlayback();
+            sendSaicHardkeyMediaPlayPause();
         }
     }
 
-    /** Log’da direksiyon müzik tuşu keycode=301 ile geliyor; müzik uygulaması buna tepki veriyor. */
+    /**
+     * Direksiyondaki duraklat/devam tuşunu taklit eder: SAIC hardkey broadcast (keyCode=301)
+     * down + up gönderilir; müzik uygulaması gerçek tuşla aynı broadcast’i alır.
+     */
+    private void sendSaicHardkeyMediaPlayPause() {
+        Intent down = new Intent(HARDKEY_ACTION);
+        down.putExtra("android.intent.extra.hardkey.keycode", KEYCODE_SAIC_MEDIA_PLAY_PAUSE);
+        down.putExtra("android.intent.extra.hardkey.down", true);
+        down.putExtra("android.intent.extra.hardkey.longpress", false);
+        sendBroadcast(down);
+        Intent up = new Intent(HARDKEY_ACTION);
+        up.putExtra("android.intent.extra.hardkey.keycode", KEYCODE_SAIC_MEDIA_PLAY_PAUSE);
+        up.putExtra("android.intent.extra.hardkey.down", false);
+        up.putExtra("android.intent.extra.hardkey.longpress", false);
+        sendBroadcast(up);
+        if (MG4Hardware.isLogEnabled()) {
+            Log.i(TAG, "MEDIA: SAIC hardkey 301 (duraklat/devam) gönderildi");
+        }
+        updateNotification("Müzik: ⏯ duraklat/devam (direksiyon tuşu taklidi)");
+    }
 
     /**
-     * Ses kısma+açma (Vol↑+Vol↓) combo’da müzik duraklat/başlat.
-     * MG4 müzik uygulaması SAIC hardkey 301’i dinliyor, o yüzden önce onu gönderiyoruz.
+     * Standart medya tuşu (KEYCODE_MEDIA_PLAY_PAUSE) — SAIC dinleyicisi yoksa fallback.
      */
     private void sendMediaPlayPauseKey() {
         if (mAudioManager == null) {
@@ -882,9 +932,15 @@ public class MG4ControlService extends Service {
     private static String keycodeLabel(int keycode) {
         switch (keycode) {
             case 5:   return "PHONE";
-            case 17:  return "STAR/FAV";
-            case 18:  return "STAR_RIGHT";
+            case 17:  return "STAR_LEFT";
+            case 18:  return "STAR_RIGHT(alt)";
             case 24:  return "VOLUME_UP";
+            case 286: return "STAR_RIGHT";
+            case 287: return "VOICE_ASSISTANT";
+            case 291: return "PHONE";
+            case 297: return "KEY_297";
+            case 298: return "KEY_298";
+            case 301: return "MEDIA_PLAY_PAUSE";
             case 25:  return "VOLUME_DOWN";
             case 66:  return "ENTER";
             case 4:   return "BACK";

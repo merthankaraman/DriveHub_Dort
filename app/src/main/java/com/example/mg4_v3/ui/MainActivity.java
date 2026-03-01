@@ -13,9 +13,12 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import androidx.appcompat.widget.SwitchCompat;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -51,13 +54,17 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_SOUND_PROFILE = "sound_profile";
     private static final String PREF_SOUND_MASTER = "sound_master";
     private static final String PREF_MOTOR_POWER = "motor_power_kw";
-    /** Tek pedal atanacak tuş: -1=Kapalı, 5=Telefon, 17=Sol yıldız, 18=Sağ yıldız (hafızalı) */
+    /** Tek pedal atanacak tuş: -1=Kapalı, 291=Telefon, 17=Sol yıldız, 286=Sağ yıldız (InputReader keyCode, hafızalı) */
     private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
-    /** Basma tipi: "single", "long", "double" */
+    /** Tek pedal açmak için basma tipi: "single", "long", "double" */
     private static final String PREF_ONE_PEDAL_PRESS_TYPE = "one_pedal_press_type";
-    /** Varsayılan: kapalı — kullanıcı bir tuş seçene kadar tek pedal tetiklenmez */
+    /** Tek pedaldan kapatmak için basma tipi (varsayılan: tek) */
+    private static final String PREF_ONE_PEDAL_PRESS_TYPE_OFF = "one_pedal_press_type_off";
     private static final int DEFAULT_ONE_PEDAL_KEY = -1;
     private static final String DEFAULT_ONE_PEDAL_PRESS_TYPE = "long";
+    private static final String DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF = "single";
+    private static final String[] PRESS_TYPE_VALUES = { "single", "long", "double" };
+    private static final String[] PRESS_TYPE_LABELS = { "Tek", "Uzun", "Çift" };
     private static final int COLOR_ACTIVE   = 0xFF1F6FEB; // mavi — seçili
     private static final int COLOR_INACTIVE = 0xFF21262D; // koyu gri — seçilmemiş
     private static final int COLOR_HEAT_ON  = 0xFF9E3333; // kırmızı — ısıtma aktif
@@ -122,9 +129,8 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnOnePedalKeyPhone;
     private Button mBtnOnePedalKeyLeftStar;
     private Button mBtnOnePedalKeyRightStar;
-    private Button mBtnOnePedalPressSingle;
-    private Button mBtnOnePedalPressLong;
-    private Button mBtnOnePedalPressDouble;
+    private Spinner mSpinnerOnePedalPressOn;
+    private Spinner mSpinnerOnePedalPressOff;
 
     // Şarj paneli
     private View     mLayoutStatusPanel;
@@ -586,9 +592,8 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mBtnOnePedalKeyPhone    = findViewById(R.id.btnOnePedalKeyPhone);
         mBtnOnePedalKeyLeftStar = findViewById(R.id.btnOnePedalKeyLeftStar);
         mBtnOnePedalKeyRightStar= findViewById(R.id.btnOnePedalKeyRightStar);
-        mBtnOnePedalPressSingle = findViewById(R.id.btnOnePedalPressSingle);
-        mBtnOnePedalPressLong   = findViewById(R.id.btnOnePedalPressLong);
-        mBtnOnePedalPressDouble = findViewById(R.id.btnOnePedalPressDouble);
+        mSpinnerOnePedalPressOn = findViewById(R.id.spinnerOnePedalPressOn);
+        mSpinnerOnePedalPressOff= findViewById(R.id.spinnerOnePedalPressOff);
         setupOnePedalKeyPrefs();
 
         // ---- Klima paneli ----
@@ -735,6 +740,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             mTvRegenCurrent.setText("");
         }
         refreshOnePedalKeyHighlight();
+        syncOnePedalSpinnersFromPrefs();
     }
 
     private void closeRegenPanel() {
@@ -782,7 +788,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             refreshOnePedalKeyHighlight();
         });
         mBtnOnePedalKeyPhone.setOnClickListener(v -> {
-            p.edit().putInt(PREF_ONE_PEDAL_KEY, 5).apply();
+            p.edit().putInt(PREF_ONE_PEDAL_KEY, 291).apply();
             refreshOnePedalKeyHighlight();
         });
         mBtnOnePedalKeyLeftStar.setOnClickListener(v -> {
@@ -790,50 +796,71 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             refreshOnePedalKeyHighlight();
         });
         mBtnOnePedalKeyRightStar.setOnClickListener(v -> {
-            p.edit().putInt(PREF_ONE_PEDAL_KEY, 18).apply();
+            p.edit().putInt(PREF_ONE_PEDAL_KEY, 286).apply();
             refreshOnePedalKeyHighlight();
         });
-        mBtnOnePedalPressSingle.setOnClickListener(v -> {
-            p.edit().putString(PREF_ONE_PEDAL_PRESS_TYPE, "single").apply();
-            refreshOnePedalKeyHighlight();
-        });
-        mBtnOnePedalPressLong.setOnClickListener(v -> {
-            p.edit().putString(PREF_ONE_PEDAL_PRESS_TYPE, "long").apply();
-            refreshOnePedalKeyHighlight();
-        });
-        mBtnOnePedalPressDouble.setOnClickListener(v -> {
-            p.edit().putString(PREF_ONE_PEDAL_PRESS_TYPE, "double").apply();
-            refreshOnePedalKeyHighlight();
-        });
+        if (mSpinnerOnePedalPressOn != null) {
+            ArrayAdapter<String> adapterOn = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PRESS_TYPE_LABELS);
+            adapterOn.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            mSpinnerOnePedalPressOn.setAdapter(adapterOn);
+            mSpinnerOnePedalPressOn.setSelection(indexOfPressType(p.getString(PREF_ONE_PEDAL_PRESS_TYPE, DEFAULT_ONE_PEDAL_PRESS_TYPE)));
+            mSpinnerOnePedalPressOn.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    p.edit().putString(PREF_ONE_PEDAL_PRESS_TYPE, PRESS_TYPE_VALUES[position]).apply();
+                }
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {}
+            });
+        }
+        if (mSpinnerOnePedalPressOff != null) {
+            ArrayAdapter<String> adapterOff = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PRESS_TYPE_LABELS);
+            adapterOff.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            mSpinnerOnePedalPressOff.setAdapter(adapterOff);
+            mSpinnerOnePedalPressOff.setSelection(indexOfPressType(p.getString(PREF_ONE_PEDAL_PRESS_TYPE_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF)));
+            mSpinnerOnePedalPressOff.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    p.edit().putString(PREF_ONE_PEDAL_PRESS_TYPE_OFF, PRESS_TYPE_VALUES[position]).apply();
+                }
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {}
+            });
+        }
         refreshOnePedalKeyHighlight();
+        syncOnePedalSpinnersFromPrefs();
+    }
+
+    private void syncOnePedalSpinnersFromPrefs() {
+        if (mSpinnerOnePedalPressOn == null || mSpinnerOnePedalPressOff == null) return;
+        SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        mSpinnerOnePedalPressOn.setSelection(indexOfPressType(p.getString(PREF_ONE_PEDAL_PRESS_TYPE, DEFAULT_ONE_PEDAL_PRESS_TYPE)));
+        mSpinnerOnePedalPressOff.setSelection(indexOfPressType(p.getString(PREF_ONE_PEDAL_PRESS_TYPE_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF)));
+    }
+
+    private static int indexOfPressType(String value) {
+        for (int i = 0; i < PRESS_TYPE_VALUES.length; i++) {
+            if (PRESS_TYPE_VALUES[i].equals(value)) return i;
+        }
+        return 0;
     }
 
     private void refreshOnePedalKeyHighlight() {
         if (mBtnOnePedalKeyOff == null) return;
         SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
         int key = p.getInt(PREF_ONE_PEDAL_KEY, DEFAULT_ONE_PEDAL_KEY);
-        String type = p.getString(PREF_ONE_PEDAL_PRESS_TYPE, DEFAULT_ONE_PEDAL_PRESS_TYPE);
         int keyColor = key == -1 ? COLOR_ACTIVE : COLOR_INACTIVE;
         mBtnOnePedalKeyOff.setBackgroundTintList(android.content.res.ColorStateList.valueOf(keyColor));
         mBtnOnePedalKeyOff.setTextColor(key == -1 ? 0xFFFFFFFF : 0xFF8B949E);
-        keyColor = key == 5 ? COLOR_ACTIVE : COLOR_INACTIVE;
+        keyColor = key == 291 ? COLOR_ACTIVE : COLOR_INACTIVE;
         mBtnOnePedalKeyPhone.setBackgroundTintList(android.content.res.ColorStateList.valueOf(keyColor));
-        mBtnOnePedalKeyPhone.setTextColor(key == 5 ? 0xFFFFFFFF : 0xFF8B949E);
+        mBtnOnePedalKeyPhone.setTextColor(key == 291 ? 0xFFFFFFFF : 0xFF8B949E);
         keyColor = key == 17 ? COLOR_ACTIVE : COLOR_INACTIVE;
         mBtnOnePedalKeyLeftStar.setBackgroundTintList(android.content.res.ColorStateList.valueOf(keyColor));
         mBtnOnePedalKeyLeftStar.setTextColor(key == 17 ? 0xFFFFFFFF : 0xFF8B949E);
-        keyColor = key == 18 ? COLOR_ACTIVE : COLOR_INACTIVE;
+        keyColor = key == 286 ? COLOR_ACTIVE : COLOR_INACTIVE;
         mBtnOnePedalKeyRightStar.setBackgroundTintList(android.content.res.ColorStateList.valueOf(keyColor));
-        mBtnOnePedalKeyRightStar.setTextColor(key == 18 ? 0xFFFFFFFF : 0xFF8B949E);
-        int typeColor = "single".equals(type) ? COLOR_ACTIVE : COLOR_INACTIVE;
-        mBtnOnePedalPressSingle.setBackgroundTintList(android.content.res.ColorStateList.valueOf(typeColor));
-        mBtnOnePedalPressSingle.setTextColor("single".equals(type) ? 0xFFFFFFFF : 0xFF8B949E);
-        typeColor = "long".equals(type) ? COLOR_ACTIVE : COLOR_INACTIVE;
-        mBtnOnePedalPressLong.setBackgroundTintList(android.content.res.ColorStateList.valueOf(typeColor));
-        mBtnOnePedalPressLong.setTextColor("long".equals(type) ? 0xFFFFFFFF : 0xFF8B949E);
-        typeColor = "double".equals(type) ? COLOR_ACTIVE : COLOR_INACTIVE;
-        mBtnOnePedalPressDouble.setBackgroundTintList(android.content.res.ColorStateList.valueOf(typeColor));
-        mBtnOnePedalPressDouble.setTextColor("double".equals(type) ? 0xFFFFFFFF : 0xFF8B949E);
+        mBtnOnePedalKeyRightStar.setTextColor(key == 286 ? 0xFFFFFFFF : 0xFF8B949E);
     }
 
     // -------------------------------------------------------------------------
