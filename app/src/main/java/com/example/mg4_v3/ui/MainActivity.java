@@ -37,8 +37,16 @@ import com.example.mg4_v3.model.RegenLevel;
 import com.example.mg4_v3.service.MG4ControlService;
 import com.example.mg4_v3.util.ChargingHistory;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -168,6 +176,13 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvDcAmpAct;
     private TextView mTvDcKwAct;
     private TextView mTvDcEnergy;
+    private LineChart mChartChargingPower;
+    private final ArrayList<Entry> mChartEntriesMaxDc = new ArrayList<>();
+    private final ArrayList<Entry> mChartEntriesAc = new ArrayList<>();
+    private final ArrayList<Entry> mChartEntriesBatt = new ArrayList<>();
+    private float mChargingChartIndex = 0f;
+        /** 100 ms'de bir nokta → 6000 nokta = 10 dakika */
+    private static final int CHARGING_CHART_MAX_POINTS = 6000;
 
     // Hangi panel açık? (yeniden yaratmada aynı ekrana dönmek için)
     private static final String STATE_PANEL = "current_panel";
@@ -557,6 +572,8 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mTvDcAmpAct        = findViewById(R.id.tvDcAmpAct);
         mTvDcKwAct         = findViewById(R.id.tvDcKwAct);
         mTvDcEnergy        = findViewById(R.id.tvDcEnergy);
+        mChartChargingPower = findViewById(R.id.chartChargingPower);
+        setupChargingCharts();
 
         findViewById(R.id.btnStatusPanel).setOnClickListener(v -> openStatusPanel());
         findViewById(R.id.btnStatusBack).setOnClickListener(v  -> closeStatusPanel());
@@ -1024,7 +1041,81 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         }
 
         // Şarjdayken + ayar açıksa ekran uyanık kalsın
-        updateKeepScreenOn();//new_flag
+        updateKeepScreenOn();
+
+        // Güç grafiklerini güncelle (kW)
+        float maxDcKw = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) ? (dcVolt * dcAmpExp) / 1000f : Float.NaN;
+        float acKw    = (!Float.isNaN(acVolt) && !Float.isNaN(acAmp))   ? (acVolt * acAmp) / 1000f : Float.NaN;
+        float battKw = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct))   ? (dcVolt * dcAmpAct) / 1000f : Float.NaN;
+        updateChargingCharts(maxDcKw, acKw, battKw);
+    }
+
+    private static final int COLOR_CHART_MAX_DC = 0xFFFFA657;
+    private static final int COLOR_CHART_AC     = 0xFF7EE787;
+    private static final int COLOR_CHART_BATT   = 0xFF58A6FF;
+
+    private void setupChargingCharts() {
+        if (mChartChargingPower == null) return;
+        int textColor = 0xFF8B949E;
+        LineChart chart = mChartChargingPower;
+        chart.getDescription().setEnabled(false);
+        chart.getLegend().setEnabled(true);
+        chart.getLegend().setTextColor(textColor);
+        chart.getLegend().setTextSize(10f);
+        chart.setTouchEnabled(false);
+        chart.setDrawGridBackground(false);
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setTextColor(textColor);
+        xAxis.setDrawGridLines(false);
+        xAxis.setGranularity(1f);
+        YAxis yAxisL = chart.getAxisLeft();
+        yAxisL.setTextColor(textColor);
+        yAxisL.setDrawGridLines(true);
+        yAxisL.setGridColor(0x408B949E);
+        chart.getAxisRight().setEnabled(false);
+    }
+
+    private static LineDataSet makeDataSet(ArrayList<Entry> entries, int color, String label) {
+        LineDataSet set = new LineDataSet(entries, label);
+        set.setColor(color);
+        set.setLineWidth(1.5f);
+        set.setDrawCircles(false);
+        set.setDrawValues(false);
+        set.setMode(LineDataSet.Mode.LINEAR);
+        return set;
+    }
+
+    private void updateChargingCharts(float maxDcKw, float acKw, float battKw) {
+        if (mChartChargingPower == null) return;
+        float x = mChargingChartIndex++;
+        if (!Float.isNaN(maxDcKw)) mChartEntriesMaxDc.add(new Entry(x, maxDcKw));
+        if (!Float.isNaN(acKw))    mChartEntriesAc.add(new Entry(x, acKw));
+        if (!Float.isNaN(battKw))  mChartEntriesBatt.add(new Entry(x, battKw));
+        trimChartEntries(mChartEntriesMaxDc);
+        trimChartEntries(mChartEntriesAc);
+        trimChartEntries(mChartEntriesBatt);
+
+        LineData data = new LineData();
+        data.addDataSet(makeDataSet(mChartEntriesMaxDc, COLOR_CHART_MAX_DC, "Maks DC (kW)"));
+        if (acKw > 0f) {
+            data.addDataSet(makeDataSet(mChartEntriesAc, COLOR_CHART_AC, "AC (kW)"));
+        }
+        data.addDataSet(makeDataSet(mChartEntriesBatt, COLOR_CHART_BATT, "Batt (kW)"));
+        mChartChargingPower.setData(data);
+        mChartChargingPower.invalidate();
+    }
+
+    private void trimChartEntries(ArrayList<Entry> entries) {
+        float minX = mChargingChartIndex - CHARGING_CHART_MAX_POINTS;
+        while (!entries.isEmpty() && entries.get(0).getX() < minX) {
+            entries.remove(0);
+        }
+        if (entries.isEmpty()) return;
+        float base = entries.get(0).getX();
+        for (Entry e : entries) {
+            e.setX(e.getX() - base);
+        }
     }
 
     // -------------------------------------------------------------------------

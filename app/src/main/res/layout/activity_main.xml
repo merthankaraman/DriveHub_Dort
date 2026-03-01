@@ -1543,18 +1543,18 @@
             android:id="@+id/tvExpectedPower"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="8dp"
             android:fontFamily="monospace"
             android:text="Beklenen Şarj Gücü:  -- kW"
             android:textColor="#FFA657"
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <!-- İki sütun: AC | Batarya -->
+        <!-- İki sütun: AC | Batarya (%40 kısaltıldı, grafik alanı büyütüldü) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_weight="0.2"
             android:orientation="horizontal">
 
             <!-- Sol sütun: AC -->
@@ -1813,6 +1813,14 @@
             </LinearLayout>
 
         </LinearLayout>
+
+        <!-- Tek grafik: Maks DC / AC / Batt (kW) — AC 0 ise 2 çizgi -->
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/chartChargingPower"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.4"
+            android:layout_marginTop="8dp" />
 
     </LinearLayout>
 
