@@ -114,7 +114,7 @@ public class EngineSoundManager {
                 context.getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
 
         // Ses profili (araç sesi)
-        String profile = prefs.getString("sound_profile", "McLaren P1");
+        String profile = prefs.getString("sound_profile", "Lotus Exige");
         applyProfileLabel(profile);
 
         // Şanzıman karakteri (Eco / Normal / Sport / Araç) — mapping tek yerde dursun
@@ -177,7 +177,7 @@ public class EngineSoundManager {
         } else if ("Praga R1".equals(profile)) {
             setVehicleProfile(PROFILE_PRAGA_R1());
         } else {
-            setVehicleProfile(PROFILE_MCLAREN_P1());
+            setVehicleProfile(PROFILE_LOTUS_EXIGE());
         }
     }
 
@@ -250,7 +250,7 @@ public class EngineSoundManager {
         );
     }
     public static VehicleProfile PROFILE_LOTUS_EXIGE() {
-        return new VehicleProfile("Lotus Exige", 800, 9000f, 0.8f,
+        return new VehicleProfile("Lotus Exige", 800, 9000f, 1,
                 2,
                 new float[][]{
                         {0f, 35f},

@@ -1095,6 +1095,16 @@
                 </LinearLayout>
 
                 <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:background="@color/surface_variant"
+                    android:padding="10dp"
+                    android:text="Ana ekran ve ses kısma tuşlarına aynı anda basarsanız ses modu açılıp kapanır."
+                    android:textColor="#8B949E"
+                    android:textSize="13sp" />
+
+                <TextView
                     android:id="@+id/tvMotorState"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

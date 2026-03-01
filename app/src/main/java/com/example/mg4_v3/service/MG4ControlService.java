@@ -29,6 +29,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
@@ -78,10 +79,15 @@ public class MG4ControlService extends Service {
     private static final int    KEYCODE_VOLUME_DOWN = 25;
     /** Direksiyondaki duraklat/devam tuşu — SAIC hardkey keyCode (log’da 301). */
     private static final int    KEYCODE_SAIC_MEDIA_PLAY_PAUSE = 301;
+    /** Ana ekran tuşu (KeyEvent.KEYCODE_HOME). Vol− ile birlikte basılınca motor sesi toggle. */
+    private static final int    KEYCODE_ANA_EKRAN = 3;
     // Vol↑+Vol↓ combo: iki tuşa da dokunuldu → "toggle bekliyor"; ikisi de bırakılınca komut gönder
     private boolean mVolUpPressed   = false;
     private boolean mVolDownPressed = false;
     private boolean mVolComboPending = false;
+    // Vol↓+Ana ekran combo: ikisi bırakılınca motor sesi aç/kapa (müzik toggle gibi)
+    private boolean mAnaEkranPressed = false;
+    private boolean mVolDownAnaEkranComboPending = false;
 
     // Tek pedal atama (Regen panelinden ayarlanır)
     private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
@@ -634,6 +640,8 @@ public class MG4ControlService extends Service {
                         onVolumeKey(KEYCODE_VOLUME_UP, isDown);
                     } else if (keyCode == KEYCODE_VOLUME_DOWN) {
                         onVolumeKey(KEYCODE_VOLUME_DOWN, isDown);
+                    } else if (keyCode == KEYCODE_ANA_EKRAN) {
+                        onAnaEkranKey(isDown);
                     }
                 }
             }
@@ -825,13 +833,58 @@ public class MG4ControlService extends Service {
                 mVolComboPending = true;
                 if (MG4Hardware.isLogEnabled()) Log.d(TAG, "Vol↑+Vol↓ ikisi basılı → toggle bekliyor");
             }
+            if (mVolDownPressed && mAnaEkranPressed) {
+                mVolDownAnaEkranComboPending = true;
+                if (MG4Hardware.isLogEnabled()) Log.d(TAG, "Vol↓+Ana ekran ikisi basılı → motor sesi toggle bekliyor");
+            }
         } else {
             if (!mVolUpPressed && !mVolDownPressed && mVolComboPending) {
                 mVolComboPending = false;
                 if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Vol↑+Vol↓ ikisi bırakıldı → müzik toggle");
                 sendSaicHardkeyMediaPlayPause();
             }
+            if (!mVolDownPressed && !mAnaEkranPressed && mVolDownAnaEkranComboPending) {
+                mVolDownAnaEkranComboPending = false;
+                if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Vol↓+Ana ekran ikisi bırakıldı → motor sesi toggle");
+                onMotorSoundToggleFromKey();
+            }
         }
+    }
+
+    /** Ana ekran tuşu (HOME) — Vol↓ ile birlikte basılıp bırakılınca motor sesi aç/kapa. */
+    private void onAnaEkranKey(boolean isDown) {
+        mAnaEkranPressed = isDown;
+        if (isDown) {
+            if (mVolDownPressed && mAnaEkranPressed) {
+                mVolDownAnaEkranComboPending = true;
+                if (MG4Hardware.isLogEnabled()) Log.d(TAG, "Vol↓+Ana ekran ikisi basılı → motor sesi toggle bekliyor");
+            }
+        } else {
+            if (!mVolDownPressed && !mAnaEkranPressed && mVolDownAnaEkranComboPending) {
+                mVolDownAnaEkranComboPending = false;
+                if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Vol↓+Ana ekran ikisi bırakıldı → motor sesi toggle");
+                onMotorSoundToggleFromKey();
+            }
+        }
+    }
+
+    /** Tuş kombo ile tetiklenen motor sesi aç/kapa (SharedPreferences + EngineSoundManager). */
+    private void onMotorSoundToggleFromKey() {
+        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        boolean current = prefs.getBoolean("sound_enabled", false);
+        boolean next = !current;
+        prefs.edit().putBoolean("sound_enabled", next).apply();
+        if (mEngineSound != null) {
+            if (next) {
+                if (!mEngineSound.isPlaying()) mEngineSound.start();
+            } else {
+                if (mEngineSound.isPlaying()) mEngineSound.stop();
+            }
+        }
+        String msg = next ? "Motor sesi: Açık" : "Motor sesi: Kapalı";
+        updateNotification(msg);
+        // Ekranda altta kısa süreli yazı (bildirim çubuğu metni ayrıca güncellenir)
+        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
 
     /**
