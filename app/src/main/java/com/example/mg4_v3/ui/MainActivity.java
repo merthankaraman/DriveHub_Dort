@@ -1409,7 +1409,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void showSoundProfileDialog() {
-        final String[] options = {"McLaren P1", "LFA", "Lamborghini Aventador", "BMW Z4", "Pagani Zonda R", "Lotus Exige"};
+        final String[] options = {"McLaren P1", "MCLAREN P1 Stereo", "Lamborghini Aventador", "BMW Z4", "Pagani Zonda R", "Lotus Exige"};
 
         new AlertDialog.Builder(this)
                 .setTitle("Araç Sesi Profili")

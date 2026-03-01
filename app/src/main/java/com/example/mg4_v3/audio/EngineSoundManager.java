@@ -158,9 +158,7 @@ public class EngineSoundManager {
      * Activity ve Service tarafı aynı mapping'i paylaşsın diye burada tutuluyor.
      */
     public void applyProfileLabel(String profile) {
-        if ("LFA".equals(profile)) {
-            setVehicleProfile(PROFILE_LFA());
-        } else if ("McLaren P1".equals(profile)) {
+        if ("McLaren P1".equals(profile)) {
             setVehicleProfile(PROFILE_MCLAREN_P1());
         } else if ("Lamborghini Aventador".equals(profile)) {
             setVehicleProfile(PROFILE_AVENTADOR());
@@ -170,6 +168,8 @@ public class EngineSoundManager {
             setVehicleProfile(PROFILE_ZONDA_R());
         } else if ("Lotus Exige".equals(profile)) {
             setVehicleProfile(PROFILE_LOTUS_EXIGE());
+        } else if ("MCLAREN P1 Stereo".equals(profile)) {
+            setVehicleProfile(PROFILE_MCLAREN_P1_ST());
         } else {
             setVehicleProfile(PROFILE_MCLAREN_P1());
         }
@@ -221,9 +221,9 @@ public class EngineSoundManager {
     // ==========================================
     // HAZIR ARAÇ TANIMLARI (STATİK)
     // ==========================================
-    public static VehicleProfile PROFILE_LFA() {
-        return new VehicleProfile("Lexus LFA", 1000f, 8300f, 1,
-                0,
+    public static VehicleProfile PROFILE_MCLAREN_P1_ST() {
+        return new VehicleProfile("McLaren P1 ST", 800f, 9000f, 1,
+                1,
                 new float[][]{
                         {0f, 30f},
                         {15f, 60f},
@@ -234,16 +234,17 @@ public class EngineSoundManager {
                         {130f, 200f},
                         {140f, 250f},
                 },
-                R.raw.lfa_idle,
-                R.raw.lfa_3784,
-                R.raw.lfa_5333,
-                R.raw.lfa_6301,
-                R.raw.lfa_7076,
-                R.raw.lfa_8135
+                R.raw.mclaren_p1_idle,
+                R.raw.st_mclaren_p1_1750,
+                R.raw.st_mclaren_p1_2750,
+                R.raw.st_mclaren_p1_4500,
+                R.raw.st_mclaren_p1_6000,
+                R.raw.st_mclaren_p1_7500,
+                R.raw.st_mclaren_p1_9000
         );
     }
     public static VehicleProfile PROFILE_LOTUS_EXIGE() {
-        return new VehicleProfile("Lotus Exige", 800, 9000f, 1,
+        return new VehicleProfile("Lotus Exige", 800, 9000f, 0.8f,
                 2,
                 new float[][]{
                         {0f, 35f},
