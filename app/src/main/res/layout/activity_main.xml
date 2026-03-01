@@ -1482,20 +1482,6 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <!-- Manuel ekran yenileme tuşu -->
-            <Button
-                android:id="@+id/btnStatusRefresh"
-                android:layout_width="wrap_content"
-                android:layout_height="44dp"
-                android:layout_marginEnd="12dp"
-                android:backgroundTint="#21262D"
-                android:minWidth="0dp"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:text="↻"
-                android:textColor="#C9D1D9"
-                android:textSize="16sp" />
-
             <TextView
                 android:id="@+id/tvChargingStatus"
                 android:layout_width="wrap_content"
@@ -1514,6 +1500,41 @@
                 android:textColor="#7EE787"
                 android:textSize="18sp"
                 android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Şarj uyuma engelle (toggle) + Şarj geçmişi butonu aynı hizada -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchChargingWakeLock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text=""
+                android:textColor="@color/status_value" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Şarj sırasında ekran uyuma engelle"
+                android:textColor="@color/status_value"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/btnShowChargingHistory"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:backgroundTint="#21262D"
+                android:text="Şarj Geçmişini Göster"
+                android:textColor="#C9D1D9"
+                android:textSize="12sp" />
 
         </LinearLayout>
 
@@ -1788,17 +1809,6 @@
                         android:textStyle="bold" />
 
                 </LinearLayout>
-
-                <!-- Şarj geçmişi ayrı ekranda açılır -->
-                <Button
-                    android:id="@+id/btnShowChargingHistory"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="12dp"
-                    android:backgroundTint="#21262D"
-                    android:text="Şarj Geçmişini Göster"
-                    android:textColor="#C9D1D9"
-                    android:textSize="12sp" />
 
             </LinearLayout>
 

@@ -553,11 +553,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
         findViewById(R.id.btnStatusPanel).setOnClickListener(v -> openStatusPanel());
         findViewById(R.id.btnStatusBack).setOnClickListener(v  -> closeStatusPanel());
-        // Manuel ekran yenileme tuşu
-        findViewById(R.id.btnStatusRefresh).setOnClickListener(v -> {
-            // Otomatik döngüden bağımsız olarak anlık yenile
-            refreshStatusPanel();
-        });
         // Klima paneli açma butonu
         findViewById(R.id.btnClimatePanel).setOnClickListener(v -> openClimatePanel());
 
@@ -631,7 +626,16 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             });
         }
 
-        // Şarj geçmişi ayrı ekranda açılır
+        // Şarj durumu paneli: uyuma engelle toggle (hafızalı) + şarj geçmişi butonu
+        SwitchCompat swChargingWakeLock = findViewById(R.id.switchChargingWakeLock);
+        if (swChargingWakeLock != null) {
+            SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+            boolean wakeLockEnabled = p.getBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, false);
+            swChargingWakeLock.setChecked(wakeLockEnabled);
+            swChargingWakeLock.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                p.edit().putBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, isChecked).apply();
+            });
+        }
         Button btnShowHistory = findViewById(R.id.btnShowChargingHistory);
         if (btnShowHistory != null) {
             btnShowHistory.setOnClickListener(v -> startActivity(new Intent(this, ChargingHistoryActivity.class)));
