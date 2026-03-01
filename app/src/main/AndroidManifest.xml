@@ -40,6 +40,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.ChargingHistoryActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.MG4_V3" />
+
         <service
             android:name=".service.MG4ControlService"
             android:exported="false"

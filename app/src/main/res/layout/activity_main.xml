@@ -1789,7 +1789,7 @@
 
                 </LinearLayout>
 
-                <!-- Şarj geçmişini açan düğme -->
+                <!-- Şarj geçmişi ayrı ekranda açılır -->
                 <Button
                     android:id="@+id/btnShowChargingHistory"
                     android:layout_width="wrap_content"
@@ -1802,112 +1802,6 @@
 
             </LinearLayout>
 
-        </LinearLayout>
-
-        <!-- Şarj geçmişi tablosu (kaydırılabilir) -->
-        <ScrollView
-            android:id="@+id/scrollChargingHistory"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:fillViewport="true"
-            android:scrollbars="vertical"
-            android:visibility="gone">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <!-- Tablo başlığı -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/surface_variant"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingVertical="8dp"
-                    android:paddingEnd="8dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1.2"
-                        android:text="Başlangıç"
-                        android:textColor="@color/status_value"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1.2"
-                        android:text="Bitiş"
-                        android:textColor="@color/status_value"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.7"
-                        android:text="AC kWh"
-                        android:textColor="@color/status_value"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.7"
-                        android:text="DC kWh"
-                        android:textColor="@color/status_value"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.5"
-                        android:text="Saat"
-                        android:textColor="@color/status_value"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/historyTableBody"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical" />
-            </LinearLayout>
-        </ScrollView>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="end"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnExportChargingHistoryCsv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:backgroundTint="#21262D"
-                android:text="CSV Dışa Aktar"
-                android:textColor="#C9D1D9"
-                android:textSize="14sp" />
-
-            <Button
-                android:id="@+id/btnClearChargingHistory"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:backgroundTint="#21262D"
-                android:text="Geçmişi Sil"
-                android:textColor="#C9D1D9"
-                android:textSize="14sp" />
         </LinearLayout>
 
     </LinearLayout>

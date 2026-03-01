@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface"
+    android:paddingTop="20dp"
+    android:paddingEnd="40dp"
+    android:paddingBottom="20dp"
+    android:paddingStart="24dp">
+
+    <!-- Üst: Geri + Başlık (Status paneli ile aynı stil) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <Button
+            android:id="@+id/btnChargingHistoryBack"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_marginEnd="16dp"
+            android:backgroundTint="#21262D"
+            android:minWidth="0dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="← Geri"
+            android:textColor="#C9D1D9"
+            android:textSize="18sp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:letterSpacing="0.06"
+            android:text="ŞARJ GEÇMİŞİ"
+            android:textColor="@color/status_value"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Tablo başlığı (Status paneli tablo başlığı ile aynı) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface_variant"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingVertical="10dp"
+        android:paddingEnd="12dp"
+        android:paddingStart="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:text="Başlangıç"
+            android:textColor="@color/status_value"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:text="Bitiş"
+            android:textColor="@color/status_value"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.7"
+            android:text="AC kWh"
+            android:textColor="@color/status_value"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.7"
+            android:text="DC kWh"
+            android:textColor="@color/status_value"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:text="Süre"
+            android:textColor="@color/status_value"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Tablo gövdesi (kaydırılabilir) -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="vertical"
+        android:background="@color/surface"
+        android:layout_marginTop="4dp">
+
+        <LinearLayout
+            android:id="@+id/historyTableBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <!-- Alt butonlar (Status paneli buton stili) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp">
+
+        <Button
+            android:id="@+id/btnExportChargingHistoryCsv"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="#21262D"
+            android:text="CSV Dışa Aktar"
+            android:textColor="#C9D1D9"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btnClearChargingHistory"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:backgroundTint="#21262D"
+            android:text="Geçmişi Sil"
+            android:textColor="#C9D1D9"
+            android:textSize="14sp" />
+    </LinearLayout>
+</LinearLayout>

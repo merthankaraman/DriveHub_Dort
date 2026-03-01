@@ -165,8 +165,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvDcAmpAct;
     private TextView mTvDcKwAct;
     private TextView mTvDcEnergy;
-    private LinearLayout mHistoryTableBody;
-    private View mHistoryScroll;
 
     // Hangi panel açık? (yeniden yaratmada aynı ekrana dönmek için)
     private static final String STATE_PANEL = "current_panel";
@@ -560,28 +558,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             // Otomatik döngüden bağımsız olarak anlık yenile
             refreshStatusPanel();
         });
-        mHistoryTableBody = findViewById(R.id.historyTableBody);
-        mHistoryScroll    = findViewById(R.id.scrollChargingHistory);
-        findViewById(R.id.btnExportChargingHistoryCsv).setOnClickListener(v -> {
-            File f = ChargingHistory.exportToCsv(this);
-            if (f != null) {
-                Toast.makeText(this, "CSV kaydedildi: " + f.getAbsolutePath(), Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this, "CSV dışa aktarma başarısız.", Toast.LENGTH_SHORT).show();
-            }
-        });
-        findViewById(R.id.btnClearChargingHistory).setOnClickListener(v -> {
-            new AlertDialog.Builder(this)
-                .setMessage("Geçmişi silmek istiyor musunuz?")
-                .setPositiveButton("Evet", (dialog, which) -> {
-                    ChargingHistory.clearAll(this);
-                    refreshChargingHistoryTable();
-                    Toast.makeText(this, "Geçmiş silindi.", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Hayır", null)
-                .show();
-        });
-
         // Klima paneli açma butonu
         findViewById(R.id.btnClimatePanel).setOnClickListener(v -> openClimatePanel());
 
@@ -655,18 +631,10 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             });
         }
 
-        // Şarj geçmişi göster/gizle düğmesi
+        // Şarj geçmişi ayrı ekranda açılır
         Button btnShowHistory = findViewById(R.id.btnShowChargingHistory);
         if (btnShowHistory != null) {
-            btnShowHistory.setOnClickListener(v -> {
-                if (mHistoryScroll == null) return;
-                if (mHistoryScroll.getVisibility() == View.VISIBLE) {
-                    mHistoryScroll.setVisibility(View.GONE);
-                } else {
-                    refreshChargingHistoryTable();
-                    mHistoryScroll.setVisibility(View.VISIBLE);
-                }
-            });
+            btnShowHistory.setOnClickListener(v -> startActivity(new Intent(this, ChargingHistoryActivity.class)));
         }
 
         findViewById(R.id.btnClimateBack).setOnClickListener(v -> closeClimatePanel());
@@ -882,16 +850,28 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             adapterOn.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             mSpinnerCamera360PressOn.setAdapter(adapterOn);
             mSpinnerCamera360PressOn.setSelection(indexOfPressType(p.getString(PREF_CAMERA_360_PRESS_ON, DEFAULT_ONE_PEDAL_PRESS_TYPE)));
-            mSpinnerCamera360PressOn.setOnItemSelectedListener((parent, view, position, id) ->
-                    p.edit().putString(PREF_CAMERA_360_PRESS_ON, PRESS_TYPE_VALUES[position]).apply());
+            mSpinnerCamera360PressOn.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    p.edit().putString(PREF_CAMERA_360_PRESS_ON, PRESS_TYPE_VALUES[position]).apply();
+                }
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {}
+            });
         }
         if (mSpinnerCamera360PressOff != null) {
             ArrayAdapter<String> adapterOff = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PRESS_TYPE_LABELS);
             adapterOff.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             mSpinnerCamera360PressOff.setAdapter(adapterOff);
             mSpinnerCamera360PressOff.setSelection(indexOfPressType(p.getString(PREF_CAMERA_360_PRESS_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF)));
-            mSpinnerCamera360PressOff.setOnItemSelectedListener((parent, view, position, id) ->
-                    p.edit().putString(PREF_CAMERA_360_PRESS_OFF, PRESS_TYPE_VALUES[position]).apply());
+            mSpinnerCamera360PressOff.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    p.edit().putString(PREF_CAMERA_360_PRESS_OFF, PRESS_TYPE_VALUES[position]).apply();
+                }
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {}
+            });
         }
     }
 
@@ -940,7 +920,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mCurrentPanel = PANEL_STATUS;
         mLayoutMain.setVisibility(View.GONE);
         mLayoutStatusPanel.setVisibility(View.VISIBLE);
-        if (mHistoryScroll != null) mHistoryScroll.setVisibility(View.GONE);
         mChargingPanelOpen = true;
         refreshStatusPanel();
         refreshChargingHistoryTable();
@@ -1019,37 +998,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         } else {
             mTvChargingDuration.setText("--:--:--");
         }
-    }
-
-    private static final SimpleDateFormat SDF = new SimpleDateFormat("dd.MM HH:mm", Locale.getDefault());
-
-    private void refreshChargingHistoryTable() {
-        if (mHistoryTableBody == null) return;
-        mHistoryTableBody.removeAllViews();
-        List<ChargingRecord> list = ChargingHistory.load(this);
-        int dp12 = (int) (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getResources().getDisplayMetrics()) + 0.5f);
-        int dp4 = (int) (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()) + 0.5f);
-        for (ChargingRecord r : list) {
-            LinearLayout row = new LinearLayout(this);
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(0, dp4, dp12, dp4);
-            addCell(row, 1.2f, SDF.format(new Date(r.startMs)));
-            addCell(row, 1.2f, SDF.format(new Date(r.endMs)));
-            addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.acKwh));
-            addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.dcKwh));
-            addCell(row, 0.5f, r.getDurationFormatted());
-            mHistoryTableBody.addView(row);
-        }
-    }
-
-    private void addCell(LinearLayout row, float weight, String text) {
-        TextView tv = new TextView(this);
-        tv.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, weight));
-        tv.setText(text);
-        tv.setTextColor(0xFF8B949E);
-        tv.setTextSize(11);
-        row.addView(tv);
     }
 
     // -------------------------------------------------------------------------
