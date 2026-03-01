@@ -21,17 +21,23 @@ public class ChargingRecord {
         return Math.max(0f, (endMs - startMs) / 3_600_000f);
     }
 
-    /**
-     * Süreyi metin olarak: 60 dakikadan uzunsa "x saat y dakika z saniye",
-     * kısaysa sadece "y dakika z saniye".
-     */
-    public String getDurationFormatted() {
+    /** Süre parçaları: [saat, dakika, saniye]. getString(duration_format_hms/min_sec) ile kullan. */
+    public int[] getDurationParts() {
         long totalMs = Math.max(0L, endMs - startMs);
         long totalSec = totalMs / 1000;
-        long h = totalSec / 3600;
-        long m = (totalSec % 3600) / 60;
-        long s = totalSec % 60;
-        if (totalSec >= 3600) {
+        int h = (int) (totalSec / 3600);
+        int m = (int) ((totalSec % 3600) / 60);
+        int s = (int) (totalSec % 60);
+        return new int[] { h, m, s };
+    }
+
+    /**
+     * Süreyi metin olarak (varsayılan Türkçe). Dil için ChargingHistoryActivity içinde getString ile format kullan.
+     */
+    public String getDurationFormatted() {
+        int[] p = getDurationParts();
+        int h = p[0], m = p[1], s = p[2];
+        if (h > 0) {
             return String.format("%d saat %d dakika %d saniye", h, m, s);
         }
         return String.format("%d dakika %d saniye", m, s);

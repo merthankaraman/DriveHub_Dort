@@ -214,16 +214,6 @@
             android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/tvDriveModeAuto"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:textSize="16sp"
-                android:textColor="@color/status_value"
-                android:paddingBottom="2dp"
-                android:text="" />
-
-            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/drive_mode"
@@ -319,7 +309,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:textSize="20sp"
-                android:text="REGEN"
+                android:text="@string/regen"
                 android:textColor="@color/status_value"
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="8dp"/>
@@ -339,7 +329,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="ISITMA"
+                android:text="@string/climate"
                 android:gravity="center_horizontal"
                 android:textSize="20sp"
                 android:textColor="@color/status_value"
@@ -361,7 +351,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="TÜKETİM"
+                android:text="@string/consumption"
                 android:gravity="center_horizontal"
                 android:textSize="20sp"
                 android:textColor="@color/status_value"
@@ -383,7 +373,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="DURUM"
+                android:text="@string/status"
                 android:gravity="center_horizontal"
                 android:textSize="20sp"
                 android:textColor="@color/status_value"
@@ -437,7 +427,7 @@
                 android:minWidth="0dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:text="←"
+                android:text="@string/back"
                 android:textColor="#C9D1D9"
                 android:textSize="18sp" />
 
@@ -581,7 +571,7 @@
                 android:minWidth="0dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:text="←"
+                android:text="@string/back"
                 android:textColor="@color/status_value"
                 android:textSize="18sp" />
 
@@ -617,7 +607,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    android:text="Tek pedal"
+                    android:text="@string/one_pedal_label"
                     android:textColor="@color/status_value"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -633,7 +623,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Tek pedalı düğmeye ata"
+                        android:text="@string/one_pedal_assign"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
@@ -665,7 +655,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Açmak için basma tipi"
+                            android:text="@string/press_type_on"
                             android:textColor="@color/text_secondary"
                             android:textSize="13sp" />
 
@@ -690,7 +680,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Kapatmak için basma tipi"
+                            android:text="@string/press_type_off"
                             android:textColor="@color/text_secondary"
                             android:textSize="13sp" />
 
@@ -720,7 +710,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    android:text="360 kamera"
+                    android:text="@string/camera_360_label"
                     android:textColor="@color/status_value"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -736,7 +726,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="360'ı düğmeye ata"
+                        android:text="@string/camera_360_assign"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
@@ -768,7 +758,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Açmak için basma tipi"
+                            android:text="@string/press_type_on"
                             android:textColor="@color/text_secondary"
                             android:textSize="13sp" />
 
@@ -793,7 +783,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Kapatmak için basma tipi"
+                            android:text="@string/press_type_off"
                             android:textColor="@color/text_secondary"
                             android:textSize="13sp" />
 
@@ -848,7 +838,7 @@
                 android:minWidth="0dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:text="←"
+                android:text="@string/back"
                 android:textColor="#C9D1D9"
                 android:textSize="18sp" />
 
@@ -876,7 +866,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Üstte ısıtma kısayolu (overlay)"
+                android:text="@string/climate_overlay_hint"
                 android:textColor="@color/status_value"
                 android:textSize="12sp" />
 
@@ -895,7 +885,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:letterSpacing="0.1"
-            android:text="DİREKSİYON ISITMA"
+            android:text="@string/heating_steering"
             android:textColor="@color/status_value"
             android:textSize="11sp" />
 
@@ -923,7 +913,7 @@
                 android:layout_height="64dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="AÇIK"
+                android:text="@string/level_on"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -936,7 +926,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:letterSpacing="0.1"
-            android:text="SOL KOLTUK"
+            android:text="@string/heating_seat_left"
             android:textColor="@color/status_value"
             android:textSize="11sp" />
 
@@ -965,7 +955,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="SEV. 1"
+                android:text="@string/level_sev_1"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -977,7 +967,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="SEV. 2"
+                android:text="@string/level_sev_2"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -988,7 +978,7 @@
                 android:layout_height="64dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="SEV. 3"
+                android:text="@string/level_sev_3"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -1001,7 +991,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:letterSpacing="0.1"
-            android:text="SAG KOLTUK"
+            android:text="@string/heating_seat_right"
             android:textColor="@color/status_value"
             android:textSize="11sp" />
 
@@ -1029,7 +1019,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="SEV. 1"
+                android:text="@string/level_sev_1"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -1041,7 +1031,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="SEV. 2"
+                android:text="@string/level_sev_2"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -1052,7 +1042,7 @@
                 android:layout_height="64dp"
                 android:layout_weight="1"
                 android:backgroundTint="#21262D"
-                android:text="SEV. 3"
+                android:text="@string/level_sev_3"
                 android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -1105,7 +1095,7 @@
                         android:minWidth="52dp"
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
-                        android:text="←"
+                        android:text="@string/back"
                         android:textColor="#C9D1D9"
                         android:textSize="20sp" />
 
@@ -1135,7 +1125,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    android:text="Motor durumu: --"
+                    android:text="@string/motor_state_placeholder"
                     android:textColor="@color/status_value"
                     android:textSize="15sp" />
 
@@ -1158,7 +1148,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="6dp"
-                            android:text="RPM"
+                            android:text="@string/gauge_rpm"
                             android:textColor="@color/status_value"
                             android:textSize="13sp" />
 
@@ -1184,7 +1174,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="6dp"
-                            android:text="VİTES"
+                            android:text="@string/gauge_gear"
                             android:textColor="@color/status_value"
                             android:textSize="13sp" />
 
@@ -1210,7 +1200,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="6dp"
-                            android:text="HIZ (km/h)"
+                            android:text="@string/gauge_speed"
                             android:textColor="@color/status_value"
                             android:textSize="13sp" />
 
@@ -1236,7 +1226,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="6dp"
-                            android:text="GÜÇ (kW)"
+                            android:text="@string/gauge_power"
                             android:textColor="@color/status_value"
                             android:textSize="13sp" />
 
@@ -1261,7 +1251,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="6dp"
-                            android:text="PEDAL"
+                            android:text="@string/gauge_pedal"
                             android:textColor="@color/status_value"
                             android:textSize="13sp" />
 
@@ -1294,7 +1284,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="12dp"
-                        android:text="Ses Seviyesi"
+                        android:text="@string/sound_volume"
                         android:textColor="@color/status_value"
                         android:textSize="14sp" />
 
@@ -1321,7 +1311,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Bildirim sesi (araç): --"
+                        android:text="@string/notification_volume"
                         android:textColor="#8B949E"
                         android:textSize="12sp" />
 
@@ -1333,7 +1323,7 @@
                         android:minWidth="0dp"
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp"
-                        android:text="Max yap"
+                        android:text="@string/btn_max_volume"
                         android:textColor="#C9D1D9"
                         android:textSize="12sp" />
 
@@ -1356,7 +1346,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="6dp"
                         android:fontFamily="monospace"
-                        android:text="Simüle hız: 0 km/h"
+                        android:text="@string/sim_speed_label"
                         android:textColor="@color/status_value"
                         android:textSize="14sp" />
 
@@ -1372,7 +1362,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="6dp"
-                        android:text="Simüle gaz pedalı (%)"
+                        android:text="@string/sim_throttle_label"
                         android:textColor="@color/status_value"
                         android:textSize="14sp" />
 
@@ -1405,7 +1395,7 @@
                             android:layout_marginEnd="6dp"
                             android:layout_weight="1"
                             android:backgroundTint="#21262D"
-                            android:text="🔊 Ses Aç"
+                            android:text="@string/btn_sound_enabled"
                             android:textColor="#FFFFFF"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -1417,7 +1407,7 @@
                             android:layout_marginStart="6dp"
                             android:layout_weight="1"
                             android:backgroundTint="#21262D"
-                            android:text="Araç Sesi: LFA"
+                            android:text="@string/vehicle_sound_placeholder"
                             android:textColor="#FFFFFF"
                             android:textSize="14sp" />
 
@@ -1436,7 +1426,7 @@
                             android:layout_marginEnd="6dp"
                             android:layout_weight="1"
                             android:backgroundTint="#21262D"
-                            android:text="Hız Testi"
+                            android:text="@string/btn_speed_test"
                             android:textColor="#FFFFFF"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -1449,7 +1439,7 @@
                             android:layout_marginTop="10dp"
                             android:layout_weight="1"
                             android:backgroundTint="#21262D"
-                            android:text="⚪ Şanzıman: Normal"
+                            android:text="@string/gearbox_normal"
                             android:textColor="#FFFFFF"
                             android:textSize="14sp" />
 
@@ -1469,7 +1459,7 @@
                             android:layout_marginEnd="6dp"
                             android:layout_weight="1"
                             android:backgroundTint="#21262D"
-                            android:text="Devir eşleme"
+                            android:text="@string/rev_match"
                             android:textColor="#FFFFFF"
                             android:textSize="14sp" />
 
@@ -1480,7 +1470,7 @@
                             android:layout_marginStart="6dp"
                             android:layout_weight="1"
                             android:backgroundTint="#21262D"
-                            android:text="Dişli ıslığını aktif et"
+                            android:text="@string/gear_whine"
                             android:textColor="#FFFFFF"
                             android:textSize="14sp" />
 
@@ -1549,7 +1539,7 @@
                 android:minWidth="48dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:text="←"
+                android:text="@string/back"
                 android:textColor="#C9D1D9"
                 android:textSize="20sp" />
 
@@ -1568,7 +1558,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:text="Araç: --"
+            android:text="@string/idle_vehicle_placeholder"
             android:textColor="#8B949E"
             android:textSize="12sp" />
 
@@ -1665,7 +1655,7 @@
                 android:minWidth="0dp"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
-                android:text="←"
+                android:text="@string/back"
                 android:textColor="#C9D1D9"
                 android:textSize="18sp" />
 
@@ -1674,7 +1664,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:letterSpacing="0.06"
-                android:text="SARJ DURUMU"
+                android:text="@string/charging_status_title"
                 android:textColor="@color/status_value"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -1684,7 +1674,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="12dp"
-                android:text="Şarj durumu: --"
+                android:text="@string/charging_status_label"
                 android:textColor="@color/status_value"
                 android:textSize="14sp" />
 
@@ -1693,7 +1683,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
-                android:text="--:--:--"
+                android:text="@string/charging_duration_placeholder"
                 android:textColor="#7EE787"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -1720,7 +1710,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Şarj sırasında ekran uyuma engelle"
+                android:text="@string/charging_wake_lock"
                 android:textColor="@color/status_value"
                 android:textSize="14sp" />
 
@@ -1729,7 +1719,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:backgroundTint="#21262D"
-                android:text="Şarj Geçmişini Göster"
+                android:text="@string/btn_charging_history"
                 android:textColor="#C9D1D9"
                 android:textSize="12sp" />
 
@@ -1742,7 +1732,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:fontFamily="monospace"
-            android:text="Beklenen Şarj Gücü:  -- kW"
+            android:text="@string/expected_charge_power"
             android:textColor="#FFA657"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -1769,7 +1759,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
                     android:letterSpacing="0.12"
-                    android:text="AC"
+                    android:text="@string/unit_ac"
                     android:textColor="#6E7681"
                     android:textSize="13sp" />
 
@@ -1784,7 +1774,7 @@
                     <TextView
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:text="V"
+                        android:text="@string/unit_v"
                         android:textColor="#8B949E"
                         android:textSize="14sp" />
 
@@ -1811,7 +1801,7 @@
                     <TextView
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:text="A"
+                        android:text="@string/unit_a"
                         android:textColor="#8B949E"
                         android:textSize="14sp" />
 
@@ -1838,7 +1828,7 @@
                     <TextView
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:text="kW"
+                        android:text="@string/unit_kw_label"
                         android:textColor="#8B949E"
                         android:textSize="14sp" />
 
@@ -1864,7 +1854,7 @@
                     <TextView
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:text="kWh"
+                        android:text="@string/unit_kwh_label"
                         android:textColor="#8B949E"
                         android:textSize="14sp" />
 
@@ -1896,7 +1886,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
                     android:letterSpacing="0.12"
-                    android:text="Batarya"
+                    android:text="@string/batarya"
                     android:textColor="#6E7681"
                     android:textSize="13sp" />
 
@@ -1911,7 +1901,7 @@
                     <TextView
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:text="V"
+                        android:text="@string/unit_v"
                         android:textColor="#8B949E"
                         android:textSize="14sp" />
 
@@ -1938,7 +1928,7 @@
                     <TextView
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:text="A"
+                        android:text="@string/unit_a"
                         android:textColor="#8B949E"
                         android:textSize="14sp" />
 
@@ -1965,7 +1955,7 @@
                     <TextView
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:text="kW"
+                        android:text="@string/unit_kw_label"
                         android:textColor="#8B949E"
                         android:textSize="14sp" />
 
@@ -1991,7 +1981,7 @@
                     <TextView
                         android:layout_width="48dp"
                         android:layout_height="wrap_content"
-                        android:text="kWh"
+                        android:text="@string/unit_kwh_label"
                         android:textColor="#8B949E"
                         android:textSize="14sp" />
 
@@ -2052,7 +2042,7 @@
                 android:minWidth="0dp"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
-                android:text="←"
+                android:text="@string/back"
                 android:textColor="#C9D1D9"
                 android:textSize="18sp" />
 
@@ -2060,7 +2050,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="TÜKETİM"
+                android:text="@string/consumption"
                 android:textColor="@color/status_value"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -2070,7 +2060,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="44dp"
                 android:backgroundTint="#21262D"
-                android:text="Yol sıfırla"
+                android:text="@string/btn_reset_trip"
                 android:textColor="#C9D1D9"
                 android:textSize="12sp" />
 
@@ -2085,46 +2075,46 @@
 
             <!-- Vites en üstte -->
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Vites" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_gear" android:textColor="#8B949E" android:textSize="18sp" />
                 <TextView android:id="@+id/tvConsumptionGear" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
             </LinearLayout>
             <!-- Toplam km -->
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Toplam km" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_total_km" android:textColor="#8B949E" android:textSize="18sp" />
                 <TextView android:id="@+id/tvConsumptionTotalKm" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=" km" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_km" android:textColor="#8B949E" android:textSize="18sp" />
             </LinearLayout>
             <!-- Tüketim (PROP_ELEC_CSUMP_PER_KM) -->
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Tüketim (kWh/km)" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_kwh_per_km" android:textColor="#8B949E" android:textSize="18sp" />
                 <TextView android:id="@+id/tvConsumptionKwhPerKm" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=" kWh/km" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_kwh_km" android:textColor="#8B949E" android:textSize="18sp" />
             </LinearLayout>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Hız" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_speed" android:textColor="#8B949E" android:textSize="18sp" />
                 <TextView android:id="@+id/tvConsumptionSpeed" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=" km/h" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_kmh" android:textColor="#8B949E" android:textSize="18sp" />
             </LinearLayout>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Güç" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_power" android:textColor="#8B949E" android:textSize="18sp" />
                 <TextView android:id="@+id/tvConsumptionPower" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=" kW" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_kw" android:textColor="#8B949E" android:textSize="18sp" />
             </LinearLayout>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Yol (bu oturum)" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_trip" android:textColor="#8B949E" android:textSize="18sp" />
                 <TextView android:id="@+id/tvConsumptionTripKm" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=" km" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_km" android:textColor="#8B949E" android:textSize="18sp" />
             </LinearLayout>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Enerji (integre)" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_energy" android:textColor="#8B949E" android:textSize="18sp" />
                 <TextView android:id="@+id/tvConsumptionEnergy" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=" kWh" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_kwh" android:textColor="#8B949E" android:textSize="18sp" />
             </LinearLayout>
             <!-- Ortalama tüketim: hesaplanan enerji / yol → kWh/100km -->
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Ort. tüketim (kWh/100km)" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_avg" android:textColor="#8B949E" android:textSize="18sp" />
                 <TextView android:id="@+id/tvConsumptionAvgKwhPer100km" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=" kWh/100km" android:textColor="#8B949E" android:textSize="18sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_kwh_100km" android:textColor="#8B949E" android:textSize="18sp" />
             </LinearLayout>
 
         </LinearLayout>

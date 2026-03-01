@@ -18,8 +18,8 @@
     <string name="status_loading">Hazırlanıyor…</string>
     <string name="status_service_ok">Servis çalışıyor. ★ tuşu aktif.</string>
     <string name="speed_placeholder">-- km/h</string>
-    <string name="motor_power_format">Motor Gücü: %d kW</string>
-    <string name="motor_power_default">Motor Gücü: 125 kW</string>
+    <string name="motor_power_format">Aracımın Motor Gücü: %d kW</string>
+    <string name="motor_power_default">Aracımın Motor Gücü: 125 kW</string>
     <string name="btn_motor_sound_settings">MOTOR SESİ AYARLARI</string>
     <string name="btn_shortcuts">Düğme kısayolları</string>
     <string name="logs_detail">Loglar (detay)</string>
@@ -57,6 +57,9 @@
     <string name="level_off">KAPALI</string>
     <string name="level_on">AÇIK</string>
     <string name="level_sev">SEV. %d</string>
+    <string name="level_sev_1">SEV. 1</string>
+    <string name="level_sev_2">SEV. 2</string>
+    <string name="level_sev_3">SEV. 3</string>
 
     <!-- Tüketim / Durum -->
     <string name="consumption">TÜKETİM</string>
@@ -73,6 +76,36 @@
     <string name="charging">Şarjda</string>
     <string name="not_charging">Şarjda değil</string>
 
+    <!-- Şarj geçmişi ekranı -->
+    <string name="charging_history_back">← Geri</string>
+    <string name="charging_history_title">ŞARJ GEÇMİŞİ</string>
+    <string name="charging_history_table_start">Başlangıç</string>
+    <string name="charging_history_table_end">Bitiş</string>
+    <string name="charging_history_table_ac_kwh">AC kWh</string>
+    <string name="charging_history_table_dc_kwh">DC kWh</string>
+    <string name="charging_history_table_duration">Süre</string>
+    <string name="charging_history_btn_export">CSV Dışa Aktar</string>
+    <string name="charging_history_btn_clear">Geçmişi Sil</string>
+    <string name="charging_history_toast_saved">CSV kaydedildi: %s</string>
+    <string name="charging_history_toast_export_failed">CSV dışa aktarma başarısız.</string>
+    <string name="charging_history_confirm_clear">Geçmişi silmek istiyor musunuz?</string>
+    <string name="charging_history_yes">Evet</string>
+    <string name="charging_history_no">Hayır</string>
+    <string name="charging_history_toast_cleared">Geçmiş silindi.</string>
+    <string name="charging_history_total_format">Toplam: AC %.2f kWh · DC %.2f kWh</string>
+    <string name="duration_format_hms">%d saat %d dakika %d saniye</string>
+    <string name="duration_format_ms">%d dakika %d saniye</string>
+    <!-- CSV dışa aktarma başlıkları (dile göre) -->
+    <string name="csv_header_start">Başlangıç</string>
+    <string name="csv_header_end">Bitiş</string>
+    <string name="csv_header_ac_kwh">AC_kWh</string>
+    <string name="csv_header_dc_kwh">DC_kWh</string>
+    <string name="csv_header_hours">Saat</string>
+    <!-- Şarj paneli grafik lejantı -->
+    <string name="chart_legend_max_dc">Maks DC (kW)</string>
+    <string name="chart_legend_ac">AC (kW)</string>
+    <string name="chart_legend_batt">Batarya (kW)</string>
+
     <!-- Kısayollar paneli -->
     <string name="shortcuts_panel_title">DÜĞME KISAYOLLARI</string>
     <string name="one_pedal_label">Tek pedal</string>
@@ -81,11 +114,27 @@
     <string name="press_type_off">Kapatmak için basma tipi</string>
     <string name="camera_360_label">360 kamera</string>
     <string name="camera_360_assign">360\'ı düğmeye ata</string>
+    <string-array name="one_pedal_key_labels">
+        <item>Kapalı</item>
+        <item>Sol yıldız</item>
+        <item>Sağ yıldız</item>
+    </string-array>
+    <string-array name="press_type_labels">
+        <item>Tek</item>
+        <item>Uzun</item>
+        <item>Çift</item>
+    </string-array>
 
     <!-- Motor sesi paneli -->
     <string name="motor_sound_title">MOTOR SESİ</string>
     <string name="motor_sound_combo_hint">Ana ekran ve ses kısma tuşlarına aynı anda basarsanız ses modu açılıp kapanır.</string>
     <string name="motor_state_placeholder">Motor durumu: --</string>
+    <string name="motor_state_ready">Motor durumu: READY</string>
+    <string name="motor_state_off">Motor durumu: Kapalı</string>
+    <string name="motor_state_drive_suffix"> · Sürüş: %s</string>
+    <string name="sim_speed_format">Simüle hız: %.0f km/h</string>
+    <string name="speed_format">%.2f km/h</string>
+    <string name="version_format">EH32 · Android Automotive · v%s</string>
     <string name="gauge_rpm">RPM</string>
     <string name="gauge_gear">VİTES</string>
     <string name="gauge_speed">HIZ (km/h)</string>
@@ -93,13 +142,13 @@
     <string name="gauge_pedal">PEDAL</string>
     <string name="sound_volume">Ses Seviyesi</string>
     <string name="notification_volume">Bildirim sesi (araç): --</string>
-    <string name="btn_max_volume">Max yap</string>
+    <string name="btn_max_volume">Bildirim ses seviyesini Max yap</string>
     <string name="sim_speed_label">Simüle hız: 0 km/h</string>
     <string name="sim_throttle_label">Simüle gaz pedalı (%)</string>
-    <string name="btn_sound_on">🔊 Ses Aç</string>
-    <string name="btn_sound_off">🔇 Ses Aç</string>
-    <string name="btn_sound_close">🔊 Ses Kapa</string>
+    <string name="btn_sound_enabled">🔊 Ses Açık</string>
+    <string name="btn_sound_disabled">🔇 Ses Kapalı</string>
     <string name="vehicle_sound_format">Araç Sesi: %s</string>
+    <string name="vehicle_sound_placeholder">Araç Sesi: --</string>
     <string name="btn_speed_test">Hız Testi</string>
     <string name="gearbox_normal">⚪ Şanzıman: Normal</string>
     <string name="gearbox_eco">🟢 Şanzıman: Eco</string>
@@ -116,6 +165,7 @@
     <!-- Rölanti paneli -->
     <string name="idle_panel_title">Rölanti ayarları</string>
     <string name="idle_vehicle_format">Araç: %s</string>
+    <string name="idle_vehicle_placeholder">Araç: --</string>
     <string name="idle_volume_hint">Rölanti sesinin maksimum seviyesi (araç dururken)</string>
     <string name="idle_pitch_hint">Rölanti perdesi (pitch): 1.0 = orijinal</string>
     <string name="btn_idle_reset_all">Tüm rölanti profillerini sıfırla</string>
@@ -143,15 +193,37 @@
     <!-- Bildirim sesi -->
     <string name="notification_volume_okunamadi">Bildirim sesi: okunamadı</string>
     <string name="notification_volume_na">Bildirim sesi: --</string>
+    <string name="notification_volume_format">Bildirim sesi (araç): %d/%d</string>
     <string name="notification_volume_max_suffix"> — Maksimumda</string>
     <string name="notification_volume_hint_suffix"> — Araç ayarlarından artırın</string>
+    <string name="heating_steering_off">Kapalı</string>
+    <string name="heating_steering_on">Açık</string>
+    <string name="seat_left_off">Sol Koltuk: Kapalı</string>
+    <string name="seat_left_sev">Sol Koltuk: Sev. %d</string>
+    <string name="seat_right_off">Sağ Koltuk: Kapalı</string>
+    <string name="seat_right_sev">Sağ Koltuk: Sev. %d</string>
 
     <!-- Genel -->
     <string name="back">←</string>
     <string name="unit_kmh"> km/h</string>
+    <string name="unit_km"> km</string>
     <string name="unit_kw"> kW</string>
     <string name="unit_kwh"> kWh</string>
+    <string name="unit_kwh_km"> kWh/km</string>
+    <string name="unit_kwh_100km"> kWh/100km</string>
     <string name="unit_v">V</string>
     <string name="unit_a">A</string>
+    <string name="unit_ac">AC</string>
+    <string name="unit_kw_label">kW</string>
+    <string name="unit_kwh_label">kWh</string>
     <string name="batarya">Batarya</string>
+    <string name="btn_reset_trip">Yol sıfırla</string>
+    <string name="consumption_gear">Vites</string>
+    <string name="consumption_total_km">Toplam km</string>
+    <string name="consumption_kwh_per_km">Tüketim (kWh/km)</string>
+    <string name="consumption_speed">Hız</string>
+    <string name="consumption_power">Güç</string>
+    <string name="consumption_trip">Yol (bu oturum)</string>
+    <string name="consumption_energy">Enerji (bu oturum)</string>
+    <string name="consumption_avg">Ort. tüketim (bu oturum)</string>
 </resources>

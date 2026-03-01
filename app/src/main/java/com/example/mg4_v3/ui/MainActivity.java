@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     /** Tek pedal atanacak tuş: -1=Kapalı, 17=Sol yıldız, 286=Sağ yıldız (InputReader keyCode, hafızalı) */
     private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
     private static final int[] ONE_PEDAL_KEY_VALUES = { -1, 17, 286 };
-    private static final String[] ONE_PEDAL_KEY_LABELS = { "Kapalı", "Sol yıldız", "Sağ yıldız" };
+    /** Tek pedal / 360 kamera tuş seçenekleri: string-array one_pedal_key_labels (Kapalı, Sol yıldız, Sağ yıldız) */
     /** Tek pedal açmak için basma tipi: "single", "long", "double" */
     private static final String PREF_ONE_PEDAL_PRESS_TYPE = "one_pedal_press_type";
     /** Tek pedaldan kapatmak için basma tipi (varsayılan: tek) */
@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String DEFAULT_ONE_PEDAL_PRESS_TYPE = "long";
     private static final String DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF = "single";
     private static final String[] PRESS_TYPE_VALUES = { "single", "long", "double" };
-    private static final String[] PRESS_TYPE_LABELS = { "Tek", "Uzun", "Çift" };
+    /** Basma tipi seçenekleri: string-array press_type_labels (Tek, Uzun, Çift) */
     /** 360 kamera tuş atama (aynı key değerleri) */
     private static final String PREF_CAMERA_360_KEY = "camera_360_key";
     private static final String PREF_CAMERA_360_PRESS_ON  = "camera_360_press_on";
@@ -103,8 +103,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvGaugePower;
     private TextView mTvGaugeThrottle;
     private TextView mTvMotorState;
-    private TextView mTvDriveModeAuto;
-    
+
     // Yapay motor sesi
     private EngineSoundManager mEngineSound;
     private Button mBtnSoundToggle;
@@ -234,15 +233,15 @@ public class MainActivity extends AppCompatActivity {
 
             if (mTvSpeed != null) {
                 if (Float.isNaN(speedForDisplay)) {
-                    mTvSpeed.setText("-- km/h");
+                    mTvSpeed.setText(getString(R.string.speed_placeholder));
                 } else {
-                    mTvSpeed.setText(String.format("%.2f km/h", speedForDisplay));
+                    mTvSpeed.setText(getString(R.string.speed_format, speedForDisplay));
                 }
             }
             if (!Float.isNaN(speedForDisplay) && mTvGaugeSpeed != null) {
                 mTvGaugeSpeed.setText(String.format("%.2f", speedForDisplay));
             } else {
-                mTvGaugeSpeed.setText("-- km/h");
+                mTvGaugeSpeed.setText(getString(R.string.speed_placeholder));
             }
             if (mEngineSound != null) {
                 float dcVolt = MG4Hardware.getDcVoltage();
@@ -266,15 +265,10 @@ public class MainActivity extends AppCompatActivity {
             }
             boolean ready = (MG4Hardware.isVehicleReady() || mSimSpeedActive);
             if (mTvMotorState != null) {
-                String motorStr = ready ? "Motor durumu: READY" : "Motor durumu: Kapalı";
+                String motorStr = ready ? getString(R.string.motor_state_ready) : getString(R.string.motor_state_off);
                 int modeVal = MG4Hardware.getDriveMode();
                 String modeStr = (modeVal >= 0) ? DriveMode.fromValue(modeVal).label : "";
-                mTvMotorState.setText(modeStr.isEmpty() ? motorStr : motorStr + " · Sürüş: " + modeStr);
-            }
-            // Araç modu yazısını güncelle (şanzıman "Araç" seçiliyse ve sürüş modu okunabiliyorsa)
-            if (mTvDriveModeAuto != null && SOUND_CHAR_AUTO.equals(getSharedPreferences("mg4_v3", MODE_PRIVATE).getString("sound_character", SOUND_CHAR_NORMAL))) {
-                int modeVal = MG4Hardware.getDriveMode();
-                mTvDriveModeAuto.setText(modeVal >= 0 ? "Araç modu: " + DriveMode.fromValue(modeVal).label : "");
+                mTvMotorState.setText(modeStr.isEmpty() ? motorStr : motorStr + getString(R.string.motor_state_drive_suffix, modeStr));
             }
             // Ses çalma: sadece ses açıksa ve (READY veya sim) ise start, değilse stop
             if (mEngineSound != null && mSimSpeedActive) {
@@ -336,8 +330,7 @@ public class MainActivity extends AppCompatActivity {
         mTvGaugePower = findViewById(R.id.tvGaugePower);
         mTvGaugeThrottle = findViewById(R.id.tvGaugeThrottle);
         mTvMotorState = findViewById(R.id.tvMotorState);
-        mTvDriveModeAuto = findViewById(R.id.tvDriveModeAuto);
-        
+
         // Motor sesi butonları (ses paneli içinde)
         mBtnSoundToggle = findViewById(R.id.btnSoundToggle);
         mBtnSoundProfile = findViewById(R.id.btnSoundProfile);
@@ -435,7 +428,7 @@ public class MainActivity extends AppCompatActivity {
                     mSimSpeedActive = true;
                     mSimSpeedKmh = speed;
                     if (mTvSpeedTestLabel != null) {
-                        mTvSpeedTestLabel.setText(String.format("Simüle hız: %.0f km/h", speed));
+                        mTvSpeedTestLabel.setText(getString(R.string.sim_speed_format, speed));
                     }
                     if (mSoundEnabled && mEngineSound != null && !mEngineSound.isPlaying()) {
                         mEngineSound.start();
@@ -576,7 +569,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
             TextView tvVersion = findViewById(R.id.tvVersion);
-            tvVersion.setText("EH32 · Android Automotive · v" + pInfo.versionName);
+            tvVersion.setText(getString(R.string.version_format, pInfo.versionName));
         } catch (Exception ignored) {}
 
         // Servisi otomatik başlat
@@ -657,9 +650,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mBtnRegenAdaptive.setOnClickListener(v -> selectRegen(RegenLevel.ADAPTIVE));
         mBtnRegenOnePedal.setOnClickListener(v -> {
             sendCommand("PEDAL_ON");
-            Toast.makeText(this, "Tek Pedal: Açık", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.toast_one_pedal_on), Toast.LENGTH_SHORT).show();
             highlightRegenButton(mBtnRegenOnePedal);
-            mTvRegenCurrent.setText("Aktif: Tek Pedal");
+            mTvRegenCurrent.setText(getString(R.string.one_pedal_active));
         });
 
         mSpinnerOnePedalKey     = findViewById(R.id.spinnerOnePedalKey);
@@ -825,7 +818,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         if (rg >= 0) {
             RegenLevel current = RegenLevel.fromValue(rg);
             highlightRegenButton(regenButton(current));
-            mTvRegenCurrent.setText("Aktif: " + current.label);
+            mTvRegenCurrent.setText(getString(R.string.regen_active, current.label));
         } else {
             mTvRegenCurrent.setText("");
         }
@@ -843,7 +836,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         sendCommand("PEDAL_OFF");
         sendRegenLevel(level);
         highlightRegenButton(regenButton(level));
-        mTvRegenCurrent.setText("Aktif: " + level.label);
+        mTvRegenCurrent.setText(getString(R.string.regen_active, level.label));
     }
 
     /** Seçilen butonu mavi, diğerlerini gri yap */
@@ -872,7 +865,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void setupOnePedalKeyPrefs() {
         SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
         if (mSpinnerOnePedalKey != null) {
-            ArrayAdapter<String> adapterKey = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, ONE_PEDAL_KEY_LABELS);
+            ArrayAdapter<CharSequence> adapterKey = ArrayAdapter.createFromResource(this, R.array.one_pedal_key_labels, android.R.layout.simple_spinner_item);
             adapterKey.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             mSpinnerOnePedalKey.setAdapter(adapterKey);
             mSpinnerOnePedalKey.setSelection(indexOfOnePedalKey(p.getInt(PREF_ONE_PEDAL_KEY, DEFAULT_ONE_PEDAL_KEY)));
@@ -887,7 +880,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             });
         }
         if (mSpinnerOnePedalPressOn != null) {
-            ArrayAdapter<String> adapterOn = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PRESS_TYPE_LABELS);
+            ArrayAdapter<CharSequence> adapterOn = ArrayAdapter.createFromResource(this, R.array.press_type_labels, android.R.layout.simple_spinner_item);
             adapterOn.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             mSpinnerOnePedalPressOn.setAdapter(adapterOn);
             mSpinnerOnePedalPressOn.setSelection(indexOfPressType(p.getString(PREF_ONE_PEDAL_PRESS_TYPE, DEFAULT_ONE_PEDAL_PRESS_TYPE)));
@@ -901,7 +894,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             });
         }
         if (mSpinnerOnePedalPressOff != null) {
-            ArrayAdapter<String> adapterOff = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PRESS_TYPE_LABELS);
+            ArrayAdapter<CharSequence> adapterOff = ArrayAdapter.createFromResource(this, R.array.press_type_labels, android.R.layout.simple_spinner_item);
             adapterOff.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             mSpinnerOnePedalPressOff.setAdapter(adapterOff);
             mSpinnerOnePedalPressOff.setSelection(indexOfPressType(p.getString(PREF_ONE_PEDAL_PRESS_TYPE_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF)));
@@ -920,7 +913,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void setupCamera360KeyPrefs() {
         SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
         if (mSpinnerCamera360Key != null) {
-            ArrayAdapter<String> adapterKey = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, ONE_PEDAL_KEY_LABELS);
+            ArrayAdapter<CharSequence> adapterKey = ArrayAdapter.createFromResource(this, R.array.one_pedal_key_labels, android.R.layout.simple_spinner_item);
             adapterKey.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             mSpinnerCamera360Key.setAdapter(adapterKey);
             mSpinnerCamera360Key.setSelection(indexOfOnePedalKey(p.getInt(PREF_CAMERA_360_KEY, DEFAULT_CAMERA_360_KEY)));
@@ -935,7 +928,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             });
         }
         if (mSpinnerCamera360PressOn != null) {
-            ArrayAdapter<String> adapterOn = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PRESS_TYPE_LABELS);
+            ArrayAdapter<CharSequence> adapterOn = ArrayAdapter.createFromResource(this, R.array.press_type_labels, android.R.layout.simple_spinner_item);
             adapterOn.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             mSpinnerCamera360PressOn.setAdapter(adapterOn);
             mSpinnerCamera360PressOn.setSelection(indexOfPressType(p.getString(PREF_CAMERA_360_PRESS_ON, DEFAULT_ONE_PEDAL_PRESS_TYPE)));
@@ -949,7 +942,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             });
         }
         if (mSpinnerCamera360PressOff != null) {
-            ArrayAdapter<String> adapterOff = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PRESS_TYPE_LABELS);
+            ArrayAdapter<CharSequence> adapterOff = ArrayAdapter.createFromResource(this, R.array.press_type_labels, android.R.layout.simple_spinner_item);
             adapterOff.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             mSpinnerCamera360PressOff.setAdapter(adapterOff);
             mSpinnerCamera360PressOff.setSelection(indexOfPressType(p.getString(PREF_CAMERA_360_PRESS_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF)));
@@ -1054,9 +1047,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         // Beklenen Şarj Gücü (üstteki metin)
         if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) {
             float expKw = (dcVolt * dcAmpExp) / 1000f;
-            mTvExpectedPower.setText(String.format("Beklenen Şarj Gücü:  %.2f kW", expKw));
+            mTvExpectedPower.setText(getString(R.string.expected_charge_power_format, expKw));
         } else {
-            mTvExpectedPower.setText("Beklenen Şarj Gücü:  -- kW");
+            mTvExpectedPower.setText(getString(R.string.expected_charge_power));
         }
 
         // AC sütunu (acVolt, acAmp yukarıda alındı)
@@ -1085,7 +1078,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
         // Şarj durumu (çıkarım: AC/DC akım veya PROP_CHG_STATUS)
         boolean charging = MG4Hardware.isChargingNow();
-        mTvChargingStatus.setText(charging ? "Şarjda" : "Şarjda değil");
+        mTvChargingStatus.setText(charging ? getString(R.string.charging) : getString(R.string.not_charging));
         mTvChargingStatus.setTextColor(charging ? 0xFF7EE787 : 0xFF8B949E);
 
         // Şarj süresi (sağ üst köşe)
@@ -1156,11 +1149,11 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         trimChartEntries(mChartEntriesBatt);
 
         LineData data = new LineData();
-        data.addDataSet(makeDataSet(mChartEntriesMaxDc, COLOR_CHART_MAX_DC, "Maks DC (kW)"));
+        data.addDataSet(makeDataSet(mChartEntriesMaxDc, COLOR_CHART_MAX_DC, getString(R.string.chart_legend_max_dc)));
         if (acKw > 0f) {
-            data.addDataSet(makeDataSet(mChartEntriesAc, COLOR_CHART_AC, "AC (kW)"));
+            data.addDataSet(makeDataSet(mChartEntriesAc, COLOR_CHART_AC, getString(R.string.chart_legend_ac)));
         }
-        data.addDataSet(makeDataSet(mChartEntriesBatt, COLOR_CHART_BATT, "Batt (kW)"));
+        data.addDataSet(makeDataSet(mChartEntriesBatt, COLOR_CHART_BATT, getString(R.string.chart_legend_batt)));
         mChartChargingPower.setData(data);
         mChartChargingPower.invalidate();
     }
@@ -1406,20 +1399,20 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         if (mTvAlarmVolumeHint == null) return;
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am == null) {
-            mTvAlarmVolumeHint.setText("Bildirim sesi: okunamadı");
+            mTvAlarmVolumeHint.setText(getString(R.string.notification_volume_okunamadi));
             return;
         }
         int cur = am.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
         int max = am.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
         if (max <= 0) {
-            mTvAlarmVolumeHint.setText("Bildirim sesi: --");
+            mTvAlarmVolumeHint.setText(getString(R.string.notification_volume_na));
             return;
         }
-        String msg = "Bildirim sesi (araç): " + cur + "/" + max;
+        String msg = getString(R.string.notification_volume_format, cur, max);
         if (cur >= max) {
-            msg += " — Maksimumda";
+            msg += getString(R.string.notification_volume_max_suffix);
         } else {
-            msg += " — Araç ayarlarından artırın";
+            msg += getString(R.string.notification_volume_hint_suffix);
         }
         mTvAlarmVolumeHint.setText(msg);
     }
@@ -1428,12 +1421,12 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void trySetAlarmVolumeMax() {
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am == null) {
-            Toast.makeText(this, "Ses servisi yok", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.toast_no_audio_service), Toast.LENGTH_SHORT).show();
             return;
         }
         int max = am.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
         if (max <= 0) {
-            Toast.makeText(this, "Bildirim sesi desteklenmiyor", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.toast_volume_unsupported), Toast.LENGTH_SHORT).show();
             return;
         }
         try {
@@ -1441,14 +1434,14 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             int now = am.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
             refreshAlarmVolumeHint();
             if (now >= max) {
-                Toast.makeText(this, "Bildirim sesi maksimuma alındı", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.toast_volume_max), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Araç bildirim sesini değiştirmeye izin vermiyor olabilir", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.toast_volume_no_permission), Toast.LENGTH_LONG).show();
             }
         } catch (SecurityException e) {
-            Toast.makeText(this, "Yetki yok: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.toast_permission_denied, e.getMessage()), Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(this, "Hata: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.toast_error, e.getMessage()), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -1484,7 +1477,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void selectSteerHeat(int level) {
         sendHeatSteer(level);
         highlightSteerButton(steerButton(level));
-        String label = level == 0 ? "Direksiyon: Kapalı" : "Direksiyon: Açık";
+        String label = level == 0 ? getString(R.string.toast_heating_steering, getString(R.string.heating_steering_off)) : getString(R.string.toast_heating_steering, getString(R.string.heating_steering_on));
         Toast.makeText(this, label, Toast.LENGTH_SHORT).show();
     }
 
@@ -1506,7 +1499,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void selectSeatLeft(int level) {
         sendHeatSeatLeft(level);
         highlightSeatLButton(seatLButton(level));
-        String label = level == 0 ? "Sol Koltuk: Kapalı" : "Sol Koltuk: Sev." + level;
+        String label = level == 0 ? getString(R.string.seat_left_off) : getString(R.string.seat_left_sev, level);
         Toast.makeText(this, label, Toast.LENGTH_SHORT).show();
     }
 
@@ -1533,7 +1526,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void selectSeatRight(int level) {
         sendHeatSeatRight(level);
         highlightSeatRButton(seatRButton(level));
-        String label = level == 0 ? "Sağ Koltuk: Kapalı" : "Sağ Koltuk: Sev." + level;
+        String label = level == 0 ? getString(R.string.seat_right_off) : getString(R.string.seat_right_sev, level);
         Toast.makeText(this, label, Toast.LENGTH_SHORT).show();
     }
 
@@ -1606,15 +1599,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
     private void updateSoundCharacterButtonText(String character) {
         if (mBtnGearProfile == null) return;
-        if (mTvDriveModeAuto != null) {
-            if (SOUND_CHAR_AUTO.equals(character)) {
-                int modeVal = MG4Hardware.getDriveMode();
-                DriveMode dm = DriveMode.fromValue(modeVal);
-                mTvDriveModeAuto.setText("Araç modu: " + dm.label);
-            } else {
-                mTvDriveModeAuto.setText("");
-            }
-        }
         switch (character) {
             case SOUND_CHAR_ECO:    mBtnGearProfile.setText(getString(R.string.gearbox_eco)); break;
             case SOUND_CHAR_SPORT:  mBtnGearProfile.setText(getString(R.string.gearbox_sport)); break;
@@ -1627,12 +1611,12 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         if (mBtnSoundToggle == null) return;
 
         if (mSoundEnabled) {
-            mBtnSoundToggle.setText(getString(R.string.btn_sound_close));
+            mBtnSoundToggle.setText(getString(R.string.btn_sound_enabled));
             mBtnSoundToggle.setBackgroundTintList(
                     android.content.res.ColorStateList.valueOf(0xFF1A7F37)); // Yeşil
             mBtnSoundToggle.setTextColor(0xFFFFFFFF);
         } else {
-            mBtnSoundToggle.setText(getString(R.string.btn_sound_off));
+            mBtnSoundToggle.setText(getString(R.string.btn_sound_disabled));
             mBtnSoundToggle.setBackgroundTintList(
                     android.content.res.ColorStateList.valueOf(COLOR_INACTIVE)); // Gri
             mBtnSoundToggle.setTextColor(0xFF8B949E);

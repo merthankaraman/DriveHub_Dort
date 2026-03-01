@@ -3,6 +3,7 @@ package com.example.mg4_v3.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.example.mg4_v3.R;
 import com.example.mg4_v3.hardware.MG4Hardware;
 import com.example.mg4_v3.model.ChargingRecord;
 
@@ -113,7 +114,7 @@ public final class ChargingHistory {
             .apply();
     }
 
-    /** Geçmişi CSV olarak app'in dış dosya klasörüne yazar. Başarılıysa dosyayı döner, yoksa null. */
+    /** Geçmişi CSV olarak app'in dış dosya klasörüne yazar. Başlık ve sütunlar uygulama diline göre. Başarılıysa dosyayı döner, yoksa null. */
     public static File exportToCsv(Context context) {
         List<ChargingRecord> list = load(context);
         File dir = context.getExternalFilesDir(null);
@@ -121,7 +122,12 @@ public final class ChargingHistory {
         File out = new File(dir, "mg4_charging_history.csv");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault());
         try (FileWriter fw = new FileWriter(out, false)) {
-            fw.write("start,end,ac_kwh,dc_kwh,hours\n");
+            String header = context.getString(R.string.csv_header_start) + ","
+                    + context.getString(R.string.csv_header_end) + ","
+                    + context.getString(R.string.csv_header_ac_kwh) + ","
+                    + context.getString(R.string.csv_header_dc_kwh) + ","
+                    + context.getString(R.string.csv_header_hours) + "\n";
+            fw.write(header);
             for (ChargingRecord r : list) {
                 String start = sdf.format(new java.util.Date(r.startMs));
                 String end = sdf.format(new java.util.Date(r.endMs));

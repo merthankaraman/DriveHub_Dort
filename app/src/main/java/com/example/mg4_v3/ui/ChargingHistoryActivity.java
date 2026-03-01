@@ -51,21 +51,21 @@ public class ChargingHistoryActivity extends AppCompatActivity {
         findViewById(R.id.btnExportChargingHistoryCsv).setOnClickListener(v -> {
             File f = ChargingHistory.exportToCsv(this);
             if (f != null) {
-                Toast.makeText(this, "CSV kaydedildi: " + f.getAbsolutePath(), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.charging_history_toast_saved, f.getAbsolutePath()), Toast.LENGTH_LONG).show();
             } else {
-                Toast.makeText(this, "CSV dışa aktarma başarısız.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.charging_history_toast_export_failed), Toast.LENGTH_SHORT).show();
             }
         });
 
         findViewById(R.id.btnClearChargingHistory).setOnClickListener(v -> {
             new AlertDialog.Builder(this)
-                    .setMessage("Geçmişi silmek istiyor musunuz?")
-                    .setPositiveButton("Evet", (dialog, which) -> {
+                    .setMessage(getString(R.string.charging_history_confirm_clear))
+                    .setPositiveButton(getString(R.string.charging_history_yes), (dialog, which) -> {
                         ChargingHistory.clearAll(this);
                         refreshTable();
-                        Toast.makeText(this, "Geçmiş silindi.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(R.string.charging_history_toast_cleared), Toast.LENGTH_SHORT).show();
                     })
-                    .setNegativeButton("Hayır", null)
+                    .setNegativeButton(getString(R.string.charging_history_no), null)
                     .show();
         });
 
@@ -154,7 +154,7 @@ public class ChargingHistoryActivity extends AppCompatActivity {
                     addCell(row, 1.2f, SDF_ROW.format(new Date(r.endMs)));
                     addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.acKwh));
                     addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.dcKwh));
-                    addCell(row, 0.5f, r.getDurationFormatted());
+                    addCell(row, 0.5f, formatDuration(r));
                     mHistoryTableBody.addView(row);
                 }
 
@@ -172,7 +172,7 @@ public class ChargingHistoryActivity extends AppCompatActivity {
                     bar.setPadding(pad, pad, pad, pad);
                     bar.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                     TextView barText = new TextView(this);
-                    barText.setText(String.format(Locale.getDefault(), "Toplam: AC %.2f kWh · DC %.2f kWh", sumAc, sumDc));
+                    barText.setText(getString(R.string.charging_history_total_format, sumAc, sumDc));
                     barText.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
                     barText.setTextSize(12);
                     bar.addView(barText);
@@ -189,6 +189,15 @@ public class ChargingHistoryActivity extends AppCompatActivity {
             monthSpacer.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp8 * 3));
             mHistoryTableBody.addView(monthSpacer);
         }
+    }
+
+    private String formatDuration(ChargingRecord r) {
+        int[] p = r.getDurationParts();
+        int h = p[0], m = p[1], s = p[2];
+        if (h > 0) {
+            return getString(R.string.duration_format_hms, h, m, s);
+        }
+        return getString(R.string.duration_format_ms, m, s);
     }
 
     private void addCell(LinearLayout row, float weight, String text) {

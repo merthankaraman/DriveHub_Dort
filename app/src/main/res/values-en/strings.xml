@@ -18,8 +18,8 @@
     <string name="status_loading">Loading…</string>
     <string name="status_service_ok">Service running. ★ key active.</string>
     <string name="speed_placeholder">-- km/h</string>
-    <string name="motor_power_format">Motor power: %d kW</string>
-    <string name="motor_power_default">Motor power: 125 kW</string>
+    <string name="motor_power_format">My car\'s motor power: %d kW</string>
+    <string name="motor_power_default">My car\'s motor power: 125 kW</string>
     <string name="btn_motor_sound_settings">MOTOR SOUND SETTINGS</string>
     <string name="btn_shortcuts">Button shortcuts</string>
     <string name="logs_detail">Logs (detail)</string>
@@ -57,6 +57,9 @@
     <string name="level_off">OFF</string>
     <string name="level_on">ON</string>
     <string name="level_sev">LV. %d</string>
+    <string name="level_sev_1">LV. 1</string>
+    <string name="level_sev_2">LV. 2</string>
+    <string name="level_sev_3">LV. 3</string>
 
     <!-- Consumption / Status -->
     <string name="consumption">CONSUMPTION</string>
@@ -73,6 +76,36 @@
     <string name="charging">Charging</string>
     <string name="not_charging">Not charging</string>
 
+    <!-- Charging history screen -->
+    <string name="charging_history_back">← Back</string>
+    <string name="charging_history_title">CHARGING HISTORY</string>
+    <string name="charging_history_table_start">Start</string>
+    <string name="charging_history_table_end">End</string>
+    <string name="charging_history_table_ac_kwh">AC kWh</string>
+    <string name="charging_history_table_dc_kwh">DC kWh</string>
+    <string name="charging_history_table_duration">Duration</string>
+    <string name="charging_history_btn_export">Export CSV</string>
+    <string name="charging_history_btn_clear">Clear history</string>
+    <string name="charging_history_toast_saved">CSV saved: %s</string>
+    <string name="charging_history_toast_export_failed">CSV export failed.</string>
+    <string name="charging_history_confirm_clear">Clear charging history?</string>
+    <string name="charging_history_yes">Yes</string>
+    <string name="charging_history_no">No</string>
+    <string name="charging_history_toast_cleared">History cleared.</string>
+    <string name="charging_history_total_format">Total: AC %.2f kWh · DC %.2f kWh</string>
+    <string name="duration_format_hms">%d h %d min %d s</string>
+    <string name="duration_format_ms">%d min %d s</string>
+    <!-- CSV export headers (locale-aware) -->
+    <string name="csv_header_start">Start</string>
+    <string name="csv_header_end">End</string>
+    <string name="csv_header_ac_kwh">AC_kWh</string>
+    <string name="csv_header_dc_kwh">DC_kWh</string>
+    <string name="csv_header_hours">Hours</string>
+    <!-- Charging panel chart legend -->
+    <string name="chart_legend_max_dc">Max DC (kW)</string>
+    <string name="chart_legend_ac">AC (kW)</string>
+    <string name="chart_legend_batt">Battery (kW)</string>
+
     <!-- Shortcuts panel -->
     <string name="shortcuts_panel_title">BUTTON SHORTCUTS</string>
     <string name="one_pedal_label">One pedal</string>
@@ -81,11 +114,27 @@
     <string name="press_type_off">Press type to turn off</string>
     <string name="camera_360_label">360 camera</string>
     <string name="camera_360_assign">Assign 360 to button</string>
+    <string-array name="one_pedal_key_labels">
+        <item>Off</item>
+        <item>Left star</item>
+        <item>Right star</item>
+    </string-array>
+    <string-array name="press_type_labels">
+        <item>Single</item>
+        <item>Long</item>
+        <item>Double</item>
+    </string-array>
 
     <!-- Motor sound panel -->
     <string name="motor_sound_title">MOTOR SOUND</string>
     <string name="motor_sound_combo_hint">Press home and volume down together to toggle sound mode.</string>
     <string name="motor_state_placeholder">Motor state: --</string>
+    <string name="motor_state_ready">Motor state: READY</string>
+    <string name="motor_state_off">Motor state: Off</string>
+    <string name="motor_state_drive_suffix"> · Drive: %s</string>
+    <string name="sim_speed_format">Sim speed: %.0f km/h</string>
+    <string name="speed_format">%.2f km/h</string>
+    <string name="version_format">EH32 · Android Automotive · v%s</string>
     <string name="gauge_rpm">RPM</string>
     <string name="gauge_gear">GEAR</string>
     <string name="gauge_speed">SPEED (km/h)</string>
@@ -93,13 +142,13 @@
     <string name="gauge_pedal">PEDAL</string>
     <string name="sound_volume">Volume</string>
     <string name="notification_volume">Notification volume (vehicle): --</string>
-    <string name="btn_max_volume">Max</string>
+    <string name="btn_max_volume">Set Notification volume to Max</string>
     <string name="sim_speed_label">Simulated speed: 0 km/h</string>
     <string name="sim_throttle_label">Simulated throttle (%)</string>
-    <string name="btn_sound_on">🔊 Sound on</string>
-    <string name="btn_sound_off">🔇 Sound on</string>
-    <string name="btn_sound_close">🔊 Sound off</string>
+    <string name="btn_sound_enabled">🔊 Sound Enabled</string>
+    <string name="btn_sound_disabled">🔇 Sound Disabled</string>
     <string name="vehicle_sound_format">Vehicle sound: %s</string>
+    <string name="vehicle_sound_placeholder">Vehicle sound: --</string>
     <string name="btn_speed_test">Speed test</string>
     <string name="gearbox_normal">⚪ Gearbox: Normal</string>
     <string name="gearbox_eco">🟢 Gearbox: Eco</string>
@@ -116,6 +165,7 @@
     <!-- Idle panel -->
     <string name="idle_panel_title">Idle settings</string>
     <string name="idle_vehicle_format">Vehicle: %s</string>
+    <string name="idle_vehicle_placeholder">Vehicle: --</string>
     <string name="idle_volume_hint">Idle sound max level (when vehicle stopped)</string>
     <string name="idle_pitch_hint">Idle pitch: 1.0 = original</string>
     <string name="btn_idle_reset_all">Reset all idle profiles</string>
@@ -143,15 +193,37 @@
     <!-- Notification volume -->
     <string name="notification_volume_okunamadi">Notification volume: read failed</string>
     <string name="notification_volume_na">Notification volume: --</string>
+    <string name="notification_volume_format">Notification volume (vehicle): %d/%d</string>
     <string name="notification_volume_max_suffix"> — Max</string>
     <string name="notification_volume_hint_suffix"> — Increase in vehicle settings</string>
+    <string name="heating_steering_off">Off</string>
+    <string name="heating_steering_on">On</string>
+    <string name="seat_left_off">Left seat: Off</string>
+    <string name="seat_left_sev">Left seat: Lv. %d</string>
+    <string name="seat_right_off">Right seat: Off</string>
+    <string name="seat_right_sev">Right seat: Lv. %d</string>
 
     <!-- General -->
     <string name="back">←</string>
     <string name="unit_kmh"> km/h</string>
+    <string name="unit_km"> km</string>
     <string name="unit_kw"> kW</string>
     <string name="unit_kwh"> kWh</string>
+    <string name="unit_kwh_km"> kWh/km</string>
+    <string name="unit_kwh_100km"> kWh/100km</string>
     <string name="unit_v">V</string>
     <string name="unit_a">A</string>
+    <string name="unit_ac">AC</string>
+    <string name="unit_kw_label">kW</string>
+    <string name="unit_kwh_label">kWh</string>
     <string name="batarya">Battery</string>
+    <string name="btn_reset_trip">Reset trip</string>
+    <string name="consumption_gear">Gear</string>
+    <string name="consumption_total_km">Total km</string>
+    <string name="consumption_kwh_per_km">Consumption (kWh/km)</string>
+    <string name="consumption_speed">Speed</string>
+    <string name="consumption_power">Power</string>
+    <string name="consumption_trip">Trip (this session)</string>
+    <string name="consumption_energy">Energy (this session)</string>
+    <string name="consumption_avg">Avg. consumption (this session)</string>
 </resources>
