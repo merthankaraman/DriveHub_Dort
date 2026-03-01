@@ -79,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
 
     // Tema modu (AppCompatDelegate sabitleriyle aynı)
     private int mThemeMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM; // Oto
+    /** recreate() tema yüzünden tetiklendiyse onCreate'de sese dokunma (ses kesilmesin). */
+    private static boolean sRecreatedDueToThemeChange = false;
 
     private TextView mTvStatus;
     private TextView mTvBinder;
@@ -439,8 +441,12 @@ public class MainActivity extends AppCompatActivity {
             mBtnSoundProfile.setOnClickListener(v -> showSoundProfileDialog());
             String savedSoundProfile = prefsSound.getString(PREF_SOUND_PROFILE, "McLaren P1");
             mBtnSoundProfile.setText("Araç Sesi: " + savedSoundProfile);
-            // EngineSoundManager tek kaynak olsun
-            mEngineSound.applyProfileLabel(savedSoundProfile);
+            // Tema değişimi (kullanıcı butonu veya Oto'da araç/sistem teması) ile recreate olduysa sese dokunma
+            boolean skipSoundBecauseRecreate = sRecreatedDueToThemeChange || (savedInstanceState != null);
+            if (!skipSoundBecauseRecreate) {
+                mEngineSound.applyProfileLabel(savedSoundProfile);
+            }
+            if (sRecreatedDueToThemeChange) sRecreatedDueToThemeChange = false;
         }
 
         // Devir eşleme toggle (hafızalı)
@@ -1334,6 +1340,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void applyThemeMode(int mode) {
         mThemeMode = mode;
         getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putInt(PREF_THEME_MODE, mode).apply();
+        sRecreatedDueToThemeChange = true; // recreate sonrası onCreate'de sese dokunma
         AppCompatDelegate.setDefaultNightMode(mode);
         updateThemeButtons();
     }
