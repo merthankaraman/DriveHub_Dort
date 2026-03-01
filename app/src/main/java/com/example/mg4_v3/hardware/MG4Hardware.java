@@ -721,6 +721,11 @@ public class MG4Hardware {
         sSimSpeedKmh = (kmh >= 0f && kmh <= 500f) ? kmh : 0f;
     }
 
+    /** Sim (hız testi) açık mı — servis sesi sim modunda da çalsın diye kullanır. */
+    public static boolean isSimSpeedActive() {
+        return sSimSpeedActive;
+    }
+
     /** Motor sesi için hız — tek yerden okuma. Sim açıksa sim hız, değilse hattan okuyup sLastSpeedForDisplay günceller. */
     public static float getSpeedForEngine() {
         if (sSimSpeedActive) return sSimSpeedKmh;

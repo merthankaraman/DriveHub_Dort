@@ -65,7 +65,7 @@ public class MG4ControlService extends Service {
     // Kontrol şeması:
     //   ★ tuşu (17)             → regen döngüsü (SystemUI da aynı tuşla regen yapıyor;
     //                              biz 150ms geciktirip araçtan mevcut değeri okuyup +1 yazıyoruz)
-    //   Vol↑+Vol↓ combo (300ms) → müzik pause/play
+    //   Vol↑+Vol↓ combo (600ms pencere — uzun basınca da tutsun)
     //   Direksiyon müzik tuşu (log’da keycode=301) → müzik pause/play
     private static final String HARDKEY_ACTION      = "com.saic.keyevent.hardkey.report";
     private static final int    KEYCODE_PHONE       = 5;
@@ -75,10 +75,10 @@ public class MG4ControlService extends Service {
     private static final int    KEYCODE_VOLUME_DOWN = 25;
     /** Direksiyondaki duraklat/devam tuşu — SAIC hardkey keyCode (log’da 301). */
     private static final int    KEYCODE_SAIC_MEDIA_PLAY_PAUSE = 301;
-    // Vol↑+Vol↓ combo → müzik pause/play (300ms pencere)
-    private static final long COMBO_WINDOW_MS = 300;
-    private long mVolUpDownTime   = 0L;
-    private long mVolDownDownTime = 0L;
+    // Vol↑+Vol↓ combo: iki tuşa da dokunuldu → "toggle bekliyor"; ikisi de bırakılınca komut gönder
+    private boolean mVolUpPressed   = false;
+    private boolean mVolDownPressed = false;
+    private boolean mVolComboPending = false;
 
     // Tek pedal atama (Regen panelinden ayarlanır)
     private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
@@ -135,7 +135,7 @@ public class MG4ControlService extends Service {
 
             // Hız tek kaynak: sim açıksa sim, değilse hattan tek okuma (getSpeedForEngine)
             float speed = MG4Hardware.getSpeedForEngine();
-            boolean ready = MG4Hardware.isVehicleReady();
+            boolean ready = MG4Hardware.isVehicleReady() || MG4Hardware.isSimSpeedActive();
             float dcVolt = MG4Hardware.getDcVoltage();
             float dcAmpAct = MG4Hardware.getDcCurrentActual();
             float dcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
@@ -561,11 +561,10 @@ public class MG4ControlService extends Service {
                     String pressOff = prefs.getString(PREF_ONE_PEDAL_PRESS_TYPE_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF);
                     onOnePedalKey(keyCode, isDown, isLong, pressOn, pressOff);
                 } else {
-                    if (!isDown) return;
                     if (keyCode == KEYCODE_VOLUME_UP) {
-                        onVolumeUp();
+                        onVolumeKey(KEYCODE_VOLUME_UP, isDown);
                     } else if (keyCode == KEYCODE_VOLUME_DOWN) {
-                        onVolumeDown();
+                        onVolumeKey(KEYCODE_VOLUME_DOWN, isDown);
                     }
                 }
             }
@@ -577,7 +576,7 @@ public class MG4ControlService extends Service {
         if (MG4Hardware.isLogEnabled()) {
             Log.i(TAG, "Hardkey receiver kayıt edildi — action=" + HARDKEY_ACTION);
             Log.i(TAG, "  Tek Pedal tuşu/basma tipi Regen panelinden atanır.");
-            Log.i(TAG, "  Vol↑+Vol↓ combo (300ms)  → müzik pause/play");
+            Log.i(TAG, "  Vol↑+Vol↓: iki tuşa dokun → ikisini bırakınca müzik toggle");
         }
     }
 
@@ -649,30 +648,26 @@ public class MG4ControlService extends Service {
     // private void cycleRegenInternal() { ... }
 
     // -------------------------------------------------------------------------
-    // Volume tuşları
+    // Volume tuşları — iki tuşa dokunulduğunda "toggle bekliyor", ikisi de bırakılınca komut
     // -------------------------------------------------------------------------
 
-    private void onVolumeUp() {
-        mVolUpDownTime = System.currentTimeMillis();
-        Log.d(TAG, "Vol↑ down");
-        checkCombo();
-    }
-
-    private void onVolumeDown() {
-        mVolDownDownTime = System.currentTimeMillis();
-        Log.d(TAG, "Vol↓ down");
-        checkCombo();
-    }
-
-    private void checkCombo() {
-        long gap = Math.abs(mVolUpDownTime - mVolDownDownTime);
-        if (mVolUpDownTime > 0 && mVolDownDownTime > 0 && gap <= COMBO_WINDOW_MS) {
-            if (MG4Hardware.isLogEnabled()) {
-                Log.i(TAG, "Vol↑+Vol↓ COMBO tetiklendi (gap=" + gap + "ms) → direksiyon duraklat/devam taklidi");
+    private void onVolumeKey(int keyCode, boolean isDown) {
+        if (keyCode == KEYCODE_VOLUME_UP) {
+            mVolUpPressed = isDown;
+        } else if (keyCode == KEYCODE_VOLUME_DOWN) {
+            mVolDownPressed = isDown;
+        }
+        if (isDown) {
+            if (mVolUpPressed && mVolDownPressed) {
+                mVolComboPending = true;
+                if (MG4Hardware.isLogEnabled()) Log.d(TAG, "Vol↑+Vol↓ ikisi basılı → toggle bekliyor");
             }
-            mVolUpDownTime   = 0;
-            mVolDownDownTime = 0;
-            sendSaicHardkeyMediaPlayPause();
+        } else {
+            if (!mVolUpPressed && !mVolDownPressed && mVolComboPending) {
+                mVolComboPending = false;
+                if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Vol↑+Vol↓ ikisi bırakıldı → müzik toggle");
+                sendSaicHardkeyMediaPlayPause();
+            }
         }
     }
 
