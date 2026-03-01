@@ -922,7 +922,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mLayoutStatusPanel.setVisibility(View.VISIBLE);
         mChargingPanelOpen = true;
         refreshStatusPanel();
-        refreshChargingHistoryTable();
         mChargingHandler.postDelayed(mChargingRunnable, 100);
     }
 
@@ -936,9 +935,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
     private void refreshStatusPanel() {
         // Şarj bittiğinde oturumu geçmişe kaydet; yeni kayıt eklendiyse tabloyu güncelle
-        if (ChargingHistory.checkAndSaveSessionIfEnded(this)) {
-            refreshChargingHistoryTable();
-        }
+        ChargingHistory.checkAndSaveSessionIfEnded(this);
 
         // DC voltaj (her iki sütun için gerekli)
         float dcVolt   = MG4Hardware.getDcVoltage();
