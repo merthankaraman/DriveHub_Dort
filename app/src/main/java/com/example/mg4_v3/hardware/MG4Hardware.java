@@ -79,6 +79,8 @@ public class MG4Hardware {
 
     private static volatile HvacListener      sHvacListener      = null;
     private static volatile DriveModeListener sDriveModeListener = null;
+    /** CPM callback'ten gelen son sürüş modu (getProperty pull bu araçta çalışmayabilir). */
+    private static volatile int sCachedDriveMode = -1;
 
     public static void setHvacListener(HvacListener listener) {
         sHvacListener = listener;
@@ -169,6 +171,7 @@ public class MG4Hardware {
         sVehicleBinder         = null;
         sVehicleSettingService = null;
         sVsBindAttempted       = false;
+        sCachedDriveMode       = -1;
         sBmsCache.clear();
         sAcEnergyKwh         = 0f;
         sDcEnergyKwh         = 0f;
@@ -392,6 +395,21 @@ public class MG4Hardware {
                 }
             } catch (Exception e) {
                 Log.w(TAG, "  CarBMSManager alınamadı: " + e.getMessage());
+            }
+
+            // Sürüş modu: BMS gibi onChangeEvent veren manager (CarAdvancedAssistedDrivingManager vb.)
+            // Log'da "onChangeEvent,PropID,area,value:557883772_..." com.saicmotor.service.vehicle'dan geliyor.
+            for (String managerKey : new String[]{ "vehicle", "advanced_assisted_driving", "driving_state" }) {
+                try {
+                    Object mgr = getCarManager.invoke(sCar, managerKey);
+                    if (mgr != null) {
+                        if (sLogEnabled) Log.i(TAG, "  ✓ Manager '" + managerKey + "' HAZIR: " + mgr.getClass().getName());
+                        registerDriveModeCallbackFromVehicleManager(mgr);
+                        break; // bir tanesi başarılıysa yeter
+                    }
+                } catch (Exception e) {
+                    if (sLogEnabled) Log.d(TAG, "  getCarManager(" + managerKey + ") yok/hata: " + e.getMessage());
+                }
             }
 
             if (sCarPropertyManager == null) {
@@ -657,7 +675,13 @@ public class MG4Hardware {
     // Getter'lar — Sürüş
     // -------------------------------------------------------------------------
 
-    public static int getDriveMode()  { return getIntPropertyCPM(PROP_DRIVE_MODE,  AREA_GLOBAL); }
+    /** Sürüş modu: önce CPM callback cache (onChangeEvent); yoksa getProperty dene. */
+    public static int getDriveMode() {
+        if (sCachedDriveMode >= 0) return sCachedDriveMode;
+        int v = getIntPropertyCPM(PROP_DRIVE_MODE, AREA_GLOBAL);
+        if (v >= 0) sCachedDriveMode = v;
+        return v;
+    }
     public static int getRegenLevel() { return getIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL); }
     public static int getOnePedal()   { return getIntPropertyCPM(PROP_ONE_PEDAL,   AREA_GLOBAL); }
 
@@ -1315,6 +1339,79 @@ public class MG4Hardware {
     }
 
     /**
+     * BMS gibi: vehicle / advanced_assisted_driving manager'ına callback kayıt eder.
+     * onChangeEvent(557883772, area, value) gelince cache + listener güncellenir; logcat'te görünür.
+     */
+    private static void registerDriveModeCallbackFromVehicleManager(Object manager) {
+        if (manager == null) return;
+        try {
+            java.lang.reflect.Method registerMethod = null;
+            for (java.lang.reflect.Method m : manager.getClass().getMethods()) {
+                String n = m.getName();
+                if (n.contains("register") || n.contains("Register")) {
+                    if (sLogEnabled) Log.i(TAG, "  VehicleManager register: " + n);
+                    if (registerMethod == null) registerMethod = m;
+                }
+            }
+            if (registerMethod == null) {
+                Log.w(TAG, "  VehicleManager: registerCallback bulunamadı");
+                return;
+            }
+            Class<?> callbackClass = registerMethod.getParameterTypes()[0];
+            if (!callbackClass.isInterface()) {
+                Log.w(TAG, "  VehicleManager: callback interface değil");
+                return;
+            }
+            Object proxy = java.lang.reflect.Proxy.newProxyInstance(
+                    callbackClass.getClassLoader(),
+                    new Class<?>[]{ callbackClass },
+                    (proxyObj, method, args) -> {
+                        String mName = method.getName();
+                        if (args == null || (!mName.contains("Change") && !mName.contains("Event") && !mName.contains("Property"))) {
+                            if ("equals".equals(mName)) return false;
+                            if ("hashCode".equals(mName)) return System.identityHashCode(proxyObj);
+                            if ("toString".equals(mName)) return "DriveModeVehicleCallbackProxy";
+                            return null;
+                        }
+                        Integer propId = null;
+                        Integer value = null;
+                        if (args.length >= 3 && args[0] instanceof Number && args[2] instanceof Number) {
+                            propId = ((Number) args[0]).intValue();
+                            value = ((Number) args[2]).intValue();
+                        } else if (args.length == 1 && args[0] != null) {
+                            Object ev = args[0];
+                            try {
+                                java.lang.reflect.Method getPid = ev.getClass().getMethod("getPropertyId");
+                                java.lang.reflect.Method getVal = null;
+                                try { getVal = ev.getClass().getMethod("getIntValue"); } catch (NoSuchMethodException e) {}
+                                if (getVal == null) getVal = ev.getClass().getMethod("getValue");
+                                propId = ((Number) getPid.invoke(ev)).intValue();
+                                value = ((Number) getVal.invoke(ev)).intValue();
+                            } catch (Exception ignored) {}
+                        } else if (args.length >= 2) {
+                            for (Object a : args) {
+                                if (a instanceof Number) {
+                                    if (propId == null) propId = ((Number) a).intValue();
+                                    else if (value == null) value = ((Number) a).intValue();
+                                }
+                            }
+                        }
+                        if (propId != null && value != null && propId == PROP_DRIVE_MODE) {
+                            sCachedDriveMode = value;
+                            Log.i(TAG, "  Sürüş modu (vehicle manager) 0x" + Integer.toHexString(propId) + " → " + value + " (mg4_v3 abonesi)");
+                            DriveModeListener listener = sDriveModeListener;
+                            if (listener != null) listener.onDriveModeChanged(value);
+                        }
+                        return null;
+                    });
+            registerMethod.invoke(manager, proxy);
+            Log.i(TAG, "  ✓ Sürüş modu vehicle manager callback kayıt edildi (BMS gibi)");
+        } catch (Exception e) {
+            Log.w(TAG, "  VehicleManager registerDriveMode hata: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
+    }
+
+    /**
      * CarPropertyManager'a callback kayıt eder ve sürüş modu (PROP_DRIVE_MODE) değişince
      * sDriveModeListener'ı tetikler.
      */
@@ -1379,18 +1476,22 @@ public class MG4Hardware {
                                             if (valObj instanceof Number) value = ((Number) valObj).intValue();
                                         } catch (Exception ignored) {}
                                     }
+                                } else if (args.length >= 3) {
+                                    // Case 2: log formatı onChangeEvent,PropID,area,value → (propId, area, value)
+                                    if (args[0] instanceof Number) propId = ((Number) args[0]).intValue();
+                                    if (args[2] instanceof Number) value  = ((Number) args[2]).intValue();
                                 } else if (args.length >= 2) {
-                                    // Case 2: propId ve value doğrudan int olarak gelebilir
                                     for (Object a : args) {
                                         if (a instanceof Integer) {
                                             if (propId == null) propId = (Integer) a;
-                                            else if (value == null)  value  = (Integer) a;
+                                            else if (value == null) value = (Integer) a;
                                         }
                                     }
                                 }
 
                                 if (propId != null && value != null && propId == PROP_DRIVE_MODE) {
-                                    listener.onDriveModeChanged(value);
+                                    sCachedDriveMode = value;
+                                    if (listener != null) listener.onDriveModeChanged(value);
                                 }
                             }
                         }

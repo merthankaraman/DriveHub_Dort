@@ -54,8 +54,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_SOUND_PROFILE = "sound_profile";
     private static final String PREF_SOUND_MASTER = "sound_master";
     private static final String PREF_MOTOR_POWER = "motor_power_kw";
-    /** Tek pedal atanacak tuş: -1=Kapalı, 291=Telefon, 17=Sol yıldız, 286=Sağ yıldız (InputReader keyCode, hafızalı) */
+    /** Tek pedal atanacak tuş: -1=Kapalı, 17=Sol yıldız, 286=Sağ yıldız (InputReader keyCode, hafızalı) */
     private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
+    private static final int[] ONE_PEDAL_KEY_VALUES = { -1, 17, 286 };
+    private static final String[] ONE_PEDAL_KEY_LABELS = { "Kapalı", "Sol yıldız", "Sağ yıldız" };
     /** Tek pedal açmak için basma tipi: "single", "long", "double" */
     private static final String PREF_ONE_PEDAL_PRESS_TYPE = "one_pedal_press_type";
     /** Tek pedaldan kapatmak için basma tipi (varsayılan: tek) */
@@ -125,10 +127,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnRegenAdaptive;
     private Button mBtnRegenOnePedal;
     private TextView mTvRegenCurrent;
-    private Button mBtnOnePedalKeyOff;
-    private Button mBtnOnePedalKeyPhone;
-    private Button mBtnOnePedalKeyLeftStar;
-    private Button mBtnOnePedalKeyRightStar;
+    private Spinner mSpinnerOnePedalKey;
     private Spinner mSpinnerOnePedalPressOn;
     private Spinner mSpinnerOnePedalPressOff;
 
@@ -211,7 +210,15 @@ public class MainActivity extends AppCompatActivity {
             }
             boolean ready = (MG4Hardware.isVehicleReady() || mSimSpeedActive);
             if (mTvMotorState != null) {
-                mTvMotorState.setText(ready ? "Motor durumu: READY" : "Motor durumu: Kapalı");
+                String motorStr = ready ? "Motor durumu: READY" : "Motor durumu: Kapalı";
+                int modeVal = MG4Hardware.getDriveMode();
+                String modeStr = (modeVal >= 0) ? DriveMode.fromValue(modeVal).label : "";
+                mTvMotorState.setText(modeStr.isEmpty() ? motorStr : motorStr + " · Sürüş: " + modeStr);
+            }
+            // Araç modu yazısını güncelle (şanzıman "Araç" seçiliyse ve sürüş modu okunabiliyorsa)
+            if (mTvDriveModeAuto != null && SOUND_CHAR_AUTO.equals(getSharedPreferences("mg4_v3", MODE_PRIVATE).getString("sound_character", SOUND_CHAR_NORMAL))) {
+                int modeVal = MG4Hardware.getDriveMode();
+                mTvDriveModeAuto.setText(modeVal >= 0 ? "Araç modu: " + DriveMode.fromValue(modeVal).label : "");
             }
             // Ses çalma: sadece ses açıksa ve (READY veya sim) ise start, değilse stop
             if (mEngineSound != null && mSimSpeedActive) {
@@ -588,10 +595,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             mTvRegenCurrent.setText("Aktif: Tek Pedal");
         });
 
-        mBtnOnePedalKeyOff      = findViewById(R.id.btnOnePedalKeyOff);
-        mBtnOnePedalKeyPhone    = findViewById(R.id.btnOnePedalKeyPhone);
-        mBtnOnePedalKeyLeftStar = findViewById(R.id.btnOnePedalKeyLeftStar);
-        mBtnOnePedalKeyRightStar= findViewById(R.id.btnOnePedalKeyRightStar);
+        mSpinnerOnePedalKey     = findViewById(R.id.spinnerOnePedalKey);
         mSpinnerOnePedalPressOn = findViewById(R.id.spinnerOnePedalPressOn);
         mSpinnerOnePedalPressOff= findViewById(R.id.spinnerOnePedalPressOff);
         setupOnePedalKeyPrefs();
@@ -739,7 +743,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         } else {
             mTvRegenCurrent.setText("");
         }
-        refreshOnePedalKeyHighlight();
         syncOnePedalSpinnersFromPrefs();
     }
 
@@ -781,24 +784,21 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void setupOnePedalKeyPrefs() {
-        if (mBtnOnePedalKeyOff == null) return;
         SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
-        mBtnOnePedalKeyOff.setOnClickListener(v -> {
-            p.edit().putInt(PREF_ONE_PEDAL_KEY, -1).apply();
-            refreshOnePedalKeyHighlight();
-        });
-        mBtnOnePedalKeyPhone.setOnClickListener(v -> {
-            p.edit().putInt(PREF_ONE_PEDAL_KEY, 291).apply();
-            refreshOnePedalKeyHighlight();
-        });
-        mBtnOnePedalKeyLeftStar.setOnClickListener(v -> {
-            p.edit().putInt(PREF_ONE_PEDAL_KEY, 17).apply();
-            refreshOnePedalKeyHighlight();
-        });
-        mBtnOnePedalKeyRightStar.setOnClickListener(v -> {
-            p.edit().putInt(PREF_ONE_PEDAL_KEY, 286).apply();
-            refreshOnePedalKeyHighlight();
-        });
+        if (mSpinnerOnePedalKey != null) {
+            ArrayAdapter<String> adapterKey = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, ONE_PEDAL_KEY_LABELS);
+            adapterKey.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            mSpinnerOnePedalKey.setAdapter(adapterKey);
+            mSpinnerOnePedalKey.setSelection(indexOfOnePedalKey(p.getInt(PREF_ONE_PEDAL_KEY, DEFAULT_ONE_PEDAL_KEY)));
+            mSpinnerOnePedalKey.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    p.edit().putInt(PREF_ONE_PEDAL_KEY, ONE_PEDAL_KEY_VALUES[position]).apply();
+                }
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {}
+            });
+        }
         if (mSpinnerOnePedalPressOn != null) {
             ArrayAdapter<String> adapterOn = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PRESS_TYPE_LABELS);
             adapterOn.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -827,15 +827,25 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
                 public void onNothingSelected(AdapterView<?> parent) {}
             });
         }
-        refreshOnePedalKeyHighlight();
         syncOnePedalSpinnersFromPrefs();
     }
 
+    private static int indexOfOnePedalKey(int key) {
+        for (int i = 0; i < ONE_PEDAL_KEY_VALUES.length; i++) {
+            if (ONE_PEDAL_KEY_VALUES[i] == key) return i;
+        }
+        return 0;
+    }
+
     private void syncOnePedalSpinnersFromPrefs() {
-        if (mSpinnerOnePedalPressOn == null || mSpinnerOnePedalPressOff == null) return;
         SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
-        mSpinnerOnePedalPressOn.setSelection(indexOfPressType(p.getString(PREF_ONE_PEDAL_PRESS_TYPE, DEFAULT_ONE_PEDAL_PRESS_TYPE)));
-        mSpinnerOnePedalPressOff.setSelection(indexOfPressType(p.getString(PREF_ONE_PEDAL_PRESS_TYPE_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF)));
+        if (mSpinnerOnePedalKey != null) {
+            mSpinnerOnePedalKey.setSelection(indexOfOnePedalKey(p.getInt(PREF_ONE_PEDAL_KEY, DEFAULT_ONE_PEDAL_KEY)));
+        }
+        if (mSpinnerOnePedalPressOn != null && mSpinnerOnePedalPressOff != null) {
+            mSpinnerOnePedalPressOn.setSelection(indexOfPressType(p.getString(PREF_ONE_PEDAL_PRESS_TYPE, DEFAULT_ONE_PEDAL_PRESS_TYPE)));
+            mSpinnerOnePedalPressOff.setSelection(indexOfPressType(p.getString(PREF_ONE_PEDAL_PRESS_TYPE_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF)));
+        }
     }
 
     private static int indexOfPressType(String value) {
@@ -843,24 +853,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             if (PRESS_TYPE_VALUES[i].equals(value)) return i;
         }
         return 0;
-    }
-
-    private void refreshOnePedalKeyHighlight() {
-        if (mBtnOnePedalKeyOff == null) return;
-        SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
-        int key = p.getInt(PREF_ONE_PEDAL_KEY, DEFAULT_ONE_PEDAL_KEY);
-        int keyColor = key == -1 ? COLOR_ACTIVE : COLOR_INACTIVE;
-        mBtnOnePedalKeyOff.setBackgroundTintList(android.content.res.ColorStateList.valueOf(keyColor));
-        mBtnOnePedalKeyOff.setTextColor(key == -1 ? 0xFFFFFFFF : 0xFF8B949E);
-        keyColor = key == 291 ? COLOR_ACTIVE : COLOR_INACTIVE;
-        mBtnOnePedalKeyPhone.setBackgroundTintList(android.content.res.ColorStateList.valueOf(keyColor));
-        mBtnOnePedalKeyPhone.setTextColor(key == 291 ? 0xFFFFFFFF : 0xFF8B949E);
-        keyColor = key == 17 ? COLOR_ACTIVE : COLOR_INACTIVE;
-        mBtnOnePedalKeyLeftStar.setBackgroundTintList(android.content.res.ColorStateList.valueOf(keyColor));
-        mBtnOnePedalKeyLeftStar.setTextColor(key == 17 ? 0xFFFFFFFF : 0xFF8B949E);
-        keyColor = key == 286 ? COLOR_ACTIVE : COLOR_INACTIVE;
-        mBtnOnePedalKeyRightStar.setBackgroundTintList(android.content.res.ColorStateList.valueOf(keyColor));
-        mBtnOnePedalKeyRightStar.setTextColor(key == 286 ? 0xFFFFFFFF : 0xFF8B949E);
     }
 
     // -------------------------------------------------------------------------
@@ -906,7 +898,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         // Beklenen Şarj Gücü (üstteki metin)
         if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) {
             float expKw = (dcVolt * dcAmpExp) / 1000f;
-            mTvExpectedPower.setText(String.format("Beklenen Şarj Gücü:  %.1f kW", expKw));
+            mTvExpectedPower.setText(String.format("Beklenen Şarj Gücü:  %.2f kW", expKw));
         } else {
             mTvExpectedPower.setText("Beklenen Şarj Gücü:  -- kW");
         }
@@ -915,16 +907,16 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mTvAcVolt.setText(Float.isNaN(acVolt) ? "--" : String.format("%.0f V", acVolt));
         mTvAcAmp.setText(Float.isNaN(acAmp)   ? "--" : String.format("%.1f A", acAmp));
         if (!Float.isNaN(acVolt) && !Float.isNaN(acAmp)) {
-            mTvAcKw.setText(String.format("%.1f kW", (acVolt * acAmp) / 1000f));
+            mTvAcKw.setText(String.format("%.3f kW", (acVolt * acAmp) / 1000f));
         } else {
             mTvAcKw.setText("--");
         }
 
         // Batarya sütunu
-        mTvDcVolt.setText(Float.isNaN(dcVolt)     ? "--" : String.format("%.1f V", dcVolt));
-        mTvDcAmpAct.setText(Float.isNaN(dcAmpAct) ? "--" : String.format("%.1f A", dcAmpAct));
+        mTvDcVolt.setText(Float.isNaN(dcVolt)     ? "--" : String.format("%.2f V", dcVolt));
+        mTvDcAmpAct.setText(Float.isNaN(dcAmpAct) ? "--" : String.format("%.2f A", dcAmpAct));
         if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct)) {
-            mTvDcKwAct.setText(String.format("%.1f kW", (dcVolt * dcAmpAct) / 1000f));
+            mTvDcKwAct.setText(String.format("%.3f kW", (dcVolt * dcAmpAct) / 1000f));
         } else {
             mTvDcKwAct.setText("--");
         }
@@ -969,7 +961,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             addCell(row, 1.2f, SDF.format(new Date(r.endMs)));
             addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.acKwh));
             addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.dcKwh));
-            addCell(row, 0.5f, String.format(Locale.US, "%.1f h", r.getDurationHours()));
+            addCell(row, 0.5f, r.getDurationFormatted());
             mHistoryTableBody.addView(row);
         }
     }

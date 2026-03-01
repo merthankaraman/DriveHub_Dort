@@ -677,8 +677,8 @@ public class MG4ControlService extends Service {
     }
 
     /**
-     * Direksiyondaki duraklat/devam tuşunu taklit eder: SAIC hardkey broadcast (keyCode=301)
-     * down + up gönderilir; müzik uygulaması gerçek tuşla aynı broadcast’i alır.
+     * Direksiyondaki duraklat/devam tuşunu taklit eder: SAIC hardkey broadcast (keyCode=301).
+     * DOWN + kısa gecikme + UP gönderiyoruz (tek basış; sadece DOWN bazı cihazlarda tepki vermiyor).
      */
     private void sendSaicHardkeyMediaPlayPause() {
         Intent down = new Intent(HARDKEY_ACTION);
@@ -686,13 +686,15 @@ public class MG4ControlService extends Service {
         down.putExtra("android.intent.extra.hardkey.down", true);
         down.putExtra("android.intent.extra.hardkey.longpress", false);
         sendBroadcast(down);
-        Intent up = new Intent(HARDKEY_ACTION);
-        up.putExtra("android.intent.extra.hardkey.keycode", KEYCODE_SAIC_MEDIA_PLAY_PAUSE);
-        up.putExtra("android.intent.extra.hardkey.down", false);
-        up.putExtra("android.intent.extra.hardkey.longpress", false);
-        sendBroadcast(up);
+        mChargingCheckHandler.postDelayed(() -> {
+            Intent up = new Intent(HARDKEY_ACTION);
+            up.putExtra("android.intent.extra.hardkey.keycode", KEYCODE_SAIC_MEDIA_PLAY_PAUSE);
+            up.putExtra("android.intent.extra.hardkey.down", false);
+            up.putExtra("android.intent.extra.hardkey.longpress", false);
+            sendBroadcast(up);
+        }, 120);
         if (MG4Hardware.isLogEnabled()) {
-            Log.i(TAG, "MEDIA: SAIC hardkey 301 (duraklat/devam) gönderildi");
+            Log.i(TAG, "MEDIA: SAIC hardkey 301 DOWN+UP (duraklat/devam) gönderildi");
         }
         updateNotification("Müzik: ⏯ duraklat/devam (direksiyon tuşu taklidi)");
     }
