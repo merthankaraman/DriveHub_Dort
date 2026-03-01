@@ -25,6 +25,8 @@ public final class ChargingHistory {
 
     private static final String PREF_NAME = "mg4_v3";
     private static final String KEY_HISTORY = "charging_history";
+    /** Şarj başlangıç zamanı (wall ms) — uygulama kapalıyken başlayan şarjda süreyi geri yüklemek için. */
+    private static final String KEY_CHARGING_START_WALL_MS = "charging_start_wall_ms";
 
     /** Şarj bittiğinde (isCharging false, önceden başlangıç vardı) kaydı ekleyip enerji/süre sayacını sıfırlar. Kayıt eklendiyse true döner. */
     public static boolean checkAndSaveSessionIfEnded(Context context) {
@@ -84,6 +86,31 @@ public final class ChargingHistory {
 
     public static void clearAll(Context context) {
         save(context, new ArrayList<ChargingRecord>());
+    }
+
+    /** Şarj başlangıç zamanını kaydet (BMS ilk şarj gördüğünde; uygulama sonradan açılsa süre doğru kalsın). */
+    public static void saveChargingStart(Context context, long startWallMs) {
+        if (context == null) return;
+        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putLong(KEY_CHARGING_START_WALL_MS, startWallMs)
+            .apply();
+    }
+
+    /** Kayıtlı şarj başlangıç zamanı; yoksa veya geçersizse 0. */
+    public static long loadChargingStart(Context context) {
+        if (context == null) return 0L;
+        return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            .getLong(KEY_CHARGING_START_WALL_MS, 0L);
+    }
+
+    /** Şarj seansı kaydedildikten sonra başlangıç kaydını sil. */
+    public static void clearChargingStart(Context context) {
+        if (context == null) return;
+        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .remove(KEY_CHARGING_START_WALL_MS)
+            .apply();
     }
 
     /** Geçmişi CSV olarak app'in dış dosya klasörüne yazar. Başarılıysa dosyayı döner, yoksa null. */

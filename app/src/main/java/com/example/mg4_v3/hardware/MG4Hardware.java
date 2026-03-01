@@ -79,8 +79,10 @@ public class MG4Hardware {
 
     private static volatile HvacListener      sHvacListener      = null;
     private static volatile DriveModeListener sDriveModeListener = null;
-    /** CPM callback'ten gelen son sürüş modu (getProperty pull bu araçta çalışmayabilir). */
+    /** CPM/vehicle callback'ten gelen son sürüş modu (getProperty pull bu araçta çalışmayabilir). */
     private static volatile int sCachedDriveMode = -1;
+    /** Aynı şekilde regen seviyesi — vehicle manager callback'ten cache. */
+    private static volatile int sCachedRegenLevel = -1;
 
     public static void setHvacListener(HvacListener listener) {
         sHvacListener = listener;
@@ -109,6 +111,8 @@ public class MG4Hardware {
     private static volatile float sLastDcKw          = 0f;
     // Şarj süresi için basit sayaç — şarj başladığı anda sistem saatini tutar
     private static volatile long  sChargingStartWallMs = 0L;
+    /** Şarj başlangıcını persist etmek için (BMS'te set, getChargingDurationMs'te geri yükle). */
+    private static Context sAppContext = null;
     // Detay log açık mı? (BMS/StatusPanel spam'i için)
     private static volatile boolean sLogEnabled = true;
 
@@ -131,6 +135,7 @@ public class MG4Hardware {
         if (sInitialized) return;
         sInitialized = true;
         Context appContext = context.getApplicationContext();
+        sAppContext = appContext;
 
         if (sLogEnabled) {
             Log.i(TAG, "========================================");
@@ -172,6 +177,7 @@ public class MG4Hardware {
         sVehicleSettingService = null;
         sVsBindAttempted       = false;
         sCachedDriveMode       = -1;
+        sCachedRegenLevel      = -1;
         sBmsCache.clear();
         sAcEnergyKwh         = 0f;
         sDcEnergyKwh         = 0f;
@@ -179,6 +185,7 @@ public class MG4Hardware {
         sLastAcKw             = 0f;
         sLastDcKw             = 0f;
         sChargingStartWallMs = 0L;
+        sAppContext          = null;
         sInitialized        = false;
         sCarBindAttempted   = false;
         if (sLogEnabled) Log.i(TAG, "destroy()");
@@ -682,7 +689,13 @@ public class MG4Hardware {
         if (v >= 0) sCachedDriveMode = v;
         return v;
     }
-    public static int getRegenLevel() { return getIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL); }
+    /** Regen seviyesi: önce vehicle/CPM callback cache; yoksa getProperty dene (sürüş modu gibi). */
+    public static int getRegenLevel() {
+        if (sCachedRegenLevel >= 0) return sCachedRegenLevel;
+        int v = getIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL);
+        if (v >= 0) sCachedRegenLevel = v;
+        return v;
+    }
     public static int getOnePedal()   { return getIntPropertyCPM(PROP_ONE_PEDAL,   AREA_GLOBAL); }
 
     // -------------------------------------------------------------------------
@@ -852,6 +865,17 @@ public class MG4Hardware {
         return false;
     }
 
+    /** BMS cache güncellendiğinde çağrılır; şarj ilk tespit edildiğinde başlangıç zamanını kaydedip persist eder. */
+    private static void onBmsCacheUpdated() {
+        if (!isCharging() || sChargingStartWallMs != 0L) return;
+        long now = System.currentTimeMillis();
+        sChargingStartWallMs = now;
+        if (sAppContext != null) {
+            com.example.mg4_v3.util.ChargingHistory.saveChargingStart(sAppContext, now);
+            if (sLogEnabled) Log.i(TAG, "Şarj başlangıcı kaydedildi (BMS) → persist");
+        }
+    }
+
     /** AC girişinden gelen toplam enerji — kWh (şarj boyunca birikir) */
     public static float getAcEnergyKwh() { return sAcEnergyKwh; }
 
@@ -860,17 +884,28 @@ public class MG4Hardware {
 
     /**
      * Şarj süresi — ms.
-     * Basit mantık: isCharging() ilk kez true olduğunda o anki System.currentTimeMillis() alınır,
-     * her çağrıda şimdiki saatle farkı döner. Şarj bittiğinde süre sabit kalır.
+     * Başlangıç: (1) BMS callback şarjı ilk gördüğünde set + persist, (2) yoksa persist'ten geri yükle,
+     * (3) yoksa isCharging() true iken ilk çağrıda "şimdi" ile başlat (senin isCharging fonksiyonu da süreyi başlatmak için kullanılır).
      */
     public static long getChargingDurationMs() {
         boolean charging = isCharging();
         long now = System.currentTimeMillis();
-        if (charging) {
+        if (charging && sChargingStartWallMs == 0L) {
+            if (sAppContext != null) {
+                long loaded = com.example.mg4_v3.util.ChargingHistory.loadChargingStart(sAppContext);
+                if (loaded > 0 && (now - loaded) < 48L * 3600 * 1000) {
+                    sChargingStartWallMs = loaded;
+                    if (sLogEnabled) Log.i(TAG, "Şarj süresi başlangıcı geri yüklendi: " + (now - loaded) / 60000 + " dk önce");
+                }
+            }
+            // Persist'ten gelmediyse: isCharging() true olduğu anda süreyi buradan başlat
             if (sChargingStartWallMs == 0L) {
                 sChargingStartWallMs = now;
-                return 0L;
+                if (sAppContext != null) com.example.mg4_v3.util.ChargingHistory.saveChargingStart(sAppContext, now);
+                if (sLogEnabled) Log.i(TAG, "Şarj süresi başlatıldı (isCharging true)");
             }
+        }
+        if (charging) {
             return Math.max(0L, now - sChargingStartWallMs);
         } else {
             if (sChargingStartWallMs == 0L) return 0L;
@@ -892,6 +927,7 @@ public class MG4Hardware {
         sLastBmsEventMs      = 0L;
         sLastAcKw             = 0f;
         sLastDcKw             = 0f;
+        if (sAppContext != null) com.example.mg4_v3.util.ChargingHistory.clearChargingStart(sAppContext);
     }
 
     /** Enerji ve süre sayaçlarını sıfırla */
@@ -1151,6 +1187,7 @@ public class MG4Hardware {
                                                 float dcA = bmsFloat(PROP_CHR_AMP_ACT);
                                                 sLastDcKw = (!Float.isNaN(dcA) && Math.abs(dcA) > 0.01f) ? (dcV * Math.abs(dcA) / 1000f) : 0f;
                                             }
+                                            onBmsCacheUpdated();
                                         } else if (isBmsPropId(propId)) {
                                             Log.w(TAG, "BMS parse value tipi desteklenmiyor: propId=0x" + Integer.toHexString(propId) + " value=" + (valueObj != null ? valueObj.getClass().getName() : "null"));
                                         }
@@ -1226,6 +1263,7 @@ public class MG4Hardware {
                                         float dcA = bmsFloat(PROP_CHR_AMP_ACT);
                                         sLastDcKw = (!Float.isNaN(dcA) && Math.abs(dcA) > 0.01f) ? (dcV * Math.abs(dcA) / 1000f) : 0f;
                                     }
+                                    onBmsCacheUpdated();
                                 } else {
                                     Log.w(TAG, "BMS callback SKIP: propId=" + propId + " rawVal=" + rawVal);
                                 }
@@ -1401,16 +1439,21 @@ public class MG4Hardware {
                                 }
                             }
                         }
-                        if (propId != null && value != null && propId == PROP_DRIVE_MODE) {
-                            sCachedDriveMode = value;
-                            Log.i(TAG, "  Sürüş modu (vehicle manager) 0x" + Integer.toHexString(propId) + " → " + value + " (mg4_v3 abonesi)");
-                            DriveModeListener listener = sDriveModeListener;
-                            if (listener != null) listener.onDriveModeChanged(value);
+                        if (propId != null && value != null) {
+                            if (propId == PROP_DRIVE_MODE) {
+                                sCachedDriveMode = value;
+                                Log.i(TAG, "  Sürüş modu (vehicle manager) 0x" + Integer.toHexString(propId) + " → " + value + " (mg4_v3 abonesi)");
+                                DriveModeListener listener = sDriveModeListener;
+                                if (listener != null) listener.onDriveModeChanged(value);
+                            } else if (propId == PROP_REGEN_LEVEL) {
+                                sCachedRegenLevel = value;
+                                if (sLogEnabled) Log.i(TAG, "  Regen seviyesi (vehicle manager) 0x" + Integer.toHexString(propId) + " → " + value);
+                            }
                         }
                         return null;
                     });
             registerMethod.invoke(manager, proxy);
-            Log.i(TAG, "  ✓ Sürüş modu vehicle manager callback kayıt edildi (BMS gibi)");
+            Log.i(TAG, "  ✓ Sürüş modu + regen vehicle manager callback kayıt edildi (BMS gibi)");
         } catch (Exception e) {
             Log.w(TAG, "  VehicleManager registerDriveMode hata: " + e.getClass().getSimpleName() + ": " + e.getMessage());
         }
@@ -1494,9 +1537,13 @@ public class MG4Hardware {
                                     }
                                 }
 
-                                if (propId != null && value != null && propId == PROP_DRIVE_MODE) {
-                                    sCachedDriveMode = value;
-                                    if (listener != null) listener.onDriveModeChanged(value);
+                                if (propId != null && value != null) {
+                                    if (propId == PROP_DRIVE_MODE) {
+                                        sCachedDriveMode = value;
+                                        if (listener != null) listener.onDriveModeChanged(value);
+                                    } else if (propId == PROP_REGEN_LEVEL) {
+                                        sCachedRegenLevel = value;
+                                    }
                                 }
                             }
                         }
@@ -1507,7 +1554,7 @@ public class MG4Hardware {
                     });
 
             registerMethod.invoke(carPropertyManager, proxy);
-            if (sLogEnabled) Log.i(TAG, "  ✓ CPM drive mode callback kayıt edildi");
+            if (sLogEnabled) Log.i(TAG, "  ✓ CPM drive mode + regen callback kayıt edildi");
 
         } catch (Exception e) {
             Log.w(TAG, "  CPM registerDriveModeCallback hata: "
