@@ -67,6 +67,11 @@ public class MainActivity extends AppCompatActivity {
     private static final String DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF = "single";
     private static final String[] PRESS_TYPE_VALUES = { "single", "long", "double" };
     private static final String[] PRESS_TYPE_LABELS = { "Tek", "Uzun", "Çift" };
+    /** 360 kamera tuş atama (aynı key değerleri) */
+    private static final String PREF_CAMERA_360_KEY = "camera_360_key";
+    private static final String PREF_CAMERA_360_PRESS_ON  = "camera_360_press_on";
+    private static final String PREF_CAMERA_360_PRESS_OFF  = "camera_360_press_off";
+    private static final int    DEFAULT_CAMERA_360_KEY = -1;
     private static final int COLOR_ACTIVE   = 0xFF1F6FEB; // mavi — seçili
     private static final int COLOR_INACTIVE = 0xFF21262D; // koyu gri — seçilmemiş
     private static final int COLOR_HEAT_ON  = 0xFF9E3333; // kırmızı — ısıtma aktif
@@ -130,6 +135,11 @@ public class MainActivity extends AppCompatActivity {
     private Spinner mSpinnerOnePedalKey;
     private Spinner mSpinnerOnePedalPressOn;
     private Spinner mSpinnerOnePedalPressOff;
+    private View   mLayoutOnePedalOptions;
+    private View   mLayoutCamera360Options;
+    private Spinner mSpinnerCamera360Key;
+    private Spinner mSpinnerCamera360PressOn;
+    private Spinner mSpinnerCamera360PressOff;
 
     // Şarj paneli
     private View     mLayoutStatusPanel;
@@ -165,6 +175,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PANEL_REGEN   = 2;
     private static final int PANEL_CLIMATE = 3;
     private static final int PANEL_SOUND   = 4;
+    private static final int PANEL_SHORTCUTS = 5;
     private int mCurrentPanel = PANEL_MAIN;
 
     // Hız güncelleme
@@ -239,6 +250,8 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    // Kısayollar paneli
+    private View   mLayoutShortcutsPanel;
     // Klima paneli
     private View   mLayoutClimatePanel;
     // Direksiyon
@@ -517,7 +530,7 @@ public class MainActivity extends AppCompatActivity {
         mLayoutSoundPanel = findViewById(R.id.layoutSoundPanel);
 
         // Ana ekran butonları
-        findViewById(R.id.btnTestBinder).setOnClickListener(v -> testCarProperty());
+        findViewById(R.id.btnShortcuts).setOnClickListener(v -> openShortcutsPanel());
         findViewById(R.id.btnDrive).setOnClickListener(v     -> sendDriveMode(DriveMode.CUSTOM));
 findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.ECO));
         findViewById(R.id.btnNormal).setOnClickListener(v    -> sendDriveMode(DriveMode.NORMAL));
@@ -585,6 +598,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         findViewById(R.id.btnRegenPanel).setOnClickListener(v -> openRegenPanel());
         findViewById(R.id.btnRegenBack).setOnClickListener(v  -> closeRegenPanel());
 
+        mLayoutShortcutsPanel = findViewById(R.id.layoutShortcutsPanel);
+        findViewById(R.id.btnShortcutsBack).setOnClickListener(v -> closeShortcutsPanel());
+
         mBtnRegenOff.setOnClickListener(v      -> selectRegen(RegenLevel.OFF));
         mBtnRegenLow.setOnClickListener(v      -> selectRegen(RegenLevel.LOW));
         mBtnRegenMedium.setOnClickListener(v   -> selectRegen(RegenLevel.MEDIUM));
@@ -600,7 +616,14 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mSpinnerOnePedalKey     = findViewById(R.id.spinnerOnePedalKey);
         mSpinnerOnePedalPressOn = findViewById(R.id.spinnerOnePedalPressOn);
         mSpinnerOnePedalPressOff= findViewById(R.id.spinnerOnePedalPressOff);
+        mLayoutOnePedalOptions  = findViewById(R.id.layoutOnePedalOptions);
+        mLayoutCamera360Options = findViewById(R.id.layoutCamera360Options);
+        mSpinnerCamera360Key    = findViewById(R.id.spinnerCamera360Key);
+        mSpinnerCamera360PressOn = findViewById(R.id.spinnerCamera360PressOn);
+        mSpinnerCamera360PressOff= findViewById(R.id.spinnerCamera360PressOff);
         setupOnePedalKeyPrefs();
+        setupCamera360KeyPrefs();
+        updateShortcutsPanelVisibility();
 
         // ---- Klima paneli ----
         mLayoutClimatePanel = findViewById(R.id.layoutClimatePanel);
@@ -689,12 +712,16 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             case PANEL_CLIMATE:
                 openClimatePanel();
                 break;
+            case PANEL_SHORTCUTS:
+                openShortcutsPanel();
+                break;
             case PANEL_MAIN:
             default:
                 // Varsayılan: ana ekran açık kalsın; diğer paneller gizli
                 mLayoutMain.setVisibility(View.VISIBLE);
                 mLayoutStatusPanel.setVisibility(View.GONE);
                 if (mLayoutRegenPanel != null) mLayoutRegenPanel.setVisibility(View.GONE);
+                if (mLayoutShortcutsPanel != null) mLayoutShortcutsPanel.setVisibility(View.GONE);
                 if (mLayoutClimatePanel != null) mLayoutClimatePanel.setVisibility(View.GONE);
                 mChargingPanelOpen = false;
                 mChargingHandler.removeCallbacks(mChargingRunnable);
@@ -796,6 +823,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                     p.edit().putInt(PREF_ONE_PEDAL_KEY, ONE_PEDAL_KEY_VALUES[position]).apply();
+                    updateShortcutsPanelVisibility();
                 }
                 @Override
                 public void onNothingSelected(AdapterView<?> parent) {}
@@ -830,6 +858,53 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             });
         }
         syncOnePedalSpinnersFromPrefs();
+    }
+
+    private void setupCamera360KeyPrefs() {
+        SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        if (mSpinnerCamera360Key != null) {
+            ArrayAdapter<String> adapterKey = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, ONE_PEDAL_KEY_LABELS);
+            adapterKey.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            mSpinnerCamera360Key.setAdapter(adapterKey);
+            mSpinnerCamera360Key.setSelection(indexOfOnePedalKey(p.getInt(PREF_CAMERA_360_KEY, DEFAULT_CAMERA_360_KEY)));
+            mSpinnerCamera360Key.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    p.edit().putInt(PREF_CAMERA_360_KEY, ONE_PEDAL_KEY_VALUES[position]).apply();
+                    updateShortcutsPanelVisibility();
+                }
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {}
+            });
+        }
+        if (mSpinnerCamera360PressOn != null) {
+            ArrayAdapter<String> adapterOn = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PRESS_TYPE_LABELS);
+            adapterOn.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            mSpinnerCamera360PressOn.setAdapter(adapterOn);
+            mSpinnerCamera360PressOn.setSelection(indexOfPressType(p.getString(PREF_CAMERA_360_PRESS_ON, DEFAULT_ONE_PEDAL_PRESS_TYPE)));
+            mSpinnerCamera360PressOn.setOnItemSelectedListener((parent, view, position, id) ->
+                    p.edit().putString(PREF_CAMERA_360_PRESS_ON, PRESS_TYPE_VALUES[position]).apply());
+        }
+        if (mSpinnerCamera360PressOff != null) {
+            ArrayAdapter<String> adapterOff = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PRESS_TYPE_LABELS);
+            adapterOff.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            mSpinnerCamera360PressOff.setAdapter(adapterOff);
+            mSpinnerCamera360PressOff.setSelection(indexOfPressType(p.getString(PREF_CAMERA_360_PRESS_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF)));
+            mSpinnerCamera360PressOff.setOnItemSelectedListener((parent, view, position, id) ->
+                    p.edit().putString(PREF_CAMERA_360_PRESS_OFF, PRESS_TYPE_VALUES[position]).apply());
+        }
+    }
+
+    private void updateShortcutsPanelVisibility() {
+        SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        int onePedalKey = p.getInt(PREF_ONE_PEDAL_KEY, DEFAULT_ONE_PEDAL_KEY);
+        int camera360Key = p.getInt(PREF_CAMERA_360_KEY, DEFAULT_CAMERA_360_KEY);
+        if (mLayoutOnePedalOptions != null) {
+            mLayoutOnePedalOptions.setVisibility(onePedalKey != -1 ? View.VISIBLE : View.GONE);
+        }
+        if (mLayoutCamera360Options != null) {
+            mLayoutCamera360Options.setVisibility(camera360Key != -1 ? View.VISIBLE : View.GONE);
+        }
     }
 
     private static int indexOfOnePedalKey(int key) {
@@ -997,6 +1072,19 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mCurrentPanel = PANEL_MAIN;
     }
 
+    private void openShortcutsPanel() {
+        mCurrentPanel = PANEL_SHORTCUTS;
+        updateShortcutsPanelVisibility();
+        mLayoutMain.setVisibility(View.GONE);
+        mLayoutShortcutsPanel.setVisibility(View.VISIBLE);
+    }
+
+    private void closeShortcutsPanel() {
+        mLayoutShortcutsPanel.setVisibility(View.GONE);
+        mLayoutMain.setVisibility(View.VISIBLE);
+        mCurrentPanel = PANEL_MAIN;
+    }
+
     // -------------------------------------------------------------------------
     // Motor sesi paneli
     // -------------------------------------------------------------------------
@@ -1086,6 +1174,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             return;
         } else if (mCurrentPanel == PANEL_STATUS) {
             closeStatusPanel();
+            return;
+        } else if (mCurrentPanel == PANEL_SHORTCUTS) {
+            closeShortcutsPanel();
             return;
         }
         // Ana ekrandaysak normal davran (Activity kapanır)

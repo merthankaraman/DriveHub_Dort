@@ -1,11 +1,13 @@
 package com.example.mg4_v3.service;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -91,10 +93,21 @@ public class MG4ControlService extends Service {
     private static final long ONE_PEDAL_LONG_PRESS_MS = 1200;
     private static final long ONE_PEDAL_DOUBLE_TAP_MS = 400;
 
+    /** 360 kamera tuş atama (Düğme kısayolları panelinden) */
+    private static final String PREF_CAMERA_360_KEY = "camera_360_key";
+    private static final String PREF_CAMERA_360_PRESS_ON  = "camera_360_press_on";
+    private static final String PREF_CAMERA_360_PRESS_OFF = "camera_360_press_off";
+    private static final int    DEFAULT_CAMERA_360_KEY = -1;
+
     private volatile boolean mOnePedalKeyPressed = false;
     private volatile boolean mOnePedalLongTriggered = false;
     private long mOnePedalLastTapTime = 0L;
     private int mOnePedalLastTapKeyCode = -1;
+
+    private volatile boolean mCamera360KeyPressed = false;
+    private volatile boolean mCamera360LongTriggered = false;
+    private long mCamera360LastTapTime = 0L;
+    private int  mCamera360LastTapKeyCode = -1;
 
     private DriveMode mCurrentDriveMode = DriveMode.NORMAL;
     private BroadcastReceiver mHardkeyReceiver;
@@ -561,7 +574,13 @@ public class MG4ControlService extends Service {
                     String pressOff = prefs.getString(PREF_ONE_PEDAL_PRESS_TYPE_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF);
                     onOnePedalKey(keyCode, isDown, isLong, pressOn, pressOff);
                 } else {
-                    if (keyCode == KEYCODE_VOLUME_UP) {
+                    int camera360Key = prefs.getInt(PREF_CAMERA_360_KEY, DEFAULT_CAMERA_360_KEY);
+                    int camera360KeyToMatch = (camera360Key == 18) ? 286 : (camera360Key == 5) ? 291 : camera360Key;
+                    if (camera360Key >= 0 && keyCode == camera360KeyToMatch) {
+                        String pressOn  = prefs.getString(PREF_CAMERA_360_PRESS_ON,  DEFAULT_ONE_PEDAL_PRESS_TYPE);
+                        String pressOff = prefs.getString(PREF_CAMERA_360_PRESS_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF);
+                        onCamera360Key(keyCode, isDown, isLong, pressOn, pressOff);
+                    } else if (keyCode == KEYCODE_VOLUME_UP) {
                         onVolumeKey(KEYCODE_VOLUME_UP, isDown);
                     } else if (keyCode == KEYCODE_VOLUME_DOWN) {
                         onVolumeKey(KEYCODE_VOLUME_DOWN, isDown);
@@ -638,6 +657,100 @@ public class MG4ControlService extends Service {
                     }
                 }
             }
+        }
+    }
+
+    /** 360 kamera atanmış tuş — açma/kapama basma tipi (Tek/Uzun/Çift) ile tetiklenir. */
+    private void onCamera360Key(int keyCode, boolean isDown, boolean isLong, String pressTypeOn, String pressTypeOff) {
+        if (isDown) {
+            mCamera360KeyPressed = true;
+            mCamera360LongTriggered = false;
+            boolean needLong = "long".equals(pressTypeOn) || "long".equals(pressTypeOff);
+            if (needLong) {
+                new Thread(() -> {
+                    long start = System.currentTimeMillis();
+                    while (mCamera360KeyPressed) {
+                        if (System.currentTimeMillis() - start >= ONE_PEDAL_LONG_PRESS_MS) {
+                            mCamera360LongTriggered = true;
+                            if ("long".equals(pressTypeOn)) {
+                                open360();
+                            } else if ("long".equals(pressTypeOff)) {
+                                close360();
+                            }
+                            mCamera360KeyPressed = false;
+                            break;
+                        }
+                        try { Thread.sleep(50); } catch (Exception ignored) {}
+                    }
+                }).start();
+            }
+        } else {
+            mCamera360KeyPressed = false;
+            if (!mCamera360LongTriggered) {
+                long now = System.currentTimeMillis();
+                boolean isDouble = (mCamera360LastTapKeyCode == keyCode && (now - mCamera360LastTapTime) <= ONE_PEDAL_DOUBLE_TAP_MS);
+                if (isDouble) {
+                    mCamera360LastTapTime = 0;
+                    mCamera360LastTapKeyCode = -1;
+                    if ("double".equals(pressTypeOn)) open360();
+                    else if ("double".equals(pressTypeOff)) close360();
+                } else {
+                    mCamera360LastTapTime = now;
+                    mCamera360LastTapKeyCode = keyCode;
+                    if ("single".equals(pressTypeOn)) open360();
+                    else if ("single".equals(pressTypeOff)) close360();
+                }
+            }
+        }
+    }
+
+    /** 360 kamera — sadece Intent ile aç; tuş taklidi yok. */
+    private void open360() {
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName("com.saicmotor.hmi.aroundview", "com.saicmotor.hmi.aroundview.AVMActivity"));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            startActivity(intent);
+            updateNotification("360 kamera açıldı");
+        } catch (Exception e) {
+            Log.w(TAG, "360 Activity başlatılamadı: " + e.getMessage());
+            updateNotification("360 açılamadı");
+        }
+    }
+
+    /** 360 (AVMActivity) şu an en üstteki ekran mı kontrol eder. */
+    @SuppressWarnings("deprecation")
+    private boolean is360ActivityOnTop() {
+        try {
+            ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            if (am == null) return false;
+            List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(1);
+            if (tasks != null && !tasks.isEmpty()) {
+                ComponentName top = tasks.get(0).topActivity;
+                if (top != null
+                    && "com.saicmotor.hmi.aroundview".equals(top.getPackageName())
+                    && "com.saicmotor.hmi.aroundview.AVMActivity".equals(top.getClassName())) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "360 üstte mi kontrol edilemedi: " + e.getMessage());
+        }
+        return false;
+    }
+
+    /** 360 kapatma — sadece 360 üstteyse geri tuşu simüle (tuş taklidi yok). */
+    private void close360() {
+        if (!is360ActivityOnTop()) {
+            Log.d(TAG, "360 zaten kapalı, geri tuşu gönderilmedi");
+            return;
+        }
+        try {
+            Runtime.getRuntime().exec(new String[]{"input", "keyevent", "4"});
+            updateNotification("360 kapatıldı (geri)");
+        } catch (Exception e) {
+            Log.w(TAG, "360 kapatma (geri tuşu): " + e.getMessage());
+            updateNotification("360 kapatılamadı");
         }
     }
 

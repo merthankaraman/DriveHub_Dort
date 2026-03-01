@@ -7,4 +7,8 @@
     <color name="surface_variant">#E6E8EB</color>
     <!-- Sayısal değerler (V / A / kW / kWh) için yüksek kontrastlı renk -->
     <color name="status_value">#111827</color>
+    <!-- Panel buton arka planı (gündüz) -->
+    <color name="panel_button_bg">#E6E8EB</color>
+    <!-- İkincil metin (açıklama / etiket, gündüz) -->
+    <color name="text_secondary">#57606A</color>
 </resources>

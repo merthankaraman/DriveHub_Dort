@@ -132,10 +132,10 @@
                 android:layout_marginBottom="12dp"/>
 
             <Button
-                android:id="@+id/btnTestBinder"
+                android:id="@+id/btnShortcuts"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="Binder Test"
+                android:text="Düğme kısayolları"
                 android:backgroundTint="#1F6FEB"
                 android:textColor="#FFFFFF"
                 android:textSize="13sp"
@@ -171,7 +171,7 @@
                     android:id="@+id/switchLogs"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Açık"
+                    android:text=""
                     android:textColor="@color/status_value" />
 
             </LinearLayout>
@@ -499,79 +499,269 @@
 
         </LinearLayout>
 
-        <!-- Tek pedalı düğmeye ata (seçenekli, aynı basma tipi gibi) -->
+    </LinearLayout>
+
+    <!-- ============================================================ -->
+    <!-- DÜĞME KISAYOLLARI PANELİ (varsayılan gizli)                 -->
+    <!-- ============================================================ -->
+    <LinearLayout
+        android:id="@+id/layoutShortcutsPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/surface"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingStart="40dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="40dp"
+        android:paddingBottom="24dp"
+        android:visibility="gone">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginBottom="28dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnShortcutsBack"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginEnd="20dp"
+                android:backgroundTint="@color/panel_button_bg"
+                android:minWidth="0dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="←"
+                android:textColor="@color/status_value"
+                android:textSize="18sp" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Tek pedalı düğmeye ata"
-                android:textColor="#8B949E"
-                android:textSize="13sp" />
-
-            <Spinner
-                android:id="@+id/spinnerOnePedalKey"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:minWidth="120dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp" />
+                android:letterSpacing="0.08"
+                android:text="DÜĞME KISAYOLLARI"
+                android:textColor="@color/status_value"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
+        <!-- İki kolon: Sol = Tek pedal, Sağ = 360 kamera -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:baselineAligned="false">
 
-            <TextView
+            <!-- SOL: Tek pedal -->
+            <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Tek pedal açmak için basma tipi"
-                android:textColor="#8B949E"
-                android:textSize="13sp" />
+                android:orientation="vertical"
+                android:paddingEnd="24dp">
 
-            <Spinner
-                android:id="@+id/spinnerOnePedalPressOn"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:minWidth="100dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:text="Tek pedal"
+                    android:textColor="@color/status_value"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Tek pedalı düğmeye ata"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
 
-            <TextView
+                    <Spinner
+                        android:id="@+id/spinnerOnePedalKey"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:minWidth="120dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layoutOnePedalOptions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Açmak için basma tipi"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <Spinner
+                            android:id="@+id/spinnerOnePedalPressOn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:minWidth="100dp"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Kapatmak için basma tipi"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <Spinner
+                            android:id="@+id/spinnerOnePedalPressOff"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:minWidth="100dp"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- SAĞ: 360 kamera -->
+            <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Tek pedaldan kapatmak için basma tipi"
-                android:textColor="#8B949E"
-                android:textSize="13sp" />
+                android:orientation="vertical"
+                android:paddingStart="24dp">
 
-            <Spinner
-                android:id="@+id/spinnerOnePedalPressOff"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:minWidth="100dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:text="360 kamera"
+                    android:textColor="@color/status_value"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="360'ı düğmeye ata"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+
+                    <Spinner
+                        android:id="@+id/spinnerCamera360Key"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:minWidth="120dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layoutCamera360Options"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Açmak için basma tipi"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <Spinner
+                            android:id="@+id/spinnerCamera360PressOn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:minWidth="100dp"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Kapatmak için basma tipi"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <Spinner
+                            android:id="@+id/spinnerCamera360PressOff"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:minWidth="100dp"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -646,7 +836,7 @@
                 android:id="@+id/switchOverlay"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Açık"
+                android:text=""
                 android:textColor="@color/status_value" />
 
         </LinearLayout>
