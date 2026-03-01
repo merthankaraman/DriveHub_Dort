@@ -226,6 +226,8 @@ public class MainActivity extends AppCompatActivity {
                     if (!mEngineSound.isPlaying()) {
                         mEngineSound.start();
                     }
+                    // Sim modunda hız ve throttle'ı doğrudan buradan ver (RPM artsın; throttle zaten slider'dan setSimulatedThrottle ile ayarlı)
+                    mEngineSound.onSpeedChanged(mSimSpeedKmh, Float.NaN);
                 } else {
                     if (mEngineSound.isPlaying()) {
                         mEngineSound.stop();
