@@ -392,15 +392,15 @@ public class EngineSoundManager {
         // Audio focus istemiyoruz: müzik focus'ta kalsın, motor sesi müzikle birlikte mixlensin.
         int maxStreams = mCurrentSamples.length + 5;
 
-        // Medya değil, alarm sesi: ses kısma/açma sadece müziği etkiler, motor sesi sadece uygulama slider'ına göre.
+        // Bildirim sesi: müzikten ayrı; araçta bildirim seviyesi ile kontrol edilir (alarm kadar tiz işlenmeyebilir).
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             AudioAttributes attrs = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .build();
             mSoundPool = new SoundPool.Builder().setMaxStreams(maxStreams).setAudioAttributes(attrs).build();
         } else {
-            mSoundPool = new SoundPool(maxStreams, AudioManager.STREAM_ALARM, 0);
+            mSoundPool = new SoundPool(maxStreams, AudioManager.STREAM_NOTIFICATION, 0);
         }
 
         mSoundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {

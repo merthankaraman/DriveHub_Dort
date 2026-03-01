@@ -1000,21 +1000,21 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mCurrentPanel = PANEL_MAIN;
     }
 
-    /** Motor sesi STREAM_ALARM kullanır; araç alarm sesi kısıksa ses de kısık çıkar. Bu değeri gösteriyoruz. */
+    /** Motor sesi STREAM_NOTIFICATION kullanır; araç bildirim sesi kısıksa ses de kısık çıkar. */
     private void refreshAlarmVolumeHint() {
         if (mTvAlarmVolumeHint == null) return;
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am == null) {
-            mTvAlarmVolumeHint.setText("Alarm sesi: okunamadı");
+            mTvAlarmVolumeHint.setText("Bildirim sesi: okunamadı");
             return;
         }
-        int cur = am.getStreamVolume(AudioManager.STREAM_ALARM);
-        int max = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+        int cur = am.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
+        int max = am.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
         if (max <= 0) {
-            mTvAlarmVolumeHint.setText("Alarm sesi: --");
+            mTvAlarmVolumeHint.setText("Bildirim sesi: --");
             return;
         }
-        String msg = "Alarm sesi (araç): " + cur + "/" + max;
+        String msg = "Bildirim sesi (araç): " + cur + "/" + max;
         if (cur >= max) {
             msg += " — Maksimumda";
         } else {
@@ -1030,19 +1030,19 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             Toast.makeText(this, "Ses servisi yok", Toast.LENGTH_SHORT).show();
             return;
         }
-        int max = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+        int max = am.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
         if (max <= 0) {
-            Toast.makeText(this, "Alarm sesi desteklenmiyor", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Bildirim sesi desteklenmiyor", Toast.LENGTH_SHORT).show();
             return;
         }
         try {
-            am.setStreamVolume(AudioManager.STREAM_ALARM, max, 0);
-            int now = am.getStreamVolume(AudioManager.STREAM_ALARM);
+            am.setStreamVolume(AudioManager.STREAM_NOTIFICATION, max, 0);
+            int now = am.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
             refreshAlarmVolumeHint();
             if (now >= max) {
-                Toast.makeText(this, "Alarm sesi maksimuma alındı", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Bildirim sesi maksimuma alındı", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Araç alarm sesini değiştirmeye izin vermiyor olabilir", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Araç bildirim sesini değiştirmeye izin vermiyor olabilir", Toast.LENGTH_LONG).show();
             }
         } catch (SecurityException e) {
             Toast.makeText(this, "Yetki yok: " + e.getMessage(), Toast.LENGTH_LONG).show();

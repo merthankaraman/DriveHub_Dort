@@ -1094,7 +1094,7 @@
 
                 </LinearLayout>
 
-                <!-- Motor sesi STREAM_ALARM kullanır; araç alarm sesi kısıksa motor sesi de kısık çıkar -->
+                <!-- Motor sesi STREAM_NOTIFICATION kullanır; araç bildirim sesi ile kontrol -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -1107,7 +1107,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Alarm sesi (araç): --"
+                        android:text="Bildirim sesi (araç): --"
                         android:textColor="#8B949E"
                         android:textSize="12sp" />
 

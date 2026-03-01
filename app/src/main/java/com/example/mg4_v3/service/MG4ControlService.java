@@ -584,6 +584,12 @@ public class MG4ControlService extends Service {
                         updateNotification("Tek Pedal: Açık");
                     }
                 }
+            } else if ("long".equals(pressType)) {
+                // Uzun basma seçiliyken: kısa basış = tek pedalı kapat
+                if (!mOnePedalLongTriggered && MG4Hardware.getOnePedal() == 1) {
+                    MG4Hardware.setOnePedal(false);
+                    updateNotification("Tek Pedal: Kapalı");
+                }
             } else if ("double".equals(pressType)) {
                 long now = System.currentTimeMillis();
                 if (mOnePedalLastTapKeyCode == keyCode && (now - mOnePedalLastTapTime) <= ONE_PEDAL_DOUBLE_TAP_MS) {
