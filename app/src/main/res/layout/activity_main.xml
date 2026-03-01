@@ -1049,7 +1049,7 @@
         android:paddingTop="16dp"
         android:paddingEnd="24dp"
         android:paddingBottom="20dp"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <ScrollView
             android:layout_width="match_parent"
@@ -1123,8 +1123,8 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
                         android:gravity="center"
                         android:orientation="vertical">
 
@@ -1149,8 +1149,8 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
                         android:gravity="center"
                         android:orientation="vertical">
 
@@ -1175,8 +1175,8 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
                         android:gravity="center"
                         android:orientation="vertical">
 
@@ -1201,8 +1201,8 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
                         android:gravity="center"
                         android:orientation="vertical">
 
@@ -1287,8 +1287,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/tvAlarmVolumeHint"
@@ -1303,10 +1303,10 @@
                         android:id="@+id/btnAlarmVolumeMax"
                         android:layout_width="wrap_content"
                         android:layout_height="36dp"
+                        android:backgroundTint="#21262D"
                         android:minWidth="0dp"
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp"
-                        android:backgroundTint="#21262D"
                         android:text="Max yap"
                         android:textColor="#C9D1D9"
                         android:textSize="12sp" />
@@ -1460,11 +1460,150 @@
 
                     </LinearLayout>
 
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnIdleSettings"
+                            android:layout_width="0dp"
+                            android:layout_height="120dp"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:backgroundTint="#21262D"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="Rölanti ayarları"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                        <Space
+                            android:layout_width="0dp"
+                            android:layout_height="120dp"
+                            android:layout_weight="1" />
+                    </LinearLayout>
+
                 </LinearLayout>
 
             </LinearLayout>
         </ScrollView>
 
+    </LinearLayout>
+
+    <!-- ============================================================ -->
+    <!-- RÖLANTİ AYARLARI PANELİ (motor sesi ekranından açılır)        -->
+    <!-- ============================================================ -->
+    <LinearLayout
+        android:id="@+id/layoutIdlePanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/surface"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="24dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnIdlePanelBack"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginEnd="16dp"
+                android:backgroundTint="#21262D"
+                android:minWidth="48dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="←"
+                android:textColor="#C9D1D9"
+                android:textSize="20sp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Rölanti ayarları"
+                android:textColor="@color/status_value"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvIdleProfile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="Araç: --"
+            android:textColor="#8B949E"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Rölanti sesinin maksimum seviyesi (araç dururken)"
+            android:textColor="#8B949E"
+            android:textSize="13sp" />
+
+        <SeekBar
+            android:id="@+id/seekIdleVolume"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:max="100"
+            android:minHeight="32dp" />
+
+        <TextView
+            android:id="@+id/tvIdleVolumeValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:text="100%"
+            android:textColor="@color/status_value"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Rölanti perdesi (pitch): 1.0 = orijinal"
+            android:textColor="#8B949E"
+            android:textSize="13sp" />
+
+        <SeekBar
+            android:id="@+id/seekIdlePitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:max="150"
+            android:minHeight="32dp" />
+
+        <TextView
+            android:id="@+id/tvIdlePitchValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1.00"
+            android:textColor="@color/status_value"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btnIdleResetAll"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#DA3633"
+            android:text="Tüm rölanti profillerini sıfırla"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
     </LinearLayout>
 
     <!-- ============================================================ -->

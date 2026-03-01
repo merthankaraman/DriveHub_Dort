@@ -42,9 +42,15 @@ public class EngineSoundManager {
     private float mCurrentRpm = 1000f;
     private float mDriveModeAggressiveness = 0.4f; // Varsayılan Normal
     private VehicleProfile mActiveProfile;
+    /** Dialog’da kayıtlı profil etiketi (sound_profile ile aynı). Rölanti prefs anahtarı bununla oluşturulur. */
+    private String mCurrentProfileLabel = "Lotus Exige";
     private EngineSample[] mCurrentSamples;
     private float mIdleRpm = 1000f;
     private float mCurrentIdleVolumeScale = 1;
+    /** Kullanıcı ayarı: rölanti ses seviyesi çarpanı (0..1). Profil idleVolumeScale ile çarpılır. */
+    private float mUserIdleVolumeScale = 1f;
+    /** Kullanıcı ayarı: rölanti pitch (0.5–2.0, 1 = orijinal). */
+    private float mIdlePitch = 1f;
     private float mMaxRpm = 9000f;
     private float mMasterVolume = 0.6f;
     private int mGearWhineSoundId = -1;
@@ -116,6 +122,7 @@ public class EngineSoundManager {
         // Ses profili (araç sesi)
         String profile = prefs.getString("sound_profile", "Lotus Exige");
         applyProfileLabel(profile);
+        loadIdleSettingsForProfile(context, profile);
 
         // Şanzıman karakteri (Eco / Normal / Sport / Araç) — mapping tek yerde dursun
         String charStr = prefs.getString("sound_character", "NORMAL");
@@ -125,6 +132,57 @@ public class EngineSoundManager {
         int master = prefs.getInt("sound_master", 60);
         float masterClamped = Math.max(0, Math.min(100, master)) / 100f;
         setMasterVolume(masterClamped);
+    }
+
+    /** Seçili ses profilinin etiketi (dialog ile aynı; rölanti prefs anahtarı bununla eşleşir). */
+    public String getCurrentProfileName() {
+        return mCurrentProfileLabel != null ? mCurrentProfileLabel : "Lotus Exige";
+    }
+
+    /** Profil adından prefs anahtar soneki (boşluk → alt çizgi; bazı cihazlarda boşluklu anahtar sorun çıkarabiliyor). */
+    public static String profileToPrefsSuffix(String profileName) {
+        return profileName != null ? profileName.replace(" ", "_") : "Lotus_Exige";
+    }
+
+    /** Verilen araç profilinin rölanti ayarlarını yükler (hafızalı, araç özelinde). */
+    public void loadIdleSettingsForProfile(Context context, String profileName) {
+        if (context == null || profileName == null) return;
+        android.content.SharedPreferences prefs = context.getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
+        String suffix = profileToPrefsSuffix(profileName);
+        String volKey = "idle_volume_scale_" + suffix;
+        String pitchKey = "idle_pitch_" + suffix;
+        String volKeyOld = "idle_volume_scale_" + profileName;
+        String pitchKeyOld = "idle_pitch_" + profileName;
+        int vol = prefs.contains(volKey) ? prefs.getInt(volKey, 100)
+                : prefs.getInt(volKeyOld, prefs.getInt("idle_volume_scale", 100));
+        float pitch = prefs.contains(pitchKey) ? prefs.getFloat(pitchKey, 1f)
+                : prefs.getFloat(pitchKeyOld, prefs.getFloat("idle_pitch", 1f));
+        setUserIdleVolumeScale(Math.max(0, Math.min(100, vol)) / 100f);
+        setIdlePitch(Math.max(0.5f, Math.min(2f, pitch)));
+        if (prefs.contains(volKeyOld) || prefs.contains(pitchKeyOld)) {
+            prefs.edit().putInt(volKey, vol).putFloat(pitchKey, pitch).remove(volKeyOld).remove(pitchKeyOld).apply();
+        }
+    }
+
+    /** Rölanti ses seviyesi çarpanı (0..1). Profil değişince tekrar uygulanır. */
+    public void setUserIdleVolumeScale(float scale01) {
+        mUserIdleVolumeScale = Math.max(0f, Math.min(1f, scale01));
+        if (mActiveProfile != null) {
+            mCurrentIdleVolumeScale = mActiveProfile.idleVolumeScale * mUserIdleVolumeScale;
+        }
+    }
+
+    public float getUserIdleVolumeScale() {
+        return mUserIdleVolumeScale;
+    }
+
+    /** Rölanti pitch (0.5–2.0). 1 = orijinal perde. */
+    public void setIdlePitch(float pitch) {
+        mIdlePitch = Math.max(0.5f, Math.min(2f, pitch));
+    }
+
+    public float getIdlePitch() {
+        return mIdlePitch;
     }
 
     /**
@@ -154,10 +212,32 @@ public class EngineSoundManager {
     }
 
     /**
+     * Araç sesi profil listesi (tek kaynak — yeni araç eklerken sadece buraya ekleyin).
+     * Sıra = seçim dialog'undaki sıra. İsimler applyProfileLabel ile birebir eşleşmeli.
+     */
+    public static final String[] PROFILE_LABELS = {
+            "McLaren P1",
+            "MCLAREN P1 Stereo",
+            "Lamborghini Aventador",
+            "BMW Z4",
+            "Pagani Zonda R",
+            "Lotus Exige",
+            "Porsche 911 GT3 RS",
+            "Porsche 918 Spyder",
+            "Praga R1"
+    };
+
+    /** Dialog ve liste için profil isimlerini döner (hafıza sıfırlanmaz, sadece liste tek yerde). */
+    public static String[] getProfileLabels() {
+        return PROFILE_LABELS;
+    }
+
+    /**
      * Verilen profil etiketine göre uygun VehicleProfile'ı seçer.
      * Activity ve Service tarafı aynı mapping'i paylaşsın diye burada tutuluyor.
      */
     public void applyProfileLabel(String profile) {
+        mCurrentProfileLabel = (profile != null && !profile.isEmpty()) ? profile : "Lotus Exige";
         if ("McLaren P1".equals(profile)) {
             setVehicleProfile(PROFILE_MCLAREN_P1());
         } else if ("Lamborghini Aventador".equals(profile)) {
@@ -446,7 +526,7 @@ public class EngineSoundManager {
         this.mActiveProfile = profile; // Kritik: Artık fizik motoru hangi aracı kullandığını biliyor.
         this.mIdleRpm = profile.idleRpm;
         this.mMaxRpm = profile.maxRpm;
-        this.mCurrentIdleVolumeScale = profile.idleVolumeScale;
+        this.mCurrentIdleVolumeScale = profile.idleVolumeScale * mUserIdleVolumeScale;
         this.mCurrentSamples = buildSamples(profile.resIds);
 
         if (MG4Hardware.isLogEnabled()) {
@@ -744,7 +824,7 @@ public class EngineSoundManager {
                 float targetVol = (i == 0) ? (masterVol * mCurrentIdleVolumeScale) : 0f;
 
                 mSoundPool.setVolume(s.streamId, targetVol, targetVol);
-                mSoundPool.setRate(s.streamId, 1.0f);
+                mSoundPool.setRate(s.streamId, mIdlePitch);
             }
             return;
         }

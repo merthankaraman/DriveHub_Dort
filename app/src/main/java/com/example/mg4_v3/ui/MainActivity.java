@@ -128,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
     private View mLayoutMain;
     private View mLayoutSpeedTest;
     private View mLayoutSoundPanel;
+    private View mLayoutIdlePanel;
     private Button mBtnMotorPower;
 
     // Hız simülasyonu (bilgisayarda test için)
@@ -193,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PANEL_SOUND   = 4;
     private static final int PANEL_SHORTCUTS = 5;
     private static final int PANEL_CONSUMPTION = 6;
+    private static final int PANEL_IDLE = 7;
     private int mCurrentPanel = PANEL_MAIN;
 
     // Tüketim paneli
@@ -583,6 +585,10 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         findViewById(R.id.btnSnow).setOnClickListener(v      -> sendDriveMode(DriveMode.SNOW));
         findViewById(R.id.btnSoundPanel).setOnClickListener(v -> openSoundPanel());
         findViewById(R.id.btnSoundBack).setOnClickListener(v -> closeSoundPanel());
+        mLayoutIdlePanel = findViewById(R.id.layoutIdlePanel);
+        findViewById(R.id.btnIdleSettings).setOnClickListener(v -> openIdlePanel());
+        findViewById(R.id.btnIdlePanelBack).setOnClickListener(v -> closeIdlePanel());
+        findViewById(R.id.btnIdleResetAll).setOnClickListener(v -> resetAllIdleProfiles());
 
         // Şarj paneli
         mLayoutStatusPanel  = findViewById(R.id.layoutStatusPanel);
@@ -1285,6 +1291,105 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mCurrentPanel = PANEL_MAIN;
     }
 
+    // -------------------------------------------------------------------------
+    // Rölanti ayarları paneli (motor sesi ekranından açılır)
+    // -------------------------------------------------------------------------
+
+    private void openIdlePanel() {
+        mCurrentPanel = PANEL_IDLE;
+        if (mLayoutSoundPanel != null) mLayoutSoundPanel.setVisibility(View.GONE);
+        if (mLayoutIdlePanel != null) {
+            mLayoutIdlePanel.setVisibility(View.VISIBLE);
+            setupIdlePanelFromPrefs();
+        }
+    }
+
+    private void closeIdlePanel() {
+        if (mLayoutIdlePanel != null) mLayoutIdlePanel.setVisibility(View.GONE);
+        if (mLayoutSoundPanel != null) mLayoutSoundPanel.setVisibility(View.VISIBLE);
+        mCurrentPanel = PANEL_SOUND;
+    }
+
+    private void setupIdlePanelFromPrefs() {
+        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        // Anahtarı her zaman prefs'teki seçili profilden türet (Service/Activity aynı key'i kullansın)
+        String profileName = prefs.getString(PREF_SOUND_PROFILE, "Lotus Exige");
+        String suffix = EngineSoundManager.profileToPrefsSuffix(profileName);
+        String volKey = "idle_volume_scale_" + suffix;
+        String pitchKey = "idle_pitch_" + suffix;
+        int vol = prefs.getInt(volKey, prefs.getInt("idle_volume_scale", 100));
+        float pitch = prefs.getFloat(pitchKey, prefs.getFloat("idle_pitch", 1f));
+        // Pitch: 0.5–2.0 → SeekBar 0–150 (50 = 1.0)
+        int pitchProgress = (int) Math.round((pitch - 0.5f) / 1.5f * 150f);
+        pitchProgress = Math.max(0, Math.min(150, pitchProgress));
+
+        TextView tvIdleProfile = findViewById(R.id.tvIdleProfile);
+        if (tvIdleProfile != null) tvIdleProfile.setText("Araç: " + profileName);
+
+        SeekBar seekVol = findViewById(R.id.seekIdleVolume);
+        SeekBar seekPitch = findViewById(R.id.seekIdlePitch);
+        TextView tvVol = findViewById(R.id.tvIdleVolumeValue);
+        TextView tvPitch = findViewById(R.id.tvIdlePitchValue);
+        final String volKeyFinal = volKey;
+        final String pitchKeyFinal = pitchKey;
+        if (seekVol != null) {
+            seekVol.setOnSeekBarChangeListener(null); // önce eski listener'ı kaldır
+            seekVol.setProgress(vol);
+            if (tvVol != null) tvVol.setText(vol + "%");
+            seekVol.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar s, int progress, boolean fromUser) {
+                    if (tvVol != null) tvVol.setText(progress + "%");
+                    float scale = progress / 100f;
+                    if (mEngineSound != null) mEngineSound.setUserIdleVolumeScale(scale);
+                    if (fromUser) prefs.edit().putInt(volKeyFinal, progress).commit();
+                }
+                @Override
+                public void onStartTrackingTouch(SeekBar s) {}
+                @Override
+                public void onStopTrackingTouch(SeekBar s) {}
+            });
+        }
+        if (seekPitch != null) {
+            seekPitch.setOnSeekBarChangeListener(null);
+            seekPitch.setMax(150);
+            seekPitch.setProgress(pitchProgress);
+            if (tvPitch != null) tvPitch.setText(String.format(java.util.Locale.US, "%.2f", pitch));
+            seekPitch.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar s, int progress, boolean fromUser) {
+                    float p = 0.5f + (progress / 150f) * 1.5f;
+                    if (tvPitch != null) tvPitch.setText(String.format(java.util.Locale.US, "%.2f", p));
+                    if (mEngineSound != null) mEngineSound.setIdlePitch(p);
+                    if (fromUser) prefs.edit().putFloat(pitchKeyFinal, p).commit();
+                }
+                @Override
+                public void onStartTrackingTouch(SeekBar s) {}
+                @Override
+                public void onStopTrackingTouch(SeekBar s) {}
+            });
+        }
+    }
+
+    /** Tüm araçların rölanti ayarlarını (seviye + pitch) varsayılana döndürür ve paneli günceller. */
+    private void resetAllIdleProfiles() {
+        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        android.content.SharedPreferences.Editor editor = prefs.edit();
+        for (String profileName : EngineSoundManager.getProfileLabels()) {
+            String suffix = EngineSoundManager.profileToPrefsSuffix(profileName);
+            editor.remove("idle_volume_scale_" + suffix);
+            editor.remove("idle_pitch_" + suffix);
+        }
+        editor.remove("idle_volume_scale").remove("idle_pitch"); // eski global anahtarlar
+        editor.commit();
+        String currentProfile = (mEngineSound != null) ? mEngineSound.getCurrentProfileName() : "Lotus Exige";
+        if (mEngineSound != null) {
+            mEngineSound.loadIdleSettingsForProfile(this, currentProfile);
+        }
+        setupIdlePanelFromPrefs();
+        Toast.makeText(this, "Tüm rölanti ayarları sıfırlandı.", Toast.LENGTH_SHORT).show();
+    }
+
     /** Motor sesi STREAM_NOTIFICATION kullanır; araç bildirim sesi kısıksa ses de kısık çıkar. */
     private void refreshAlarmVolumeHint() {
         if (mTvAlarmVolumeHint == null) return;
@@ -1356,6 +1461,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             return;
         } else if (mCurrentPanel == PANEL_CONSUMPTION) {
             closeConsumptionPanel();
+            return;
+        } else if (mCurrentPanel == PANEL_IDLE) {
+            closeIdlePanel();
             return;
         }
         super.onBackPressed();
@@ -1521,7 +1629,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void showSoundProfileDialog() {
-        final String[] options = {"McLaren P1", "MCLAREN P1 Stereo", "Lamborghini Aventador", "BMW Z4", "Pagani Zonda R", "Lotus Exige", "Porsche 911 GT3 RS"};//, "Praga R1"};//, "Porsche 918 Spyder"};
+        final String[] options = EngineSoundManager.getProfileLabels();
 
         new AlertDialog.Builder(this)
                 .setTitle("Araç Sesi Profili")
@@ -1531,8 +1639,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
                     if (mBtnSoundProfile != null) {
                         mBtnSoundProfile.setText("Araç Sesi: " + label);
                     }
-                    // Profil eşlemesini EngineSoundManager yönetsin
+                    // Profil eşlemesini EngineSoundManager yönetsin; rölanti ayarları bu araça özel yüklensin
                     mEngineSound.applyProfileLabel(label);
+                    mEngineSound.loadIdleSettingsForProfile(MainActivity.this, label);
                 })
                 .show();
     }
