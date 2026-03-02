@@ -217,7 +217,6 @@ public class EngineSoundManager {
      */
     public static final String[] PROFILE_LABELS = {
             "McLaren P1",
-            "MCLAREN P1 Stereo",
             "Lamborghini Aventador",
             "BMW Z4",
             "Pagani Zonda R",
@@ -248,8 +247,6 @@ public class EngineSoundManager {
             setVehicleProfile(PROFILE_ZONDA_R());
         } else if ("Lotus Exige".equals(profile)) {
             setVehicleProfile(PROFILE_LOTUS_EXIGE());
-        } else if ("MCLAREN P1 Stereo".equals(profile)) {
-            setVehicleProfile(PROFILE_MCLAREN_P1_ST());
         } else if ("Porsche 911 GT3 RS".equals(profile)) {
             setVehicleProfile(PROFILE_911_GT3_RS());
         } else if ("Porsche 918 Spyder".equals(profile)) {
@@ -307,28 +304,6 @@ public class EngineSoundManager {
     // ==========================================
     // HAZIR ARAÇ TANIMLARI (STATİK)
     // ==========================================
-    public static VehicleProfile PROFILE_MCLAREN_P1_ST() {
-        return new VehicleProfile("McLaren P1 ST", 800f, 9000f, 1,
-                1,
-                new float[][]{
-                        {0f, 30f},
-                        {15f, 60f},
-                        {20f, 80f},
-                        {40f, 100f},
-                        {60f, 140f},
-                        {100f, 170f},
-                        {130f, 200f},
-                        {140f, 250f},
-                },
-                R.raw.mclaren_p1_idle,
-                R.raw.st_mclaren_p1_1750,
-                R.raw.st_mclaren_p1_2750,
-                R.raw.st_mclaren_p1_4500,
-                R.raw.st_mclaren_p1_6000,
-                R.raw.st_mclaren_p1_7500,
-                R.raw.st_mclaren_p1_9000
-        );
-    }
     public static VehicleProfile PROFILE_LOTUS_EXIGE() {
         return new VehicleProfile("Lotus Exige", 800, 9000f, 1,
                 2,

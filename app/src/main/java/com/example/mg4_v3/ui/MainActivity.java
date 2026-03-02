@@ -1141,7 +1141,11 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void updateChargingCharts(float maxDcKw, float acKw, float battKw) {
         if (mChartChargingPower == null) return;
         float x = mChargingChartIndex++;
-        if (!Float.isNaN(maxDcKw)) mChartEntriesMaxDc.add(new Entry(x, maxDcKw));
+        // Grafikte şarj gücü negatif aksında gösterilsin: beklenen gücü de negatif tarafta çiz.
+        if (!Float.isNaN(maxDcKw)) {
+            float maxDcForChart = (maxDcKw > 0f) ? -maxDcKw : maxDcKw;
+            mChartEntriesMaxDc.add(new Entry(x, maxDcForChart));
+        }
         if (!Float.isNaN(acKw))    mChartEntriesAc.add(new Entry(x, acKw));
         if (!Float.isNaN(battKw))  mChartEntriesBatt.add(new Entry(x, battKw));
         trimChartEntries(mChartEntriesMaxDc);
@@ -1232,15 +1236,28 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void refreshConsumptionPanel() {
         int totalKm = MG4Hardware.getLastTotalKm();
         int mileageStart = MG4Hardware.getMileageAtConsumptionStart();
-        int tripKm = (mileageStart >= 0 && totalKm >= 0) ? Math.max(0, totalKm - mileageStart) : -1;
+        // Bu oturum yolu: hız integrali (km). Toplam km sadece bilgi amaçlı.
+        double tripDistanceKm = MG4Hardware.getTripDistanceKm();
+        int tripKm = (tripDistanceKm >= 0) ? (int) Math.floor(tripDistanceKm + 0.5) : -1;
         float speedKmh = MG4Hardware.getLastSpeedKmh();
         float consumption = MG4Hardware.getLastConsumption();
-        float powerKw = MG4Hardware.getLastPowerKw();
+        // Güç: diğer ekranlarla aynı kaynaktan (DC volt * DC akım / 1000).
+        float dcVolt = MG4Hardware.getDcVoltage();
+        float dcAmpAct = MG4Hardware.getDcCurrentActual();
+        float powerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? Float.NaN : (dcVolt * dcAmpAct) / 1000f;
         int gear = MG4Hardware.getLastGear();
         double tripEnergyKwh = MG4Hardware.getTripEnergyKwh();
 
         if (mTvConsumptionGear != null) {
-            mTvConsumptionGear.setText(gear < 0 ? "--" : String.valueOf(gear));
+            String gearText;
+            switch (gear) {
+                case 1:  gearText = "P"; break;
+                case 2:  gearText = "R"; break;
+                case 3:  gearText = "N"; break;
+                case 4:  gearText = "D"; break;
+                default: gearText = gear < 0 ? "--" : String.valueOf(gear); break;
+            }
+            mTvConsumptionGear.setText(gearText);
         }
         if (mTvConsumptionTotalKm != null) {
             mTvConsumptionTotalKm.setText(totalKm < 0 ? "--" : String.valueOf(totalKm));
@@ -1255,16 +1272,20 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             mTvConsumptionPower.setText(Float.isNaN(powerKw) ? "--" : String.format(Locale.US, "%.2f", powerKw));
         }
         if (mTvConsumptionTripKm != null) {
-            mTvConsumptionTripKm.setText(tripKm < 0 ? "--" : String.valueOf(tripKm));
+            if (tripDistanceKm >= 0) {
+                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f", tripDistanceKm));
+            } else {
+                mTvConsumptionTripKm.setText("--");
+            }
         }
         if (mTvConsumptionEnergy != null) {
             mTvConsumptionEnergy.setText(String.format(Locale.US, "%.3f", tripEnergyKwh));
         }
-        // Ortalama tüketim (kWh/100km) = hesaplanan enerji / yol * 100
+        // Ortalama tüketim (kWh/100km) = bu oturum enerjisi / bu oturum yolu * 100
         if (mTvConsumptionAvgKwhPer100km != null) {
-            if (tripKm > 0 && tripEnergyKwh >= 0) {
-                double avgKwhPer100 = (tripEnergyKwh / tripKm) * 100.0;
-                mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.1f", avgKwhPer100));
+            if (tripDistanceKm > 0.01 && tripEnergyKwh >= 0) {
+                double avgKwhPer100 = (tripEnergyKwh / tripDistanceKm) * 100.0;
+                mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f", avgKwhPer100));
             } else {
                 mTvConsumptionAvgKwhPer100km.setText("--");
             }

@@ -1741,7 +1741,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.2"
+            android:layout_weight="0.6"
             android:orientation="horizontal">
 
             <!-- Sol sütun: AC -->
@@ -2006,8 +2006,8 @@
             android:id="@+id/chartChargingPower"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.4"
-            android:layout_marginTop="8dp" />
+            android:layout_marginTop="8dp"
+            android:layout_weight="0.4" />
 
     </LinearLayout>
 
@@ -2024,14 +2024,14 @@
         android:paddingTop="20dp"
         android:paddingEnd="40dp"
         android:paddingBottom="20dp"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginBottom="24dp"
             android:gravity="center_vertical"
-            android:layout_marginBottom="24dp">
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btnConsumptionBack"
@@ -2069,52 +2069,257 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:background="@color/surface_variant"
+            android:orientation="vertical"
             android:padding="24dp">
 
             <!-- Vites en üstte -->
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_gear" android:textColor="#8B949E" android:textSize="18sp" />
-                <TextView android:id="@+id/tvConsumptionGear" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/consumption_gear"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvConsumptionGear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/status_value"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
             </LinearLayout>
             <!-- Toplam km -->
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_total_km" android:textColor="#8B949E" android:textSize="18sp" />
-                <TextView android:id="@+id/tvConsumptionTotalKm" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_km" android:textColor="#8B949E" android:textSize="18sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/consumption_total_km"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvConsumptionTotalKm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/status_value"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_km"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
             </LinearLayout>
             <!-- Tüketim (PROP_ELEC_CSUMP_PER_KM) -->
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_kwh_per_km" android:textColor="#8B949E" android:textSize="18sp" />
-                <TextView android:id="@+id/tvConsumptionKwhPerKm" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_kwh_km" android:textColor="#8B949E" android:textSize="18sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/consumption_kwh_per_km"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvConsumptionKwhPerKm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/status_value"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_kwh_km"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
             </LinearLayout>
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_speed" android:textColor="#8B949E" android:textSize="18sp" />
-                <TextView android:id="@+id/tvConsumptionSpeed" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_kmh" android:textColor="#8B949E" android:textSize="18sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/consumption_speed"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvConsumptionSpeed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/status_value"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_kmh"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
             </LinearLayout>
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_power" android:textColor="#8B949E" android:textSize="18sp" />
-                <TextView android:id="@+id/tvConsumptionPower" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_kw" android:textColor="#8B949E" android:textSize="18sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/consumption_power"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvConsumptionPower"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/status_value"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_kw"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
             </LinearLayout>
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_trip" android:textColor="#8B949E" android:textSize="18sp" />
-                <TextView android:id="@+id/tvConsumptionTripKm" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_km" android:textColor="#8B949E" android:textSize="18sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/consumption_trip"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvConsumptionTripKm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/status_value"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_km"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
             </LinearLayout>
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_energy" android:textColor="#8B949E" android:textSize="18sp" />
-                <TextView android:id="@+id/tvConsumptionEnergy" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_kwh" android:textColor="#8B949E" android:textSize="18sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/consumption_energy"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvConsumptionEnergy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/status_value"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_kwh"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
             </LinearLayout>
             <!-- Ortalama tüketim: hesaplanan enerji / yol → kWh/100km -->
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/consumption_avg" android:textColor="#8B949E" android:textSize="18sp" />
-                <TextView android:id="@+id/tvConsumptionAvgKwhPer100km" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="26sp" android:fontFamily="monospace" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/unit_kwh_100km" android:textColor="#8B949E" android:textSize="18sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/consumption_avg"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvConsumptionAvgKwhPer100km"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/status_value"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_kwh_100km"
+                    android:textColor="#8B949E"
+                    android:textSize="18sp" />
             </LinearLayout>
 
         </LinearLayout>

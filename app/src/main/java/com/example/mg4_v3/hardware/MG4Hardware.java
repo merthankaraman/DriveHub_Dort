@@ -810,6 +810,7 @@ public class MG4Hardware {
     // Tüketim integrasyonu (serviste 100ms'de bir çalışır; uygulama açık olmasa da boot'tan itibaren)
     // -------------------------------------------------------------------------
     private static volatile double sTripEnergyKwh = 0.0;
+    private static volatile double sTripDistanceKm = 0.0;
     private static volatile int sMileageAtConsumptionStart = -1;
     private static volatile long sConsumptionLastUpdateMs = 0;
     private static volatile float sLastSpeedKmh = Float.NaN;
@@ -818,19 +819,34 @@ public class MG4Hardware {
     private static volatile int sLastTotalKm = -1;
     private static volatile int sLastGear = -1;
 
-    /** Serviste 100ms'de bir çağrılır: oku, güç hesapla, enerji integre et, önbelleğe yaz. */
+    /** Serviste 100ms'de bir çağrılır: oku, güç hesapla (öncelik DC güç), enerji integre et, önbelleğe yaz. */
     public static void integrateConsumptionData() {
         float speedKmh = getSpeedKmh();
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
         float consumption = getConsumptionKwhPerKm();
-        float powerKw = (!Float.isNaN(consumption) && !Float.isNaN(speedKmh) && speedKmh >= 0f)
-                ? (consumption * speedKmh) : Float.NaN;
+        // Güç: mümkünse DC volt * DC akım / 1000; yoksa eski tüketim*hız fallback'i.
+        float dcVolt = getDcVoltage();
+        float dcAmpAct = getDcCurrentActual();
+        float powerKw;
+        if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct)) {
+            powerKw = (dcVolt * dcAmpAct) / 1000f;
+        } else if (!Float.isNaN(consumption) && !Float.isNaN(speedKmh) && speedKmh >= 0f) {
+            powerKw = consumption * speedKmh;
+        } else {
+            powerKw = Float.NaN;
+        }
 
         long nowMs = System.currentTimeMillis();
         double dtHours = (sConsumptionLastUpdateMs > 0) ? (nowMs - sConsumptionLastUpdateMs) / 3600000.0 : 0.0;
         sConsumptionLastUpdateMs = nowMs;
-        if (!Float.isNaN(powerKw) && dtHours > 0) {
-            sTripEnergyKwh += powerKw * dtHours;
+        if (dtHours > 0) {
+            if (!Float.isNaN(powerKw)) {
+                sTripEnergyKwh += powerKw * dtHours;
+            }
+            if (!Float.isNaN(speedKmh)) {
+                // Yol integrali: v(km/h) * dt(h) = km
+                sTripDistanceKm += speedKmh * dtHours;
+            }
         }
 
         sLastSpeedKmh = speedKmh;
@@ -840,10 +856,11 @@ public class MG4Hardware {
         sLastGear = getGear();
     }
 
-    /** Yol sıfırla: trip başlangıç km = şimdiki toplam km, enerji = 0. */
+    /** Yol sıfırla: trip başlangıç km = şimdiki toplam km, enerji + mesafe = 0. */
     public static void resetConsumptionTrip() {
         sMileageAtConsumptionStart = getTotalMileage();
         sTripEnergyKwh = 0.0;
+        sTripDistanceKm = 0.0;
         sConsumptionLastUpdateMs = System.currentTimeMillis();
     }
 
@@ -856,6 +873,7 @@ public class MG4Hardware {
     }
 
     public static double getTripEnergyKwh() { return sTripEnergyKwh; }
+    public static double getTripDistanceKm() { return sTripDistanceKm; }
     public static int getMileageAtConsumptionStart() { return sMileageAtConsumptionStart; }
     public static float getLastSpeedKmh() { return sLastSpeedKmh; }
     public static float getLastConsumption() { return sLastConsumption; }
