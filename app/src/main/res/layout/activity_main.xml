@@ -1704,7 +1704,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:text=""
-                android:textColor="@color/status_value" />
+                android:textColor="@color/status_value"
+                android:visibility="invisible" />
 
             <TextView
                 android:layout_width="0dp"
@@ -1712,7 +1713,8 @@
                 android:layout_weight="1"
                 android:text="@string/charging_wake_lock"
                 android:textColor="@color/status_value"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:visibility="invisible" />
 
             <Button
                 android:id="@+id/btnShowChargingHistory"
