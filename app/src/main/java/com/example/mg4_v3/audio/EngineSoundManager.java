@@ -62,13 +62,18 @@ public class EngineSoundManager {
     private int mTurboSoundId = -1;
     private int mTurboStreamId = -1;
     private float mCurrentTurboBoost = 0f; // 0.0 - 1.0 arası iç basınç simülasyonu
-    private float mTurboMaxSound = 0.5f;
+    private float mTurboMaxSound = 0.3f;
     private boolean mEnableTurboSound = true;
     private float mCompressorMaxVol = 0.5f; // Kompresör sesi baskın olmalı
     private long mLastShiftTime = 0;
     private boolean mEnableRevMatch = true;
     private float mRevMatchBoost = 0f;
     private boolean mGearWhineEnabled = true;
+    // --- FLUTTER (STUTUTU) DEĞİŞKENLERİ ---
+    private int mFlutterSoundId = -1;
+    private int mFlutterStreamId = -1;
+    private float mCurrentFlutterVol = 0f; // Anlık flutter ses seviyesi
+    private float mLastThrottleForFlutter = 0f;
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public static class VehicleProfile {
@@ -221,6 +226,7 @@ public class EngineSoundManager {
             "BMW Z4",
             "Pagani Zonda R",
             "Lotus Exige",
+            "GTR R34",
     };
 
     /** Dialog ve liste için profil isimlerini döner (hafıza sıfırlanmaz, sadece liste tek yerde). */
@@ -244,6 +250,8 @@ public class EngineSoundManager {
             setVehicleProfile(PROFILE_ZONDA_R());
         } else if ("Lotus Exige".equals(profile)) {
             setVehicleProfile(PROFILE_LOTUS_EXIGE());
+        } else if ("GTR R34".equals(profile)) {
+            setVehicleProfile(PROFILE_GTRR34());
         } else {
             setVehicleProfile(PROFILE_LOTUS_EXIGE());
         }
@@ -299,12 +307,12 @@ public class EngineSoundManager {
         return new VehicleProfile("Lotus Exige", 800, 9000f, 1,
                 2,
                 new float[][]{
-                        {0f, 35f},
-                        {20f, 65f},
-                        {45f, 95f},
-                        {75f, 125f},
-                        {105f, 155f},
-                        {135f, 185f}
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {80f, 120f},
+                        {100f, 160f}
                 },
                 R.raw.lotus_exige_idle,
                 R.raw.lotus_exige_3000,
@@ -318,14 +326,12 @@ public class EngineSoundManager {
         return new VehicleProfile("McLaren P1", 800f, 9000f, 1,
                 1,
                 new float[][]{
-                        {0f, 30f},
-                        {15f, 60f},
-                        {20f, 80f},
-                        {40f, 100f},
-                        {60f, 140f},
-                        {100f, 170f},
-                        {130f, 200f},
-                        {140f, 250f},
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {80f, 120f},
+                        {100f, 160f},
                 },
                 R.raw.mclaren_p1_idle,
                 R.raw.mclaren_p1_1750,
@@ -340,14 +346,12 @@ public class EngineSoundManager {
         return new VehicleProfile("Lamborghini Aventador", 800f, 8000f, 1,
                 0,
                 new float[][]{
-                        {0f, 30f},
-                        {15f, 60f},
-                        {20f, 80f},
-                        {40f, 100f},
-                        {60f, 140f},
-                        {100f, 170f},
-                        {130f, 200f},
-                        {140f, 250f},
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {80f, 120f},
+                        {100f, 160f}
                 },
                 R.raw.lamborghini_aventador_idle,
                 R.raw.lamborghini_aventador_2500,
@@ -360,14 +364,12 @@ public class EngineSoundManager {
         return new VehicleProfile("BMW Z4", 800f, 6836, 1,
                 1,
                 new float[][]{
-                        {0f, 30f},
-                        {15f, 60f},
-                        {20f, 80f},
-                        {40f, 100f},
-                        {60f, 140f},
-                        {100f, 170f},
-                        {130f, 200f},
-                        {140f, 250f},
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {80f, 120f},
+                        {100f, 160f}
                 },
                 R.raw.bmw_z4_idle,
                 R.raw.bmw_z4_2800,
@@ -381,14 +383,12 @@ public class EngineSoundManager {
         return new VehicleProfile("Pagani Zonda R", 1000f, 8250, 1,
                 0,
                 new float[][]{
-                        {0f, 30f},
-                        {15f, 60f},
-                        {20f, 80f},
-                        {40f, 100f},
-                        {60f, 140f},
-                        {100f, 170f},
-                        {130f, 200f},
-                        {140f, 250f},
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {80f, 120f},
+                        {100f, 160f}
                 },
                 R.raw.zonda_r_idle,
                 R.raw.zonda_r_3500,
@@ -398,6 +398,26 @@ public class EngineSoundManager {
                 R.raw.zonda_r_6250,
                 R.raw.zonda_r_7000,
                 R.raw.zonda_r_8250
+        );
+    }
+    public static VehicleProfile PROFILE_GTRR34() {
+        return new VehicleProfile("GTR R34", 1000f, 8200, 1,
+                0,
+                new float[][]{
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {80f, 120f},
+                        {100f, 160f}
+                },
+                R.raw.rb26_idle,
+                R.raw.rb26_2000,
+                R.raw.rb26_3500,
+                R.raw.rb26_4000,
+                R.raw.rb26_5500,
+                R.raw.rb26_6500,
+                R.raw.rb26_8300
         );
     }
 
@@ -475,6 +495,8 @@ public class EngineSoundManager {
                 // Şanzıman Islığı
                 mGearWhineStreamId = mSoundPool.play(mGearWhineSoundId, 0f, 0f, 1, -1, 1.0f);
 
+                // start() metodu içinde, onLoadCompleteListener'ın içine (Tüm dosyalar yüklendiğinde kısmına) ekle:
+                mFlutterStreamId = mSoundPool.play(mFlutterSoundId, 0f, 0f, 1, -1, 1.0f); // -1 = Sonsuz Döngü
                 onSpeedChanged(mCurrentSpeedKmh);
             }
         });
@@ -487,6 +509,12 @@ public class EngineSoundManager {
             mTurboSoundId = mSoundPool.load(mContext, R.raw.turbo, 1);
 
         mGearWhineSoundId = mSoundPool.load(mContext, R.raw.transmission, 1);
+
+        if (mActiveProfile.name.contains("R34")) {
+            mFlutterSoundId = mSoundPool.load(mContext, R.raw.rb26_bf1, 1);
+        } else {
+            mFlutterSoundId = -1; // R34 değilse şimdilik kapalı
+        }
 
         // Sonra motor seslerini yükle
         for (EngineSample sample : mCurrentSamples) {
@@ -675,6 +703,44 @@ public class EngineSoundManager {
         float masterVol = Math.max(0f, Math.min(1.0f, mMasterVolume));
         float rpmRatio = (rpm - mIdleRpm) / (mMaxRpm - mIdleRpm);
         rpmRatio = Math.max(0f, Math.min(1f, rpmRatio));
+
+        // --- CONTINUOUS FLUTTER (DÖNGÜSEL STUTUTU) ---
+        if (mFlutterStreamId != -1) {
+
+            // 1. TETİKLEYİCİ: Devir 3500'den büyük, gaz %60'tan bir anda %10'un altına düştüyse
+            if (rpm > 3500f && mLastThrottleForFlutter > 0.6f && mSimulatedThrottle < 0.1f) {
+                // Turbodaki sıkışan havanın şiddetini devire göre belirle (8000 devirde vol 1.0, 4000'de 0.5 gibi)
+                mCurrentFlutterVol = (rpm / mMaxRpm);
+            }
+
+            // 2. SÖNÜMLEME VE ÇALMA (Decay)
+            if (mCurrentFlutterVol > 0f) {
+                // Her 16ms döngüsünde sesi %8 oranında azalt (Yaklaşık 0.5 - 1 saniyede ses sıfırlanır)
+                mCurrentFlutterVol *= 0.92f;
+
+                // Çok küçüldüğünde tamamen kapat ki işlemciyi yormasın
+                if (mCurrentFlutterVol < 0.02f) {
+                    mCurrentFlutterVol = 0f;
+                }
+
+                // Ana sese (Master Volume) bağla ve biraz belirginleştir (x1.5)
+                float finalFlutterVol = mCurrentFlutterVol * masterVol * 1.5f;
+                finalFlutterVol = Math.max(0f, Math.min(1f, finalFlutterVol));
+
+                // GERÇEKÇİLİK DETAYI: Pervane yavaşladıkça flutter'ın perdesi (pitch) de kalınlaşır.
+                // Ses seviyesi azaldıkça pitch 1.2'den 0.8'e doğru düşer.
+                float flutterPitch = 0.8f + (mCurrentFlutterVol * 0.4f);
+
+                mSoundPool.setVolume(mFlutterStreamId, finalFlutterVol, finalFlutterVol);
+                mSoundPool.setRate(mFlutterStreamId, flutterPitch);
+            } else {
+                // Tetiklenme yoksa tamamen sessiz
+                mSoundPool.setVolume(mFlutterStreamId, 0f, 0f);
+            }
+
+            // Bir sonraki mikser döngüsü için gazın son durumunu kaydet
+            mLastThrottleForFlutter = mSimulatedThrottle;
+        }
 
         // --- TURBO HESAPLAMASI (Hızdan Bağımsız, RPM'e Tam Bağımlı) ---
         if (mTurboStreamId != -1) {

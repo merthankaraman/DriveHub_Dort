@@ -623,6 +623,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mTvConsumptionPower       = findViewById(R.id.tvConsumptionPower);
         mTvConsumptionTripKm      = findViewById(R.id.tvConsumptionTripKm);
         mTvConsumptionEnergy      = findViewById(R.id.tvConsumptionEnergy);
+        mTvConsumptionAvgKwhPer100km      = findViewById(R.id.tvConsumptionAvgKwhPer100km);
         findViewById(R.id.btnConsumptionPanel).setOnClickListener(v -> openConsumptionPanel());
         findViewById(R.id.btnConsumptionBack).setOnClickListener(v -> closeConsumptionPanel());
         findViewById(R.id.btnConsumptionResetTrip).setOnClickListener(v -> resetConsumptionTrip());
