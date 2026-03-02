@@ -211,13 +211,13 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvConsumptionAvgKwhPer100km;
 
     private final Handler mConsumptionHandler = new Handler();
-    /** Sadece panel açıkken UI güncellemesi (seyrek yeterli); veri serviste 100ms'de bir zaten okunuyor. */
+    /** Sadece panel açıkken UI güncellemesi (daha akıcı olsun diye ~5 Hz); veri serviste 100ms'de bir zaten okunuyor. */
     private final Runnable mConsumptionUiRunnable = new Runnable() {
         @Override
         public void run() {
             if (mCurrentPanel == PANEL_CONSUMPTION) {
                 refreshConsumptionPanel();
-                mConsumptionHandler.postDelayed(this, 500);
+                mConsumptionHandler.postDelayed(this, 200);
             }
         }
     };
@@ -1218,7 +1218,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mLayoutConsumptionPanel.setVisibility(View.VISIBLE);
         MG4Hardware.ensureConsumptionTripStarted();
         refreshConsumptionPanel();
-        mConsumptionHandler.postDelayed(mConsumptionUiRunnable, 500);
+        mConsumptionHandler.postDelayed(mConsumptionUiRunnable, 200);
     }
 
     private void closeConsumptionPanel() {

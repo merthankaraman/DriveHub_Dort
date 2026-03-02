@@ -311,8 +311,10 @@ public class EngineSoundManager {
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
+                        {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f}
+                        {100f, 160f},
+                        {120f, 180f}
                 },
                 R.raw.lotus_exige_idle,
                 R.raw.lotus_exige_3000,
@@ -330,8 +332,10 @@ public class EngineSoundManager {
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
+                        {70f, 110f},
                         {80f, 120f},
                         {100f, 160f},
+                        {120f, 180f}
                 },
                 R.raw.mclaren_p1_idle,
                 R.raw.mclaren_p1_1750,
@@ -350,8 +354,10 @@ public class EngineSoundManager {
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
+                        {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f}
+                        {100f, 160f},
+                        {120f, 180f}
                 },
                 R.raw.lamborghini_aventador_idle,
                 R.raw.lamborghini_aventador_2500,
@@ -368,8 +374,10 @@ public class EngineSoundManager {
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
+                        {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f}
+                        {100f, 160f},
+                        {120f, 180f}
                 },
                 R.raw.bmw_z4_idle,
                 R.raw.bmw_z4_2800,
@@ -387,8 +395,10 @@ public class EngineSoundManager {
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
+                        {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f}
+                        {100f, 160f},
+                        {120f, 180f}
                 },
                 R.raw.zonda_r_idle,
                 R.raw.zonda_r_3500,
@@ -408,8 +418,10 @@ public class EngineSoundManager {
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
+                        {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f}
+                        {100f, 160f},
+                        {120f, 180f}
                 },
                 R.raw.rb26_idle,
                 R.raw.rb26_2000,
@@ -469,7 +481,7 @@ public class EngineSoundManager {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             AudioAttributes attrs = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .build();
             mSoundPool = new SoundPool.Builder().setMaxStreams(maxStreams).setAudioAttributes(attrs).build();
         } else {
