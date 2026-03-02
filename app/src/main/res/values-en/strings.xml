@@ -219,11 +219,9 @@
     <string name="batarya">Battery</string>
     <string name="btn_reset_trip">Reset trip</string>
     <string name="consumption_gear">Gear</string>
-    <string name="consumption_total_km">Total km</string>
-    <string name="consumption_kwh_per_km">Consumption (kWh/km)</string>
     <string name="consumption_speed">Speed</string>
     <string name="consumption_power">Power</string>
-    <string name="consumption_trip">Trip (this session)</string>
-    <string name="consumption_energy">Energy (this session)</string>
-    <string name="consumption_avg">Avg. consumption (this session)</string>
+    <string name="consumption_trip">Trip Km</string>
+    <string name="consumption_energy">Energy </string>
+    <string name="consumption_avg">Avg. consumption </string>
 </resources>

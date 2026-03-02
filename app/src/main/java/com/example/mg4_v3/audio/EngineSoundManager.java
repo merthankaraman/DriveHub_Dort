@@ -575,8 +575,8 @@ public class EngineSoundManager {
             onSpeedChanged(speedKmh, Float.NaN);
             return;
         }
-        float dcVolt = MG4Hardware.getDcVoltage();
-        float dcAmpAct = MG4Hardware.getDcCurrentActual();
+        float dcVolt = MG4Hardware.getDcVoltGlobal();
+        float dcAmpAct = MG4Hardware.getDcAmpGlobal();
         float kw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
         onSpeedChanged(speedKmh, kw);
     }
@@ -590,8 +590,8 @@ public class EngineSoundManager {
             if (!Float.isNaN(dcPowerKw)) {
                 mCurrentDcPowerKw = dcPowerKw < 5f ? 0f : dcPowerKw;
             } else {
-                float dcVolt = MG4Hardware.getDcVoltage();
-                float dcAmpAct = MG4Hardware.getDcCurrentActual();
+                float dcVolt = MG4Hardware.getDcVoltGlobal();
+                float dcAmpAct = MG4Hardware.getDcAmpGlobal();
                 mCurrentDcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
                 mCurrentDcPowerKw = mCurrentDcPowerKw < 5f ? 0f : mCurrentDcPowerKw;
             }

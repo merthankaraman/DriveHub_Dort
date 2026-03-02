@@ -219,11 +219,9 @@
     <string name="batarya">Batarya</string>
     <string name="btn_reset_trip">Yol sıfırla</string>
     <string name="consumption_gear">Vites</string>
-    <string name="consumption_total_km">Toplam km</string>
-    <string name="consumption_kwh_per_km">Tüketim (kWh/km)</string>
     <string name="consumption_speed">Hız</string>
     <string name="consumption_power">Güç</string>
-    <string name="consumption_trip">Yol (bu oturum)</string>
-    <string name="consumption_energy">Enerji (bu oturum)</string>
-    <string name="consumption_avg">Ort. tüketim (bu oturum)</string>
+    <string name="consumption_trip">Yol Km</string>
+    <string name="consumption_energy">Enerji </string>
+    <string name="consumption_avg">Ort. tüketim </string>
 </resources>

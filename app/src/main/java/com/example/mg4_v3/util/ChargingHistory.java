@@ -36,8 +36,8 @@ public final class ChargingHistory {
         if (MG4Hardware.isChargingNow()) return false;
 
         long endMs = System.currentTimeMillis();
-        float acKwh = MG4Hardware.getAcEnergyKwh();
-        float dcKwh = MG4Hardware.getDcEnergyKwh();
+        float acKwh = MG4Hardware.getAcChargeEnergyKwh();
+        float dcKwh = MG4Hardware.getDcChargeEnergyKwh();
         ChargingRecord record = new ChargingRecord(startMs, endMs, acKwh, dcKwh);
         List<ChargingRecord> list = load(context);
         list.add(0, record); // en yeni başta

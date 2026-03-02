@@ -202,8 +202,6 @@ public class MainActivity extends AppCompatActivity {
     // Tüketim paneli
     private View mLayoutConsumptionPanel;
     private TextView mTvConsumptionGear;
-    private TextView mTvConsumptionTotalKm;
-    private TextView mTvConsumptionKwhPerKm;
     private TextView mTvConsumptionSpeed;
     private TextView mTvConsumptionPower;
     private TextView mTvConsumptionTripKm;
@@ -244,9 +242,8 @@ public class MainActivity extends AppCompatActivity {
                 mTvGaugeSpeed.setText(getString(R.string.speed_placeholder));
             }
             if (mEngineSound != null) {
-                float dcVolt = MG4Hardware.getDcVoltage();
-                float dcAmpAct = MG4Hardware.getDcCurrentActual();
-                float dcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
+                float dcPowerKw = MG4Hardware.getDcKwGlobal();
+                if (Float.isNaN(dcPowerKw)) dcPowerKw = 0f;
                 if (mTvGaugeRpm != null) {
                     float rpm = mEngineSound.getCurrentRpm();
                     mTvGaugeRpm.setText(String.format("%.0f", rpm));
@@ -617,8 +614,6 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         // ---- Tüketim paneli ----
         mLayoutConsumptionPanel   = findViewById(R.id.layoutConsumptionPanel);
         mTvConsumptionGear        = findViewById(R.id.tvConsumptionGear);
-        mTvConsumptionTotalKm     = findViewById(R.id.tvConsumptionTotalKm);
-        mTvConsumptionKwhPerKm    = findViewById(R.id.tvConsumptionKwhPerKm);
         mTvConsumptionSpeed       = findViewById(R.id.tvConsumptionSpeed);
         mTvConsumptionPower       = findViewById(R.id.tvConsumptionPower);
         mTvConsumptionTripKm      = findViewById(R.id.tvConsumptionTripKm);
@@ -1034,12 +1029,12 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         // Şarj bittiğinde oturumu geçmişe kaydet; yeni kayıt eklendiyse tabloyu güncelle
         ChargingHistory.checkAndSaveSessionIfEnded(this);
 
-        // DC voltaj (her iki sütun için gerekli)
-        float dcVolt   = MG4Hardware.getDcVoltage();
-        float dcAmpAct = MG4Hardware.getDcCurrentActual();
+        // DC/AC değerleri — 100ms polling ile global cache'ten
+        float dcVolt   = MG4Hardware.getDcVoltGlobal();
+        float dcAmpAct = MG4Hardware.getDcAmpGlobal();
         float dcAmpExp = MG4Hardware.getDcCurrentExpected();
-        float acVolt   = MG4Hardware.getAcVoltage();
-        float acAmp    = MG4Hardware.getAcCurrent();
+        float acVolt   = MG4Hardware.getAcVoltGlobal();
+        float acAmp    = MG4Hardware.getAcAmpGlobal();
         // BMS gelip gelmediğini görmek için log (filtre: tag:MG4_UI veya MG4_HW)
         if (MG4Hardware.isLogEnabled()) {
             Log.i(TAG, "StatusPanel: dcV=" + dcVolt + " acV=" + acVolt + " dcAact=" + dcAmpAct + " acA=" + acAmp);
@@ -1072,8 +1067,8 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         }
 
         // Enerji satırları (şarj boyunca biriken)
-        float acEnergy = MG4Hardware.getAcEnergyKwh();
-        float dcEnergy = MG4Hardware.getDcEnergyKwh();
+        float acEnergy = MG4Hardware.getAcChargeEnergyKwh();
+        float dcEnergy = MG4Hardware.getDcChargeEnergyKwh();
         mTvAcEnergy.setText(acEnergy > 0f ? String.format("%.3f kWh", acEnergy) : "--");
         mTvDcEnergy.setText(dcEnergy > 0f ? String.format("%.3f kWh", dcEnergy) : "--");
 
@@ -1237,15 +1232,11 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void refreshConsumptionPanel() {
         int totalKm = MG4Hardware.getLastTotalKm();
         int mileageStart = MG4Hardware.getMileageAtConsumptionStart();
-        // Bu oturum yolu: hız integrali (km). Toplam km sadece bilgi amaçlı.
         double tripDistanceKm = MG4Hardware.getTripDistanceKm();
-        int tripKm = (tripDistanceKm >= 0) ? (int) Math.floor(tripDistanceKm + 0.5) : -1;
         float speedKmh = MG4Hardware.getLastSpeedKmh();
         float consumption = MG4Hardware.getLastConsumption();
-        // Güç: diğer ekranlarla aynı kaynaktan (DC volt * DC akım / 1000).
-        float dcVolt = MG4Hardware.getDcVoltage();
-        float dcAmpAct = MG4Hardware.getDcCurrentActual();
-        float powerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? Float.NaN : (dcVolt * dcAmpAct) / 1000f;
+        float powerKw = MG4Hardware.getDcKwGlobal();
+        powerKw = Float.isNaN(powerKw) ? Float.NaN : powerKw;
         int gear = MG4Hardware.getLastGear();
         double tripEnergyKwh = MG4Hardware.getTripEnergyKwh();
 
@@ -1260,33 +1251,35 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             }
             mTvConsumptionGear.setText(gearText);
         }
-        if (mTvConsumptionTotalKm != null) {
-            mTvConsumptionTotalKm.setText(totalKm < 0 ? "--" : String.valueOf(totalKm));
-        }
-        if (mTvConsumptionKwhPerKm != null) {
-            mTvConsumptionKwhPerKm.setText(Float.isNaN(consumption) ? "--" : String.format(Locale.US, "%.3f", consumption));
-        }
         if (mTvConsumptionSpeed != null) {
-            mTvConsumptionSpeed.setText(Float.isNaN(speedKmh) ? "--" : String.format(Locale.US, "%.2f", speedKmh));
+            if (Float.isNaN(speedKmh)) {
+                mTvConsumptionSpeed.setText("--");
+            } else {
+                mTvConsumptionSpeed.setText(String.format(Locale.US, "%.2f km/h", speedKmh));
+            }
         }
         if (mTvConsumptionPower != null) {
-            mTvConsumptionPower.setText(Float.isNaN(powerKw) ? "--" : String.format(Locale.US, "%.2f", powerKw));
+            if (Float.isNaN(powerKw)) {
+                mTvConsumptionPower.setText("--");
+            } else {
+                mTvConsumptionPower.setText(String.format(Locale.US, "%.2f kW", powerKw));
+            }
         }
         if (mTvConsumptionTripKm != null) {
             if (tripDistanceKm >= 0) {
-                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f", tripDistanceKm));
+                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", tripDistanceKm));
             } else {
                 mTvConsumptionTripKm.setText("--");
             }
         }
         if (mTvConsumptionEnergy != null) {
-            mTvConsumptionEnergy.setText(String.format(Locale.US, "%.3f", tripEnergyKwh));
+            mTvConsumptionEnergy.setText(String.format(Locale.US, "%.3f kWh", tripEnergyKwh));
         }
         // Ortalama tüketim (kWh/100km) = bu oturum enerjisi / bu oturum yolu * 100
         if (mTvConsumptionAvgKwhPer100km != null) {
             if (tripDistanceKm > 0.01 && tripEnergyKwh >= 0) {
                 double avgKwhPer100 = (tripEnergyKwh / tripDistanceKm) * 100.0;
-                mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f", avgKwhPer100));
+                mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f kWh/100 km", avgKwhPer100));
             } else {
                 mTvConsumptionAvgKwhPer100km.setText("--");
             }

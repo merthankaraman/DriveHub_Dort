@@ -106,13 +106,18 @@ public class MG4Hardware {
     /** Eksik BMS parse metod uyarısı bir kez */
     private static volatile boolean sBmsParseWarningLogged = false;
     private static volatile boolean sBmsPropIdWarningLogged = false;
-    // Enerji birikimi — UI kapalı olsa bile BMS callback içinde güncellenir
-    private static volatile float sAcEnergyKwh       = 0f;
-    private static volatile float sDcEnergyKwh       = 0f;
-    private static volatile long  sLastBmsEventMs   = 0L;
-    /** Son event'teki güç (kW); deltaMs aralığı için bunu kullanıyoruz, yeni gelen değeri değil. */
-    private static volatile float sLastAcKw          = 0f;
-    private static volatile float sLastDcKw          = 0f;
+    // Enerji birikimi — UI kapalı olsa bile servisin 100ms polling'inde güncellenir
+    private static volatile float sAcChargeEnergyKwh       = 0f;
+    private static volatile float sDcChargeEnergyKwh       = 0f;
+    private static volatile long  sLastBmsEventMs    = 0L;
+
+    // 100ms polling ile güncellenen global ölçümler
+    private static volatile float sDcVolt            = Float.NaN;
+    private static volatile float sDcAmp             = Float.NaN;
+    private static volatile float sDcKw              = Float.NaN;
+    private static volatile float sAcVolt            = Float.NaN;
+    private static volatile float sAcAmp             = Float.NaN;
+    private static volatile float sAcKw              = Float.NaN;
     // Şarj süresi için basit sayaç — şarj başladığı anda sistem saatini tutar
     private static volatile long  sChargingStartWallMs = 0L;
     /** Şarj başlangıcını persist etmek için (BMS'te set, getChargingDurationMs'te geri yükle). */
@@ -183,11 +188,9 @@ public class MG4Hardware {
         sCachedDriveMode       = -1;
         sCachedRegenLevel      = -1;
         sBmsCache.clear();
-        sAcEnergyKwh         = 0f;
-        sDcEnergyKwh         = 0f;
+        sAcChargeEnergyKwh         = 0f;
+        sDcChargeEnergyKwh         = 0f;
         sLastBmsEventMs      = 0L;
-        sLastAcKw             = 0f;
-        sLastDcKw             = 0f;
         sChargingStartWallMs = 0L;
         sAppContext          = null;
         sInitialized        = false;
@@ -807,7 +810,8 @@ public class MG4Hardware {
     }
 
     // -------------------------------------------------------------------------
-    // Tüketim integrasyonu (serviste 100ms'de bir çalışır; uygulama açık olmasa da boot'tan itibaren)
+    // Enerji integrasyonu (serviste 100ms'de bir çalışır; uygulama açık olmasa da boot'tan itibaren)
+    // Sadece DC/AC kW üzerinden hesaplanır; consumption*hız tabanlı "sürüş gücü" kullanılmaz.
     // -------------------------------------------------------------------------
     private static volatile double sTripEnergyKwh = 0.0;
     private static volatile double sTripDistanceKm = 0.0;
@@ -815,43 +819,60 @@ public class MG4Hardware {
     private static volatile long sConsumptionLastUpdateMs = 0;
     private static volatile float sLastSpeedKmh = Float.NaN;
     private static volatile float sLastConsumption = Float.NaN;
-    private static volatile float sLastPowerKw = Float.NaN;
     private static volatile int sLastTotalKm = -1;
     private static volatile int sLastGear = -1;
 
-    /** Serviste 100ms'de bir çağrılır: oku, güç hesapla (öncelik DC güç), enerji integre et, önbelleğe yaz. */
+    /** Serviste 100ms'de bir çağrılır: DC/AC güçleri oku, enerjiyi ve mesafeyi integre et, önbelleğe yaz. */
     public static void integrateConsumptionData() {
         float speedKmh = getSpeedKmh();
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
-        float consumption = getConsumptionKwhPerKm();
-        // Güç: mümkünse DC volt * DC akım / 1000; yoksa eski tüketim*hız fallback'i.
+        float consumption = getConsumptionKwhPerKm(); // Sadece gösterim için; güç hesabında kullanılmıyor.
+
+        // DC güç (sürüş + şarj): V * A / 1000 → kW (işaretli)
         float dcVolt = getDcVoltage();
         float dcAmpAct = getDcCurrentActual();
-        float powerKw;
-        if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct)) {
-            powerKw = (dcVolt * dcAmpAct) / 1000f;
-        } else if (!Float.isNaN(consumption) && !Float.isNaN(speedKmh) && speedKmh >= 0f) {
-            powerKw = consumption * speedKmh;
-        } else {
-            powerKw = Float.NaN;
-        }
+        float dcKw = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct))
+                ? (dcVolt * dcAmpAct) / 1000f : Float.NaN;
+
+        // AC güç (sadece şarjda anlamlı): V * A / 1000 → kW (pozitif)
+        float acVolt = getAcVoltage();
+        float acAmp = getAcCurrent();
+        float acKw = (!Float.isNaN(acVolt) && !Float.isNaN(acAmp))
+                ? (acVolt * acAmp) / 1000f : Float.NaN;
+
+        // Global cache'i güncelle (diğer ekranlar buradan okur)
+        sDcVolt = dcVolt;
+        sDcAmp  = dcAmpAct;
+        sDcKw   = dcKw;
+        sAcVolt = acVolt;
+        sAcAmp  = acAmp;
+        sAcKw   = acKw;
 
         long nowMs = System.currentTimeMillis();
         double dtHours = (sConsumptionLastUpdateMs > 0) ? (nowMs - sConsumptionLastUpdateMs) / 3600000.0 : 0.0;
         sConsumptionLastUpdateMs = nowMs;
         if (dtHours > 0) {
-            if (!Float.isNaN(powerKw)) {
-                sTripEnergyKwh += powerKw * dtHours;
+            // Trip enerjisi: DC güç üzerinden, mutlak değerle (sürüşte negatif, şarjda pozitif olabilir).
+            if (!Float.isNaN(dcKw)) {
+                sTripEnergyKwh += dcKw * dtHours;
             }
             if (!Float.isNaN(speedKmh)) {
                 // Yol integrali: v(km/h) * dt(h) = km
                 sTripDistanceKm += speedKmh * dtHours;
             }
+            // Şarj enerjisi — AC/DC güçlerini de aynı dt ile entegre et (tek polling noktası).
+            if (isCharging()) {
+                if (!Float.isNaN(acKw) && acKw > 0f) {
+                    sAcChargeEnergyKwh += acKw * dtHours;
+                }
+                if (!Float.isNaN(dcKw) && dcKw > 0f) {
+                    sDcChargeEnergyKwh += dcKw * dtHours;
+                }
+            }
         }
 
         sLastSpeedKmh = speedKmh;
         sLastConsumption = consumption;
-        sLastPowerKw = powerKw;
         sLastTotalKm = getTotalMileage();
         sLastGear = getGear();
     }
@@ -877,9 +898,16 @@ public class MG4Hardware {
     public static int getMileageAtConsumptionStart() { return sMileageAtConsumptionStart; }
     public static float getLastSpeedKmh() { return sLastSpeedKmh; }
     public static float getLastConsumption() { return sLastConsumption; }
-    public static float getLastPowerKw() { return sLastPowerKw; }
     public static int getLastTotalKm() { return sLastTotalKm; }
     public static int getLastGear() { return sLastGear; }
+
+    // Global cache getter'ları (100ms polling ile güncellenen değerler)
+    public static float getDcVoltGlobal() { return sDcVolt; }
+    public static float getDcAmpGlobal()  { return sDcAmp; }
+    public static float getDcKwGlobal()   { return sDcKw; }
+    public static float getAcVoltGlobal() { return sAcVolt; }
+    public static float getAcAmpGlobal()  { return sAcAmp; }
+    public static float getAcKwGlobal()   { return sAcKw; }
 
     /** DC batarya voltajı — V. Önce BMS cache (canlı callback), yoksa CPM. */
     public static float getDcVoltage() {
@@ -973,10 +1001,10 @@ public class MG4Hardware {
     }
 
     /** AC girişinden gelen toplam enerji — kWh (şarj boyunca birikir) */
-    public static float getAcEnergyKwh() { return sAcEnergyKwh; }
+    public static float getAcChargeEnergyKwh() { return sAcChargeEnergyKwh; }
 
     /** Bataryanın aldığı toplam enerji — kWh (şarj boyunca birikir) */
-    public static float getDcEnergyKwh() { return sDcEnergyKwh; }
+    public static float getDcChargeEnergyKwh() { return sDcChargeEnergyKwh; }
 
     /**
      * Şarj süresi — ms.
@@ -1018,21 +1046,17 @@ public class MG4Hardware {
     /** Şarj bittiğinde kayıt alındıktan sonra çağrılır; sonraki seans için sayacı sıfırlar. */
     public static void resetSessionAfterSave() {
         sChargingStartWallMs = 0L;
-        sAcEnergyKwh         = 0f;
-        sDcEnergyKwh         = 0f;
+        sAcChargeEnergyKwh         = 0f;
+        sDcChargeEnergyKwh         = 0f;
         sLastBmsEventMs      = 0L;
-        sLastAcKw             = 0f;
-        sLastDcKw             = 0f;
         if (sAppContext != null) com.example.mg4_v3.util.ChargingHistory.clearChargingStart(sAppContext);
     }
 
     /** Enerji ve süre sayaçlarını sıfırla */
     public static void resetEnergy() {
-        sAcEnergyKwh         = 0f;
-        sDcEnergyKwh         = 0f;
+        sAcChargeEnergyKwh         = 0f;
+        sDcChargeEnergyKwh         = 0f;
         sLastBmsEventMs      = 0L;
-        sLastAcKw             = 0f;
-        sLastDcKw             = 0f;
         sChargingStartWallMs = 0L;
         if (sLogEnabled) Log.i(TAG, "resetEnergy() çağrıldı");
     }
@@ -1269,19 +1293,7 @@ public class MG4Hardware {
                                             //    Log.i(TAG, "BMS CACHE OK 0x" + Integer.toHexString(propId) + " = " + toCache);
                                             //}
                                             if (propId == PROP_BATT_VOLT) {
-                                                long nowMs = android.os.SystemClock.elapsedRealtime();
-                                                long deltaMs = (sLastBmsEventMs > 0) ? (nowMs - sLastBmsEventMs) : 0;
-                                                if (deltaMs > 0 && deltaMs < 5000 && isCharging()) {
-                                                    sAcEnergyKwh += sLastAcKw * deltaMs / 3_600_000f;
-                                                    sDcEnergyKwh += sLastDcKw * deltaMs / 3_600_000f;
-                                                }
-                                                sLastBmsEventMs = nowMs;
-                                                float acV = bmsFloat(PROP_AC_VOLT);
-                                                float acA = bmsFloat(PROP_AC_AMP);
-                                                sLastAcKw = (!Float.isNaN(acV) && !Float.isNaN(acA) && acA > 0f) ? (acV * acA / 1000f) : 0f;
-                                                float dcV = ((Number) toCache).floatValue();
-                                                float dcA = bmsFloat(PROP_CHR_AMP_ACT);
-                                                sLastDcKw = (!Float.isNaN(dcA) && Math.abs(dcA) > 0.01f) ? (dcV * Math.abs(dcA) / 1000f) : 0f;
+                                                sLastBmsEventMs = android.os.SystemClock.elapsedRealtime();
                                             }
                                             onBmsCacheUpdated();
                                         } else if (isBmsPropId(propId)) {
@@ -1345,19 +1357,7 @@ public class MG4Hardware {
                                     sBmsCache.put(propId, rawVal);
                                     //Log.i(TAG, "BMS CACHE OK 0x" + Integer.toHexString(propId) + " = " + rawVal);
                                     if (propId == PROP_BATT_VOLT) {
-                                        long nowMs = android.os.SystemClock.elapsedRealtime();
-                                        long deltaMs = (sLastBmsEventMs > 0) ? (nowMs - sLastBmsEventMs) : 0;
-                                        if (deltaMs > 0 && deltaMs < 5000 && isCharging()) {
-                                            sAcEnergyKwh += sLastAcKw * deltaMs / 3_600_000f;
-                                            sDcEnergyKwh += sLastDcKw * deltaMs / 3_600_000f;
-                                        }
-                                        sLastBmsEventMs = nowMs;
-                                        float acV = bmsFloat(PROP_AC_VOLT);
-                                        float acA = bmsFloat(PROP_AC_AMP);
-                                        sLastAcKw = (!Float.isNaN(acV) && !Float.isNaN(acA) && acA > 0f) ? (acV * acA / 1000f) : 0f;
-                                        float dcV = ((Number) rawVal).floatValue();
-                                        float dcA = bmsFloat(PROP_CHR_AMP_ACT);
-                                        sLastDcKw = (!Float.isNaN(dcA) && Math.abs(dcA) > 0.01f) ? (dcV * Math.abs(dcA) / 1000f) : 0f;
+                                        sLastBmsEventMs = android.os.SystemClock.elapsedRealtime();
                                     }
                                     onBmsCacheUpdated();
                                 } else {

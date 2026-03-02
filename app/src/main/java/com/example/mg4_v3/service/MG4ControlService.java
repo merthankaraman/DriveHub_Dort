@@ -156,9 +156,7 @@ public class MG4ControlService extends Service {
             // Hız tek kaynak: sim açıksa sim, değilse hattan tek okuma (getSpeedForEngine)
             float speed = MG4Hardware.getSpeedForEngine();
             boolean ready = MG4Hardware.isVehicleReady() || MG4Hardware.isSimSpeedActive();
-            float dcVolt = MG4Hardware.getDcVoltage();
-            float dcAmpAct = MG4Hardware.getDcCurrentActual();
-            float dcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
+            float dcPowerKw = MG4Hardware.getDcKwGlobal();
 
             SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
             boolean soundEnabled = prefs.getBoolean("sound_enabled", false);
