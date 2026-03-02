@@ -826,7 +826,7 @@ public class MG4Hardware {
     public static void integrateConsumptionData() {
         float speedKmh = getSpeedKmh();
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
-        float consumption = getConsumptionKwhPerKm(); // Sadece gösterim için; güç hesabında kullanılmıyor.
+        float consumption = getConsumptionKwhPerKm();
 
         // DC güç (sürüş + şarj): V * A / 1000 → kW (işaretli)
         float dcVolt = getDcVoltage();
@@ -834,19 +834,10 @@ public class MG4Hardware {
         float dcKw = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct))
                 ? (dcVolt * dcAmpAct) / 1000f : Float.NaN;
 
-        // AC güç (sadece şarjda anlamlı): V * A / 1000 → kW (pozitif)
         float acVolt = getAcVoltage();
         float acAmp = getAcCurrent();
         float acKw = (!Float.isNaN(acVolt) && !Float.isNaN(acAmp))
                 ? (acVolt * acAmp) / 1000f : Float.NaN;
-
-        // Global cache'i güncelle (diğer ekranlar buradan okur)
-        sDcVolt = dcVolt;
-        sDcAmp  = dcAmpAct;
-        sDcKw   = dcKw;
-        sAcVolt = acVolt;
-        sAcAmp  = acAmp;
-        sAcKw   = acKw;
 
         long nowMs = System.currentTimeMillis();
         double dtHours = (sConsumptionLastUpdateMs > 0) ? (nowMs - sConsumptionLastUpdateMs) / 3600000.0 : 0.0;
@@ -865,12 +856,18 @@ public class MG4Hardware {
                 if (!Float.isNaN(acKw) && acKw > 0f) {
                     sAcChargeEnergyKwh += acKw * dtHours;
                 }
-                if (!Float.isNaN(dcKw) && dcKw > 0f) {
-                    sDcChargeEnergyKwh += dcKw * dtHours;
+                if (!Float.isNaN(sDcKw) && sDcKw < 0f) {
+                    sDcChargeEnergyKwh += sDcKw * dtHours;
                 }
             }
         }
-
+        // Global cache'i güncelle (diğer ekranlar buradan okur)
+        sDcVolt = dcVolt;
+        sDcAmp  = dcAmpAct;
+        sDcKw   = dcKw;
+        sAcVolt = acVolt;
+        sAcAmp  = acAmp;
+        sAcKw   = acKw;
         sLastSpeedKmh = speedKmh;
         sLastConsumption = consumption;
         sLastTotalKm = getTotalMileage();
@@ -961,15 +958,13 @@ public class MG4Hardware {
     /** Araç şarjda mı? Önce PROP_CHG_STATUS; yoksa AC/DC akım ve voltajdan çıkarım. */
     private static boolean isCharging() {
         Object val = sBmsCache.get(PROP_CHG_STATUS);
-        float acA = bmsFloat(PROP_AC_AMP);
-        float dcA = bmsFloat(PROP_CHR_AMP_ACT);
-        float dcV = bmsFloat(PROP_BATT_VOLT);
-        float speed = getSpeedKmh();
+        float acA = getAcAmpGlobal();
+        float dcA = getDcAmpGlobal();
+        float dcV = getDcVoltGlobal();
 
-        if (sLogEnabled) {
-            if (sLogEnabled) Log.i(TAG, "CHG CHECK → status=" + (val instanceof Number ? ((Number) val).intValue() : -1)
-                    + " acA=" + acA + " dcA=" + dcA + " dcV=" + dcV + " speed=" + speed);
-        }
+        if (sLogEnabled) Log.i(TAG, "CHG CHECK → status=" + (val instanceof Number ? ((Number) val).intValue() : -1)
+                + " acA=" + acA + " dcA=" + dcA + " dcV=" + dcV + " speed=" + sLastSpeedKmh);
+
 
         /*if (val instanceof Number) {
             int st = ((Number) val).intValue();// şarj olurken 1 şarj durunca 8 oldu
@@ -985,7 +980,7 @@ public class MG4Hardware {
 
         // Araç PROP_CHG_STATUS göndermiyorsa: AC'den anlamlı akım çekiliyorsa veya DC tarafında güç var ise şarjda say
         if (!Float.isNaN(acA) && acA > 0.5f) return true;
-        if (!Float.isNaN(dcA) && !Float.isNaN(dcV) && dcV > 200f && dcA <= -5f && speed == 0) return true;
+        if (!Float.isNaN(dcA) && !Float.isNaN(dcV) && dcV > 200f && dcA <= -1f && sLastSpeedKmh == 0) return true;
         return false;
     }
 
