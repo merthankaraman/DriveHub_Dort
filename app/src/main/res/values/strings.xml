@@ -224,4 +224,27 @@
     <string name="consumption_trip">Yol Km</string>
     <string name="consumption_energy">Enerji </string>
     <string name="consumption_avg">Ort. tüketim </string>
+
+    <!-- Driving history -->
+    <string name="driving_history_title">Sürüş geçmişi</string>
+    <string name="driving_history_table_start">Başlangıç</string>
+    <string name="driving_history_table_end">Bitiş</string>
+    <string name="driving_history_table_distance">Yol (km)</string>
+    <string name="driving_history_table_energy">Enerji (kWh)</string>
+    <string name="driving_history_table_avg_consumption">Ort. (kWh/100km)</string>
+    <string name="driving_history_table_duration">Süre</string>
+    <string name="driving_history_btn_export">CSV Dışa Aktar</string>
+    <string name="driving_history_btn_clear">Geçmişi Sil</string>
+    <string name="driving_history_confirm_clear">Tüm sürüş geçmişini silmek istediğine emin misin?</string>
+    <string name="driving_history_yes">Evet</string>
+    <string name="driving_history_no">Hayır</string>
+    <string name="driving_history_toast_cleared">Sürüş geçmişi silindi.</string>
+    <string name="driving_history_toast_saved">Sürüş geçmişi CSV kaydedildi: %s</string>
+    <string name="driving_history_toast_export_failed">Sürüş geçmişi CSV dışa aktarılamadı.</string>
+    <string name="driving_history_total_format">Toplam: %.2f km, %.3f kWh</string>
+    <string name="driving_history_total_with_avg_format">Toplam: %.2f km, %.3f kWh (Ort: %.1f kWh/100km)</string>
+    <string name="driving_history_month_total_with_avg_format">Ay toplamı: %.2f km, %.3f kWh (Ort: %.1f kWh/100km)</string>
+
+    <!-- Charging history month total -->
+    <string name="charging_history_month_total_format">Ay toplamı: %.2f kWh AC, %.2f kWh DC</string>
 </resources>

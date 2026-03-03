@@ -72,9 +72,6 @@ public class MG4ControlService extends Service {
     //   Vol↑+Vol↓ combo (600ms pencere — uzun basınca da tutsun)
     //   Direksiyon müzik tuşu (log’da keycode=301) → müzik pause/play
     private static final String HARDKEY_ACTION      = "com.saic.keyevent.hardkey.report";
-    private static final int    KEYCODE_PHONE       = 5;
-    private static final int    KEYCODE_STAR        = 17;
-    private static final int    KEYCODE_STAR_RIGHT  = 18;
     private static final int    KEYCODE_VOLUME_UP   = 24;
     private static final int    KEYCODE_VOLUME_DOWN = 25;
     /** Direksiyondaki duraklat/devam tuşu — SAIC hardkey keyCode (log’da 301). */
@@ -201,13 +198,48 @@ public class MG4ControlService extends Service {
     /** Tüketim verisi + enerji integrasyonu (100ms); boot'tan itibaren, uygulama açılmasa da. */
     private static final int CONSUMPTION_INTEGRATION_INTERVAL_MS = 100;
     private final Handler mConsumptionHandler = new Handler(Looper.getMainLooper());
+    private boolean mDriveSessionActive = false;
+    private long mDriveStartWallMs = 0L;
+
     private final Runnable mConsumptionIntegrationRunnable = new Runnable() {
         @Override
         public void run() {
             MG4Hardware.integrateConsumptionData();
+            updateDriveSessionFromReady();
             mConsumptionHandler.postDelayed(this, CONSUMPTION_INTEGRATION_INTERVAL_MS);
         }
     };
+
+    private void updateDriveSessionFromReady() {
+        boolean ready = MG4Hardware.isVehicleReady();
+        long now = System.currentTimeMillis();
+
+        if (!mDriveSessionActive && ready) {
+            // Yeni sürüş oturumu başlıyor
+            mDriveSessionActive = true;
+            mDriveStartWallMs = now;
+            MG4Hardware.resetDriveGraphCounters();
+            return;
+        }
+
+        if (mDriveSessionActive && !ready) {
+            // Sürüş oturumu bitti
+            mDriveSessionActive = false;
+            double distKm = MG4Hardware.getDriveGraphDistanceKm();
+            double energyKwh = MG4Hardware.getDriveGraphEnergyKwh();
+            double durationMinutes = (now - mDriveStartWallMs) / 60000.0;
+
+            if ((distKm > 0.01 || energyKwh > 0.001) && durationMinutes >= 5.0) {
+                com.example.mg4_v3.util.DrivingHistory.addSession(
+                        getApplicationContext(),
+                        mDriveStartWallMs,
+                        now,
+                        (float) distKm,
+                        (float) energyKwh
+                );
+            }
+        }
+    }
 
     @Override
     public void onCreate() {
@@ -852,13 +884,13 @@ public class MG4ControlService extends Service {
     /** Ana ekran tuşu (HOME) — Vol↓ ile birlikte basılıp bırakılınca motor sesi aç/kapa. */
     private void onAnaEkranKey(boolean isDown) {
         mAnaEkranPressed = isDown;
-        if (isDown) {
-            if (mVolDownPressed && mAnaEkranPressed) {
+        if (mAnaEkranPressed) {
+            if (mVolDownPressed) {
                 mVolDownAnaEkranComboPending = true;
                 if (MG4Hardware.isLogEnabled()) Log.d(TAG, "Vol↓+Ana ekran ikisi basılı → motor sesi toggle bekliyor");
             }
         } else {
-            if (!mVolDownPressed && !mAnaEkranPressed && mVolDownAnaEkranComboPending) {
+            if (!mVolDownPressed && mVolDownAnaEkranComboPending) {
                 mVolDownAnaEkranComboPending = false;
                 if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Vol↓+Ana ekran ikisi bırakıldı → motor sesi toggle");
                 onMotorSoundToggleFromKey();
@@ -879,7 +911,7 @@ public class MG4ControlService extends Service {
                 if (mEngineSound.isPlaying()) mEngineSound.stop();
             }
         }
-        String msg = next ? "Motor sesi: Açık" : "Motor sesi: Kapalı";
+        String msg = next ? getString(R.string.toast_motor_sound_on) : getString(R.string.toast_motor_sound_off);
         updateNotification(msg);
         // Ekranda altta kısa süreli yazı (bildirim çubuğu metni ayrıca güncellenir)
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();

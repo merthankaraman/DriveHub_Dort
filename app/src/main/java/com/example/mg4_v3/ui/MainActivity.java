@@ -310,9 +310,12 @@ public class MainActivity extends AppCompatActivity {
         mThemeMode = prefs.getInt(PREF_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         AppCompatDelegate.setDefaultNightMode(mThemeMode);
         String lang = prefs.getString(PREF_LANGUAGE, "");
-        if (!lang.isEmpty()) {
-            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(lang));
+        // Varsayılan dil: Türkçe. İlk kurulumda PREF_LANGUAGE boşsa "tr" olarak ayarla.
+        if (lang.isEmpty()) {
+            lang = "tr";
+            prefs.edit().putString(PREF_LANGUAGE, lang).apply();
         }
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(lang));
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -620,6 +623,8 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mTvConsumptionEnergy      = findViewById(R.id.tvConsumptionEnergy);
         mTvConsumptionAvgKwhPer100km      = findViewById(R.id.tvConsumptionAvgKwhPer100km);
         findViewById(R.id.btnConsumptionPanel).setOnClickListener(v -> openConsumptionPanel());
+        findViewById(R.id.btnDrivingHistory).setOnClickListener(v ->
+                startActivity(new android.content.Intent(this, DrivingHistoryActivity.class)));
         findViewById(R.id.btnConsumptionBack).setOnClickListener(v -> closeConsumptionPanel());
         findViewById(R.id.btnConsumptionResetTrip).setOnClickListener(v -> resetConsumptionTrip());
 

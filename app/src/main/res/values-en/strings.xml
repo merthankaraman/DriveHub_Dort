@@ -224,4 +224,27 @@
     <string name="consumption_trip">Trip Km</string>
     <string name="consumption_energy">Energy </string>
     <string name="consumption_avg">Avg. consumption </string>
+
+    <!-- Driving history -->
+    <string name="driving_history_title">Driving history</string>
+    <string name="driving_history_table_start">Start</string>
+    <string name="driving_history_table_end">End</string>
+    <string name="driving_history_table_distance">Distance (km)</string>
+    <string name="driving_history_table_energy">Energy (kWh)</string>
+    <string name="driving_history_table_avg_consumption">Avg (kWh/100km)</string>
+    <string name="driving_history_table_duration">Duration</string>
+    <string name="driving_history_btn_export">Export CSV</string>
+    <string name="driving_history_btn_clear">Clear history</string>
+    <string name="driving_history_confirm_clear">Are you sure you want to clear all driving history?</string>
+    <string name="driving_history_yes">Yes</string>
+    <string name="driving_history_no">No</string>
+    <string name="driving_history_toast_cleared">Driving history cleared.</string>
+    <string name="driving_history_toast_saved">Driving history CSV saved: %s</string>
+    <string name="driving_history_toast_export_failed">Failed to export driving history CSV.</string>
+    <string name="driving_history_total_format">Total: %.2f km, %.3f kWh</string>
+    <string name="driving_history_total_with_avg_format">Total: %.2f km, %.3f kWh (Avg: %.1f kWh/100km)</string>
+    <string name="driving_history_month_total_with_avg_format">Month total: %.2f km, %.3f kWh (Avg: %.1f kWh/100km)</string>
+
+    <!-- Charging history month total -->
+    <string name="charging_history_month_total_format">Month total: %.2f kWh AC, %.2f kWh DC</string>
 </resources>

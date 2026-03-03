@@ -120,6 +120,8 @@ public class MG4Hardware {
     private static volatile float sAcKw              = Float.NaN;
     // Şarj süresi için basit sayaç — şarj başladığı anda sistem saatini tutar
     private static volatile long  sChargingStartWallMs = 0L;
+    // READY durumu (100ms polling ile güncellenen cache)
+    private static volatile boolean sVehicleReady       = false;
     /** Şarj başlangıcını persist etmek için (BMS'te set, getChargingDurationMs'te geri yükle). */
     private static Context sAppContext = null;
     // Detay log açık mı? (BMS/StatusPanel spam'i için)
@@ -759,20 +761,9 @@ public class MG4Hardware {
         return sLastSpeedForDisplay;
     }
 
-    /** Araç "READY" mi? (EV sistemi aktif mi?) */
+    /** Araç "READY" mi? (EV sistemi aktif mi?) — 100ms polling ile güncellenen cache'ten döner. */
     public static boolean isVehicleReady() {
-        // 1) Öncelik: Ignition (0=kapalı, 2=çalışıyor)
-        int ign = getIntPropertyCPM(PROP_VEHICLE_IGNITION, AREA_GLOBAL);
-        int eng = getIntPropertyCPM(PROP_ENGINE_STATE, AREA_GLOBAL);
-        //engine state çalışınca 1
-        //frene basınca ign 3 oluyor onun dışında 2 koltuğa oturunca 2 oturmazsan araç kapalıysa 0
-        //Log.i(TAG, "READY CHECK → ign=" + ign + " engineState=" + eng);
-        //if (ign == 2) return true;
-        //if (ign == 0) return false;
-
-        // 2) Yedek: EngineState (0 = kapalı, >0 = aktif)
-        if (eng == 1) return true;
-        else return false;
+        return sVehicleReady;
     }
 
     /** SOC — % (0.0–100.0). CPM'den oku, yoksa BMS cache'e bak. */
@@ -815,6 +806,9 @@ public class MG4Hardware {
     // -------------------------------------------------------------------------
     private static volatile double sTripEnergyKwh = 0.0;
     private static volatile double sTripDistanceKm = 0.0;
+    // Sürüş grafiği için bağımsız sayaçlar (UI trip reset'inden etkilenmez)
+    private static volatile double sDriveGraphEnergyKwh = 0.0;
+    private static volatile double sDriveGraphDistanceKm = 0.0;
     private static volatile int sMileageAtConsumptionStart = -1;
     private static volatile long sConsumptionLastUpdateMs = 0;
     private static volatile float sLastSpeedKmh = Float.NaN;
@@ -822,6 +816,8 @@ public class MG4Hardware {
     private static volatile int sLastTotalKm = -1;
     private static volatile int sLastGear = -1;
     private static volatile int elseifcounter = 0;
+    private static volatile int elsecounter = 0;
+    private static volatile int elsecounter2 = 0;
     private static volatile int dtHourscounter = 0;
 
     /** Serviste 100ms'de bir çağrılır: DC/AC güçleri oku, enerjiyi ve mesafeyi integre et, önbelleğe yaz. */
@@ -841,9 +837,22 @@ public class MG4Hardware {
             elseifcounter += 1;
         } else {
             dcKw = Float.NaN;
+            elsecounter += 1;
         }
 
-        if (sLogEnabled && elseifcounter > 0) Log.i(TAG,"diaggg dcVolt ve dcAmp NAN " + elseifcounter + "consumption " + consumption + "kwh/km speedKmh " + speedKmh);
+        // Güç için güvenlik sınırı: abs(dcKw) mantıksız derecede büyükse integrale sokma
+        if (!Float.isNaN(dcKw) && Math.abs(dcKw) > 300f) {
+            if (sLogEnabled) {
+                Log.w(TAG, "integral_diag: dcKw clamp edildi dcKw=" + dcKw
+                        + " dcVolt=" + dcVolt + " dcAmpAct=" + dcAmpAct
+                        + " consumption=" + consumption + " speedKmh=" + speedKmh);
+            }
+            elsecounter2 += 1;
+            dcKw = Float.NaN;
+        }
+
+        if ((elseifcounter > 0 || elsecounter > 0 || elsecounter2 > 0)) Log.i(TAG,"integral_diag: dcVolt ve dcAmp NAN elseif: " + elseifcounter + " else: " + elsecounter + " else2: " + elsecounter2 + " consumption: " + consumption + "kwh/km speedKmh " + speedKmh);
+
 
         float acVolt = getAcVoltage();
         float acAmp = getAcCurrent();
@@ -854,7 +863,18 @@ public class MG4Hardware {
         double dtHours = (sConsumptionLastUpdateMs > 0)
                 ? (nowMs - sConsumptionLastUpdateMs) / 3600000.0
                 : 0.0;
-        if (sLogEnabled && dtHourscounter > 0) Log.i(TAG,"diaggg dtHourscounter " + dtHourscounter);
+
+        // Zaman için güvenlik sınırı: 0 veya 1 saatten büyük deltaları integrale sokma
+        if (dtHours <= 0.0 || dtHours > 1.0) {
+            dtHourscounter += 1;
+            if (sLogEnabled) {
+                Log.w(TAG,"integral_diag: dtHours skip dt=" + dtHours
+                        + " lastMs=" + sConsumptionLastUpdateMs + " nowMs=" + nowMs);
+            }
+            sConsumptionLastUpdateMs = nowMs;
+            //return;
+        }
+        if (dtHourscounter > 0) Log.i(TAG,"integral_diag: dtHourscounter " + dtHourscounter);
 
         sConsumptionLastUpdateMs = nowMs;
         if (dtHours > 0) {
@@ -865,6 +885,15 @@ public class MG4Hardware {
                 // Yol integrali: v(km/h) * dt(h) = km
                 sTripDistanceKm += speedKmh * dtHours;
             }
+            // Sürüş grafiği sayaçları: sadece araç READY iken entegre et
+            if (isVehicleReady()) {
+                if (!Float.isNaN(speedKmh)) {
+                    sDriveGraphDistanceKm += speedKmh * dtHours;
+                }
+                if (!Float.isNaN(dcKw)) {
+                    sDriveGraphEnergyKwh += dcKw * dtHours;
+                }
+            }
             if (isCharging()) {
                 if (!Float.isNaN(acKw) && acKw > 0f) {
                     sAcChargeEnergyKwh += acKw * dtHours;
@@ -873,8 +902,7 @@ public class MG4Hardware {
                     sDcChargeEnergyKwh += Math.abs(sDcKw * dtHours);
                 }
             }
-        }
-        else {
+        } else {
             dtHourscounter += 1;
         }
         // Global cache'i güncelle (diğer ekranlar buradan okur)
@@ -888,6 +916,9 @@ public class MG4Hardware {
         sLastConsumption = consumption;
         sLastTotalKm = getTotalMileage();
         sLastGear = getGear();
+
+        int enginestate = getIntPropertyCPM(PROP_ENGINE_STATE, AREA_GLOBAL);
+        sVehicleReady = (enginestate == 1);
     }
 
     /** Yol sıfırla: trip başlangıç km = şimdiki toplam km, enerji + mesafe = 0. */
@@ -913,6 +944,14 @@ public class MG4Hardware {
     public static float getLastConsumption() { return sLastConsumption; }
     public static int getLastTotalKm() { return sLastTotalKm; }
     public static int getLastGear() { return sLastGear; }
+
+    // Sürüş grafiği sayaçları (UI trip reset'inden bağımsız)
+    public static double getDriveGraphEnergyKwh() { return sDriveGraphEnergyKwh; }
+    public static double getDriveGraphDistanceKm() { return sDriveGraphDistanceKm; }
+    public static void resetDriveGraphCounters() {
+        sDriveGraphEnergyKwh = 0.0;
+        sDriveGraphDistanceKm = 0.0;
+    }
 
     // Global cache getter'ları (100ms polling ile güncellenen değerler)
     public static float getDcVoltGlobal() { return sDcVolt; }

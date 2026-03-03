@@ -358,16 +358,35 @@
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="8dp"/>
 
-            <Button
-                android:id="@+id/btnConsumptionPanel"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="@string/consumption_screen"
-                android:backgroundTint="#21262D"
-                android:textColor="#C9D1D9"
-                android:gravity="center_horizontal"
-                android:textSize="20sp"
-                android:layout_marginBottom="14dp"/>
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="14dp">
+
+                <Button
+                    android:id="@+id/btnConsumptionPanel"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:text="@string/consumption_screen"
+                    android:backgroundTint="#21262D"
+                    android:textColor="#C9D1D9"
+                    android:gravity="center_horizontal"
+                    android:textSize="18sp" />
+
+                <Button
+                    android:id="@+id/btnDrivingHistory"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="@string/driving_history_title"
+                    android:backgroundTint="#21262D"
+                    android:textColor="#C9D1D9"
+                    android:gravity="center_horizontal"
+                    android:textSize="16sp" />
+            </LinearLayout>
 
             <!-- Sarj/Durum paneli girisi -->
             <TextView

@@ -43,6 +43,10 @@
         </activity>
 
         <activity
+            android:name=".ui.DrivingHistoryActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.ChargingHistoryActivity"
             android:exported="false"
             android:screenOrientation="landscape"
