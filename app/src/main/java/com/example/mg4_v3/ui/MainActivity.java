@@ -1067,15 +1067,18 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         }
 
         // Enerji satırları (şarj boyunca biriken)
-        float acEnergy = MG4Hardware.getAcChargeEnergyKwh();
-        float dcEnergy = MG4Hardware.getDcChargeEnergyKwh();
-        mTvAcEnergy.setText(acEnergy > 0f ? String.format("%.3f kWh", acEnergy) : "--");
-        mTvDcEnergy.setText(dcEnergy > 0f ? String.format("%.3f kWh", dcEnergy) : "--");
+        float acChargeEnergy = MG4Hardware.getAcChargeEnergyKwh();
+        float dcChargeEnergy = MG4Hardware.getDcChargeEnergyKwh();
+        mTvAcEnergy.setText(acChargeEnergy > 0f ? String.format("%.3f kWh", acChargeEnergy) : "--");
+        mTvDcEnergy.setText(dcChargeEnergy > 0f ? String.format("%.3f kWh", dcChargeEnergy) : "--");
 
         // Şarj durumu (çıkarım: AC/DC akım veya PROP_CHG_STATUS)
         boolean charging = MG4Hardware.isChargingNow();
         mTvChargingStatus.setText(charging ? getString(R.string.charging) : getString(R.string.not_charging));
         mTvChargingStatus.setTextColor(charging ? 0xFF7EE787 : 0xFF8B949E);
+        if (mChartChargingPower != null) {
+            mChartChargingPower.setVisibility(charging ? View.VISIBLE : View.GONE);
+        }
 
         // Şarj süresi (sağ üst köşe)
         long totalSec = MG4Hardware.getChargingDurationMs() / 1000;
@@ -1091,11 +1094,13 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         // Şarjdayken + ayar açıksa ekran uyanık kalsın
         updateKeepScreenOn();
 
-        // Güç grafiklerini güncelle (kW)
-        float maxDcKw = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) ? (dcVolt * dcAmpExp) / 1000f : Float.NaN;
-        float acKw    = (!Float.isNaN(acVolt) && !Float.isNaN(acAmp))   ? (acVolt * acAmp) / 1000f : Float.NaN;
-        float battKw = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct))   ? (dcVolt * dcAmpAct) / 1000f : Float.NaN;
-        updateChargingCharts(maxDcKw, acKw, battKw);
+        // Güç grafiklerini güncelle (kW) — sadece şarjdayken aktif olsun
+        if (charging) {
+            float maxDcKw = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) ? (dcVolt * dcAmpExp) / 1000f : Float.NaN;
+            float acKw    = (!Float.isNaN(acVolt) && !Float.isNaN(acAmp))   ? (acVolt * acAmp) / 1000f : Float.NaN;
+            float battKw  = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct))   ? (dcVolt * dcAmpAct) / 1000f : Float.NaN;
+            updateChargingCharts(maxDcKw, acKw, battKw);
+        }
     }
 
     private static final int COLOR_CHART_MAX_DC = 0xFFFFA657;

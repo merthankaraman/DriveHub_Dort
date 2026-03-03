@@ -851,13 +851,12 @@ public class MG4Hardware {
                 // Yol integrali: v(km/h) * dt(h) = km
                 sTripDistanceKm += speedKmh * dtHours;
             }
-            // Şarj enerjisi — AC/DC güçlerini de aynı dt ile entegre et (tek polling noktası).
             if (isCharging()) {
                 if (!Float.isNaN(acKw) && acKw > 0f) {
                     sAcChargeEnergyKwh += acKw * dtHours;
                 }
                 if (!Float.isNaN(sDcKw) && sDcKw < 0f) {
-                    sDcChargeEnergyKwh += sDcKw * dtHours;
+                    sDcChargeEnergyKwh += Math.abs(sDcKw * dtHours);
                 }
             }
         }
