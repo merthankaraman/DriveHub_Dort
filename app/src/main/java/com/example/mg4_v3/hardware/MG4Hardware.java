@@ -821,6 +821,8 @@ public class MG4Hardware {
     private static volatile float sLastConsumption = Float.NaN;
     private static volatile int sLastTotalKm = -1;
     private static volatile int sLastGear = -1;
+    private static volatile int elseifcounter = 0;
+    private static volatile int dtHourscounter = 0;
 
     /** Serviste 100ms'de bir çağrılır: DC/AC güçleri oku, enerjiyi ve mesafeyi integre et, önbelleğe yaz. */
     public static void integrateConsumptionData() {
@@ -831,8 +833,17 @@ public class MG4Hardware {
         // DC güç (sürüş + şarj): V * A / 1000 → kW (işaretli)
         float dcVolt = getDcVoltage();
         float dcAmpAct = getDcCurrentActual();
-        float dcKw = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct))
-                ? (dcVolt * dcAmpAct) / 1000f : Float.NaN;
+        float dcKw;
+        if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct)) {
+            dcKw = (dcVolt * dcAmpAct) / 1000f;
+        } else if (!Float.isNaN(consumption) && !Float.isNaN(speedKmh) && speedKmh >= 0f) {
+            dcKw = consumption * speedKmh;
+            elseifcounter += 1;
+        } else {
+            dcKw = Float.NaN;
+        }
+
+        if (sLogEnabled && elseifcounter > 0) Log.i(TAG,"diaggg dcVolt ve dcAmp NAN " + elseifcounter + "consumption " + consumption + "kwh/km speedKmh " + speedKmh);
 
         float acVolt = getAcVoltage();
         float acAmp = getAcCurrent();
@@ -840,10 +851,13 @@ public class MG4Hardware {
                 ? (acVolt * acAmp) / 1000f : Float.NaN;
 
         long nowMs = System.currentTimeMillis();
-        double dtHours = (sConsumptionLastUpdateMs > 0) ? (nowMs - sConsumptionLastUpdateMs) / 3600000.0 : 0.0;
+        double dtHours = (sConsumptionLastUpdateMs > 0)
+                ? (nowMs - sConsumptionLastUpdateMs) / 3600000.0
+                : 0.0;
+        if (sLogEnabled && dtHourscounter > 0) Log.i(TAG,"diaggg dtHourscounter " + dtHourscounter);
+
         sConsumptionLastUpdateMs = nowMs;
         if (dtHours > 0) {
-            // Trip enerjisi: DC güç üzerinden, mutlak değerle (sürüşte negatif, şarjda pozitif olabilir).
             if (!Float.isNaN(dcKw)) {
                 sTripEnergyKwh += dcKw * dtHours;
             }
@@ -859,6 +873,9 @@ public class MG4Hardware {
                     sDcChargeEnergyKwh += Math.abs(sDcKw * dtHours);
                 }
             }
+        }
+        else {
+            dtHourscounter += 1;
         }
         // Global cache'i güncelle (diğer ekranlar buradan okur)
         sDcVolt = dcVolt;
