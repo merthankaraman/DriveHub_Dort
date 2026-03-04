@@ -345,6 +345,11 @@ public class MainActivity extends AppCompatActivity {
         if (btnAlarmVolumeMax != null) {
             btnAlarmVolumeMax.setOnClickListener(v -> trySetAlarmVolumeMax());
         }
+        Button btnAlarmSource = findViewById(R.id.btnAlarmSource);
+        if (btnAlarmSource != null) {
+            btnAlarmSource.setOnClickListener(v -> toggleSoundSource());
+            updateSoundSourceButton(btnAlarmSource);
+        }
         mBtnMotorPower = findViewById(R.id.btnMotorPower);
 
         // Yapay motor sesi yöneticisini başlat (önce instance al)
@@ -1440,6 +1445,34 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             msg += getString(R.string.notification_volume_hint_suffix);
         }
         mTvAlarmVolumeHint.setText(msg);
+    }
+
+    private void updateSoundSourceButton(Button btn) {
+        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        String source = prefs.getString("sound_source", "notification");
+        if ("media".equals(source)) {
+            btn.setText(getString(R.string.sound_source_media));
+        } else {
+            btn.setText(getString(R.string.sound_source_notification));
+        }
+    }
+
+    private void toggleSoundSource() {
+        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        String source = prefs.getString("sound_source", "notification");
+        String newSource = "media".equals(source) ? "notification" : "media";
+        prefs.edit().putString("sound_source", newSource).apply();
+
+        Button btnAlarmSource = findViewById(R.id.btnAlarmSource);
+        if (btnAlarmSource != null) {
+            updateSoundSourceButton(btnAlarmSource);
+        }
+
+        // Kaynak değiştiyse aktif motor sesini yeniden başlat
+        if (mEngineSound != null && mEngineSound.isPlaying()) {
+            mEngineSound.stop();
+            mEngineSound.start();
+        }
     }
 
     /** MODIFY_AUDIO_SETTINGS + sistem UID ile deniyor; araç izin vermeyebilir. */

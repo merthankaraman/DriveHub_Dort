@@ -143,6 +143,8 @@
     <string name="sound_volume">Ses Seviyesi</string>
     <string name="notification_volume">Bildirim sesi (araç): --</string>
     <string name="btn_max_volume">Bildirim ses seviyesini Max yap</string>
+    <string name="sound_source_notification">Kaynak: Bildirim</string>
+    <string name="sound_source_media">Kaynak: Medya</string>
     <string name="sim_speed_label">Simüle hız: 0 km/h</string>
     <string name="sim_throttle_label">Simüle gaz pedalı (%)</string>
     <string name="btn_sound_enabled">🔊 Ses Açık</string>

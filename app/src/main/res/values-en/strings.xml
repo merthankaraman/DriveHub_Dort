@@ -143,6 +143,8 @@
     <string name="sound_volume">Volume</string>
     <string name="notification_volume">Notification volume (vehicle): --</string>
     <string name="btn_max_volume">Set Notification volume to Max</string>
+    <string name="sound_source_notification">Source: Notification</string>
+    <string name="sound_source_media">Source: Media</string>
     <string name="sim_speed_label">Simulated speed: 0 km/h</string>
     <string name="sim_throttle_label">Simulated throttle (%)</string>
     <string name="btn_sound_enabled">🔊 Sound Enabled</string>

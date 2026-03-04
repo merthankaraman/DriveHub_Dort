@@ -1335,6 +1335,19 @@
                         android:textSize="12sp" />
 
                     <Button
+                        android:id="@+id/btnAlarmSource"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:layout_marginEnd="8dp"
+                        android:backgroundTint="#21262D"
+                        android:minWidth="0dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:text="@string/sound_source_notification"
+                        android:textColor="#C9D1D9"
+                        android:textSize="12sp" />
+
+                    <Button
                         android:id="@+id/btnAlarmVolumeMax"
                         android:layout_width="wrap_content"
                         android:layout_height="36dp"

@@ -1,6 +1,7 @@
 package com.example.mg4_v3.audio;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -86,13 +87,25 @@ public class EngineSoundManager {
         public final float[][] gearRanges;
         public final int hasTurbo; //0:No, 1:YES, 2:Comppressor
 
-        public VehicleProfile(String name, float idleRpm, float maxRpm, float idleVolumeScale, int hasTurbo, float[][] gearRanges, int... resIds) {
+        // --- YENİ EKLENEN FİZİK PARAMETRELERİ (RevHeadz Spec) ---
+        public final float rpmOnSmooth;      // Gaza basınca devir ivmelenme hızı
+        public final float rpmOffSmooth;     // Gazı çekince devir düşme hızı
+        public final long shiftDurationMs;   // Vites geçiş/patlama süresi
+        public final float wobbleMagnitude;  // Vites atınca devir saatinin sarsılma şiddeti
+
+        public VehicleProfile(String name, float idleRpm, float maxRpm, float idleVolumeScale, int hasTurbo, float[][] gearRanges,
+                              float rpmOnSmooth, float rpmOffSmooth, long shiftDurationMs, float wobbleMagnitude,
+                              int... resIds) {
             this.name = name;
             this.idleRpm = idleRpm;
             this.maxRpm = maxRpm;
             this.idleVolumeScale = idleVolumeScale;
             this.hasTurbo = hasTurbo;
             this.gearRanges = gearRanges;
+            this.rpmOnSmooth = rpmOnSmooth;
+            this.rpmOffSmooth = rpmOffSmooth;
+            this.shiftDurationMs = shiftDurationMs;
+            this.wobbleMagnitude = wobbleMagnitude;
             this.resIds = resIds;
         }
     }
@@ -316,6 +329,7 @@ public class EngineSoundManager {
                         {100f, 160f},
                         {120f, 180f}
                 },
+                0.08f, 0.05f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 R.raw.lotus_exige_idle,
                 R.raw.lotus_exige_3000,
                 R.raw.lotus_exige_4750,
@@ -337,6 +351,7 @@ public class EngineSoundManager {
                         {100f, 160f},
                         {120f, 180f}
                 },
+                0.12f, 0.08f, 80, 50f, // Çift kavrama, çok hızlı devir, az sarsıntı
                 R.raw.mclaren_p1_idle,
                 R.raw.mclaren_p1_1750,
                 R.raw.mclaren_p1_2750,
@@ -359,6 +374,7 @@ public class EngineSoundManager {
                         {100f, 160f},
                         {120f, 180f}
                 },
+                0.10f, 0.06f, 120, 250f, // ISR Şanzıman, inanılmaz şiddetli Wobble!
                 R.raw.lamborghini_aventador_idle,
                 R.raw.lamborghini_aventador_2500,
                 R.raw.lamborghini_aventador_4500,
@@ -379,6 +395,7 @@ public class EngineSoundManager {
                         {100f, 160f},
                         {120f, 180f}
                 },
+                0.06f, 0.04f, 150, 100f, // Standart tork konvertör hissi
                 R.raw.bmw_z4_idle,
                 R.raw.bmw_z4_2800,
                 R.raw.bmw_z4_4000,
@@ -400,6 +417,7 @@ public class EngineSoundManager {
                         {100f, 160f},
                         {120f, 180f}
                 },
+                0.15f, 0.10f, 100, 300f, // Safkan yarış makinesi, vahşi ve kontrolsüz
                 R.raw.zonda_r_idle,
                 R.raw.zonda_r_3500,
                 R.raw.zonda_r_4250,
@@ -423,6 +441,7 @@ public class EngineSoundManager {
                         {100f, 160f},
                         {120f, 180f}
                 },
+                0.06f, 0.045f, 110, 250f, // RevHeadz GTR/GT3 Spec atalet ve sarsıntı!
                 R.raw.rb26_idle,
                 R.raw.rb26_2000,
                 R.raw.rb26_3500,
@@ -477,15 +496,27 @@ public class EngineSoundManager {
         // Audio focus istemiyoruz: müzik focus'ta kalsın, motor sesi müzikle birlikte mixlensin.
         int maxStreams = mCurrentSamples.length + 5;
 
-        // Bildirim sesi: müzikten ayrı; araçta bildirim seviyesi ile kontrol edilir (alarm kadar tiz işlenmeyebilir).
+        // Ses kaynağı: bildirim veya medya (kullanıcı seçimine göre).
+        boolean useMedia = false;
+        try {
+            SharedPreferences prefs = mContext.getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
+            String source = prefs.getString("sound_source", "notification");
+            useMedia = "media".equals(source);
+        } catch (Throwable ignored) {
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             AudioAttributes attrs = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                    .setUsage(useMedia ? AudioAttributes.USAGE_MEDIA : AudioAttributes.USAGE_NOTIFICATION)
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .build();
-            mSoundPool = new SoundPool.Builder().setMaxStreams(maxStreams).setAudioAttributes(attrs).build();
+            mSoundPool = new SoundPool.Builder()
+                    .setMaxStreams(maxStreams)
+                    .setAudioAttributes(attrs)
+                    .build();
         } else {
-            mSoundPool = new SoundPool(maxStreams, AudioManager.STREAM_NOTIFICATION, 0);
+            int stream = useMedia ? AudioManager.STREAM_MUSIC : AudioManager.STREAM_NOTIFICATION;
+            mSoundPool = new SoundPool(maxStreams, stream, 0);
         }
 
         mSoundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
@@ -514,7 +545,6 @@ public class EngineSoundManager {
         });
 
         // 3. YÜKLEME SIRALAMASI (Load): ID'leri şimdi alıyoruz
-        // Önce özel sesleri yükle (ID'ler oluşsun)
         if (mActiveProfile.hasTurbo == 2)
             mTurboSoundId = mSoundPool.load(mContext, R.raw.supercharge, 1);
         else
@@ -523,7 +553,7 @@ public class EngineSoundManager {
         mGearWhineSoundId = mSoundPool.load(mContext, R.raw.transmission, 1);
 
         if (mActiveProfile.name.contains("R34")) {
-            mFlutterSoundId = mSoundPool.load(mContext, R.raw.rb26_bf1, 1);
+            mFlutterSoundId = mSoundPool.load(mContext, R.raw.rb26_bf2, 1);
         } else {
             mFlutterSoundId = -1; // R34 değilse şimdilik kapalı
         }
@@ -543,7 +573,8 @@ public class EngineSoundManager {
         if (mCurrentSamples != null) {
             for (EngineSample s : mCurrentSamples) s.streamId = -1;
         }
-        mTurboStreamId = -1; // Turbo sıfırla
+        mTurboStreamId = -1;
+        mFlutterStreamId = -1;
     }
 
     // ==========================================
@@ -569,7 +600,6 @@ public class EngineSoundManager {
     // ==========================================
     // TCU & MIXER (ANA MANTIK)
     // ==========================================
-    /** Hız değişti; kW verilmezse Hardware cache'den okunur (tek yerden çekmek için MainActivity'den geçirilebilir). */
     public void onSpeedChanged(float speedKmh) {
         if (mUseManualThrottle) {
             onSpeedChanged(speedKmh, Float.NaN);
@@ -581,7 +611,6 @@ public class EngineSoundManager {
         onSpeedChanged(speedKmh, kw);
     }
 
-    /** Hız + DC güç (kW). MainActivity zaten gauge için çektiyse aynı değeri geçir; ikinci kez hat çekilmez. */
     public void onSpeedChanged(float speedKmh, float dcPowerKw) {
         if (!mIsPlaying || mCurrentSamples == null || mLoadedSamplesCount < mCurrentSamples.length) return;
 
@@ -615,34 +644,23 @@ public class EngineSoundManager {
         }
 
         // 1. ADIM: Sürücünün İstediği "İdeal Devir" (Target RPM)
-        // Gaz %10 ise -> 2500 RPM civarı (Ekonomik)
-        // Gaz %50 ise -> 5000 RPM civarı (Orta/Canlı)
-        // Gaz %100 ise -> 9000 RPM (Maksimum Güç)
         float targetRpmRange = mMaxRpm - mIdleRpm;
         float baseTarget = 1500f + (mDriveModeAggressiveness * 3500f);
         float desiredRpm = baseTarget + (throttle * (mMaxRpm - baseTarget));
         desiredRpm = Math.max(mIdleRpm, Math.min(mMaxRpm, desiredRpm));
 
-        // 2. ADIM: Vites Kararı (Sadece 1 saniyede bir karar verir)
+        // 2. ADIM: Vites Kararı
         if (currentTime - mLastShiftTime > 1200) {
             int bestGear = mCurrentGear > 0 ? mCurrentGear : 1;
             float bestRpmDiff = Float.MAX_VALUE;
 
-            // Tüm vitesleri tara, hangisi bizi "desiredRpm"e en yakın tutuyor?
             for (int g = 1; g <= mActiveProfile.gearRanges.length; g++) {
                 float[] range = mActiveProfile.gearRanges[g - 1];
-
-                // Eğer hız bu vitesin limitleri dışındaysa bu vitesi geç (Toleranslı)
                 if (speed < range[0] * 1.2f || speed > range[1] * 1.05f) continue;
 
-                // Bu vitesteki tahmini devri hesapla
                 float ratio = (speed - range[0]) / (range[1] - range[0]);
                 float estimatedRpm = mIdleRpm + (ratio * targetRpmRange);
-
                 float diff = Math.abs(estimatedRpm - desiredRpm);
-
-                // Vites büyütme eğilimi (Histerezis):
-                // Mevcut vitesten memnunsa, çok büyük fark yoksa vites değiştirme
                 float threshold = (g > mCurrentGear) ? (1000f + mDriveModeAggressiveness * 6000f) : 800f;
 
                 if (diff < bestRpmDiff - threshold) {
@@ -655,16 +673,10 @@ public class EngineSoundManager {
                 // --- VİTES KÜÇÜLTME (Downshift) ---
                 if (bestGear < mCurrentGear) {
                     if (mEnableRevMatch) {
-                        // 0.15f yerine daha kontrollü bir oran (Örn: 0.08f)
                         float aggressivenessFactor = 0.05f + (mDriveModeAggressiveness * 0.10f);
                         mRevMatchBoost = mMaxRpm * aggressivenessFactor;
-
-                        // KORUMA: Eğer devir zaten çok yüksekse ara gazını kıs
-                        if (mCurrentRpm > mMaxRpm * 0.8f) {
-                            mRevMatchBoost *= 0.5f; // Kesiciye yakınken %50 azalt
-                        }
+                        if (mCurrentRpm > mMaxRpm * 0.8f) mRevMatchBoost *= 0.5f;
                     } else {
-                        // Rev-match kapalıysa sadece normal vites küçültme artışı yap
                         mCurrentRpm *= 1.10f;
                     }
                 }
@@ -692,12 +704,26 @@ public class EngineSoundManager {
             mRevMatchBoost *= 0.85f;
             if (mRevMatchBoost < 5f) mRevMatchBoost = 0;
 
-            // 2. RPM Yumuşatması (Normal motor karakteri)
-            mCurrentRpm = (mCurrentRpm * 0.85f) + (targetRpmFinal * 0.15f);
+            // 2. RPM YUMUŞATMASI (Atalet Sistemi)
+            // Gaza basılıysa OnSmooth, çekiliyse OffSmooth değerini kullan
+            float currentSmooth = (throttle > 0.05f) ? mActiveProfile.rpmOnSmooth : mActiveProfile.rpmOffSmooth;
+            mCurrentRpm = (mCurrentRpm * (1.0f - currentSmooth)) + (targetRpmFinal * currentSmooth);
 
             // 3. Ara gazı etkisini final RPM'e ekle (Eğer açıksa)
             if (mEnableRevMatch && mRevMatchBoost > 0) {
                 mCurrentRpm += mRevMatchBoost;
+            }
+
+            // 4. WOBBLE (ŞANZIMAN SARSINTISI) HİLESİ!
+            // Vites atıldıktan sonraki ilk yarım saniye (500ms) içinde çalışır
+            long timeSinceShift = currentTime - mLastShiftTime;
+            if (timeSinceShift < 500 && mActiveProfile.wobbleMagnitude > 0) {
+                float timeSec = timeSinceShift / 1000f; // Saniye cinsinden zaman
+                float dampening = Math.max(0f, 1.0f - (timeSec / 0.5f)); // 500ms içinde etki sıfırlanır
+
+                // 9.0Hz frekansla (saniyede 9 kez) sinüs dalgası oluşturarak devri titret
+                float wobbleOffset = (float) Math.sin(timeSec * 9.0f * Math.PI * 2) * mActiveProfile.wobbleMagnitude * dampening;
+                mCurrentRpm += wobbleOffset;
             }
         }
 
@@ -717,40 +743,25 @@ public class EngineSoundManager {
         rpmRatio = Math.max(0f, Math.min(1f, rpmRatio));
 
         // --- CONTINUOUS FLUTTER (DÖNGÜSEL STUTUTU) ---
-        if (mFlutterStreamId != -1) {
-
-            // 1. TETİKLEYİCİ: Devir 3500'den büyük, gaz %60'tan bir anda %10'un altına düştüyse
+        if (mFlutterStreamId != -1 && false) {
             if (rpm > 3500f && mLastThrottleForFlutter > 0.6f && mSimulatedThrottle < 0.1f) {
-                // Turbodaki sıkışan havanın şiddetini devire göre belirle (8000 devirde vol 1.0, 4000'de 0.5 gibi)
                 mCurrentFlutterVol = (rpm / mMaxRpm);
             }
 
-            // 2. SÖNÜMLEME VE ÇALMA (Decay)
             if (mCurrentFlutterVol > 0f) {
-                // Her 16ms döngüsünde sesi %8 oranında azalt (Yaklaşık 0.5 - 1 saniyede ses sıfırlanır)
                 mCurrentFlutterVol *= 0.92f;
+                if (mCurrentFlutterVol < 0.02f) mCurrentFlutterVol = 0f;
 
-                // Çok küçüldüğünde tamamen kapat ki işlemciyi yormasın
-                if (mCurrentFlutterVol < 0.02f) {
-                    mCurrentFlutterVol = 0f;
-                }
-
-                // Ana sese (Master Volume) bağla ve biraz belirginleştir (x1.5)
                 float finalFlutterVol = mCurrentFlutterVol * masterVol * 1.5f;
                 finalFlutterVol = Math.max(0f, Math.min(1f, finalFlutterVol));
-
-                // GERÇEKÇİLİK DETAYI: Pervane yavaşladıkça flutter'ın perdesi (pitch) de kalınlaşır.
-                // Ses seviyesi azaldıkça pitch 1.2'den 0.8'e doğru düşer.
                 float flutterPitch = 0.8f + (mCurrentFlutterVol * 0.4f);
 
                 mSoundPool.setVolume(mFlutterStreamId, finalFlutterVol, finalFlutterVol);
                 mSoundPool.setRate(mFlutterStreamId, flutterPitch);
             } else {
-                // Tetiklenme yoksa tamamen sessiz
                 mSoundPool.setVolume(mFlutterStreamId, 0f, 0f);
             }
 
-            // Bir sonraki mikser döngüsü için gazın son durumunu kaydet
             mLastThrottleForFlutter = mSimulatedThrottle;
         }
 
@@ -761,14 +772,10 @@ public class EngineSoundManager {
                 mCurrentTurboBoost = 0f;
             } else if(mEnableTurboSound && mActiveProfile.hasTurbo == 1){
                 float throttle = mSimulatedThrottle;
-
-                // RPM 0.10 oranının altındaysa boost her zaman 0 olur (Fiziksel kural)
                 float boostFactor = (rpmRatio > 0.10f) ? (rpmRatio - 0.10f) * 1.12f : 0f;
                 boostFactor = Math.max(0f, Math.min(1f, boostFactor));
 
                 float targetBoost = throttle * boostFactor;
-
-                // Hız 0 olsa bile bu hesaplama çalışır, rölantide boost 0'a iner
                 mCurrentTurboBoost = (mCurrentTurboBoost * 0.90f) + (targetBoost * 0.10f);
 
                 float turboVol = mCurrentTurboBoost * masterVol * mTurboMaxSound;
@@ -777,11 +784,7 @@ public class EngineSoundManager {
                 mSoundPool.setVolume(mTurboStreamId, turboVol, turboVol);
                 mSoundPool.setRate(mTurboStreamId, turboPitch);
             } else if(mEnableTurboSound && mActiveProfile.hasTurbo == 2){
-                // 1. Ses Seviyesi: Gaz pedalıyla artar ama gaz bırakılınca da %20 duyulmaya devam eder
                 float compVol = (0.2f + (mSimulatedThrottle * 0.8f)) * rpmRatio * masterVol * mCompressorMaxVol;
-
-                // 2. Perde (Pitch): Kompresörler çok tizleşir.
-                // 0.8'den başlasın, kesicide 2.5 (çok tiz) olsun.
                 float compPitch = 0.8f + (rpmRatio * 1.7f);
 
                 mSoundPool.setVolume(mTurboStreamId, compVol, compVol);
@@ -831,26 +834,15 @@ public class EngineSoundManager {
                 rawVol = blend;
             }
 
-            // 2. SİHİRLİ DOKUNUŞ: Karekök alarak Eşit Güç eğrisine çevir
-            // Bu, iki sesin birleştiği noktada toplam gücün sabit kalmasını sağlar ve "pıt pıt"ı bitirir.
             float shapedVol = (float) Math.sqrt(rawVol);
             if (Float.isNaN(shapedVol)) shapedVol = 0f;
 
-            // 3. Rölanti ölçeğini uygula
             if (s == mCurrentSamples[0]) shapedVol *= mCurrentIdleVolumeScale;
 
-            // 1. YÜK HACMİ (Volume Load):
-            // Gaz bırakıldığında ses tamamen ölmez ama daha derinden gelir.
-            // Gaz %100 olduğunda ise tam kapasite çalar.
             float loadVolumeFactor = 0.5f + (mSimulatedThrottle * 0.5f);
-
-            // 2. YÜK PERDESİ (Pitch Load):
-            // Gaza basıldığında motorun "zorlanma" sesini taklit etmek için
-            // pitch'i çok hafif (maksimum %3) yukarı esnetiyoruz.
             float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
-
-            // Sport modunda motor sesi %20 daha yüksek ve ham gelir
             float modeVolumeBoost = (mDriveModeAggressiveness > 0.5f) ? 1.2f : 1.0f;
+
             float finalVolume = Math.max(0.0f, Math.min(1.0f, shapedVol * masterVol * loadVolumeFactor * modeVolumeBoost));
             float pitch = (rpm / s.baseRpm) * loadPitchFactor;
 
@@ -860,11 +852,11 @@ public class EngineSoundManager {
             mSoundPool.setVolume(s.streamId, finalVolume, finalVolume);
             mSoundPool.setRate(s.streamId, pitch);
         }
+
         if (mGearWhineStreamId != -1 && mGearWhineEnabled) {
             float speedRatio = mCurrentSpeedKmh / mWhineMaxSpeed;
             speedRatio = Math.max(0f, Math.min(1f, speedRatio));
 
-            // Ses seviyesi: Hızlandıkça artar, master volume ile çarpılır
             float whineVol = speedRatio * masterVol * mGearWhineMaxVol;
             float whinePitch = 0.5f + (speedRatio * 1.5f);
 
@@ -873,7 +865,6 @@ public class EngineSoundManager {
         } else if(!mGearWhineEnabled){
             mSoundPool.setVolume(mGearWhineStreamId, 0, 0);
             mSoundPool.setRate(mGearWhineStreamId, 1);
-
         }
     }
 
