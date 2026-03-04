@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * MG4 V3 Simülasyon Motoru (Assetto Corsa FMOD Mantığı)
+ * MG4 V3 Simülasyon Motoru (Hibrit Sistem: Single-Layer + FMOD Dual-Layer)
  * Modüler Yapı: Araç Profilleri -> TCU (Şanzıman Beyni) -> SoundPool Mikser
  */
 public class EngineSoundManager {
@@ -36,21 +36,26 @@ public class EngineSoundManager {
 
     private float mCurrentSpeedKmh = 0f;
     private float mSimulatedThrottle = 0f; // 0–1
-    private float mMotorMaxPower = 130f;   // kW, pedal oranına map için üst sınır
-    private float mCurrentDcPowerKw = 0f;  // (dcVolt * dcAmpAct) / 1000f
-    private boolean mUseManualThrottle = false; // Sim panelinden gaz verildiğinde true
+    private float mMotorMaxPower = 130f;
+    private float mCurrentDcPowerKw = 0f;
+    private boolean mUseManualThrottle = false;
     private int mCurrentGear = 0;
     private float mCurrentRpm = 1000f;
-    private float mDriveModeAggressiveness = 0.4f; // Varsayılan Normal
+    private float mDriveModeAggressiveness = 0.4f;
     private VehicleProfile mActiveProfile;
-    /** Dialog’da kayıtlı profil etiketi (sound_profile ile aynı). Rölanti prefs anahtarı bununla oluşturulur. */
     private String mCurrentProfileLabel = "Lotus Exige";
+
+    // --- ESKİ SİSTEM (Tek Katmanlılar İçin) ---
     private EngineSample[] mCurrentSamples;
+
+    // --- YENİ SİSTEM (Çift Katmanlılar İçin ON/OFF) ---
+    private boolean mIsDualLayer = false;
+    private EngineSample[] mCurrentSamplesOn;
+    private EngineSample[] mCurrentSamplesOff;
+
     private float mIdleRpm = 1000f;
     private float mCurrentIdleVolumeScale = 1;
-    /** Kullanıcı ayarı: rölanti ses seviyesi çarpanı (0..1). Profil idleVolumeScale ile çarpılır. */
     private float mUserIdleVolumeScale = 1f;
-    /** Kullanıcı ayarı: rölanti pitch (0.5–2.0, 1 = orijinal). */
     private float mIdlePitch = 1f;
     private float mMaxRpm = 9000f;
     private float mMasterVolume = 0.6f;
@@ -62,40 +67,41 @@ public class EngineSoundManager {
     // --- TURBO DEĞİŞKENLERİ ---
     private int mTurboSoundId = -1;
     private int mTurboStreamId = -1;
-    private float mCurrentTurboBoost = 0f; // 0.0 - 1.0 arası iç basınç simülasyonu
+    private float mCurrentTurboBoost = 0f;
     private float mTurboMaxSound = 0.3f;
     private boolean mEnableTurboSound = true;
-    private float mCompressorMaxVol = 0.5f; // Kompresör sesi baskın olmalı
+    private float mCompressorMaxVol = 0.5f;
     private long mLastShiftTime = 0;
     private boolean mEnableRevMatch = true;
     private float mRevMatchBoost = 0f;
     private boolean mGearWhineEnabled = true;
-    // --- FLUTTER (STUTUTU) DEĞİŞKENLERİ ---
+
+    // --- FLUTTER DEĞİŞKENLERİ ---
     private int mFlutterSoundId = -1;
-    private int mFlutterStreamId = -1;
-    private float mCurrentFlutterVol = 0f; // Anlık flutter ses seviyesi
+    private float mFlutterSoundmultiplier = 0.4f;
+    private long mLastFlutterTime = 0;
     private float mLastThrottleForFlutter = 0f;
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public static class VehicleProfile {
         public final String name;
-        public final int[] resIds;
+        public final int[][] onSounds;  // Zorunlu (ON sesleri ve RPM'leri)
+        public final int[][] offSounds; // Opsiyonel (Yoksa null gönder)
         public final float idleRpm;
         public final float maxRpm;
         public final float idleVolumeScale;
-        // Her vitesin hız limitleri: { {vites1Min, vites1Max}, {vites2Min, vites2Max}, ... }
         public final float[][] gearRanges;
-        public final int hasTurbo; //0:No, 1:YES, 2:Comppressor
+        public final int hasTurbo;
 
-        // --- YENİ EKLENEN FİZİK PARAMETRELERİ (RevHeadz Spec) ---
-        public final float rpmOnSmooth;      // Gaza basınca devir ivmelenme hızı
-        public final float rpmOffSmooth;     // Gazı çekince devir düşme hızı
-        public final long shiftDurationMs;   // Vites geçiş/patlama süresi
-        public final float wobbleMagnitude;  // Vites atınca devir saatinin sarsılma şiddeti
+        public final float rpmOnSmooth;
+        public final float rpmOffSmooth;
+        public final long shiftDurationMs;
+        public final float wobbleMagnitude;
 
+        // TEK VE KUSURSUZ CONSTRUCTOR
         public VehicleProfile(String name, float idleRpm, float maxRpm, float idleVolumeScale, int hasTurbo, float[][] gearRanges,
                               float rpmOnSmooth, float rpmOffSmooth, long shiftDurationMs, float wobbleMagnitude,
-                              int... resIds) {
+                              int[][] onSounds, int[][] offSounds) {
             this.name = name;
             this.idleRpm = idleRpm;
             this.maxRpm = maxRpm;
@@ -106,9 +112,11 @@ public class EngineSoundManager {
             this.rpmOffSmooth = rpmOffSmooth;
             this.shiftDurationMs = shiftDurationMs;
             this.wobbleMagnitude = wobbleMagnitude;
-            this.resIds = resIds;
+            this.onSounds = onSounds;
+            this.offSounds = offSounds;
         }
     }
+
     private static class EngineSample {
         final int baseRpm;
         final int resourceId;
@@ -121,118 +129,46 @@ public class EngineSoundManager {
         }
     }
 
-    public void setMasterVolume(float volume01) {
-        mMasterVolume = Math.max(0f, Math.min(1f, volume01));
-    }
+    public void setMasterVolume(float volume01) { mMasterVolume = Math.max(0f, Math.min(1f, volume01)); }
+    public void setMotorMaxPower(float powerKw) { mMotorMaxPower = (Math.max(50f, Math.min(200f, powerKw)) - 20f); }
 
-    public void setMotorMaxPower(float powerKw) {
-        mMotorMaxPower = (Math.max(50f, Math.min(200f, powerKw)) - 20f);
-    }
-
-    /**
-     * SharedPreferences içinden ses profilini, şanzıman karakterini ve master volume'ü yükler.
-     * Böylece profil eşleme mantığı tek yerde tutulur.
-     */
     public void initFromPreferences(Context context) {
-        android.content.SharedPreferences prefs =
-                context.getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
-
-        // Ses profili (araç sesi)
+        android.content.SharedPreferences prefs = context.getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
         String profile = prefs.getString("sound_profile", "Lotus Exige");
         applyProfileLabel(profile);
         loadIdleSettingsForProfile(context, profile);
-
-        // Şanzıman karakteri (Eco / Normal / Sport / Araç) — mapping tek yerde dursun
-        String charStr = prefs.getString("sound_character", "NORMAL");
-        applySoundCharacterFromString(charStr);
-
-        // Master volume
-        int master = prefs.getInt("sound_master", 60);
-        float masterClamped = Math.max(0, Math.min(100, master)) / 100f;
-        setMasterVolume(masterClamped);
+        applySoundCharacterFromString(prefs.getString("sound_character", "NORMAL"));
+        setMasterVolume(Math.max(0, Math.min(100, prefs.getInt("sound_master", 60))) / 100f);
     }
 
-    /** Seçili ses profilinin etiketi (dialog ile aynı; rölanti prefs anahtarı bununla eşleşir). */
-    public String getCurrentProfileName() {
-        return mCurrentProfileLabel != null ? mCurrentProfileLabel : "Lotus Exige";
-    }
+    public String getCurrentProfileName() { return mCurrentProfileLabel != null ? mCurrentProfileLabel : "Lotus Exige"; }
+    public static String profileToPrefsSuffix(String profileName) { return profileName != null ? profileName.replace(" ", "_") : "Lotus_Exige"; }
 
-    /** Profil adından prefs anahtar soneki (boşluk → alt çizgi; bazı cihazlarda boşluklu anahtar sorun çıkarabiliyor). */
-    public static String profileToPrefsSuffix(String profileName) {
-        return profileName != null ? profileName.replace(" ", "_") : "Lotus_Exige";
-    }
-
-    /** Verilen araç profilinin rölanti ayarlarını yükler (hafızalı, araç özelinde). */
     public void loadIdleSettingsForProfile(Context context, String profileName) {
         if (context == null || profileName == null) return;
         android.content.SharedPreferences prefs = context.getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
         String suffix = profileToPrefsSuffix(profileName);
-        String volKey = "idle_volume_scale_" + suffix;
-        String pitchKey = "idle_pitch_" + suffix;
-        String volKeyOld = "idle_volume_scale_" + profileName;
-        String pitchKeyOld = "idle_pitch_" + profileName;
-        int vol = prefs.contains(volKey) ? prefs.getInt(volKey, 100)
-                : prefs.getInt(volKeyOld, prefs.getInt("idle_volume_scale", 100));
-        float pitch = prefs.contains(pitchKey) ? prefs.getFloat(pitchKey, 1f)
-                : prefs.getFloat(pitchKeyOld, prefs.getFloat("idle_pitch", 1f));
+        int vol = prefs.getInt("idle_volume_scale_" + suffix, 100);
+        float pitch = prefs.getFloat("idle_pitch_" + suffix, 1f);
         setUserIdleVolumeScale(Math.max(0, Math.min(100, vol)) / 100f);
         setIdlePitch(Math.max(0.5f, Math.min(2f, pitch)));
-        if (prefs.contains(volKeyOld) || prefs.contains(pitchKeyOld)) {
-            prefs.edit().putInt(volKey, vol).putFloat(pitchKey, pitch).remove(volKeyOld).remove(pitchKeyOld).apply();
-        }
     }
 
-    /** Rölanti ses seviyesi çarpanı (0..1). Profil değişince tekrar uygulanır. */
     public void setUserIdleVolumeScale(float scale01) {
         mUserIdleVolumeScale = Math.max(0f, Math.min(1f, scale01));
-        if (mActiveProfile != null) {
-            mCurrentIdleVolumeScale = mActiveProfile.idleVolumeScale * mUserIdleVolumeScale;
-        }
+        if (mActiveProfile != null) mCurrentIdleVolumeScale = mActiveProfile.idleVolumeScale * mUserIdleVolumeScale;
     }
+    public float getUserIdleVolumeScale() { return mUserIdleVolumeScale; }
+    public void setIdlePitch(float pitch) { mIdlePitch = Math.max(0.5f, Math.min(2f, pitch)); }
+    public float getIdlePitch() { return mIdlePitch; }
 
-    public float getUserIdleVolumeScale() {
-        return mUserIdleVolumeScale;
-    }
-
-    /** Rölanti pitch (0.5–2.0). 1 = orijinal perde. */
-    public void setIdlePitch(float pitch) {
-        mIdlePitch = Math.max(0.5f, Math.min(2f, pitch));
-    }
-
-    public float getIdlePitch() {
-        return mIdlePitch;
-    }
-
-    /**
-     * Verilen karakter string'ine göre şanzıman agresifliğini belirler.
-     * ECO/NORMAL/SPORT/AUTO mapping'ini tek yerde toplar.
-     */
     public void applySoundCharacterFromString(String character) {
         float agg = 0.4f;
-        if ("ECO".equals(character)) {
-            agg = 0.25f;
-        } else if ("SPORT".equals(character)) {
-            agg = 0.7f;
-        } else if ("AUTO".equals(character)) {
-            int modeVal = MG4Hardware.getDriveMode();
-            com.example.mg4_v3.model.DriveMode dm =
-                    com.example.mg4_v3.model.DriveMode.fromValue(modeVal);
-            switch (dm) {
-                case ECO:    agg = 0.25f; break;
-                case SPORT:  agg = 0.7f;  break;
-                case SNOW:
-                case NORMAL:
-                case CUSTOM:
-                default:     agg = 0.4f;  break;
-            }
-        }
+        if ("ECO".equals(character)) agg = 0.25f;
+        else if ("SPORT".equals(character)) agg = 0.7f;
         setDriveModeAggressiveness(agg);
     }
 
-    /**
-     * Araç sesi profil listesi (tek kaynak — yeni araç eklerken sadece buraya ekleyin).
-     * Sıra = seçim dialog'undaki sıra. İsimler applyProfileLabel ile birebir eşleşmeli.
-     */
     public static final String[] PROFILE_LABELS = {
             "McLaren P1",
             "Lamborghini Aventador",
@@ -240,81 +176,35 @@ public class EngineSoundManager {
             "Pagani Zonda R",
             "Lotus Exige",
             "GTR R34",
+            "GTR R34 MONO",
     };
 
-    /** Dialog ve liste için profil isimlerini döner (hafıza sıfırlanmaz, sadece liste tek yerde). */
-    public static String[] getProfileLabels() {
-        return PROFILE_LABELS;
-    }
+    public static String[] getProfileLabels() { return PROFILE_LABELS; }
 
-    /**
-     * Verilen profil etiketine göre uygun VehicleProfile'ı seçer.
-     * Activity ve Service tarafı aynı mapping'i paylaşsın diye burada tutuluyor.
-     */
     public void applyProfileLabel(String profile) {
         mCurrentProfileLabel = (profile != null && !profile.isEmpty()) ? profile : "Lotus Exige";
-        if ("McLaren P1".equals(profile)) {
-            setVehicleProfile(PROFILE_MCLAREN_P1());
-        } else if ("Lamborghini Aventador".equals(profile)) {
-            setVehicleProfile(PROFILE_AVENTADOR());
-        } else if ("BMW Z4".equals(profile)) {
-            setVehicleProfile(PROFILE_BMW_Z4());
-        } else if ("Pagani Zonda R".equals(profile)) {
-            setVehicleProfile(PROFILE_ZONDA_R());
-        } else if ("Lotus Exige".equals(profile)) {
-            setVehicleProfile(PROFILE_LOTUS_EXIGE());
-        } else if ("GTR R34".equals(profile)) {
-            setVehicleProfile(PROFILE_GTRR34());
-        } else {
-            setVehicleProfile(PROFILE_LOTUS_EXIGE());
-        }
+        if ("McLaren P1".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1());
+        else if ("Lamborghini Aventador".equals(profile)) setVehicleProfile(PROFILE_AVENTADOR());
+        else if ("BMW Z4".equals(profile)) setVehicleProfile(PROFILE_BMW_Z4());
+        else if ("Pagani Zonda R".equals(profile)) setVehicleProfile(PROFILE_ZONDA_R());
+        else if ("GTR R34".equals(profile)) setVehicleProfile(PROFILE_GTRR34());
+        else if ("GTR R34 MONO".equals(profile)) setVehicleProfile(PROFILE_GTRR34_MONO());
+        else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
 
-    /** Ses karakteri: Eco=0.25, Normal=0.4, Sport=0.7 (vites devir davranışı). */
-    public void setDriveModeAggressiveness(float aggressiveness01) {
-        mDriveModeAggressiveness = Math.max(0f, Math.min(1f, aggressiveness01));
-    }
-
-    /** Simüle gaz pedalı (0–1). Manuel modda onSpeedChanged throttle'ı güncellemez. */
-    public void setSimulatedThrottle(float throttle01) {
-        mSimulatedThrottle = Math.max(0.01f, Math.min(1f, throttle01));
-    }
-
-    public float getSimulatedThrottle() {
-        return mSimulatedThrottle;
-    }
-
-    public boolean isRevMatchEnabled() {
-        return mEnableRevMatch;
-    }
-
-    public void setRevMatchEnabled(boolean enabled) {
-        mEnableRevMatch = enabled;
-    }
-
-    public boolean isGearWhineEnabled() {
-        return mGearWhineEnabled;
-    }
-
-    public void setGearWhineEnabled(boolean enabled) {
-        mGearWhineEnabled = enabled;
-    }
-
-    /** Manuel gaz kullanılıyor mu (sim paneli açıkken true). */
-    public void setUseManualThrottle(boolean use) {
-        mUseManualThrottle = use;
-    }
-
-    public float getCurrentRpm() {
-        return mCurrentRpm;
-    }
-
-    public int getCurrentGear() {
-        return mCurrentGear;
-    }
+    public void setDriveModeAggressiveness(float aggressiveness01) { mDriveModeAggressiveness = Math.max(0f, Math.min(1f, aggressiveness01)); }
+    public void setSimulatedThrottle(float throttle01) { mSimulatedThrottle = Math.max(0.01f, Math.min(1f, throttle01)); }
+    public float getSimulatedThrottle() { return mSimulatedThrottle; }
+    public boolean isRevMatchEnabled() { return mEnableRevMatch; }
+    public void setRevMatchEnabled(boolean enabled) { mEnableRevMatch = enabled; }
+    public boolean isGearWhineEnabled() { return mGearWhineEnabled; }
+    public void setGearWhineEnabled(boolean enabled) { mGearWhineEnabled = enabled; }
+    public void setUseManualThrottle(boolean use) { mUseManualThrottle = use; }
+    public float getCurrentRpm() { return mCurrentRpm; }
+    public int getCurrentGear() { return mCurrentGear; }
 
     // ==========================================
-    // HAZIR ARAÇ TANIMLARI (STATİK)
+    // HAZIR ARAÇ TANIMLARI
     // ==========================================
     public static VehicleProfile PROFILE_LOTUS_EXIGE() {
         return new VehicleProfile("Lotus Exige", 800, 9000f, 1,
@@ -330,16 +220,18 @@ public class EngineSoundManager {
                         {120f, 180f}
                 },
                 0.08f, 0.05f, 150, 150f, // Hafif ve atik (Moderate Wobble)
-                R.raw.lotus_exige_idle,
-                R.raw.lotus_exige_3000,
-                R.raw.lotus_exige_4750,
-                R.raw.lotus_exige_4750,
-                R.raw.lotus_exige_8115,
-                R.raw.lotus_exige_9649
+                new int[][]{
+                        {R.raw.lotus_exige_idle, 800},
+                        {R.raw.lotus_exige_3000, 3000},
+                        {R.raw.lotus_exige_4750, 4750},
+                        {R.raw.lotus_exige_8115, 8115},
+                        {R.raw.lotus_exige_9649, 9000}
+                },
+                null
         );
     }
     public static VehicleProfile PROFILE_MCLAREN_P1() {
-        return new VehicleProfile("McLaren P1", 800f, 9000f, 1,
+        return new VehicleProfile("McLaren P1", 800f, 8800f, 1,
                 1,
                 new float[][]{
                         {0f, 40f},
@@ -352,13 +244,17 @@ public class EngineSoundManager {
                         {120f, 180f}
                 },
                 0.12f, 0.08f, 80, 50f, // Çift kavrama, çok hızlı devir, az sarsıntı
-                R.raw.mclaren_p1_idle,
-                R.raw.mclaren_p1_1750,
-                R.raw.mclaren_p1_2750,
-                R.raw.mclaren_p1_4500,
-                R.raw.mclaren_p1_6000,
-                R.raw.mclaren_p1_7500,
-                R.raw.mclaren_p1_9000
+                // ON Katmanı
+                new int[][]{
+                        {R.raw.mclaren_p1_idle, 800},
+                        {R.raw.mclaren_p1_1750, 1750},
+                        {R.raw.mclaren_p1_2750, 2750},
+                        {R.raw.mclaren_p1_4500, 4500},
+                        {R.raw.mclaren_p1_6000, 6000},
+                        {R.raw.mclaren_p1_7500, 7500},
+                        {R.raw.mclaren_p1_9000, 8800}
+                },
+                null // OFF Katmanı Yok
         );
     }
     public static VehicleProfile PROFILE_AVENTADOR() {
@@ -375,11 +271,15 @@ public class EngineSoundManager {
                         {120f, 180f}
                 },
                 0.10f, 0.06f, 120, 250f, // ISR Şanzıman, inanılmaz şiddetli Wobble!
-                R.raw.lamborghini_aventador_idle,
-                R.raw.lamborghini_aventador_2500,
-                R.raw.lamborghini_aventador_4500,
-                R.raw.lamborghini_aventador_6500,
-                R.raw.lamborghini_aventador_8250
+                // ON Katmanı
+                new int[][]{
+                        {R.raw.lamborghini_aventador_idle, 800},
+                        {R.raw.lamborghini_aventador_2500, 2500},
+                        {R.raw.lamborghini_aventador_4500, 4500},
+                        {R.raw.lamborghini_aventador_6500, 6500},
+                        {R.raw.lamborghini_aventador_8250, 8000}
+                },
+                null // OFF Katmanı Yok
         );
     }
     public static VehicleProfile PROFILE_BMW_Z4() {
@@ -396,12 +296,16 @@ public class EngineSoundManager {
                         {120f, 180f}
                 },
                 0.06f, 0.04f, 150, 100f, // Standart tork konvertör hissi
-                R.raw.bmw_z4_idle,
-                R.raw.bmw_z4_2800,
-                R.raw.bmw_z4_4000,
-                R.raw.bmw_z4_6000,
-                R.raw.bmw_z4_6029,
-                R.raw.bmw_z4_6836
+                // ON Katmanı
+                new int[][]{
+                        {R.raw.bmw_z4_idle, 800},
+                        {R.raw.bmw_z4_2800, 2800},
+                        {R.raw.bmw_z4_4000, 4000},
+                        {R.raw.bmw_z4_6000, 6000},
+                        {R.raw.bmw_z4_6029, 6029},
+                        {R.raw.bmw_z4_6836, 6836}
+                },
+                null // OFF Katmanı Yok
         );
     }
     public static VehicleProfile PROFILE_ZONDA_R() {
@@ -418,18 +322,22 @@ public class EngineSoundManager {
                         {120f, 180f}
                 },
                 0.15f, 0.10f, 100, 300f, // Safkan yarış makinesi, vahşi ve kontrolsüz
-                R.raw.zonda_r_idle,
-                R.raw.zonda_r_3500,
-                R.raw.zonda_r_4250,
-                R.raw.zonda_r_5000,
-                R.raw.zonda_r_5500,
-                R.raw.zonda_r_6250,
-                R.raw.zonda_r_7000,
-                R.raw.zonda_r_8250
+                // ON Katmanı
+                new int[][]{
+                        {R.raw.zonda_r_idle, 800},
+                        {R.raw.zonda_r_3500, 3500},
+                        {R.raw.zonda_r_4250, 4250},
+                        {R.raw.zonda_r_5000, 5000},
+                        {R.raw.zonda_r_5500, 5500},
+                        {R.raw.zonda_r_6250, 6250},
+                        {R.raw.zonda_r_7000, 7000},
+                        {R.raw.zonda_r_8250, 8250}
+                },
+                null // OFF Katmanı Yok
         );
     }
-    public static VehicleProfile PROFILE_GTRR34() {
-        return new VehicleProfile("GTR R34", 1000f, 8200, 1,
+    public static VehicleProfile PROFILE_GTRR34_MONO() {
+        return new VehicleProfile("GTR R34 MONO", 1000f, 8200, 0.6f,
                 0,
                 new float[][]{
                         {0f, 40f},
@@ -441,20 +349,55 @@ public class EngineSoundManager {
                         {100f, 160f},
                         {120f, 180f}
                 },
-                0.06f, 0.045f, 110, 250f, // RevHeadz GTR/GT3 Spec atalet ve sarsıntı!
-                R.raw.rb26_idle,
-                R.raw.rb26_2000,
-                R.raw.rb26_3500,
-                R.raw.rb26_4000,
-                R.raw.rb26_5500,
-                R.raw.rb26_6500,
-                R.raw.rb26_8300
+                0.06f, 0.045f, 100, 250f,
+                // ON Katmanı
+                new int[][]{
+                        {R.raw.rb26_idle, 1000},
+                        {R.raw.rb26_in_2_onverylow_2000, 2000},
+                        {R.raw.rb26_in_2_onlow_3500, 3500},
+                        {R.raw.rb26_in_2_onmid_5000, 5000},
+                        {R.raw.rb26_in_2_onhigh_6500, 6500},
+                        {R.raw.rb26_in_on_veryhigh_8000, 8000}
+                },
+                // OFF Katmanı
+                null
         );
     }
 
-    // ==========================================
-    // CONSTRUCTOR & INSTANCE
-    // ==========================================
+    // --- GTR R34 (YENİ ÇİFT KATMANLI DUAL-LAYER PROFİL) ---
+    public static VehicleProfile PROFILE_GTRR34() {
+        return new VehicleProfile("GTR R34", 1000f, 8200, 0.6f,
+                0,
+                new float[][]{
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {70f, 110f},
+                        {80f, 120f},
+                        {100f, 160f},
+                        {120f, 180f}
+                },
+                0.06f, 0.045f, 110, 250f,
+                // ON Katmanı
+                new int[][]{
+                        {R.raw.rb26_idle, 1000},
+                        {R.raw.rb26_in_2_onverylow_2000, 2000},
+                        {R.raw.rb26_in_2_onlow_3500, 3500},
+                        {R.raw.rb26_in_2_onmid_5000, 5000},
+                        {R.raw.rb26_in_2_onhigh_6500, 6500},
+                        {R.raw.rb26_in_on_veryhigh_8000, 8000}
+                },
+                // OFF Katmanı
+                new int[][]{
+                        {R.raw.rb26_idle, 1000},
+                        {R.raw.rb26_ex_5_offverylow, 1500},
+                        {R.raw.rb26_ex_5_offlow, 4000},
+                        {R.raw.rb26_ex_5_offmid, 6500}
+                }
+        );
+    }
+
     private EngineSoundManager(Context context) {
         this.mContext = context.getApplicationContext();
         this.mHandler = new Handler(Looper.getMainLooper());
@@ -465,102 +408,101 @@ public class EngineSoundManager {
         return sInstance;
     }
 
-    // ==========================================
-    // MODÜLER AYARLAR (DIŞARIDAN ÇAĞRILIR)
-    // ==========================================
     public void setVehicleProfile(VehicleProfile profile) {
         boolean wasPlaying = mIsPlaying;
         if (mIsPlaying) stop();
 
-        this.mActiveProfile = profile; // Kritik: Artık fizik motoru hangi aracı kullandığını biliyor.
+        this.mActiveProfile = profile;
         this.mIdleRpm = profile.idleRpm;
         this.mMaxRpm = profile.maxRpm;
         this.mCurrentIdleVolumeScale = profile.idleVolumeScale * mUserIdleVolumeScale;
-        this.mCurrentSamples = buildSamples(profile.resIds);
+        mCurrentSamplesOn = buildSamples(profile.onSounds);
+        mCurrentSamples = mCurrentSamplesOn; // Eski mixerin çalışması için referans (Single Layer için)
 
-        if (MG4Hardware.isLogEnabled()) {
-            Log.i(TAG, "Profil yüklendi: " + profile.name);
+        if (profile.offSounds != null) {
+            mIsDualLayer = true;
+            mCurrentSamplesOff = buildSamples(profile.offSounds);
+        } else {
+            mIsDualLayer = false;
+            mCurrentSamplesOff = null;
         }
-        mCurrentGear = 0; // Vitesi rölantiye çek
+
+        if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Profil yüklendi: " + profile.name);
+        mCurrentGear = 0;
         if (wasPlaying) start();
     }
 
-    // ==========================================
-    // SES MOTORU (START / STOP)
-    // ==========================================
+    private EngineSample[] buildSamples(int[][] soundMap) {
+        List<EngineSample> samples = new ArrayList<>();
+        if (soundMap != null) {
+            for (int[] map : soundMap) {
+                samples.add(new EngineSample(map[1], map[0])); // map[1] = RPM, map[0] = resId
+            }
+            samples.sort((s1, s2) -> Integer.compare(s1.baseRpm, s2.baseRpm));
+        }
+        return samples.toArray(new EngineSample[0]);
+    }
+
     public void start() {
         if (mIsPlaying || mCurrentSamples == null) return;
         mIsPlaying = true;
         mLoadedSamplesCount = 0;
 
-        // Audio focus istemiyoruz: müzik focus'ta kalsın, motor sesi müzikle birlikte mixlensin.
-        int maxStreams = mCurrentSamples.length + 5;
+        // Eğer Dual-Layer ise ON ve OFF katmanlarını topluyoruz
+        int baseStreams = mIsDualLayer ? (mCurrentSamplesOn.length + mCurrentSamplesOff.length) : mCurrentSamples.length;
+        int maxStreams = baseStreams + 5;
 
-        // Ses kaynağı: bildirim veya medya (kullanıcı seçimine göre).
         boolean useMedia = false;
         try {
             SharedPreferences prefs = mContext.getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
-            String source = prefs.getString("sound_source", "notification");
-            useMedia = "media".equals(source);
-        } catch (Throwable ignored) {
-        }
+            useMedia = "media".equals(prefs.getString("sound_source", "notification"));
+        } catch (Throwable ignored) {}
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             AudioAttributes attrs = new AudioAttributes.Builder()
                     .setUsage(useMedia ? AudioAttributes.USAGE_MEDIA : AudioAttributes.USAGE_NOTIFICATION)
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .build();
-            mSoundPool = new SoundPool.Builder()
-                    .setMaxStreams(maxStreams)
-                    .setAudioAttributes(attrs)
-                    .build();
+            mSoundPool = new SoundPool.Builder().setMaxStreams(maxStreams).setAudioAttributes(attrs).build();
         } else {
             int stream = useMedia ? AudioManager.STREAM_MUSIC : AudioManager.STREAM_NOTIFICATION;
             mSoundPool = new SoundPool(maxStreams, stream, 0);
         }
 
         mSoundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
-            if (status != 0) return; // Yükleme hatası varsa çık
-
-            // Toplam beklenen dosya sayısı: EngineSamples + Turbo + Transmission
-            int totalExpected = mCurrentSamples.length + 2;
-
+            if (status != 0) return;
+            int totalExpected = baseStreams + 2;
             mLoadedSamplesCount++;
 
-            // TÜM DOSYALAR YÜKLENDİĞİNDE:
             if (mLoadedSamplesCount >= totalExpected && mIsPlaying) {
-                // Ana Motor Sesleri
-                for (EngineSample sample : mCurrentSamples) {
-                    sample.streamId = mSoundPool.play(sample.soundId, 0f, 0f, 1, -1, 1.0f);
-                }
-                // Turbo / Compressor
-                mTurboStreamId = mSoundPool.play(mTurboSoundId, 0f, 0f, 1, -1, 1.0f);
-                // Şanzıman Islığı
-                mGearWhineStreamId = mSoundPool.play(mGearWhineSoundId, 0f, 0f, 1, -1, 1.0f);
 
-                // start() metodu içinde, onLoadCompleteListener'ın içine (Tüm dosyalar yüklendiğinde kısmına) ekle:
-                mFlutterStreamId = mSoundPool.play(mFlutterSoundId, 0f, 0f, 1, -1, 1.0f); // -1 = Sonsuz Döngü
+                if (mIsDualLayer) {
+                    for (EngineSample sample : mCurrentSamplesOn) sample.streamId = mSoundPool.play(sample.soundId, 0f, 0f, 1, -1, 1.0f);
+                    for (EngineSample sample : mCurrentSamplesOff) sample.streamId = mSoundPool.play(sample.soundId, 0f, 0f, 1, -1, 1.0f);
+                } else {
+                    for (EngineSample sample : mCurrentSamples) sample.streamId = mSoundPool.play(sample.soundId, 0f, 0f, 1, -1, 1.0f);
+                }
+
+                mTurboStreamId = mSoundPool.play(mTurboSoundId, 0f, 0f, 1, -1, 1.0f);
+                mGearWhineStreamId = mSoundPool.play(mGearWhineSoundId, 0f, 0f, 1, -1, 1.0f);
                 onSpeedChanged(mCurrentSpeedKmh);
             }
         });
 
-        // 3. YÜKLEME SIRALAMASI (Load): ID'leri şimdi alıyoruz
-        if (mActiveProfile.hasTurbo == 2)
-            mTurboSoundId = mSoundPool.load(mContext, R.raw.supercharge, 1);
-        else
-            mTurboSoundId = mSoundPool.load(mContext, R.raw.turbo, 1);
-
+        // Yardımcı sesleri yükle
+        mTurboSoundId = mSoundPool.load(mContext, (mActiveProfile.hasTurbo == 2) ? R.raw.supercharge : R.raw.turbo, 1);
         mGearWhineSoundId = mSoundPool.load(mContext, R.raw.transmission, 1);
-
         if (mActiveProfile.name.contains("R34")) {
             mFlutterSoundId = mSoundPool.load(mContext, R.raw.rb26_bf2, 1);
         } else {
-            mFlutterSoundId = -1; // R34 değilse şimdilik kapalı
+            mFlutterSoundId = -1; // Diğerlerinde flutter tetiklense bile çalacak dosya olmadığı için sessiz kalır!
         }
-
-        // Sonra motor seslerini yükle
-        for (EngineSample sample : mCurrentSamples) {
-            sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
+        // Motor seslerini yükle
+        if (mIsDualLayer) {
+            for (EngineSample sample : mCurrentSamplesOn) sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
+            for (EngineSample sample : mCurrentSamplesOff) sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
+        } else {
+            for (EngineSample sample : mCurrentSamples) sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
         }
     }
 
@@ -570,36 +512,13 @@ public class EngineSoundManager {
             mSoundPool.release();
             mSoundPool = null;
         }
-        if (mCurrentSamples != null) {
-            for (EngineSample s : mCurrentSamples) s.streamId = -1;
-        }
+        if (mCurrentSamples != null) for (EngineSample s : mCurrentSamples) s.streamId = -1;
+        if (mCurrentSamplesOn != null) for (EngineSample s : mCurrentSamplesOn) s.streamId = -1;
+        if (mCurrentSamplesOff != null) for (EngineSample s : mCurrentSamplesOff) s.streamId = -1;
         mTurboStreamId = -1;
-        mFlutterStreamId = -1;
+        mFlutterSoundId = -1;
     }
 
-    // ==========================================
-    // YARDIMCI METODLAR (RPM PARSER)
-    // ==========================================
-    private EngineSample[] buildSamples(int... resourceIds) {
-        List<EngineSample> samples = new ArrayList<>();
-        for (int id : resourceIds) {
-            String fileName = mContext.getResources().getResourceEntryName(id);
-            int rpm = 1000;
-            if (!fileName.contains("idle")) {
-                String[] parts = fileName.split("_");
-                try {
-                    rpm = Integer.parseInt(parts[parts.length - 1]);
-                } catch (Exception e) { rpm = 1000; }
-            }
-            samples.add(new EngineSample(rpm, id));
-        }
-        samples.sort((s1, s2) -> Integer.compare(s1.baseRpm, s2.baseRpm));
-        return samples.toArray(new EngineSample[0]);
-    }
-
-    // ==========================================
-    // TCU & MIXER (ANA MANTIK)
-    // ==========================================
     public void onSpeedChanged(float speedKmh) {
         if (mUseManualThrottle) {
             onSpeedChanged(speedKmh, Float.NaN);
@@ -612,7 +531,7 @@ public class EngineSoundManager {
     }
 
     public void onSpeedChanged(float speedKmh, float dcPowerKw) {
-        if (!mIsPlaying || mCurrentSamples == null || mLoadedSamplesCount < mCurrentSamples.length) return;
+        if (!mIsPlaying || mCurrentSamples == null || mLoadedSamplesCount < (mIsDualLayer ? mCurrentSamplesOn.length : mCurrentSamples.length)) return;
 
         mCurrentSpeedKmh = (Float.isNaN(speedKmh) || speedKmh < 0f) ? 0f : speedKmh;
         if (!mUseManualThrottle) {
@@ -626,7 +545,6 @@ public class EngineSoundManager {
             }
             mSimulatedThrottle = Math.min(1f, Math.max(0f, (mCurrentDcPowerKw / mMotorMaxPower)));
         }
-
         updateGearAndRpm();
         updateAudioMixer();
     }
@@ -634,7 +552,7 @@ public class EngineSoundManager {
     private void updateGearAndRpm() {
         if (mActiveProfile == null) return;
         float speed = mCurrentSpeedKmh;
-        float throttle = mSimulatedThrottle; // 0.01 - 1.0
+        float throttle = mSimulatedThrottle;
         long currentTime = System.currentTimeMillis();
 
         if (speed < 1.0f) {
@@ -643,13 +561,11 @@ public class EngineSoundManager {
             return;
         }
 
-        // 1. ADIM: Sürücünün İstediği "İdeal Devir" (Target RPM)
         float targetRpmRange = mMaxRpm - mIdleRpm;
         float baseTarget = 1500f + (mDriveModeAggressiveness * 3500f);
         float desiredRpm = baseTarget + (throttle * (mMaxRpm - baseTarget));
         desiredRpm = Math.max(mIdleRpm, Math.min(mMaxRpm, desiredRpm));
 
-        // 2. ADIM: Vites Kararı
         if (currentTime - mLastShiftTime > 1200) {
             int bestGear = mCurrentGear > 0 ? mCurrentGear : 1;
             float bestRpmDiff = Float.MAX_VALUE;
@@ -670,28 +586,21 @@ public class EngineSoundManager {
             }
 
             if (bestGear != mCurrentGear) {
-                // --- VİTES KÜÇÜLTME (Downshift) ---
                 if (bestGear < mCurrentGear) {
                     if (mEnableRevMatch) {
                         float aggressivenessFactor = 0.05f + (mDriveModeAggressiveness * 0.10f);
                         mRevMatchBoost = mMaxRpm * aggressivenessFactor;
                         if (mCurrentRpm > mMaxRpm * 0.8f) mRevMatchBoost *= 0.5f;
-                    } else {
-                        mCurrentRpm *= 1.10f;
-                    }
-                }
-                // --- VİTES BÜYÜTME (Upshift) ---
-                else {
+                    } else mCurrentRpm *= 1.10f;
+                } else {
                     mRevMatchBoost = 0;
                     mCurrentRpm *= 0.88f;
                 }
-
                 mLastShiftTime = currentTime;
                 mCurrentGear = bestGear;
             }
         }
 
-        // 3. ADIM: Mevcut Vitesteki Gerçek RPM'i Hesapla
         if (mCurrentGear > 0) {
             float[] finalRange = mActiveProfile.gearRanges[mCurrentGear - 1];
             float speedRatio = (speed - finalRange[0]) / (finalRange[1] - finalRange[0]);
@@ -700,28 +609,18 @@ public class EngineSoundManager {
             float dynamicMax = mIdleRpm + (targetRpmRange * (0.5f + throttle * 0.5f));
             float targetRpmFinal = mIdleRpm + (speedRatio * (dynamicMax - mIdleRpm));
 
-            // 1. Önce ara gazı sıçramasını (boost) sönümlendir
             mRevMatchBoost *= 0.85f;
             if (mRevMatchBoost < 5f) mRevMatchBoost = 0;
 
-            // 2. RPM YUMUŞATMASI (Atalet Sistemi)
-            // Gaza basılıysa OnSmooth, çekiliyse OffSmooth değerini kullan
             float currentSmooth = (throttle > 0.05f) ? mActiveProfile.rpmOnSmooth : mActiveProfile.rpmOffSmooth;
             mCurrentRpm = (mCurrentRpm * (1.0f - currentSmooth)) + (targetRpmFinal * currentSmooth);
 
-            // 3. Ara gazı etkisini final RPM'e ekle (Eğer açıksa)
-            if (mEnableRevMatch && mRevMatchBoost > 0) {
-                mCurrentRpm += mRevMatchBoost;
-            }
+            if (mEnableRevMatch && mRevMatchBoost > 0) mCurrentRpm += mRevMatchBoost;
 
-            // 4. WOBBLE (ŞANZIMAN SARSINTISI) HİLESİ!
-            // Vites atıldıktan sonraki ilk yarım saniye (500ms) içinde çalışır
             long timeSinceShift = currentTime - mLastShiftTime;
             if (timeSinceShift < 500 && mActiveProfile.wobbleMagnitude > 0) {
-                float timeSec = timeSinceShift / 1000f; // Saniye cinsinden zaman
-                float dampening = Math.max(0f, 1.0f - (timeSec / 0.5f)); // 500ms içinde etki sıfırlanır
-
-                // 9.0Hz frekansla (saniyede 9 kez) sinüs dalgası oluşturarak devri titret
+                float timeSec = timeSinceShift / 1000f;
+                float dampening = Math.max(0f, 1.0f - (timeSec / 0.5f));
                 float wobbleOffset = (float) Math.sin(timeSec * 9.0f * Math.PI * 2) * mActiveProfile.wobbleMagnitude * dampening;
                 mCurrentRpm += wobbleOffset;
             }
@@ -731,7 +630,7 @@ public class EngineSoundManager {
     }
 
     private void updateAudioMixer() {
-        if (mSoundPool == null || mCurrentSamples == null || mLoadedSamplesCount < mCurrentSamples.length) return;
+        if (mSoundPool == null || mCurrentSamples == null) return;
 
         long currentTime = System.currentTimeMillis();
         if (currentTime - mLastMixerUpdateTime < MIXER_UPDATE_INTERVAL_MS) return;
@@ -742,129 +641,151 @@ public class EngineSoundManager {
         float rpmRatio = (rpm - mIdleRpm) / (mMaxRpm - mIdleRpm);
         rpmRatio = Math.max(0f, Math.min(1f, rpmRatio));
 
-        // --- CONTINUOUS FLUTTER (DÖNGÜSEL STUTUTU) ---
-        if (mFlutterStreamId != -1 && false) {
-            if (rpm > 3500f && mLastThrottleForFlutter > 0.6f && mSimulatedThrottle < 0.1f) {
-                mCurrentFlutterVol = (rpm / mMaxRpm);
+        if (mFlutterSoundId != -1) {
+            if (rpm > 3500f && mLastThrottleForFlutter > 0.6f && mSimulatedThrottle < 0.1f
+                    && (currentTime - mLastFlutterTime > 800)) {
+
+                float flutterVol = (rpm / mMaxRpm) * masterVol * mFlutterSoundmultiplier;
+                flutterVol = Math.max(0f, Math.min(1f, flutterVol));
+
+                // Pitch hafif rastgele (aynı robotik ses çıkmasın)
+                float flutterPitch = 0.85f + (float)(Math.random() * 0.2f);
+
+                // Priority'yi 1'e çektik (Kanal sayımız zaten yeterli, sesi ezmez).
+                mSoundPool.play(mFlutterSoundId, flutterVol, flutterVol, 1, 0, flutterPitch);
+
+                mLastFlutterTime = currentTime;
             }
-
-            if (mCurrentFlutterVol > 0f) {
-                mCurrentFlutterVol *= 0.92f;
-                if (mCurrentFlutterVol < 0.02f) mCurrentFlutterVol = 0f;
-
-                float finalFlutterVol = mCurrentFlutterVol * masterVol * 1.5f;
-                finalFlutterVol = Math.max(0f, Math.min(1f, finalFlutterVol));
-                float flutterPitch = 0.8f + (mCurrentFlutterVol * 0.4f);
-
-                mSoundPool.setVolume(mFlutterStreamId, finalFlutterVol, finalFlutterVol);
-                mSoundPool.setRate(mFlutterStreamId, flutterPitch);
-            } else {
-                mSoundPool.setVolume(mFlutterStreamId, 0f, 0f);
-            }
-
             mLastThrottleForFlutter = mSimulatedThrottle;
         }
 
-        // --- TURBO HESAPLAMASI (Hızdan Bağımsız, RPM'e Tam Bağımlı) ---
+        // --- TURBO SESİ ---
         if (mTurboStreamId != -1) {
             if (mActiveProfile == null || (mActiveProfile.hasTurbo == 0)) {
                 mSoundPool.setVolume(mTurboStreamId, 0f, 0f);
-                mCurrentTurboBoost = 0f;
-            } else if(mEnableTurboSound && mActiveProfile.hasTurbo == 1){
-                float throttle = mSimulatedThrottle;
-                float boostFactor = (rpmRatio > 0.10f) ? (rpmRatio - 0.10f) * 1.12f : 0f;
-                boostFactor = Math.max(0f, Math.min(1f, boostFactor));
-
-                float targetBoost = throttle * boostFactor;
-                mCurrentTurboBoost = (mCurrentTurboBoost * 0.90f) + (targetBoost * 0.10f);
-
-                float turboVol = mCurrentTurboBoost * masterVol * mTurboMaxSound;
-                float turboPitch = 0.8f + (rpmRatio * 1.2f);
-
-                mSoundPool.setVolume(mTurboStreamId, turboVol, turboVol);
-                mSoundPool.setRate(mTurboStreamId, turboPitch);
-            } else if(mEnableTurboSound && mActiveProfile.hasTurbo == 2){
+            } else if(mEnableTurboSound && mActiveProfile.hasTurbo == 1) {
+                float boostFactor = Math.max(0f, Math.min(1f, (rpmRatio > 0.10f) ? (rpmRatio - 0.10f) * 1.12f : 0f));
+                mCurrentTurboBoost = (mCurrentTurboBoost * 0.90f) + ((mSimulatedThrottle * boostFactor) * 0.10f);
+                mSoundPool.setVolume(mTurboStreamId, mCurrentTurboBoost * masterVol * mTurboMaxSound, mCurrentTurboBoost * masterVol * mTurboMaxSound);
+                mSoundPool.setRate(mTurboStreamId, 0.8f + (rpmRatio * 1.2f));
+            } else if(mEnableTurboSound && mActiveProfile.hasTurbo == 2) {
                 float compVol = (0.2f + (mSimulatedThrottle * 0.8f)) * rpmRatio * masterVol * mCompressorMaxVol;
-                float compPitch = 0.8f + (rpmRatio * 1.7f);
-
                 mSoundPool.setVolume(mTurboStreamId, compVol, compVol);
-                mSoundPool.setRate(mTurboStreamId, compPitch);
-            }
-            else {
-                mSoundPool.setVolume(mTurboStreamId, 0, 0);
-                mSoundPool.setRate(mTurboStreamId, 1);
+                mSoundPool.setRate(mTurboStreamId, 0.8f + (rpmRatio * 1.7f));
             }
         }
-        if (mCurrentSpeedKmh < 1.0f) {
-            for (int i = 0; i < mCurrentSamples.length; i++) {
-                EngineSample s = mCurrentSamples[i];
-                if (s.streamId == -1) continue;
 
-                float targetVol = (i == 0) ? (masterVol * mCurrentIdleVolumeScale) : 0f;
+        // --- MİKSER: HİBRİT KARAR MEKANİZMASI ---
+        if (mIsDualLayer) {
+            // YENİ SİSTEM (DUAL LAYER - R34)
+            float onWeight = (float) Math.sqrt(mSimulatedThrottle);
+            float offWeight = (float) Math.sqrt(Math.max(0f, 1.0f - mSimulatedThrottle));
 
-                mSoundPool.setVolume(s.streamId, targetVol, targetVol);
-                mSoundPool.setRate(s.streamId, mIdlePitch);
+            processLayer(mCurrentSamplesOn, rpm, onWeight * masterVol, true);
+            processLayer(mCurrentSamplesOff, rpm, offWeight * masterVol, false);
+
+        } else {
+            // ESKİ SİSTEM (SINGLE LAYER - Lotus, Aventador vs.)
+            if (mCurrentSpeedKmh < 1.0f) {
+                for (int i = 0; i < mCurrentSamples.length; i++) {
+                    EngineSample s = mCurrentSamples[i];
+                    if (s.streamId == -1) continue;
+                    float targetVol = (i == 0) ? (masterVol * mCurrentIdleVolumeScale) : 0f;
+                    mSoundPool.setVolume(s.streamId, targetVol, targetVol);
+                    mSoundPool.setRate(s.streamId, mIdlePitch);
+                }
+            } else {
+                EngineSample lower = mCurrentSamples[0], upper = mCurrentSamples[1];
+                if (rpm >= mCurrentSamples[mCurrentSamples.length - 1].baseRpm) {
+                    lower = mCurrentSamples[mCurrentSamples.length - 1];
+                    upper = lower;
+                } else {
+                    for (int i = 0; i < mCurrentSamples.length - 1; i++) {
+                        if (rpm >= mCurrentSamples[i].baseRpm && rpm <= mCurrentSamples[i+1].baseRpm) {
+                            lower = mCurrentSamples[i]; upper = mCurrentSamples[i+1]; break;
+                        }
+                    }
+                }
+                float rpmDiff = upper.baseRpm - lower.baseRpm;
+                float blend = Math.max(0f, Math.min(1f, (rpmDiff <= 0) ? 0 : (rpm - lower.baseRpm) / rpmDiff));
+
+                for (int i = 0; i < mCurrentSamples.length; i++) {
+                    EngineSample s = mCurrentSamples[i];
+                    if (s.streamId == -1) continue;
+                    float rawVol = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
+                    float shapedVol = (float) Math.sqrt(rawVol);
+                    if (Float.isNaN(shapedVol)) shapedVol = 0f;
+                    if (s == mCurrentSamples[0]) shapedVol *= mCurrentIdleVolumeScale;
+
+                    float loadVolumeFactor = 0.5f + (mSimulatedThrottle * 0.5f);
+                    float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
+                    float modeVolumeBoost = (mDriveModeAggressiveness > 0.5f) ? 1.2f : 1.0f;
+
+                    float finalVolume = Math.max(0.0f, Math.min(1.0f, shapedVol * masterVol * loadVolumeFactor * modeVolumeBoost));
+                    float pitch = Math.max(0.5f, Math.min(2.0f, (rpm / s.baseRpm) * loadPitchFactor));
+
+                    mSoundPool.setVolume(s.streamId, finalVolume, finalVolume);
+                    mSoundPool.setRate(s.streamId, Float.isNaN(pitch) ? 1.0f : pitch);
+                }
             }
-            return;
         }
 
-        EngineSample lower = mCurrentSamples[0];
-        EngineSample upper = mCurrentSamples[1];
+        // Şanzıman Islığı Ortak
+        if (mGearWhineStreamId != -1 && mGearWhineEnabled) {
+            float speedRatio = Math.max(0f, Math.min(1f, mCurrentSpeedKmh / mWhineMaxSpeed));
+            mSoundPool.setVolume(mGearWhineStreamId, speedRatio * masterVol * mGearWhineMaxVol, speedRatio * masterVol * mGearWhineMaxVol);
+            mSoundPool.setRate(mGearWhineStreamId, 0.5f + (speedRatio * 1.5f));
+        } else if(!mGearWhineEnabled){
+            mSoundPool.setVolume(mGearWhineStreamId, 0, 0);
+        }
+    }
 
-        for (int i = 0; i < mCurrentSamples.length - 1; i++) {
-            if (rpm >= mCurrentSamples[i].baseRpm && rpm <= mCurrentSamples[i+1].baseRpm) {
-                lower = mCurrentSamples[i];
-                upper = mCurrentSamples[i+1];
-                break;
+    /** YENİ SİSTEM İÇİN DUAL-LAYER KATMAN İŞLEYİCİ */
+    private void processLayer(EngineSample[] layer, float rpm, float weightVol, boolean isOnLayer) {
+        if (layer == null || layer.length == 0) return;
+
+        EngineSample lower = layer[0];
+        EngineSample upper = layer.length > 1 ? layer[1] : layer[0];
+
+        if (rpm >= layer[layer.length - 1].baseRpm) {
+            lower = layer[layer.length - 1];
+            upper = lower;
+        } else {
+            // Normal aralık bulucu
+            for (int i = 0; i < layer.length - 1; i++) {
+                if (rpm >= layer[i].baseRpm && rpm <= layer[i+1].baseRpm) {
+                    lower = layer[i];
+                    upper = layer[i+1];
+                    break;
+                }
             }
         }
 
         float rpmDiff = upper.baseRpm - lower.baseRpm;
-        float blend = (rpmDiff <= 0) ? 0 : (rpm - lower.baseRpm) / rpmDiff;
-        blend = Math.max(0f, Math.min(1f, blend));
+        float blend = Math.max(0f, Math.min(1f, (rpmDiff <= 0) ? 0 : (rpm - lower.baseRpm) / rpmDiff));
 
-        for (int i = 0; i < mCurrentSamples.length; i++) {
-            EngineSample s = mCurrentSamples[i];
+        for (int i = 0; i < layer.length; i++) {
+            EngineSample s = layer[i];
             if (s.streamId == -1) continue;
-            float rawVol = 0f;
 
-            if (s == lower) {
-                rawVol = 1f - blend;
-            } else if (s == upper) {
-                rawVol = blend;
-            }
-
+            float rawVol = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
             float shapedVol = (float) Math.sqrt(rawVol);
             if (Float.isNaN(shapedVol)) shapedVol = 0f;
+            if (s == layer[0]) shapedVol *= mCurrentIdleVolumeScale;
 
-            if (s == mCurrentSamples[0]) shapedVol *= mCurrentIdleVolumeScale;
+            float finalVolume = shapedVol * weightVol;
+            float pitch = rpm / s.baseRpm;
 
-            float loadVolumeFactor = 0.5f + (mSimulatedThrottle * 0.5f);
-            float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
-            float modeVolumeBoost = (mDriveModeAggressiveness > 0.5f) ? 1.2f : 1.0f;
+            if (isOnLayer) pitch *= (0.98f + (mSimulatedThrottle * 0.04f));
+            pitch = Math.max(0.6f, Math.min(1.8f, pitch)); // Yapay sünekliği önlemek için limit
 
-            float finalVolume = Math.max(0.0f, Math.min(1.0f, shapedVol * masterVol * loadVolumeFactor * modeVolumeBoost));
-            float pitch = (rpm / s.baseRpm) * loadPitchFactor;
-
-            pitch = Math.max(0.5f, Math.min(2.0f, pitch));
-            if (Float.isNaN(pitch)) pitch = 1.0f;
+            if (mCurrentSpeedKmh < 1.0f) {
+                finalVolume = (i == 0) ? (mMasterVolume * mCurrentIdleVolumeScale) : 0f;
+                pitch = mIdlePitch;
+            }
 
             mSoundPool.setVolume(s.streamId, finalVolume, finalVolume);
             mSoundPool.setRate(s.streamId, pitch);
-        }
-
-        if (mGearWhineStreamId != -1 && mGearWhineEnabled) {
-            float speedRatio = mCurrentSpeedKmh / mWhineMaxSpeed;
-            speedRatio = Math.max(0f, Math.min(1f, speedRatio));
-
-            float whineVol = speedRatio * masterVol * mGearWhineMaxVol;
-            float whinePitch = 0.5f + (speedRatio * 1.5f);
-
-            mSoundPool.setVolume(mGearWhineStreamId, whineVol, whineVol);
-            mSoundPool.setRate(mGearWhineStreamId, whinePitch);
-        } else if(!mGearWhineEnabled){
-            mSoundPool.setVolume(mGearWhineStreamId, 0, 0);
-            mSoundPool.setRate(mGearWhineStreamId, 1);
         }
     }
 
