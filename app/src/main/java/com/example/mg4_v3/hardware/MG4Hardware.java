@@ -819,6 +819,7 @@ public class MG4Hardware {
     private static volatile int elsecounter = 0;
     private static volatile int elsecounter2 = 0;
     private static volatile int dtHourscounter = 0;
+    private static volatile int dtHourscounter1 = 0;
 
     /** Serviste 100ms'de bir çağrılır: DC/AC güçleri oku, enerjiyi ve mesafeyi integre et, önbelleğe yaz. */
     public static void integrateConsumptionData() {
@@ -866,15 +867,17 @@ public class MG4Hardware {
 
         // Zaman için güvenlik sınırı: 0 veya 1 saatten büyük deltaları integrale sokma
         if (dtHours <= 0.0 || dtHours > 1.0) {
-            dtHourscounter += 1;
+            if (dtHours <= 0.0) dtHourscounter += 1;
+            else dtHourscounter1 += 1;
             if (sLogEnabled) {
                 Log.w(TAG,"integral_diag: dtHours skip dt=" + dtHours
                         + " lastMs=" + sConsumptionLastUpdateMs + " nowMs=" + nowMs);
             }
-            sConsumptionLastUpdateMs = nowMs;
-            //return;
+            //sConsumptionLastUpdateMs = nowMs;
+            return;
         }
-        if (dtHourscounter > 0) Log.i(TAG,"integral_diag: dtHourscounter " + dtHourscounter);
+        // bu arkadaş 4 oldu dtHourscounter
+        if (dtHourscounter > 0 || dtHourscounter1 > 0) Log.i(TAG,"integral_diag: dtHourscounter " + dtHourscounter + " dtHourscounter1: " + dtHourscounter1);
 
         sConsumptionLastUpdateMs = nowMs;
         if (dtHours > 0) {
@@ -1017,6 +1020,10 @@ public class MG4Hardware {
         float dcA = getDcAmpGlobal();
         float dcV = getDcVoltGlobal();
 
+        // şarj olurken 10
+        //durdu 8
+        // precharge 5
+        //
         if (sLogEnabled) Log.i(TAG, "CHG CHECK → status=" + (val instanceof Number ? ((Number) val).intValue() : -1)
                 + " acA=" + acA + " dcA=" + dcA + " dcV=" + dcV + " speed=" + sLastSpeedKmh);
 

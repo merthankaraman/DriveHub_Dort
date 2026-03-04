@@ -84,6 +84,8 @@ public class EngineSoundManager {
     // START/STOP MARŞ DEĞİŞKENLERİ
     private int mStartSoundId = -1;
     private int mStopSoundId = -1;
+    private long mEngineStartTime = 0; // Marşın basıldığı anı tutar
+    private long mAutoStartupDelayMs = 0; // Dosyadan otomatik okunan marş süresi
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public static class VehicleProfile {
@@ -220,7 +222,7 @@ public class EngineSoundManager {
                         {100f, 160f},
                         {120f, 180f}
                 },
-                0.08f, 0.05f, 150, 150f, // Hafif ve atik (Moderate Wobble)
+                1f, 1f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 0,0,
                 new int[][]{
                         {R.raw.lotus_exige_idle, 800},
@@ -233,17 +235,19 @@ public class EngineSoundManager {
         );
     }
     public static VehicleProfile PROFILE_PORSCHE_GT3() {
-        return new VehicleProfile("Porsche GT3 997", 2000f, 9400f, 1f,
+        return new VehicleProfile("Porsche GT3 997", 2000f, 9400f, 0.7f,
                 0,
                 new float[][]{
-                        {0f, 103f},
-                        {30f, 142f},
-                        {60f, 176f},
-                        {90f, 214f},
-                        {120f, 253f},
-                        {150f, 303f}
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {70f, 110f},
+                        {80f, 120f},
+                        {100f, 160f},
+                        {120f, 180f}
                 },
-                0.0600f, 0.0450f, 110, 250f,
+                1f, 1f, 110, 250f,
                 R.raw.por911rsr_on_start, R.raw.por911rsr_on_stop,
                 new int[][]{
                         {R.raw.por911rsr_on_idle, 2000},
@@ -267,22 +271,24 @@ public class EngineSoundManager {
         return new VehicleProfile("Lexus LFA",
                 984f,   // Orijinal Rölanti (IdleRPM)
                 9550f,  // Orijinal Kesici (MaxRPM)
-                1f,
+                0.6f,
                 0,      // Atmosferik (Turbo yok)
 
                 // LFA'nın SpeedPerThousandRPM değerlerinin 9.55 (Max RPM) ile çarpılmış gerçek vites hızları
                 new float[][]{
-                        {0f, 90f},    // 1. Vites (9.44 * 9.55 = 90 km/h)
-                        {30f, 132f},  // 2. Vites (13.88 * 9.55 = 132.5 km/h)
-                        {60f, 185f},  // 3. Vites (19.45 * 9.55 = 185.7 km/h)
-                        {90f, 244f},  // 4. Vites (25.55 * 9.55 = 244 km/h)
-                        {120f, 281f}, // 5. Vites (29.44 * 9.55 = 281 km/h)
-                        {150f, 318f}  // 6. Vites (33.33 * 9.55 = 318 km/h)
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {70f, 110f},
+                        {80f, 120f},
+                        {100f, 160f},
+                        {120f, 180f}
                 },
 
                 // Orijinal LFA Fizik Karakteristiği
-                0.0650f,  // Çılgın bir devir yükselme hızı
-                0.0300f,  // Çok daha hızlı devir düşüşü (Hafif volan)
+                1f,  // Çılgın bir devir yükselme hızı
+                1f,  // Çok daha hızlı devir düşüşü (Hafif volan)
                 200,      // 200ms Vites Geçişi (Tek kavramalı ASG şanzıman hissi)
                 180f,     // 180 RPM Wobble (Porsche kadar sarsıntılı değil, daha pürüzsüz)
 
@@ -315,22 +321,24 @@ public class EngineSoundManager {
         return new VehicleProfile("Dodge Hellcat",
                 700f,   // Orijinal Rölanti
                 6100f,  // Orijinal Kesici
-                1f,
-                2,      // hasTurbo = 2 (Supercharger Kompresör Sesini Aktif Eder)
+                0.7f,
+                0,
 
                 // txt'deki SpeedPerThousandRPM değerlerinin 6.1 (Max RPM) ile çarpılmış gerçek vites hızları [cite: 7, 8]
                 new float[][]{
-                        {0f, 96f},    // 1. Vites (15.78 * 6.1)
-                        {30f, 137f},  // 2. Vites (22.57 * 6.1)
-                        {60f, 182f},  // 3. Vites (29.97 * 6.1)
-                        {90f, 217f},  // 4. Vites (35.66 * 6.1)
-                        {120f, 282f}, // 5. Vites (46.31 * 6.1)
-                        {150f, 345f}  // 6. Vites (56.61 * 6.1)
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {70f, 110f},
+                        {80f, 120f},
+                        {100f, 160f},
+                        {120f, 180f}
                 },
 
                 // Orijinal Hellcat Fizik Karakteristiği
-                0.0800f,  // İvmelenme hızı
-                0.0150f,  // Çok yavaş devir düşüşü (Ağır V8 volan hissi)
+                1f,  // İvmelenme hızı
+                1f,  // Çok yavaş devir düşüşü (Ağır V8 volan hissi)
                 110,      // 110ms Vites Geçişi (ZF 8 ileri otomatik hızında)
                 250f,     // 250 RPM Wobble (Şiddetli şanzıman sarsıntısı)
 
@@ -379,6 +387,13 @@ public class EngineSoundManager {
 
         this.mActiveProfile = profile;
         this.mIdleRpm = profile.idleRpm;
+        // MARŞ SÜRESİNİ OTOMATİK HESAPLA
+        if (profile.startSoundResId != 0) {
+            mAutoStartupDelayMs = getSoundDurationMs(profile.startSoundResId);
+            if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Marş süresi otomatik hesaplandı: " + mAutoStartupDelayMs + "ms");
+        } else {
+            mAutoStartupDelayMs = 0;
+        }
         this.mMaxRpm = profile.maxRpm;
         this.mCurrentIdleVolumeScale = profile.idleVolumeScale * mUserIdleVolumeScale;
         mCurrentSamplesOn = buildSamples(profile.onSounds);
@@ -458,8 +473,13 @@ public class EngineSoundManager {
                 mGearWhineStreamId = mSoundPool.play(mGearWhineSoundId, 0f, 0f, 1, -1, 1.0f);
 
                 // MARŞ SESİ BURADA OYNATILIYOR
-                if (mStartSoundId != -1) {
+                if (mStartSoundId != -1 && MG4Hardware.getLastGear() == 1) {
                     mSoundPool.play(mStartSoundId, mMasterVolume, mMasterVolume, 2, 0, 1.0f);
+                    mEngineStartTime = System.currentTimeMillis(); // Marş süresince rölantiyi beklet (Fade-in)
+                } else {
+                    // Marş sesi yoksa VEYA vites P'de değilse (örn. yolda gidiyorsak):
+                    // Marşı atla ve motor seslerini gecikmesiz, anında başlat!
+                    mEngineStartTime = 0;
                 }
 
                 onSpeedChanged(mCurrentSpeedKmh);
@@ -629,8 +649,22 @@ public class EngineSoundManager {
         if (currentTime - mLastMixerUpdateTime < MIXER_UPDATE_INTERVAL_MS) return;
         mLastMixerUpdateTime = currentTime;
 
+        // --- MARŞ SÜRESİ FADE-IN KONTROLÜ ---
+        float startupFade = 1.0f;
+        if (mActiveProfile != null && mActiveProfile.startSoundResId != 0 && mAutoStartupDelayMs > 0 && mEngineStartTime > 0) {
+            long timeSinceStart = currentTime - mEngineStartTime;
+            if (timeSinceStart < mAutoStartupDelayMs) {
+                startupFade = 0f; // Marş dönüyor, motor rölantisi sessiz!
+            } else if (timeSinceStart < mAutoStartupDelayMs + 600) {
+                startupFade = (timeSinceStart - mAutoStartupDelayMs) / 600f; // Marş bitince rölanti 600ms içinde "har" diye yükselsin
+            }
+        }
+
         float rpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
-        float masterVol = Math.max(0f, Math.min(1.0f, mMasterVolume));
+
+        // FADE-IN ÇARPANI BURADA UYGULANIYOR!
+        float masterVol = Math.max(0f, Math.min(1.0f, mMasterVolume)) * startupFade;
+
         float rpmRatio = (rpm - mIdleRpm) / (mMaxRpm - mIdleRpm);
         rpmRatio = Math.max(0f, Math.min(1f, rpmRatio));
 
@@ -666,12 +700,14 @@ public class EngineSoundManager {
         }
 
         // --- MİKSER: HİBRİT KARAR MEKANİZMASI ---
+        // --- MİKSER: HİBRİT KARAR MEKANİZMASI ---
         if (mIsDualLayer) {
             float onWeight = (float) Math.sqrt(mSimulatedThrottle);
             float offWeight = (float) Math.sqrt(Math.max(0f, 1.0f - mSimulatedThrottle));
 
-            processLayer(mCurrentSamplesOn, rpm, onWeight * masterVol, true);
-            processLayer(mCurrentSamplesOff, rpm, offWeight * masterVol, false);
+            // DÜZELTME: Kısılmış masterVol değerini de fonksiyona yolluyoruz
+            processLayer(mCurrentSamplesOn, rpm, onWeight * masterVol, masterVol, true);
+            processLayer(mCurrentSamplesOff, rpm, offWeight * masterVol, masterVol, false);
 
         } else {
             if (mCurrentSpeedKmh < 1.0f) {
@@ -728,7 +764,8 @@ public class EngineSoundManager {
     }
 
     /** YENİ SİSTEM İÇİN DUAL-LAYER KATMAN İŞLEYİCİ */
-    private void processLayer(EngineSample[] layer, float rpm, float weightVol, boolean isOnLayer) {
+    // DÜZELTME: Parametrelere 'float fadedMasterVol' eklendi
+    private void processLayer(EngineSample[] layer, float rpm, float weightVol, float fadedMasterVol, boolean isOnLayer) {
         if (layer == null || layer.length == 0) return;
 
         EngineSample lower = layer[0];
@@ -766,7 +803,7 @@ public class EngineSoundManager {
             pitch = Math.max(0.6f, Math.min(1.8f, pitch));
 
             if (mCurrentSpeedKmh < 1.0f) {
-                finalVolume = (i == 0) ? (mMasterVolume * mCurrentIdleVolumeScale) : 0f;
+                finalVolume = (i == 0) ? (fadedMasterVol * mCurrentIdleVolumeScale) : 0f;
                 pitch = mIdlePitch;
             }
 
@@ -776,4 +813,21 @@ public class EngineSoundManager {
     }
 
     public boolean isPlaying() { return mIsPlaying; }
+    // --- OTOMATİK MARŞ SÜRESİ HESAPLAYICI ---
+    private long getSoundDurationMs(int rawResId) {
+        if (rawResId == 0 || rawResId == -1) return 0;
+        try {
+            android.media.MediaMetadataRetriever mmr = new android.media.MediaMetadataRetriever();
+            android.content.res.AssetFileDescriptor afd = mContext.getResources().openRawResourceFd(rawResId);
+            mmr.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            String durationStr = mmr.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
+            mmr.release();
+            afd.close();
+            // Dosyanın tam süresini alıyoruz. (İstersen sonundan 200ms kırparak rölantinin daha erken girmesini sağlayabilirsin)
+            return Long.parseLong(durationStr);
+        } catch (Exception e) {
+            Log.e(TAG, "Süre okunamadı, varsayılan 2500ms kullanılıyor.", e);
+            return 2500;
+        }
+    }
 }
