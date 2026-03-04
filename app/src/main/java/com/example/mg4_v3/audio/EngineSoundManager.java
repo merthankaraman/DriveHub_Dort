@@ -185,7 +185,9 @@ public class EngineSoundManager {
             "Dodge Hellcat",
             "Nissan GT-R GT3",
             "McLaren GT3",
-            "BMW Z4 GT3"
+            "BMW Z4 GT3",
+            "Mazda 3-Rotor",
+            "Modern F1 V10"
     };
 
     public static String[] getProfileLabels() { return PROFILE_LABELS; }
@@ -198,6 +200,8 @@ public class EngineSoundManager {
         else if ("Nissan GT-R GT3".equals(profile)) setVehicleProfile(PROFILE_NISSAN_GT3());
         else if ("McLaren GT3".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_GT3());
         else if ("BMW Z4 GT3".equals(profile)) setVehicleProfile(PROFILE_BMW_Z4_GT3());
+        else if ("Mazda 3-Rotor".equals(profile)) setVehicleProfile(PROFILE_MAZDA_ROTOR());
+        else if ("Modern F1 V10".equals(profile)) setVehicleProfile(PROFILE_F1_V10());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
 
@@ -544,6 +548,98 @@ public class EngineSoundManager {
                 }
         );
     }
+    public static VehicleProfile PROFILE_MAZDA_ROTOR() {
+        return new VehicleProfile("Mazda 3-Rotor",
+                1980f,
+                9550f,
+                1.0f,
+                0,
+
+                // txt'deki SpeedPerThousandRPM değerlerinin 9.55 (Max RPM) ile çarpılmış gerçek vites hızları
+                new float[][]{
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {70f, 110f},
+                        {80f, 120f},
+                        {100f, 160f},
+                        {120f, 180f},
+                        {140f, 200f},
+                        {160f, 220f}
+                },
+                1f, 1f,
+                200,
+                180f,
+                R.raw.mazda3rotor_startup,
+                0,
+                new int[][]{
+                        {R.raw.mazda3rotor_idle, 1980},
+                        {R.raw.mazda3rotor_onverylow, 3000},
+                        {R.raw.mazda3rotor_onlow, 4500},
+                        {R.raw.mazda3rotor_onlowmid, 6000},
+                        {R.raw.mazda3rotor_onmid, 7500},
+                        {R.raw.mazda3rotor_onhigh, 9200},
+                        {R.raw.mazda3rotor_limiter, 9550}
+                },
+                // OFF Katmanı (Gaz Çekildiğinde Gelen Egzantrik Kompresyon)
+                new int[][]{
+                        {R.raw.mazda3rotor_idle, 1980},
+                        {R.raw.mazda3rotor_offverylow_1, 3000},
+                        {R.raw.mazda3rotor_offlow, 4500},
+                        {R.raw.mazda3rotor_offlowmid, 6000},
+                        {R.raw.mazda3rotor_offmid, 7500},
+                        {R.raw.mazda3rotor_offhigh, 9550}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_F1_V10() {
+        return new VehicleProfile("Modern F1 V10",
+                4000f,
+                20050f,
+                0.8f,
+                0,
+        new float[][]{
+                {0f, 40f},
+                {20f, 60f},
+                {40f, 80f},
+                {60f, 100f},
+                {70f, 110f},
+                {80f, 120f},
+                {100f, 160f},
+                {120f, 180f},
+                {140f, 200f},
+                {160f, 220f}
+                },
+                1f, 1f,
+                80,380f,
+
+                R.raw.modgpv10_startup,
+                0,
+
+                // ON Katmanı (İnanılmaz Yüksek Devir Çığlıkları)
+                new int[][]{
+                        {R.raw.modgpv10_onidle, 4000},
+                        {R.raw.modgpv10_onverylow, 6500},
+                        {R.raw.modgpv10_onlow, 9000},
+                        {R.raw.modgpv10_onlowmid_2_manual_11000, 11000},
+                        {R.raw.modgpv10_onmid, 13000},
+                        {R.raw.modgpv10_onmidhigh_auto_14000, 14000},
+                        {R.raw.modgpv10_onhigh, 18000},
+                        {R.raw.modgpv10_onhigh, 20050}
+                },
+                // OFF Katmanı (Gaz Çekildiğindeki Yırtıcı V10 Kompresyonu)
+                new int[][]{
+                        {R.raw.modgpv10_idle, 4000},
+                        {R.raw.modgpv10_offidle_auto_6000, 6000},
+                        {R.raw.modgpv10_offverylow, 7000},
+                        {R.raw.modgpv10_offverylow_2_manual_8000, 8000},
+                        {R.raw.modgpv10_offlow, 11000},
+                        {R.raw.modgpv10_offmid, 15000},
+                        {R.raw.modgpv10_offhigh, 20050}
+                }
+        );
+    }
 
     private EngineSoundManager(Context context) {
         this.mContext = context.getApplicationContext();
@@ -646,7 +742,11 @@ public class EngineSoundManager {
                 mTurboStreamId = mSoundPool.play(mTurboSoundId, 0f, 0f, 1, -1, 1.0f);
                 mGearWhineStreamId = mSoundPool.play(mGearWhineSoundId, 0f, 0f, 1, -1, 1.0f);
 
-                if (mStartSoundId != -1 && (MG4Hardware.getLastGear() == 1) || MG4Hardware.isSimSpeedActive()) {
+                // Marş: sadece vites 1 veya sim aktifken ve araç READY/sim ile (boot’ta READY olmadan çalmasın)
+                boolean mayPlayStart = mStartSoundId != -1
+                        && (MG4Hardware.getLastGear() == 1 || MG4Hardware.isSimSpeedActive())
+                        && (MG4Hardware.isVehicleReady() || MG4Hardware.isSimSpeedActive());
+                if (mayPlayStart) {
                     mSoundPool.play(mStartSoundId, mMasterVolume, mMasterVolume, 2, 0, 1.0f);
                     mEngineStartTime = System.currentTimeMillis(); // Marş süresince rölantiyi beklet (Fade-in)
                 } else {
@@ -823,10 +923,20 @@ public class EngineSoundManager {
         float startupFade = 1.0f;
         if (mActiveProfile != null && mActiveProfile.startSoundResId != 0 && mAutoStartupDelayMs > 0 && mEngineStartTime > 0) {
             long timeSinceStart = currentTime - mEngineStartTime;
-            if (timeSinceStart < mAutoStartupDelayMs) {
-                startupFade = 0f; // Marş dönüyor, motor rölantisi sessiz!
-            } else if (timeSinceStart < mAutoStartupDelayMs + 600) {
-                startupFade = (timeSinceStart - mAutoStartupDelayMs) / 600f; // Marş bitince rölanti 600ms içinde "har" diye yükselsin
+
+            // Marş sesi bitmeden kaç milisaniye önce rölanti sızmaya başlasın?
+            long overlapMs = 500;
+            // Rölantinin 0'dan %100 sese ulaşma süresi (Yumuşaklık ayarı)
+            long fadeDurationMs = 800;
+
+            long fadeStartTime = mAutoStartupDelayMs - overlapMs;
+            if (fadeStartTime < 0) fadeStartTime = 0; // Dosya çok kısaysa hata vermemesi için güvenlik
+
+            if (timeSinceStart < fadeStartTime) {
+                startupFade = 0f; // Marşın ilk kısımları, rölanti hala tam sessiz
+            } else if (timeSinceStart < fadeStartTime + fadeDurationMs) {
+                // Marşın son kısmı sönümlenirken rölanti sesi alttan yavaşça yükselir (Mükemmel Karışım)
+                startupFade = (timeSinceStart - fadeStartTime) / (float)fadeDurationMs;
             }
         }
 

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Parcel;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.example.mg4_v3.model.DriveMode;
@@ -810,7 +811,8 @@ public class MG4Hardware {
     private static volatile double sDriveGraphEnergyKwh = 0.0;
     private static volatile double sDriveGraphDistanceKm = 0.0;
     private static volatile int sMileageAtConsumptionStart = -1;
-    private static volatile long sConsumptionLastUpdateMs = 0;
+    /** Son integrasyon anı (monotonik; SystemClock.elapsedRealtime()). Saat geri alınsa bile dt negatif olmaz. */
+    private static volatile long sConsumptionLastRealtimeMs = 0;
     private static volatile float sLastSpeedKmh = Float.NaN;
     private static volatile float sLastConsumption = Float.NaN;
     private static volatile int sLastTotalKm = -1;
@@ -860,26 +862,26 @@ public class MG4Hardware {
         float acKw = (!Float.isNaN(acVolt) && !Float.isNaN(acAmp))
                 ? (acVolt * acAmp) / 1000f : Float.NaN;
 
-        long nowMs = System.currentTimeMillis();
-        double dtHours = (sConsumptionLastUpdateMs > 0)
-                ? (nowMs - sConsumptionLastUpdateMs) / 3600000.0
+        // Monotonik saat: NTP/senkron ile geri gitmez, integral için kayıp/çift sayım olmaz
+        long nowRealtimeMs = SystemClock.elapsedRealtime();
+        double dtHours = (sConsumptionLastRealtimeMs > 0)
+                ? (nowRealtimeMs - sConsumptionLastRealtimeMs) / 3600000.0
                 : 0.0;
 
-        // Zaman için güvenlik sınırı: 0 veya 1 saatten büyük deltaları integrale sokma
+        // Zaman için güvenlik sınırı: 0 veya 1 saatten büyük deltaları integrale sokma (dt artık negatif olmaz)
         if (dtHours <= 0.0 || dtHours > 1.0) {
             if (dtHours <= 0.0) dtHourscounter += 1;
             else dtHourscounter1 += 1;
             if (sLogEnabled) {
                 Log.w(TAG,"integral_diag: dtHours skip dt=" + dtHours
-                        + " lastMs=" + sConsumptionLastUpdateMs + " nowMs=" + nowMs);
+                        + " lastRealtimeMs=" + sConsumptionLastRealtimeMs + " nowRealtimeMs=" + nowRealtimeMs);
             }
-            //sConsumptionLastUpdateMs = nowMs;
+            sConsumptionLastRealtimeMs = nowRealtimeMs;
             return;
         }
-        // bu arkadaş 4 oldu dtHourscounter
         if (dtHourscounter > 0 || dtHourscounter1 > 0) Log.i(TAG,"integral_diag: dtHourscounter " + dtHourscounter + " dtHourscounter1: " + dtHourscounter1);
 
-        sConsumptionLastUpdateMs = nowMs;
+        sConsumptionLastRealtimeMs = nowRealtimeMs;
         if (dtHours > 0) {
             if (!Float.isNaN(dcKw)) {
                 sTripEnergyKwh += dcKw * dtHours;
@@ -929,14 +931,14 @@ public class MG4Hardware {
         sMileageAtConsumptionStart = getTotalMileage();
         sTripEnergyKwh = 0.0;
         sTripDistanceKm = 0.0;
-        sConsumptionLastUpdateMs = System.currentTimeMillis();
+        sConsumptionLastRealtimeMs = SystemClock.elapsedRealtime();
     }
 
     /** İlk kez trip başlat (panel açıldığında veya servis ilk çalıştığında; -1 ise şimdiki km'den başlat). */
     public static void ensureConsumptionTripStarted() {
         if (sMileageAtConsumptionStart < 0) {
             sMileageAtConsumptionStart = getTotalMileage();
-            sConsumptionLastUpdateMs = System.currentTimeMillis();
+            sConsumptionLastRealtimeMs = SystemClock.elapsedRealtime();
         }
     }
 
