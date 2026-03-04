@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * MG4 V3 Simülasyon Motoru (Hibrit Sistem: Single-Layer + FMOD Dual-Layer + Telemetry Start/Stop)
+ * MG4 V3 Simülasyon Motoru (Hibrit Sistem: Single-Layer + FMOD Dual-Layer)
  * Modüler Yapı: Araç Profilleri -> TCU (Şanzıman Beyni) -> SoundPool Mikser
  */
 public class EngineSoundManager {
@@ -101,7 +101,6 @@ public class EngineSoundManager {
         public final long shiftDurationMs;
         public final float wobbleMagnitude;
 
-        // Yeni Eklenenler (Start/Stop)
         public final int startSoundResId;
         public final int stopSoundResId;
 
@@ -178,27 +177,19 @@ public class EngineSoundManager {
     }
 
     public static final String[] PROFILE_LABELS = {
-            "McLaren P1",
-            "Lamborghini Aventador",
-            "BMW Z4",
-            "Pagani Zonda R",
             "Lotus Exige",
-            "GTR R34",
-            "GTR R34 MONO",
-            "Porsche GT3 997"
+            "Porsche GT3 997",
+            "Lexus LFA",
+            "Dodge Hellcat"
     };
 
     public static String[] getProfileLabels() { return PROFILE_LABELS; }
 
     public void applyProfileLabel(String profile) {
         mCurrentProfileLabel = (profile != null && !profile.isEmpty()) ? profile : "Lotus Exige";
-        if ("McLaren P1".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1());
-        else if ("Lamborghini Aventador".equals(profile)) setVehicleProfile(PROFILE_AVENTADOR());
-        else if ("BMW Z4".equals(profile)) setVehicleProfile(PROFILE_BMW_Z4());
-        else if ("Pagani Zonda R".equals(profile)) setVehicleProfile(PROFILE_ZONDA_R());
-        else if ("GTR R34".equals(profile)) setVehicleProfile(PROFILE_GTRR34());
-        else if ("GTR R34 MONO".equals(profile)) setVehicleProfile(PROFILE_GTRR34_MONO());
-        else if ("Porsche GT3 997".equals(profile)) setVehicleProfile(PROFILE_PORSCHE_GT3());
+        if ("Porsche GT3 997".equals(profile)) setVehicleProfile(PROFILE_PORSCHE_GT3());
+        else if ("Lexus LFA".equals(profile)) setVehicleProfile(PROFILE_LEXUS_LFA());
+        else if ("Dodge Hellcat".equals(profile)) setVehicleProfile(PROFILE_DODGE_HELLCAT());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
 
@@ -241,177 +232,6 @@ public class EngineSoundManager {
                 null
         );
     }
-    public static VehicleProfile PROFILE_MCLAREN_P1() {
-        return new VehicleProfile("McLaren P1", 800f, 8800f, 1,
-                1,
-                new float[][]{
-                        {0f, 40f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {70f, 110f},
-                        {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f}
-                },
-                0.12f, 0.08f, 80, 50f, // Çift kavrama, çok hızlı devir, az sarsıntı
-                0,0,
-                // ON Katmanı
-                new int[][]{
-                        {R.raw.mclaren_p1_idle, 800},
-                        {R.raw.mclaren_p1_1750, 1750},
-                        {R.raw.mclaren_p1_2750, 2750},
-                        {R.raw.mclaren_p1_4500, 4500},
-                        {R.raw.mclaren_p1_6000, 6000},
-                        {R.raw.mclaren_p1_7500, 7500},
-                        {R.raw.mclaren_p1_9000, 8800}
-                },
-                null // OFF Katmanı Yok
-        );
-    }
-    public static VehicleProfile PROFILE_AVENTADOR() {
-        return new VehicleProfile("Lamborghini Aventador", 800f, 8000f, 1,
-                0,
-                new float[][]{
-                        {0f, 40f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {70f, 110f},
-                        {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f}
-                },
-                0.10f, 0.06f, 120, 250f, // ISR Şanzıman, inanılmaz şiddetli Wobble!
-                0,0,
-                // ON Katmanı
-                new int[][]{
-                        {R.raw.lamborghini_aventador_idle, 800},
-                        {R.raw.lamborghini_aventador_2500, 2500},
-                        {R.raw.lamborghini_aventador_4500, 4500},
-                        {R.raw.lamborghini_aventador_6500, 6500},
-                        {R.raw.lamborghini_aventador_8250, 8000}
-                },
-                null // OFF Katmanı Yok
-        );
-    }
-    public static VehicleProfile PROFILE_BMW_Z4() {
-        return new VehicleProfile("BMW Z4", 800f, 6836, 1,
-                1,
-                new float[][]{
-                        {0f, 40f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {70f, 110f},
-                        {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f}
-                },
-                0.06f, 0.04f, 150, 100f, // Standart tork konvertör hissi
-                0,0,
-                // ON Katmanı
-                new int[][]{
-                        {R.raw.bmw_z4_idle, 800},
-                        {R.raw.bmw_z4_2800, 2800},
-                        {R.raw.bmw_z4_4000, 4000},
-                        {R.raw.bmw_z4_6000, 6000},
-                        {R.raw.bmw_z4_6029, 6029},
-                        {R.raw.bmw_z4_6836, 6836}
-                },
-                null // OFF Katmanı Yok
-        );
-    }
-    public static VehicleProfile PROFILE_ZONDA_R() {
-        return new VehicleProfile("Pagani Zonda R", 1000f, 8250, 1,
-                0,
-                new float[][]{
-                        {0f, 40f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {70f, 110f},
-                        {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f}
-                },
-                0.15f, 0.10f, 100, 300f, // Safkan yarış makinesi, vahşi ve kontrolsüz
-                0,0,
-                // ON Katmanı
-                new int[][]{
-                        {R.raw.zonda_r_idle, 800},
-                        {R.raw.zonda_r_3500, 3500},
-                        {R.raw.zonda_r_4250, 4250},
-                        {R.raw.zonda_r_5000, 5000},
-                        {R.raw.zonda_r_5500, 5500},
-                        {R.raw.zonda_r_6250, 6250},
-                        {R.raw.zonda_r_7000, 7000},
-                        {R.raw.zonda_r_8250, 8250}
-                },
-                null // OFF Katmanı Yok
-        );
-    }
-    public static VehicleProfile PROFILE_GTRR34_MONO() {
-        return new VehicleProfile("GTR R34 MONO", 1000f, 8200, 0.6f,
-                0,
-                new float[][]{
-                        {0f, 40f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {70f, 110f},
-                        {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f}
-                },
-                0.06f, 0.045f, 100, 250f,
-                0,0,
-                // ON Katmanı
-                new int[][]{
-                        {R.raw.rb26_idle, 1000},
-                        {R.raw.rb26_in_2_onverylow_2000, 2000},
-                        {R.raw.rb26_in_2_onlow_3500, 3500},
-                        {R.raw.rb26_in_2_onmid_5000, 5000},
-                        {R.raw.rb26_in_2_onhigh_6500, 6500},
-                        {R.raw.rb26_in_on_veryhigh_8000, 8000}
-                },
-                // OFF Katmanı
-                null
-        );
-    }
-    public static VehicleProfile PROFILE_GTRR34() {
-        return new VehicleProfile("GTR R34", 1000f, 8200, 0.6f,
-                0,
-                new float[][]{
-                        {0f, 40f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {70f, 110f},
-                        {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f}
-                },
-                0.06f, 0.045f, 110, 250f,
-                0,0,
-                // ON Katmanı
-                new int[][]{
-                        {R.raw.rb26_idle, 1000},
-                        {R.raw.rb26_in_2_onverylow_2000, 2000},
-                        {R.raw.rb26_in_2_onlow_3500, 3500},
-                        {R.raw.rb26_in_2_onmid_5000, 5000},
-                        {R.raw.rb26_in_2_onhigh_6500, 6500},
-                        {R.raw.rb26_in_on_veryhigh_8000, 8000}
-                },
-                // OFF Katmanı
-                new int[][]{
-                        {R.raw.rb26_idle, 1000},
-                        {R.raw.rb26_ex_5_offverylow, 1500},
-                        {R.raw.rb26_ex_5_offlow, 4000},
-                        {R.raw.rb26_ex_5_offmid, 6500}
-                }
-        );
-    }
     public static VehicleProfile PROFILE_PORSCHE_GT3() {
         return new VehicleProfile("Porsche GT3 997", 2000f, 9400f, 1f,
                 0,
@@ -440,6 +260,105 @@ public class EngineSoundManager {
                 {R.raw.por911rsr_on_offmid, 6500},
                 {R.raw.por911rsr_on_offhigh, 8000},
                 {R.raw.por911rsr_on_offlimiter, 9400}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_LEXUS_LFA() {
+        return new VehicleProfile("Lexus LFA",
+                984f,   // Orijinal Rölanti (IdleRPM)
+                9550f,  // Orijinal Kesici (MaxRPM)
+                1f,
+                0,      // Atmosferik (Turbo yok)
+
+                // LFA'nın SpeedPerThousandRPM değerlerinin 9.55 (Max RPM) ile çarpılmış gerçek vites hızları
+                new float[][]{
+                        {0f, 90f},    // 1. Vites (9.44 * 9.55 = 90 km/h)
+                        {30f, 132f},  // 2. Vites (13.88 * 9.55 = 132.5 km/h)
+                        {60f, 185f},  // 3. Vites (19.45 * 9.55 = 185.7 km/h)
+                        {90f, 244f},  // 4. Vites (25.55 * 9.55 = 244 km/h)
+                        {120f, 281f}, // 5. Vites (29.44 * 9.55 = 281 km/h)
+                        {150f, 318f}  // 6. Vites (33.33 * 9.55 = 318 km/h)
+                },
+
+                // Orijinal LFA Fizik Karakteristiği
+                0.0650f,  // Çılgın bir devir yükselme hızı
+                0.0300f,  // Çok daha hızlı devir düşüşü (Hafif volan)
+                200,      // 200ms Vites Geçişi (Tek kavramalı ASG şanzıman hissi)
+                180f,     // 180 RPM Wobble (Porsche kadar sarsıntılı değil, daha pürüzsüz)
+
+                // Marş ve İstop Sesleri
+                R.raw.lfa_in_startup,
+                R.raw.lfa_in_stop,
+
+                // ON Katmanı (Gaza Basıldığında V10 Çığlığı)
+                new int[][]{
+                        {R.raw.lfa_in_onidle, 984},
+                        {R.raw.lfa_in_onverylow_1, 2500},
+                        {R.raw.lfa_in_onlow, 4500},
+                        {R.raw.lfa_in_onmid, 6500},
+                        {R.raw.lfa_in_onhigh, 8500},
+                        {R.raw.lfa_in_limiter, 9550}
+                },
+                // OFF Katmanı (Gaz Çekildiğinde Gelen Yırtıcı Kompresyon)
+                new int[][]{
+                        {R.raw.lfa_in_offidle, 984},
+                        {R.raw.lfa_in_offverylow_2, 2500},
+                        {R.raw.lfa_in_offlow, 4500},
+                        {R.raw.lfa_in_offmid, 6500},
+                        {R.raw.lfa_in_offhigh, 8500},
+                        // LFA paketinde 'offlimiter' olmadığı için üst devir kompresyonunu sonuna kadar sündürüyoruz:
+                        {R.raw.lfa_in_offhigh, 9550}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_DODGE_HELLCAT() {
+        return new VehicleProfile("Dodge Hellcat",
+                700f,   // Orijinal Rölanti
+                6100f,  // Orijinal Kesici
+                1f,
+                2,      // hasTurbo = 2 (Supercharger Kompresör Sesini Aktif Eder)
+
+                // txt'deki SpeedPerThousandRPM değerlerinin 6.1 (Max RPM) ile çarpılmış gerçek vites hızları [cite: 7, 8]
+                new float[][]{
+                        {0f, 96f},    // 1. Vites (15.78 * 6.1)
+                        {30f, 137f},  // 2. Vites (22.57 * 6.1)
+                        {60f, 182f},  // 3. Vites (29.97 * 6.1)
+                        {90f, 217f},  // 4. Vites (35.66 * 6.1)
+                        {120f, 282f}, // 5. Vites (46.31 * 6.1)
+                        {150f, 345f}  // 6. Vites (56.61 * 6.1)
+                },
+
+                // Orijinal Hellcat Fizik Karakteristiği
+                0.0800f,  // İvmelenme hızı
+                0.0150f,  // Çok yavaş devir düşüşü (Ağır V8 volan hissi)
+                110,      // 110ms Vites Geçişi (ZF 8 ileri otomatik hızında)
+                250f,     // 250 RPM Wobble (Şiddetli şanzıman sarsıntısı)
+
+                // Marş ve İstop Sesleri
+                R.raw.hellcat_ex_startup_1,
+                R.raw.hellcat_ex_stop_1,
+
+                // ON Katmanı (Gaza Basıldığında Gelen V8 Kükremesi)
+                new int[][]{
+                        {R.raw.hellcat_ex_idle_1, 700},
+                        {R.raw.hellcat_in_onload_1000_1600_1, 1600},
+                        {R.raw.hellcat_in_onload_1500_2500_2, 2500},
+                        {R.raw.hellcat_in_onload_2000_3500_1, 3500},
+                        {R.raw.hellcat_in_onload_3000_4400_1, 4400},
+                        {R.raw.hellcat_in_onload_4000_5000_2, 5000},
+                        {R.raw.hellcat_in_onload_4800_5400_1, 5400},
+                        {R.raw.hellcat_limiter, 6100}
+                },
+                // OFF Katmanı (Gaz Çekildiğinde Gelen Tok V8 Kompresyonu)
+                new int[][]{
+                        {R.raw.hellcat_ex_idle_1, 700},
+                        {R.raw.hellcat_ex_offload_2400_1400_1, 1400},
+                        {R.raw.hellcat_ex_offload_2800_2000_1, 2000},
+                        {R.raw.hellcat_in_offload_3500_2500_1, 2500},
+                        {R.raw.hellcat_in_offload_4000_3000_1, 3000},
+                        {R.raw.hellcat_in_offload_4500_3500_1, 3500},
+                        {R.raw.hellcat_in_offload_5400_4700_1, 4700},
+                        {R.raw.hellcat_in_offload_5400_4700_1, 6100} // Kesiciye kadar son off dosyasını sündürüyoruz
                 }
         );
     }
@@ -495,8 +414,6 @@ public class EngineSoundManager {
         mLoadedSamplesCount = 0;
 
         int baseStreams = mIsDualLayer ? (mCurrentSamplesOn.length + mCurrentSamplesOff.length) : mCurrentSamples.length;
-
-        // Extras'ı hesapla
         int extras = 2; // Turbo + Whine
         if (mActiveProfile.name.contains("R34")) extras++;
         if (mActiveProfile.startSoundResId != 0) extras++;
@@ -525,11 +442,11 @@ public class EngineSoundManager {
 
         mSoundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
             if (status != 0) return;
-
             int totalExpected = baseStreams + finalExtras;
             mLoadedSamplesCount++;
 
             if (mLoadedSamplesCount >= totalExpected && mIsPlaying) {
+
                 if (mIsDualLayer) {
                     for (EngineSample sample : mCurrentSamplesOn) sample.streamId = mSoundPool.play(sample.soundId, 0f, 0f, 1, -1, 1.0f);
                     for (EngineSample sample : mCurrentSamplesOff) sample.streamId = mSoundPool.play(sample.soundId, 0f, 0f, 1, -1, 1.0f);
@@ -539,16 +456,24 @@ public class EngineSoundManager {
 
                 mTurboStreamId = mSoundPool.play(mTurboSoundId, 0f, 0f, 1, -1, 1.0f);
                 mGearWhineStreamId = mSoundPool.play(mGearWhineSoundId, 0f, 0f, 1, -1, 1.0f);
+
+                // MARŞ SESİ BURADA OYNATILIYOR
+                if (mStartSoundId != -1) {
+                    mSoundPool.play(mStartSoundId, mMasterVolume, mMasterVolume, 2, 0, 1.0f);
+                }
+
                 onSpeedChanged(mCurrentSpeedKmh);
             }
         });
 
+        // Yardımcı sesleri yükle
         mTurboSoundId = mSoundPool.load(mContext, (mActiveProfile.hasTurbo == 2) ? R.raw.supercharge : R.raw.turbo, 1);
         mGearWhineSoundId = mSoundPool.load(mContext, R.raw.transmission, 1);
         if (mActiveProfile.name.contains("R34")) mFlutterSoundId = mSoundPool.load(mContext, R.raw.rb26_bf2, 1); else mFlutterSoundId = -1;
         if (mActiveProfile.startSoundResId != 0) mStartSoundId = mSoundPool.load(mContext, mActiveProfile.startSoundResId, 1); else mStartSoundId = -1;
         if (mActiveProfile.stopSoundResId != 0) mStopSoundId = mSoundPool.load(mContext, mActiveProfile.stopSoundResId, 1); else mStopSoundId = -1;
 
+        // Motor seslerini yükle
         if (mIsDualLayer) {
             for (EngineSample sample : mCurrentSamplesOn) sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
             for (EngineSample sample : mCurrentSamplesOff) sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
@@ -559,13 +484,31 @@ public class EngineSoundManager {
 
     public void stop() {
         mIsPlaying = false;
+
         if (mSoundPool != null) {
-            mSoundPool.release();
-            mSoundPool = null;
+            // 1. Mevcut tüm motor ve yardımcı döngü seslerini anında kapat
+            if (mCurrentSamples != null) for (EngineSample s : mCurrentSamples) if(s.streamId != -1) mSoundPool.stop(s.streamId);
+            if (mCurrentSamplesOn != null) for (EngineSample s : mCurrentSamplesOn) if(s.streamId != -1) mSoundPool.stop(s.streamId);
+            if (mCurrentSamplesOff != null) for (EngineSample s : mCurrentSamplesOff) if(s.streamId != -1) mSoundPool.stop(s.streamId);
+            if (mTurboStreamId != -1) mSoundPool.stop(mTurboStreamId);
+            if (mGearWhineStreamId != -1) mSoundPool.stop(mGearWhineStreamId);
+
+            // 2. İSTOP SESİNİ ÇAL
+            if (mStopSoundId != -1) {
+                mSoundPool.play(mStopSoundId, mMasterVolume, mMasterVolume, 2, 0, 1.0f);
+            }
+
+            // 3. İstop sesinin yarım kalmaması için SoundPool'u GECİKMELİ Kapat
+            final SoundPool poolToRelease = mSoundPool;
+            mSoundPool = null; // Bağlantıyı hemen kopar, böylece mixer bir daha işleyemez.
+
+            mHandler.postDelayed(() -> {
+                if (poolToRelease != null) {
+                    poolToRelease.release();
+                }
+            }, 2500); // İstop sesinin uzunluğuna göre bu süreyi (2.5 saniye) artırabilir/azaltabilirsin.
         }
-        if (mCurrentSamples != null) for (EngineSample s : mCurrentSamples) s.streamId = -1;
-        if (mCurrentSamplesOn != null) for (EngineSample s : mCurrentSamplesOn) s.streamId = -1;
-        if (mCurrentSamplesOff != null) for (EngineSample s : mCurrentSamplesOff) s.streamId = -1;
+
         mTurboStreamId = -1; mFlutterSoundId = -1; mStartSoundId = -1; mStopSoundId = -1;
     }
 
@@ -680,7 +623,7 @@ public class EngineSoundManager {
     }
 
     private void updateAudioMixer() {
-        if (mSoundPool == null || mCurrentSamples == null) return;
+        if (mSoundPool == null || (!mIsDualLayer && mCurrentSamples == null) || (mIsDualLayer && mCurrentSamplesOn == null)) return;
 
         long currentTime = System.currentTimeMillis();
         if (currentTime - mLastMixerUpdateTime < MIXER_UPDATE_INTERVAL_MS) return;
@@ -697,8 +640,10 @@ public class EngineSoundManager {
 
                 float flutterVol = (rpm / mMaxRpm) * masterVol * mFlutterSoundmultiplier;
                 flutterVol = Math.max(0f, Math.min(1f, flutterVol));
+
                 float flutterPitch = 0.85f + (float)(Math.random() * 0.2f);
                 mSoundPool.play(mFlutterSoundId, flutterVol, flutterVol, 1, 0, flutterPitch);
+
                 mLastFlutterTime = currentTime;
             }
             mLastThrottleForFlutter = mSimulatedThrottle;
