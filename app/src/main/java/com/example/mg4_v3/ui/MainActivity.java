@@ -1347,7 +1347,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void setupIdlePanelFromPrefs() {
         SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
         // Anahtarı her zaman prefs'teki seçili profilden türet (Service/Activity aynı key'i kullansın)
-        String profileName = prefs.getString(PREF_SOUND_PROFILE, "Lotus Exige");
+        String profileName = prefs.getString(PREF_SOUND_PROFILE, "Lotus Exige 240");
         String suffix = EngineSoundManager.profileToPrefsSuffix(profileName);
         String volKey = "idle_volume_scale_" + suffix;
         String pitchKey = "idle_pitch_" + suffix;
@@ -1416,7 +1416,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         }
         editor.remove("idle_volume_scale").remove("idle_pitch"); // eski global anahtarlar
         editor.commit();
-        String currentProfile = (mEngineSound != null) ? mEngineSound.getCurrentProfileName() : "Lotus Exige";
+        String currentProfile = (mEngineSound != null) ? mEngineSound.getCurrentProfileName() : "Lotus Exige 240";
         if (mEngineSound != null) {
             mEngineSound.loadIdleSettingsForProfile(this, currentProfile);
         }

@@ -43,7 +43,7 @@ public class EngineSoundManager {
     private float mCurrentRpm = 1000f;
     private float mDriveModeAggressiveness = 0.4f;
     private VehicleProfile mActiveProfile;
-    private String mCurrentProfileLabel = "Lotus Exige";
+    private String mCurrentProfileLabel = "Lotus Exige 240";
 
     // --- ESKİ SİSTEM (Tek Katmanlılar İçin) ---
     private EngineSample[] mCurrentSamples;
@@ -115,8 +115,8 @@ public class EngineSoundManager {
             this.idleVolumeScale = idleVolumeScale;
             this.hasTurbo = hasTurbo;
             this.gearRanges = gearRanges;
-            this.rpmOnSmooth = rpmOnSmooth;
-            this.rpmOffSmooth = rpmOffSmooth;
+            this.rpmOnSmooth = 0.5f;//rpmOnSmooth;
+            this.rpmOffSmooth = 0.5f;//rpmOffSmooth;
             this.shiftDurationMs = shiftDurationMs;
             this.wobbleMagnitude = wobbleMagnitude;
             this.startSoundResId = startSoundResId;
@@ -143,14 +143,14 @@ public class EngineSoundManager {
 
     public void initFromPreferences(Context context) {
         android.content.SharedPreferences prefs = context.getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
-        String profile = prefs.getString("sound_profile", "Lotus Exige");
+        String profile = prefs.getString("sound_profile", "Lotus Exige 240");
         applyProfileLabel(profile);
         loadIdleSettingsForProfile(context, profile);
         applySoundCharacterFromString(prefs.getString("sound_character", "NORMAL"));
         setMasterVolume(Math.max(0, Math.min(100, prefs.getInt("sound_master", 60))) / 100f);
     }
 
-    public String getCurrentProfileName() { return mCurrentProfileLabel != null ? mCurrentProfileLabel : "Lotus Exige"; }
+    public String getCurrentProfileName() { return mCurrentProfileLabel != null ? mCurrentProfileLabel : "Lotus Exige 240"; }
     public static String profileToPrefsSuffix(String profileName) { return profileName != null ? profileName.replace(" ", "_") : "Lotus_Exige"; }
 
     public void loadIdleSettingsForProfile(Context context, String profileName) {
@@ -179,19 +179,25 @@ public class EngineSoundManager {
     }
 
     public static final String[] PROFILE_LABELS = {
-            "Lotus Exige",
+            "Lotus Exige 240",
             "Porsche GT3 997",
             "Lexus LFA",
-            "Dodge Hellcat"
+            "Dodge Hellcat",
+            "Nissan GT-R GT3",
+            "McLaren GT3",
+            "BMW Z4 GT3"
     };
 
     public static String[] getProfileLabels() { return PROFILE_LABELS; }
 
     public void applyProfileLabel(String profile) {
-        mCurrentProfileLabel = (profile != null && !profile.isEmpty()) ? profile : "Lotus Exige";
+        mCurrentProfileLabel = (profile != null && !profile.isEmpty()) ? profile : "Lotus Exige 240";
         if ("Porsche GT3 997".equals(profile)) setVehicleProfile(PROFILE_PORSCHE_GT3());
         else if ("Lexus LFA".equals(profile)) setVehicleProfile(PROFILE_LEXUS_LFA());
         else if ("Dodge Hellcat".equals(profile)) setVehicleProfile(PROFILE_DODGE_HELLCAT());
+        else if ("Nissan GT-R GT3".equals(profile)) setVehicleProfile(PROFILE_NISSAN_GT3());
+        else if ("McLaren GT3".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_GT3());
+        else if ("BMW Z4 GT3".equals(profile)) setVehicleProfile(PROFILE_BMW_Z4_GT3());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
 
@@ -210,7 +216,7 @@ public class EngineSoundManager {
     // HAZIR ARAÇ TANIMLARI (Hepsi 0,0 Marş/İstop güncellendi)
     // ==========================================
     public static VehicleProfile PROFILE_LOTUS_EXIGE() {
-        return new VehicleProfile("Lotus Exige", 800, 9000f, 1,
+        return new VehicleProfile("Lotus Exige 240", 800, 9000f, 1,
                 2,
                 new float[][]{
                         {0f, 40f},
@@ -220,18 +226,31 @@ public class EngineSoundManager {
                         {70f, 110f},
                         {80f, 120f},
                         {100f, 160f},
-                        {120f, 180f}
+                        {120f, 180f},
+                        {140f, 200f},
+                        {160f, 220f}
                 },
                 1f, 1f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 0,0,
+                // ON Katmanı (Gaza Basıldığında)
                 new int[][]{
-                        {R.raw.lotus_exige_idle, 800},
-                        {R.raw.lotus_exige_3000, 3000},
-                        {R.raw.lotus_exige_4750, 4750},
-                        {R.raw.lotus_exige_8115, 8115},
-                        {R.raw.lotus_exige_9649, 9000}
+                        {R.raw.elisesc_idle, 800},
+                        {R.raw.elisesc_on_3000, 3000},
+                        {R.raw.elisesc_on_4750, 4750},
+                        {R.raw.elisesc_on_8115, 8115},
+                        {R.raw.elisesc_on_9649, 8800},
+                        {R.raw.elisesc_limiter, 9000}
                 },
-                null
+
+                // OFF Katmanı (Gaz Çekildiğinde)
+                new int[][]{
+                        {R.raw.elisesc_idle, 800},
+                        {R.raw.elisesc_off_2500, 2500},
+                        {R.raw.elisesc_off_3750, 3750},
+                        {R.raw.elisesc_off_5000, 5000},
+                        {R.raw.elisesc_off_8500, 8500},
+                        {R.raw.elisesc_off_8500, 9000}
+                }
         );
     }
     public static VehicleProfile PROFILE_PORSCHE_GT3() {
@@ -245,7 +264,9 @@ public class EngineSoundManager {
                         {70f, 110f},
                         {80f, 120f},
                         {100f, 160f},
-                        {120f, 180f}
+                        {120f, 180f},
+                        {140f, 200f},
+                        {160f, 220f}
                 },
                 1f, 1f, 110, 250f,
                 R.raw.por911rsr_on_start, R.raw.por911rsr_on_stop,
@@ -283,7 +304,9 @@ public class EngineSoundManager {
                         {70f, 110f},
                         {80f, 120f},
                         {100f, 160f},
-                        {120f, 180f}
+                        {120f, 180f},
+                        {140f, 200f},
+                        {160f, 220f}
                 },
 
                 // Orijinal LFA Fizik Karakteristiği
@@ -333,7 +356,9 @@ public class EngineSoundManager {
                         {70f, 110f},
                         {80f, 120f},
                         {100f, 160f},
-                        {120f, 180f}
+                        {120f, 180f},
+                        {140f, 200f},
+                        {160f, 220f}
                 },
 
                 // Orijinal Hellcat Fizik Karakteristiği
@@ -367,6 +392,155 @@ public class EngineSoundManager {
                         {R.raw.hellcat_in_offload_4500_3500_1, 3500},
                         {R.raw.hellcat_in_offload_5400_4700_1, 4700},
                         {R.raw.hellcat_in_offload_5400_4700_1, 6100} // Kesiciye kadar son off dosyasını sündürüyoruz
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_NISSAN_GT3() {
+        return new VehicleProfile("Nissan GT-R GT3",
+                880f,
+                7250f,
+                1.0f,
+                1,
+                new float[][]{
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {70f, 110f},
+                        {80f, 120f},
+                        {100f, 160f},
+                        {120f, 180f},
+                        {140f, 200f},
+                        {160f, 220f}
+                },
+
+                1f, 1f,
+                200,
+                250f,
+
+                R.raw.nisgt3_startup,
+                R.raw.nisgt3_stop,
+
+                // ON Katmanı (Çok Detaylı 9 Katmanlı İvmelenme)
+                new int[][]{
+                        {R.raw.nisgt3_idle, 880},
+                        {R.raw.nisgt3_loop0, 1500},
+                        {R.raw.nisgt3_loop01, 2200},
+                        {R.raw.nisgt3_loop02, 2900},
+                        {R.raw.nisgt3_loop03, 3600},
+                        {R.raw.nisgt3_loop04, 4300},
+                        {R.raw.nisgt3_loop05, 5000},
+                        {R.raw.nisgt3_loop06, 5700},
+                        {R.raw.nisgt3_loop07, 6400},
+                        {R.raw.nisgt3_loop08, 7000},
+                        {R.raw.nisgt3_onlimiter, 7250}
+                },
+                // OFF Katmanı (Gaz Çekildiğinde Gelen Yırtıcı V6 Kompresyonu)
+                new int[][]{
+                        {R.raw.nisgt3_idle, 880},
+                        {R.raw.nisgt3_off_loop01, 2000},
+                        {R.raw.nisgt3_off_loop02, 3500},
+                        {R.raw.nisgt3_off_loop03, 5000},
+                        {R.raw.nisgt3_off_loop04, 6000},
+                        {R.raw.nisgt3_off_loop05, 7250}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_MCLAREN_GT3() {
+        return new VehicleProfile("McLaren GT3",
+                1476f,   // Orijinal Rölanti
+                7800f,   // Orijinal Kesici
+                0.7f,
+                1,
+
+                new float[][]{
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {70f, 110f},
+                        {80f, 120f},
+                        {100f, 160f},
+                        {120f, 180f},
+                        {140f, 200f},
+                        {160f, 220f}
+                },
+
+                1f, 1f,
+                100,
+                250f,
+
+                R.raw.mp412c_start,
+                R.raw.mp412c_stop,
+
+                // ON Katmanı (Gaza Basıldığında V8 Kükremesi)
+                new int[][]{
+                        {R.raw.mp412c_idle, 1476},
+                        {R.raw.mp412c_onidle_3, 2500},
+                        {R.raw.mp412c_onlow, 3800},
+                        {R.raw.mp412c_onmid, 5000},
+                        {R.raw.mp412c_onmidhigh, 6200},
+                        {R.raw.mp412c_onhigh, 7400},
+                        {R.raw.mp412c_limiter, 7800}
+                },
+                // OFF Katmanı (Gaz Çekildiğinde Gelen Tok Kompresyon)
+                new int[][]{
+                        {R.raw.mp412c_idle, 1476},
+                        {R.raw.mp412c_offverylow_1, 2500},
+                        {R.raw.mp412c_offlow, 3800},
+                        {R.raw.mp412c_offmid, 5000},
+                        {R.raw.mp412c_offmidhigh, 6200},
+                        {R.raw.mp412c_offhigh, 7800}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_BMW_Z4_GT3() {
+        return new VehicleProfile("BMW Z4 GT3",
+                2000f,
+                8900f,
+                0.8f,
+                0,
+
+                new float[][]{
+                        {0f, 40f},
+                        {20f, 60f},
+                        {40f, 80f},
+                        {60f, 100f},
+                        {70f, 110f},
+                        {80f, 120f},
+                        {100f, 160f},
+                        {120f, 180f},
+                        {140f, 200f},
+                        {160f, 220f}
+                },
+                1f, 1f,
+                200,
+                250f,
+
+                // Marş ve İstop Sesleri
+                R.raw.bmwz4gt3_startup,
+                R.raw.bmwz4gt3_stop,
+
+                // ON Katmanı (İnanılmaz Detaylı 8 Katmanlı V8 Sesi)
+                new int[][]{
+                        {R.raw.bmwz4gt3_onidle_1, 2000},
+                        {R.raw.bmwz4gt3_onverylow_1, 3000},
+                        {R.raw.bmwz4gt3_onverylow_2, 4000},
+                        {R.raw.bmwz4gt3_onlow, 5000},
+                        {R.raw.bmwz4gt3_onmid, 6000},
+                        {R.raw.bmwz4gt3_onmidhigh, 7000},
+                        {R.raw.bmwz4gt3_onhigh, 8000},
+                        {R.raw.bmwz4gt3_onveryhigh, 8800},
+                        {R.raw.bmwz4gt3_limiter, 8900}
+                },
+                // OFF Katmanı (Gaz Çekildiğinde Gelen Mekanik Kompresyon)
+                new int[][]{
+                        {R.raw.bmwz4gt3_offidle, 2000},
+                        {R.raw.bmwz4gt3_offverylow, 3500},
+                        {R.raw.bmwz4gt3_offlow, 5000},
+                        {R.raw.bmwz4gt3_offmid, 6500},
+                        {R.raw.bmwz4gt3_offhigh, 7800},
+                        {R.raw.bmwz4gt3_offveryhigh, 8900}
                 }
         );
     }
@@ -429,8 +603,8 @@ public class EngineSoundManager {
         mLoadedSamplesCount = 0;
 
         int baseStreams = mIsDualLayer ? (mCurrentSamplesOn.length + mCurrentSamplesOff.length) : mCurrentSamples.length;
-        int extras = 2; // Turbo + Whine
-        if (mActiveProfile.name.contains("R34")) extras++;
+        int extras = 2; // Turbo ve Whine her zaman yükleniyor
+        if (mActiveProfile.hasTurbo == 1) extras++;
         if (mActiveProfile.startSoundResId != 0) extras++;
         if (mActiveProfile.stopSoundResId != 0) extras++;
 
@@ -472,13 +646,10 @@ public class EngineSoundManager {
                 mTurboStreamId = mSoundPool.play(mTurboSoundId, 0f, 0f, 1, -1, 1.0f);
                 mGearWhineStreamId = mSoundPool.play(mGearWhineSoundId, 0f, 0f, 1, -1, 1.0f);
 
-                // MARŞ SESİ BURADA OYNATILIYOR
-                if (mStartSoundId != -1 && MG4Hardware.getLastGear() == 1) {
+                if (mStartSoundId != -1 && (MG4Hardware.getLastGear() == 1) || MG4Hardware.isSimSpeedActive()) {
                     mSoundPool.play(mStartSoundId, mMasterVolume, mMasterVolume, 2, 0, 1.0f);
                     mEngineStartTime = System.currentTimeMillis(); // Marş süresince rölantiyi beklet (Fade-in)
                 } else {
-                    // Marş sesi yoksa VEYA vites P'de değilse (örn. yolda gidiyorsak):
-                    // Marşı atla ve motor seslerini gecikmesiz, anında başlat!
                     mEngineStartTime = 0;
                 }
 
@@ -489,11 +660,10 @@ public class EngineSoundManager {
         // Yardımcı sesleri yükle
         mTurboSoundId = mSoundPool.load(mContext, (mActiveProfile.hasTurbo == 2) ? R.raw.supercharge : R.raw.turbo, 1);
         mGearWhineSoundId = mSoundPool.load(mContext, R.raw.transmission, 1);
-        if (mActiveProfile.name.contains("R34")) mFlutterSoundId = mSoundPool.load(mContext, R.raw.rb26_bf2, 1); else mFlutterSoundId = -1;
+        if (mActiveProfile.hasTurbo == 1) mFlutterSoundId = mSoundPool.load(mContext, R.raw.blowoff2, 1); else mFlutterSoundId = -1;
         if (mActiveProfile.startSoundResId != 0) mStartSoundId = mSoundPool.load(mContext, mActiveProfile.startSoundResId, 1); else mStartSoundId = -1;
         if (mActiveProfile.stopSoundResId != 0) mStopSoundId = mSoundPool.load(mContext, mActiveProfile.stopSoundResId, 1); else mStopSoundId = -1;
 
-        // Motor seslerini yükle
         if (mIsDualLayer) {
             for (EngineSample sample : mCurrentSamplesOn) sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
             for (EngineSample sample : mCurrentSamplesOff) sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
