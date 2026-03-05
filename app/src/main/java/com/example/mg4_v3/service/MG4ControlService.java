@@ -335,7 +335,11 @@ public class MG4ControlService extends Service {
         mMainHandler.postDelayed(() -> {
             applyRememberedDriveModeIfNeeded();
             applyRememberedRegenIfNeeded();
-        }, 5000);
+            String msg = "Mod ayarlandı";
+            updateNotification(msg);
+            // Ekranda altta kısa süreli yazı (bildirim çubuğu metni ayrıca güncellenir)
+            Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+        }, 50000);
 
         if (MG4Hardware.isLogEnabled()) {
             Log.i(TAG, "=== onCreate tamamlandı ===");

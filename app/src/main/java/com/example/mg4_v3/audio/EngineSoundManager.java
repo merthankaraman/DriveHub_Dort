@@ -845,9 +845,8 @@ public class EngineSoundManager {
             return;
         }
 
-        // --- 1. OTOMATİK ŞANZIMAN (TCU) KARAR MEKANİZMASI ---
-        // Vites kararları sadece belli aralıklarla (500ms) alınır ki şanzıman sapıtmasın
-        if (currentTime - mLastShiftTime > 500) {
+        long shiftCooldown = Math.max(400L, mActiveProfile.shiftDurationMs);
+        if (currentTime - mLastShiftTime > shiftCooldown) {
             int targetGear = mCurrentGear > 0 ? mCurrentGear : 1;
 
             // 1. Vites Büyütme (Up Shift) - Eşikler daha gerçekçi ayarlandı
@@ -923,17 +922,42 @@ public class EngineSoundManager {
 
             float targetRpmFinal = rawRpm + mRevMatchBoost;
 
-            // Vites atma anındaki mekanik sarsıntı (Wobble)
+            // --- VİTES SARSINTISI (WOBBLE) ARTIK PROFİLDEKİ SÜREYİ KULLANIYOR ---
             long timeSinceShift = currentTime - mLastShiftTime;
-            if (timeSinceShift < 500 && mActiveProfile.wobbleMagnitude > 0) {
+            long shiftDur = mActiveProfile.shiftDurationMs;
+
+            if (timeSinceShift < shiftDur && mActiveProfile.wobbleMagnitude > 0) {
                 float timeSec = timeSinceShift / 1000f;
-                float dampening = Math.max(0f, 1.0f - (timeSec / 0.5f));
-                float wobbleOffset = (float) Math.sin(timeSec * 9.0f * Math.PI * 2) * mActiveProfile.wobbleMagnitude * dampening;
+                float durSec = shiftDur / 1000f;
+                // Sarsıntı, ayarladığın süre boyunca yavaşça sönümlenir
+                float dampening = Math.max(0f, 1.0f - (timeSec / durSec));
+                float wobbleOffset = (float) Math.sin(timeSec * 15.0f * Math.PI * 2) * mActiveProfile.wobbleMagnitude * dampening;
                 targetRpmFinal += wobbleOffset;
             }
 
-            // RpmOnSmooth ve RpmOffSmooth sadece devir geçişlerini pürüzsüzleştirir. Sabit hızda devir sabit kalır.
-            float currentSmooth = (throttle > 0.05f) ? mActiveProfile.rpmOnSmooth : mActiveProfile.rpmOffSmooth;
+            // --- DEVİR GEÇİŞ YUMUŞATMASI (Rev Match ve Debriyaj Simülasyonu) ---
+            float currentSmooth;
+
+            if (mRevMatchBoost > 50f) {
+                // 1. Ara gaz (Rev Match) devredeyken motor kusursuz bir fırlama hızıyla (0.25f) kükrer!
+                currentSmooth = 0.25f;
+            }
+            else if (timeSinceShift < shiftDur) {
+                // 2. VİTES GEÇİŞ SÜRESİ (Debriyaj Basılı): Devir sürtünmeyle süzülerek hedefe varır.
+                // Eğer 11.000 yaparsan devrin yeni vitese oturması tam 11 saniye sürer!
+                currentSmooth = 16f / (float) shiftDur;
+                // Güvenlik: Matematik çökmesin diye limitliyoruz
+                currentSmooth = Math.max(0.002f, Math.min(0.2f, currentSmooth));
+            }
+            else if (throttle > 0.05f) {
+                // 3. Vites geçmiş ve gaza basılıyken normal atiklik
+                currentSmooth = mActiveProfile.rpmOnSmooth;
+            }
+            else {
+                // 4. Vites geçmiş ve gazdan çekilmişken normal kompresyon düşüşü
+                currentSmooth = mActiveProfile.rpmOffSmooth;
+            }
+
             mCurrentRpm = (mCurrentRpm * (1.0f - currentSmooth)) + (targetRpmFinal * currentSmooth);
         }
 
