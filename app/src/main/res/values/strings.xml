@@ -114,6 +114,8 @@
     <string name="press_type_off">Kapatmak için basma tipi</string>
     <string name="camera_360_label">360 kamera</string>
     <string name="camera_360_assign">360\'ı düğmeye ata</string>
+    <string name="remember_drive_mode_label">Sürüş modunu hatırla</string>
+    <string name="remember_regen_label">Regen seviyesini hatırla</string>
     <string-array name="one_pedal_key_labels">
         <item>Kapalı</item>
         <item>Sol yıldız</item>

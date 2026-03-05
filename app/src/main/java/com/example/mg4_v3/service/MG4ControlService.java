@@ -103,6 +103,15 @@ public class MG4ControlService extends Service {
     private static final String PREF_CAMERA_360_PRESS_OFF = "camera_360_press_off";
     private static final int    DEFAULT_CAMERA_360_KEY = -1;
 
+    /** Sürüş modunu hatırla (Düğme kısayolları panelindeki switch) */
+    public static final String PREF_REMEMBER_DRIVE_MODE = "remember_drive_mode";
+    /** Son seçilen sürüş modu (DriveMode.value) */
+    public static final String PREF_LAST_DRIVE_MODE     = "last_drive_mode";
+    /** Regen seviyesini hatırla (Düğme kısayolları panelindeki switch) */
+    public static final String PREF_REMEMBER_REGEN      = "remember_regen_level";
+    /** Son seçilen regen seviyesi (RegenLevel.value) */
+    public static final String PREF_LAST_REGEN_LEVEL    = "last_regen_level";
+
     private volatile boolean mOnePedalKeyPressed = false;
     private volatile boolean mOnePedalLongTriggered = false;
     private long mOnePedalLastTapTime = 0L;
@@ -278,6 +287,15 @@ public class MG4ControlService extends Service {
         MG4Hardware.setDriveModeListener(modeValue -> {
             mCurrentDriveMode = DriveMode.fromValue(modeValue);
             updateNotification("Sürüş: " + mCurrentDriveMode.label);
+            // Araçtaki güncel modu her zaman kaydet (hatırlama açıksa boot sonrasında tekrar göndereceğiz)
+            SharedPreferences sp = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+            sp.edit().putInt(PREF_LAST_DRIVE_MODE, modeValue).apply();
+
+            // Aynı callback daha seyrek çalıştığı için regen seviyesini de burada yakala (kullanıcı araçtan değiştirmiş olabilir)
+            int regenVal = MG4Hardware.getRegenLevel();
+            if (regenVal >= 0) {
+                sp.edit().putInt(PREF_LAST_REGEN_LEVEL, regenVal).apply();
+            }
         });
 
         // EngineSoundManager'ı her durumda servis tarafında başlat.
@@ -312,6 +330,12 @@ public class MG4ControlService extends Service {
         // Tüketim: boot'tan itibaren 100ms'de bir oku + enerji integre et (uygulama açılmasa da)
         MG4Hardware.ensureConsumptionTripStarted();
         mConsumptionHandler.post(mConsumptionIntegrationRunnable);
+
+        // Sürüş modu / regen hafızası açıksa, servis başladıktan kısa süre sonra son değerleri tekrar gönder
+        mMainHandler.postDelayed(() -> {
+            applyRememberedDriveModeIfNeeded();
+            applyRememberedRegenIfNeeded();
+        }, 5000);
 
         if (MG4Hardware.isLogEnabled()) {
             Log.i(TAG, "=== onCreate tamamlandı ===");
@@ -353,6 +377,35 @@ public class MG4ControlService extends Service {
             mChargingWakeLock.acquire(30 * 60 * 1000L); // 30 dk timeout, yenileme her 10 sn
         } else if (!charging && mChargingWakeLock.isHeld()) {
             mChargingWakeLock.release();
+        }
+    }
+
+    /** Boot sonrası sürüş modunu otomatik geri yükle (kullanıcı \"sürüş modunu hatırla\" switch'ini açtıysa). */
+    private void applyRememberedDriveModeIfNeeded() {
+        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        if (!prefs.getBoolean(PREF_REMEMBER_DRIVE_MODE, false)) return;
+
+        int lastValue = prefs.getInt(PREF_LAST_DRIVE_MODE, DriveMode.NORMAL.value);
+        DriveMode dm = DriveMode.fromValue(lastValue);
+        if (dm == null) return;
+
+        MG4Hardware.setDriveMode(dm);
+        mCurrentDriveMode = dm;
+        updateNotification("Sürüş: " + mCurrentDriveMode.label);
+    }
+
+    /** Boot sonrası regen seviyesini otomatik geri yükle (kullanıcı \"Regen seviyesini hatırla\" switch'ini açtıysa). */
+    private void applyRememberedRegenIfNeeded() {
+        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        if (!prefs.getBoolean(PREF_REMEMBER_REGEN, false)) return;
+
+        int lastValue = prefs.getInt(PREF_LAST_REGEN_LEVEL, RegenLevel.MEDIUM.value);
+        RegenLevel rl = RegenLevel.fromValue(lastValue);
+        if (rl == null) return;
+
+        boolean ok = MG4Hardware.setRegenLevel(rl);
+        if (ok) {
+            updateNotification("Regen: " + rl.label);
         }
     }
 
@@ -1092,6 +1145,9 @@ public class MG4ControlService extends Service {
                 mCurrentDriveMode = mCurrentDriveMode.next();
                 MG4Hardware.setDriveMode(mCurrentDriveMode);
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
+                // Son seçilen modu kaydet
+                getSharedPreferences("mg4_v3", MODE_PRIVATE)
+                        .edit().putInt(PREF_LAST_DRIVE_MODE, mCurrentDriveMode.value).apply();
                 break;
             case "DRIVE_SET":
                 DriveMode dm = DriveMode.fromValue(
@@ -1099,6 +1155,8 @@ public class MG4ControlService extends Service {
                 MG4Hardware.setDriveMode(dm);
                 mCurrentDriveMode = dm;
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
+                getSharedPreferences("mg4_v3", MODE_PRIVATE)
+                        .edit().putInt(PREF_LAST_DRIVE_MODE, mCurrentDriveMode.value).apply();
                 break;
             case "REGEN_SET":
                 RegenLevel rl = RegenLevel.fromValue(
@@ -1110,6 +1168,9 @@ public class MG4ControlService extends Service {
                 } else {
                     updateNotification("Regen: " + rl.label);
                 }
+                // Son seçilen regen seviyesini kaydet (hatırlama açıksa boot sonrasında tekrar göndereceğiz)
+                getSharedPreferences("mg4_v3", MODE_PRIVATE)
+                        .edit().putInt(PREF_LAST_REGEN_LEVEL, rl.value).apply();
                 break;
             case "PEDAL_ON":
                 MG4Hardware.setOnePedal(true);

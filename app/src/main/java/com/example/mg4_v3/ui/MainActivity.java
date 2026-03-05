@@ -673,6 +673,27 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         setupCamera360KeyPrefs();
         updateShortcutsPanelVisibility();
 
+        // Sürüş modunu / regen seviyesini hatırla (düğme kısayolları panelindeki switch'ler)
+        SharedPreferences pShortcuts = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+
+        SwitchCompat swRememberDrive = findViewById(R.id.switchRememberDriveMode);
+        if (swRememberDrive != null) {
+            boolean rememberDrive = pShortcuts.getBoolean(MG4ControlService.PREF_REMEMBER_DRIVE_MODE, false);
+            swRememberDrive.setChecked(rememberDrive);
+            swRememberDrive.setOnCheckedChangeListener((buttonView, isChecked) ->
+                    pShortcuts.edit().putBoolean(MG4ControlService.PREF_REMEMBER_DRIVE_MODE, isChecked).apply()
+            );
+        }
+
+        SwitchCompat swRememberRegen = findViewById(R.id.switchRememberRegen);
+        if (swRememberRegen != null) {
+            boolean rememberRegen = pShortcuts.getBoolean(MG4ControlService.PREF_REMEMBER_REGEN, false);
+            swRememberRegen.setChecked(rememberRegen);
+            swRememberRegen.setOnCheckedChangeListener((buttonView, isChecked) ->
+                    pShortcuts.edit().putBoolean(MG4ControlService.PREF_REMEMBER_REGEN, isChecked).apply()
+            );
+        }
+
         // ---- Klima paneli ----
         mLayoutClimatePanel = findViewById(R.id.layoutClimatePanel);
         // Direksiyon
