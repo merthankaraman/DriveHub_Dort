@@ -144,6 +144,7 @@ public class MG4ControlService extends Service {
     private int            mSeatRLevel = 0;
 
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
+    private boolean mDriveRegenRememberInitialized = false;
 
     // Sistem medya sesini kontrol etmek için
     private AudioManager mAudioManager;
@@ -287,14 +288,17 @@ public class MG4ControlService extends Service {
         MG4Hardware.setDriveModeListener(modeValue -> {
             mCurrentDriveMode = DriveMode.fromValue(modeValue);
             updateNotification("Sürüş: " + mCurrentDriveMode.label);
-            // Araçtaki güncel modu her zaman kaydet (hatırlama açıksa boot sonrasında tekrar göndereceğiz)
-            SharedPreferences sp = getSharedPreferences("mg4_v3", MODE_PRIVATE);
-            sp.edit().putInt(PREF_LAST_DRIVE_MODE, modeValue).apply();
 
-            // Aynı callback daha seyrek çalıştığı için regen seviyesini de burada yakala (kullanıcı araçtan değiştirmiş olabilir)
-            int regenVal = MG4Hardware.getRegenLevel();
-            if (regenVal >= 0) {
-                sp.edit().putInt(PREF_LAST_REGEN_LEVEL, regenVal).apply();
+            // Kullanıcı mod/regen hatırlamayı açtıktan ve ilk "remember" denemesi yapıldıktan SONRA
+            // CPM callback'lerinden gelen değerleri de son bilinen mod/regen olarak hafızaya yaz.
+            if (mDriveRegenRememberInitialized) {
+                SharedPreferences sp = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+                sp.edit().putInt(PREF_LAST_DRIVE_MODE, modeValue).apply();
+
+                int regenVal = MG4Hardware.getRegenLevel();
+                if (regenVal >= 0) {
+                    sp.edit().putInt(PREF_LAST_REGEN_LEVEL, regenVal).apply();
+                }
             }
         });
 
@@ -331,15 +335,11 @@ public class MG4ControlService extends Service {
         MG4Hardware.ensureConsumptionTripStarted();
         mConsumptionHandler.post(mConsumptionIntegrationRunnable);
 
-        // Sürüş modu / regen hafızası açıksa, servis başladıktan kısa süre sonra son değerleri tekrar gönder
         mMainHandler.postDelayed(() -> {
             applyRememberedDriveModeIfNeeded();
             applyRememberedRegenIfNeeded();
-            String msg = "Mod ayarlandı";
-            updateNotification(msg);
-            // Ekranda altta kısa süreli yazı (bildirim çubuğu metni ayrıca güncellenir)
-            Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-        }, 50000);
+            mDriveRegenRememberInitialized = true;
+        }, 30000);
 
         if (MG4Hardware.isLogEnabled()) {
             Log.i(TAG, "=== onCreate tamamlandı ===");
@@ -385,31 +385,66 @@ public class MG4ControlService extends Service {
     }
 
     /** Boot sonrası sürüş modunu otomatik geri yükle (kullanıcı \"sürüş modunu hatırla\" switch'ini açtıysa). */
-    private void applyRememberedDriveModeIfNeeded() {
+    private boolean applyRememberedDriveModeIfNeeded() {
         SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
-        if (!prefs.getBoolean(PREF_REMEMBER_DRIVE_MODE, false)) return;
+        if (!prefs.getBoolean(PREF_REMEMBER_DRIVE_MODE, false)) return false;
 
         int lastValue = prefs.getInt(PREF_LAST_DRIVE_MODE, DriveMode.NORMAL.value);
         DriveMode dm = DriveMode.fromValue(lastValue);
-        if (dm == null) return;
+        if (dm == null) {
+            Toast.makeText(getApplicationContext(),
+                    "Hatırlanmış sürüş modu bulunamadı", Toast.LENGTH_SHORT).show();
+            return false;
+        }
 
-        MG4Hardware.setDriveMode(dm);
+        boolean ok = MG4Hardware.setDriveMode(dm);
+        if (!ok) {
+            if (MG4Hardware.isLogEnabled()) {
+                Log.w(TAG, "RememberDrive: setDriveMode(" + dm + ") başarısız");
+            }
+            Toast.makeText(getApplicationContext(),
+                    "Sürüş modu ayarlanamadı: " + dm.label, Toast.LENGTH_SHORT).show();
+            return false;
+        }
         mCurrentDriveMode = dm;
         updateNotification("Sürüş: " + mCurrentDriveMode.label);
+        if (MG4Hardware.isLogEnabled()) {
+            Log.i(TAG, "RememberDrive: uygulandı → " + dm + " (" + dm.value + ")");
+        }
+        Toast.makeText(getApplicationContext(),
+                "Sürüş modu yüklendi: " + dm.label, Toast.LENGTH_SHORT).show();
+        return true;
     }
 
     /** Boot sonrası regen seviyesini otomatik geri yükle (kullanıcı \"Regen seviyesini hatırla\" switch'ini açtıysa). */
-    private void applyRememberedRegenIfNeeded() {
+    private boolean applyRememberedRegenIfNeeded() {
         SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
-        if (!prefs.getBoolean(PREF_REMEMBER_REGEN, false)) return;
+        if (!prefs.getBoolean(PREF_REMEMBER_REGEN, false)) return false;
 
-        int lastValue = prefs.getInt(PREF_LAST_REGEN_LEVEL, RegenLevel.MEDIUM.value);
+        int lastValue = prefs.getInt(PREF_LAST_REGEN_LEVEL, RegenLevel.HIGH.value);
         RegenLevel rl = RegenLevel.fromValue(lastValue);
-        if (rl == null) return;
+        if (rl == null) {
+            Toast.makeText(getApplicationContext(),
+                    "Hatırlanmış regen seviyesi bulunamadı", Toast.LENGTH_SHORT).show();
+            return false;
+        }
 
         boolean ok = MG4Hardware.setRegenLevel(rl);
         if (ok) {
             updateNotification("Regen: " + rl.label);
+            if (MG4Hardware.isLogEnabled()) {
+                Log.i(TAG, "RememberRegen: uygulandı → " + rl + " (" + rl.value + ")");
+            }
+            Toast.makeText(getApplicationContext(),
+                    "Regen seviyesi yüklendi: " + rl.label, Toast.LENGTH_SHORT).show();
+            return true;
+        } else {
+            if (MG4Hardware.isLogEnabled()) {
+                Log.w(TAG, "RememberRegen: setRegenLevel(" + rl + ") başarısız");
+            }
+            Toast.makeText(getApplicationContext(),
+                    "Regen seviyesi ayarlanamadı: " + rl.label, Toast.LENGTH_SHORT).show();
+            return false;
         }
     }
 

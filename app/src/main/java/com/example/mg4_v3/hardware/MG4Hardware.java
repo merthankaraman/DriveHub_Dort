@@ -1003,31 +1003,20 @@ public class MG4Hardware {
         float dcA = getDcAmpGlobal();
         float dcV = getDcVoltGlobal();
 
-        // şarj olurken 10
-        //durdu 8
-        // precharge 5
-        //
+        // 10 dc şarj
+        // 1 ac şarj
+        // 8 durdu
+        // 5 bağlanıyor
+        // 7 bağlandı şarj olmuyor
         int st = val instanceof Number ? ((Number) val).intValue() : -1;
         if (sLogEnabled) Log.i(TAG, "CHG CHECK → status=" + st
                 + " acA=" + acA + " dcA=" + dcA + " dcV=" + dcV + " speed=" + sLastSpeedKmh);
-
-
-        /*if (val instanceof Number) {
-            int st = ((Number) val).intValue();// şarj olurken 1 şarj durunca 8 oldu
-            // status>0 olsa bile akımlar neredeyse 0 ise şarjda sayma
-            if (st > 0) {
-                boolean acAlive = !Float.isNaN(acA) && acA > 0.5f;
-                boolean dcAlive = !Float.isNaN(dcA) && Math.abs(dcA) > 1.0f && dcV > 200f;
-                if (acAlive || dcAlive) return true;
-                return false;
-            }
-            if (st == 0) return false;
-        }*/
+        return (st == 1) || (st == 10);
 
         // Araç PROP_CHG_STATUS göndermiyorsa: AC'den anlamlı akım çekiliyorsa veya DC tarafında güç var ise şarjda say
-        if (!Float.isNaN(acA) && acA > 0.5f) return true;
-        if (!Float.isNaN(dcA) && !Float.isNaN(dcV) && dcV > 200f && dcA <= -1f && sLastSpeedKmh == 0) return true;
-        return false;
+        //if (!Float.isNaN(acA) && acA > 0.5f) return true;
+        //else if (!Float.isNaN(dcA) && !Float.isNaN(dcV) && dcV > 200f && dcA <= -1f && sLastSpeedKmh == 0) return true;
+        //return false;
     }
 
     /** BMS cache güncellendiğinde çağrılır; şarj ilk tespit edildiğinde başlangıç zamanını kaydedip persist eder. */

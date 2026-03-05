@@ -68,7 +68,6 @@ public class EngineSoundManager {
     private int mTurboStreamId = -1;
     private float mCurrentTurboBoost = 0f;
     private float mTurboMaxSound = 0.3f;
-    private boolean mEnableTurboSound = true;
     private float mCompressorMaxVol = 0.5f;
 
     private long mLastShiftTime = 0;
@@ -1018,12 +1017,12 @@ public class EngineSoundManager {
         if (mTurboStreamId != -1) {
             if (mActiveProfile == null || (mActiveProfile.hasTurbo == 0)) {
                 mSoundPool.setVolume(mTurboStreamId, 0f, 0f);
-            } else if(mEnableTurboSound && mActiveProfile.hasTurbo == 1) {
+            } else if(mActiveProfile.hasTurbo == 1) {
                 float boostFactor = Math.max(0f, Math.min(1f, (rpmRatio > 0.10f) ? (rpmRatio - 0.10f) * 1.12f : 0f));
                 mCurrentTurboBoost = (mCurrentTurboBoost * 0.90f) + ((mSimulatedThrottle * boostFactor) * 0.10f);
                 mSoundPool.setVolume(mTurboStreamId, mCurrentTurboBoost * masterVol * mTurboMaxSound, mCurrentTurboBoost * masterVol * mTurboMaxSound);
                 mSoundPool.setRate(mTurboStreamId, 0.8f + (rpmRatio * 1.2f));
-            } else if(mEnableTurboSound && mActiveProfile.hasTurbo == 2) {
+            } else if(mActiveProfile.hasTurbo == 2) {
                 float compVol = (0.2f + (mSimulatedThrottle * 0.8f)) * rpmRatio * masterVol * mCompressorMaxVol;
                 mSoundPool.setVolume(mTurboStreamId, compVol, compVol);
                 mSoundPool.setRate(mTurboStreamId, 0.8f + (rpmRatio * 1.7f));
@@ -1114,10 +1113,6 @@ public class EngineSoundManager {
             mSoundPool.setVolume(mGearWhineStreamId, 0, 0);
         }
     }
-
-    /** YENİ SİSTEM İÇİN DUAL-LAYER KATMAN İŞLEYİCİ */
-    // DÜZELTME: Parametrelere 'float fadedMasterVol' eklendi
-    /** YENİ SİSTEM İÇİN DUAL-LAYER KATMAN İŞLEYİCİ */
     private void processLayer(EngineSample[] layer, float rpm, float weightVol, float fadedMasterVol, boolean isOnLayer) {
         if (layer == null || layer.length == 0) return;
 
