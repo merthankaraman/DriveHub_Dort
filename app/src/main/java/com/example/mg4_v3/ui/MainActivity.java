@@ -249,7 +249,17 @@ public class MainActivity extends AppCompatActivity {
                     mTvGaugeRpm.setText(String.format("%.0f", rpm));
                 }
                 if (mTvGaugeGear != null) {
-                    mTvGaugeGear.setText("A" + (mEngineSound.getCurrentGear() == 0 ? "1" : mEngineSound.getCurrentGear()));
+                    int gear_real = MG4Hardware.getLastGear();
+                    if(mSimSpeedActive) gear_real = 4;
+                    String gearText;
+                    switch (gear_real) {
+                        case 1:  gearText = "P"; break;
+                        case 2:  gearText = "R"; break;
+                        case 3:  gearText = "N"; break;
+                        case 4:  gearText = "A" + (mEngineSound.getCurrentGear() == 0 ? "1" : mEngineSound.getCurrentGear()); break;
+                        default: gearText = "--"; break;
+                    }
+                    mTvGaugeGear.setText(gearText);
                 }
                 if (mTvGaugePower != null) {
                     mTvGaugePower.setText(String.format("%.2f", dcPowerKw));
@@ -445,7 +455,7 @@ public class MainActivity extends AppCompatActivity {
             });
 
             if (seekThrottleTest != null && mEngineSound != null) {
-                seekThrottleTest.setProgress(50); // Varsayılan %50
+                seekThrottleTest.setProgress(0);
                 seekThrottleTest.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {

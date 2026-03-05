@@ -225,17 +225,13 @@ public class EngineSoundManager {
         return new VehicleProfile("Lotus Exige 240", 800, 9000f, 1,
                 2,
                 new float[][]{
-                        {0f, 35f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {80f, 120f},
-                        {100f, 140f},
-                        {120f, 180f},
-                        // {110f, 150f},
-                        //{120f, 160f},
-                        //{140f, 180f},
-                        //{160f, 200f}
+                        {0f, 40f},    // 1. Vites (Dururken 0 km/h - Kesicide 40 km/h)
+                        {5f, 70f},    // 2. Vites (Rölantide 5 km/h - Kesicide 70 km/h)
+                        {9f, 100f},   // 3. Vites (Rölantide 9 km/h - Kesicide 100 km/h)
+                        {12f, 130f},  // 4. Vites (Rölantide 12 km/h - Kesicide 130 km/h)
+                        {15f, 155f},  // 5. Vites (Rölantide 15 km/h - Kesicide 155 km/h)
+                        {18f, 180f},   // 6. Vites (Rölantide 18 km/h - Kesicide 180 km/h)
+                        {20f, 320f}   // 7. VİTES (OVERDRIVE): Uzun yol vitesidir. 175'te devri 5000'e, 120'de 3500'e düşürür!
                 },
                 1f, 0.1f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 0,0,
@@ -264,17 +260,13 @@ public class EngineSoundManager {
         return new VehicleProfile("Porsche GT3 997", 2000f, 9400f, 0.7f,
                 0,
                 new float[][]{
-                        {0f, 35f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {80f, 120f},
-                        {100f, 140f},
-                        {120f, 180f},
-                        //{110f, 150f},
-                        //{120f, 160f},
-                        //{140f, 180f},
-                        //{160f, 200f}
+                        {0f, 75f},    // 1. Vites
+                        {6f, 120f},   // 2. Vites
+                        {10f, 165f},  // 3. Vites
+                        {15f, 210f},  // 4. Vites
+                        {20f, 260f},  // 5. Vites
+                        {25f, 315f},  // 6. Vites (Son Hız)
+                        {30f, 370f}   // 7. VİTES (OVERDRIVE)
                 },
                 1f, 1f, 110, 250f,
                 R.raw.por911rsr_on_start, R.raw.por911rsr_on_stop,
@@ -286,35 +278,33 @@ public class EngineSoundManager {
                         {R.raw.por911rsr_on_onhigh, 8000},
                         {R.raw.por911rsr_on_limiter, 9400}
                 },
-        new int[][]{
-                {R.raw.por911rsr_on_offidle, 2000},
-                {R.raw.por911rsr_on_offverylow, 3500},
-                {R.raw.por911rsr_on_offlow, 5000},
-                {R.raw.por911rsr_on_offmid, 6500},
-                {R.raw.por911rsr_on_offhigh, 8000},
-                {R.raw.por911rsr_on_offlimiter, 9400}
+                new int[][]{
+                        {R.raw.por911rsr_on_offidle, 2000},
+                        {R.raw.por911rsr_on_offverylow, 3500},
+                        {R.raw.por911rsr_on_offlow, 5000},
+                        {R.raw.por911rsr_on_offmid, 6500},
+                        {R.raw.por911rsr_on_offhigh, 8000},
+                        {R.raw.por911rsr_on_offlimiter, 9400}
                 }
         );
     }
     public static VehicleProfile PROFILE_LEXUS_LFA() {
         return new VehicleProfile("Lexus LFA",
-                984f,   // Orijinal Rölanti (IdleRPM)
-                9550f,  // Orijinal Kesici (MaxRPM)
+                984f,
+                9550f,
                 1f,
-                0,      // Atmosferik (Turbo yok)
+                0,
 
-                // LFA'nın SpeedPerThousandRPM değerlerinin 9.55 (Max RPM) ile çarpılmış gerçek vites hızları
                 new float[][]{
-                        {0f, 35f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {80f, 120f},
-                        {100f, 140f},
-                        {120f, 180f},
+                        {0f, 80f},    // 1. Vites
+                        {6f, 125f},   // 2. Vites
+                        {10f, 175f},  // 3. Vites
+                        {15f, 225f},  // 4. Vites
+                        {20f, 275f},  // 5. Vites
+                        {25f, 330f},  // 6. Vites (Redline V10 Çığlığı ve Son hız)
+                        {30f, 400f}   // 7. VİTES (OVERDRIVE): Uzun yol fısıltısı.
                 },
 
-                // Orijinal LFA Fizik Karakteristiği
                 1f,  // Çılgın bir devir yükselme hızı
                 1f,  // Çok daha hızlı devir düşüşü (Hafif volan)
                 200,      // 200ms Vites Geçişi (Tek kavramalı ASG şanzıman hissi)
@@ -351,25 +341,21 @@ public class EngineSoundManager {
                 6100f,  // Orijinal Kesici
                 0.7f,
                 0,
-
-                // txt'deki SpeedPerThousandRPM değerlerinin 6.1 (Max RPM) ile çarpılmış gerçek vites hızları [cite: 7, 8]
                 new float[][]{
-                        {0f, 35f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {80f, 120f},
-                        {100f, 140f},
-                        {120f, 180f},
+                        {0f, 65f},    // 1. Vites (Patinaj canavarı)
+                        {5f, 105f},   // 2. Vites
+                        {8f, 145f},   // 3. Vites
+                        {12f, 190f},  // 4. Vites
+                        {16f, 235f},  // 5. Vites
+                        {20f, 280f},  // 6. Vites
+                        {25f, 325f},  // 7. Vites (Son hız)
+                        {30f, 420f}   // 8. VİTES (OVERDRIVE): 160 ile giderken V8 mırıldanarak çalışır.
                 },
+                1f,
+                1f,
+                110,
+                250f,
 
-                // Orijinal Hellcat Fizik Karakteristiği
-                1f,  // İvmelenme hızı
-                1f,  // Çok yavaş devir düşüşü (Ağır V8 volan hissi)
-                110,      // 110ms Vites Geçişi (ZF 8 ileri otomatik hızında)
-                250f,     // 250 RPM Wobble (Şiddetli şanzıman sarsıntısı)
-
-                // Marş ve İstop Sesleri
                 R.raw.hellcat_ex_startup_1,
                 R.raw.hellcat_ex_stop_1,
 
@@ -404,13 +390,12 @@ public class EngineSoundManager {
                 1.0f,
                 1,
                 new float[][]{
-                        {0f, 35f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {80f, 120f},
-                        {100f, 140f},
-                        {120f, 180f},
+                        {0f, 85f},
+                        {10f, 130f},
+                        {15f, 175f},
+                        {20f, 220f},
+                        {25f, 265f},
+                        {30f, 305f}   // 6. Vites Son
                 },
 
                 1f, 1f,
@@ -451,15 +436,13 @@ public class EngineSoundManager {
                 7800f,   // Orijinal Kesici
                 0.7f,
                 1,
-
                 new float[][]{
-                        {0f, 35f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {80f, 120f},
-                        {100f, 140f},
-                        {120f, 180f},
+                        {0f, 85f},
+                        {10f, 130f},
+                        {15f, 175f},
+                        {20f, 220f},
+                        {25f, 260f},
+                        {30f, 300f}   // 6. Vites Son
                 },
 
                 1f, 1f,
@@ -498,13 +481,12 @@ public class EngineSoundManager {
                 0,
 
                 new float[][]{
-                        {0f, 35f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {80f, 120f},
-                        {100f, 140f},
-                        {120f, 180f},
+                        {0f, 80f},
+                        {8f, 125f},
+                        {12f, 170f},
+                        {18f, 215f},
+                        {22f, 255f},
+                        {26f, 295f}   // 6. Vites Son
                 },
                 1f, 1f,
                 200,
@@ -544,15 +526,14 @@ public class EngineSoundManager {
                 1.0f,
                 0,
 
-                // txt'deki SpeedPerThousandRPM değerlerinin 9.55 (Max RPM) ile çarpılmış gerçek vites hızları
                 new float[][]{
-                        {0f, 35f},
-                        {20f, 60f},
-                        {40f, 80f},
-                        {60f, 100f},
-                        {80f, 120f},
-                        {100f, 140f},
-                        {120f, 180f},
+                        {0f, 75f},
+                        {8f, 125f},
+                        {12f, 175f},
+                        {18f, 225f},
+                        {22f, 275f},
+                        {26f, 320f},
+                        {30f, 390f}   // 7. VİTES (OVERDRIVE)
                 },
                 1f, 1f,
                 200,
@@ -585,18 +566,14 @@ public class EngineSoundManager {
                 20050f,
                 0.6f,
                 0,
-        new float[][]{
-                {0f, 35f},
-                {20f, 60f},
-                {40f, 80f},
-                {60f, 100f},
-                {80f, 120f},
-                {100f, 140f},
-                {120f, 180f},
-                   // {110f, 150f},
-                    //{120f, 160f},
-                    //{140f, 180f},
-                    //{160f, 200f}
+                new float[][]{
+                        {0f, 76f},    // F1 aracı 76'da anında kesiciye girer
+                        {10f, 110f},
+                        {15f, 160f},
+                        {20f, 215f},
+                        {25f, 255f},
+                        {30f, 290f},
+                        {35f, 335f}   // 7. Vites Son Hız (Sürekli Bağırtı)
                 },
                 1f, 1f,
                 80,380f,
@@ -631,28 +608,29 @@ public class EngineSoundManager {
         return new VehicleProfile("GTR R34", 1000f, 8200, 0.5f,
                 1,
                 new float[][]{
-                        {0f, 90f},
-                        {45f, 110f},
-                        {55f, 140f},
-                        {70f, 160f},
-                        {80f, 180f},
-                        {120f, 200f},
+                        {0f, 70f},
+                        {5f, 115f},
+                        {10f, 160f},
+                        {15f, 210f},
+                        {20f, 260f},
+                        {25f, 310f},  // 6. Vites
+                        {30f, 380f}   // 7. VİTES (OVERDRIVE)
                 },
                 1f, 1f, 110, 250f,
                 0,0,
                 // ON Katmanı
                 new int[][]{
-                        {R.raw.rb26_idle, 1000},
-                        {R.raw.rb26_2_in_on_verylow2, 2000},
+                        {R.raw.rb26_4_ex_idle, 1000},
+                        {R.raw.rb26_in_2_onverylow, 1500},
                         {R.raw.rb26_2_in_on_verylow, 3500},
                         {R.raw.rb26_2_in_on_low3, 5000},
                         {R.raw.rb26_2_in_on_mid3, 6500},
-                        {R.raw.rb26_in_2_onhigh, 7500},
-                        {R.raw.rb26_in_2_onhigh2, 8200}
+                        {R.raw.rb26_in_on_high2, 7500},
+                        {R.raw.rb26_in_on_veryhigh, 8200}
                 },
                 // OFF Katmanı
                 new int[][]{
-                        {R.raw.rb26_idle, 1000},
+                        {R.raw.rb26_4_ex_idle, 1000},
                         {R.raw.rb26_ex_5_offverylow, 1500},
                         {R.raw.rb26_ex_5_offlow, 4000},
                         {R.raw.rb26_ex_5_offmid, 6500}
@@ -859,78 +837,126 @@ public class EngineSoundManager {
 
         if (speed < 1.0f) {
             mCurrentGear = 0;
-            mCurrentRpm = mIdleRpm;
+            // ARAÇ DURURKEN BOŞTA GAZ VERME (N-Revving)
+            // Hız 0 olsa bile boş viteste gaza basınca devir yükselsin
+            float targetIdleRpm = mIdleRpm + (throttle * (mMaxRpm - mIdleRpm));
+            float currentSmooth = (throttle > 0.05f) ? mActiveProfile.rpmOnSmooth : mActiveProfile.rpmOffSmooth;
+            mCurrentRpm = (mCurrentRpm * (1.0f - currentSmooth)) + (targetIdleRpm * currentSmooth);
             return;
         }
 
-        float targetRpmRange = mMaxRpm - mIdleRpm;
-        float baseTarget = 1500f + (mDriveModeAggressiveness * 3500f);
-        float desiredRpm = baseTarget + (throttle * (mMaxRpm - baseTarget));
-        desiredRpm = Math.max(mIdleRpm, Math.min(mMaxRpm, desiredRpm));
+        // --- 1. OTOMATİK ŞANZIMAN (TCU) KARAR MEKANİZMASI ---
+        // Vites kararları sadece belli aralıklarla (500ms) alınır ki şanzıman sapıtmasın
+        if (currentTime - mLastShiftTime > 500) {
+            int targetGear = mCurrentGear > 0 ? mCurrentGear : 1;
 
-        if (currentTime - mLastShiftTime > 1200) {
-            int bestGear = mCurrentGear > 0 ? mCurrentGear : 1;
-            float bestRpmDiff = Float.MAX_VALUE;
+            // 1. Vites Büyütme (Up Shift) - Eşikler daha gerçekçi ayarlandı
+            float modeBonus = mDriveModeAggressiveness * 0.20f;
+            float shiftUpRpmThreshold = mIdleRpm + (mMaxRpm - mIdleRpm) * Math.min(0.96f, (0.25f + modeBonus + (throttle * 0.60f)));
 
-            for (int g = 1; g <= mActiveProfile.gearRanges.length; g++) {
-                float[] range = mActiveProfile.gearRanges[g - 1];
-                if (speed < range[0] * 1.2f || speed > range[1] * 1.05f) continue;
+            // 2. Vites Küçültme (Down Shift) - Eşik ÇOK DÜŞÜRÜLDÜ ki araba hemen vites düşürmesin (Ping-Pong olmasın)
+            float shiftDownRpmThreshold = mIdleRpm + (mMaxRpm - mIdleRpm) * (0.05f + (mDriveModeAggressiveness * 0.15f));
 
-                float ratio = (speed - range[0]) / (range[1] - range[0]);
-                float estimatedRpm = mIdleRpm + (ratio * targetRpmRange);
-                float diff = Math.abs(estimatedRpm - desiredRpm);
-                float threshold = (g > mCurrentGear) ? (1000f + mDriveModeAggressiveness * 6000f) : 800f;
+            // KICKDOWN: Dip gazda (%80 üstü) vites düşürme eşiğini artır
+            if (throttle > 0.8f) {
+                shiftDownRpmThreshold = mIdleRpm + (mMaxRpm - mIdleRpm) * 0.45f;
+            }
 
-                if (diff < bestRpmDiff - threshold) {
-                    bestRpmDiff = diff;
-                    bestGear = g;
+            // Mevcut vitesteki mekanik devrimiz nedir?
+            float currentGearRpm = calculateMechanicalRpm(targetGear, speed);
+
+            // --- VİTES KARARLARI (GELECEĞİ GÖREN PING-PONG KORUMASI VE BLOCK-SHIFT) ---
+            if (currentGearRpm > shiftUpRpmThreshold && targetGear < mActiveProfile.gearRanges.length) {
+
+                // İLERİYİ GÖRME: Eğer 2. vitese geçersem devir beni hemen geri 1'e atacak kadar düşük mü olacak?
+                float nextGearRpm = calculateMechanicalRpm(targetGear + 1, speed);
+
+                // Eğer yeni vitesin devri, düşürme eşiğinden en az 250 RPM yüksekse (güvendeysek) vites büyüt!
+                if (nextGearRpm > shiftDownRpmThreshold + 250f) {
+                    targetGear++;
+                }
+            }
+            else if (currentGearRpm < shiftDownRpmThreshold && targetGear > 1) {
+                // BLOCK-SHIFT (Atlayarak Vites Küçültme): Hız aniden 170'ten 89'a düşerse...
+                // Şanzıman doğru vitesi bulana kadar aradaki tüm vitesleri saniyenin binde biri hızında atlar!
+                while (targetGear > 1) {
+                    float prevGearRpm = calculateMechanicalRpm(targetGear - 1, speed);
+
+                    // Alt vites motoru patlatmayacaksa (Kesicinin altındaysa) o vitese atla
+                    if (prevGearRpm < mMaxRpm * 0.96f) {
+                        targetGear--;
+                        currentGearRpm = prevGearRpm; // Hesaplamayı yeni vitese göre güncelle
+
+                        // Eğer indiğimiz bu yeni vitesin devri artık güç üretmek için yeterliyse döngüyü kır!
+                        if (currentGearRpm >= shiftDownRpmThreshold) {
+                            break;
+                        }
+                    } else {
+                        // Bir alt vites motoru patlatacaksa, mecburen bulunduğumuz viteste kalıp freni bekleyeceğiz.
+                        break;
+                    }
                 }
             }
 
-            if (bestGear != mCurrentGear) {
-                if (bestGear < mCurrentGear) {
-                    if (mEnableRevMatch) {
-                        float aggressivenessFactor = 0.05f + (mDriveModeAggressiveness * 0.10f);
-                        mRevMatchBoost = mMaxRpm * aggressivenessFactor;
-                        if (mCurrentRpm > mMaxRpm * 0.8f) mRevMatchBoost *= 0.5f;
-                    } else mCurrentRpm *= 1.10f;
+            // Eğer vites değiştiyse aksiyon al
+            if (targetGear != mCurrentGear) {
+                if (targetGear < mCurrentGear && mEnableRevMatch) {
+                    // Vites düşürürken o meşhur Ara Gazı (Rev Match) ver
+                    float aggressivenessFactor = 0.10f + (mDriveModeAggressiveness * 0.15f);
+                    mRevMatchBoost = mMaxRpm * aggressivenessFactor;
                 } else {
                     mRevMatchBoost = 0;
-                    mCurrentRpm *= 0.88f;
                 }
+                mCurrentGear = targetGear;
                 mLastShiftTime = currentTime;
-                mCurrentGear = bestGear;
             }
         }
 
+        // --- 2. HIZA MEKANİK OLARAK KİLİTLENMİŞ DEVİR HESAPLAMASI ---
         if (mCurrentGear > 0) {
-            float[] finalRange = mActiveProfile.gearRanges[mCurrentGear - 1];
-            float speedRatio = (speed - finalRange[0]) / (finalRange[1] - finalRange[0]);
-            speedRatio = Math.max(0.05f, Math.min(0.95f, speedRatio));
+            // İŞTE ÇÖZÜM: Devir artık sadece HIZ'a ve VİTES'e bağlı! Gazla alakası kalmadı.
+            float rawRpm = calculateMechanicalRpm(mCurrentGear, speed);
 
-            float dynamicMax = mIdleRpm + (targetRpmRange * (0.5f + throttle * 0.5f));
-            float targetRpmFinal = mIdleRpm + (speedRatio * (dynamicMax - mIdleRpm));
-
-            mRevMatchBoost *= 0.85f;
+            // Ara gazı etkisini yavaşça söndür
+            mRevMatchBoost *= 0.90f;
             if (mRevMatchBoost < 5f) mRevMatchBoost = 0;
 
-            float currentSmooth = (throttle > 0.05f) ? mActiveProfile.rpmOnSmooth : mActiveProfile.rpmOffSmooth;
-            mCurrentRpm = (mCurrentRpm * (1.0f - currentSmooth)) + (targetRpmFinal * currentSmooth);
+            float targetRpmFinal = rawRpm + mRevMatchBoost;
 
-            if (mEnableRevMatch && mRevMatchBoost > 0) mCurrentRpm += mRevMatchBoost;
-
+            // Vites atma anındaki mekanik sarsıntı (Wobble)
             long timeSinceShift = currentTime - mLastShiftTime;
             if (timeSinceShift < 500 && mActiveProfile.wobbleMagnitude > 0) {
                 float timeSec = timeSinceShift / 1000f;
                 float dampening = Math.max(0f, 1.0f - (timeSec / 0.5f));
                 float wobbleOffset = (float) Math.sin(timeSec * 9.0f * Math.PI * 2) * mActiveProfile.wobbleMagnitude * dampening;
-                mCurrentRpm += wobbleOffset;
+                targetRpmFinal += wobbleOffset;
             }
+
+            // RpmOnSmooth ve RpmOffSmooth sadece devir geçişlerini pürüzsüzleştirir. Sabit hızda devir sabit kalır.
+            float currentSmooth = (throttle > 0.05f) ? mActiveProfile.rpmOnSmooth : mActiveProfile.rpmOffSmooth;
+            mCurrentRpm = (mCurrentRpm * (1.0f - currentSmooth)) + (targetRpmFinal * currentSmooth);
         }
 
+        // Sınırların dışına çıkmasını engelle
         mCurrentRpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
     }
 
+    // YENİ YARDIMCI METOT (Bunu updateGearAndRpm'in hemen altına yapıştır)
+    // YENİ VE KUSURSUZ MEKANİK DEVİR HESAPLAYICI
+    private float calculateMechanicalRpm(int gear, float speed) {
+        if (gear < 1 || gear > mActiveProfile.gearRanges.length) return mIdleRpm;
+
+        float[] range = mActiveProfile.gearRanges[gear - 1];
+        float minSpeedInGear = range[0]; // Vitesin alt hızı (Listendeki sol değer)
+        float maxSpeedInGear = range[1]; // Vitesin üst hızı (Listendeki sağ değer)
+
+        // Hızın bu vites aralığındaki gerçek yüzdesini bul
+        // Eğer hız minSpeed'den düşükse (örneğin 15. viteste 89 kmh ile gidiyorsan) bu oran EKSİ (-) çıkar!
+        float speedRatio = (speed - minSpeedInGear) / (maxSpeedInGear - minSpeedInGear);
+
+        // Devri hesapla (Burada Math.max ile sınır KOYMUYORUZ ki devir eksiye düşsün ve şanzıman panikleyip vites düşürsün)
+        return mIdleRpm + (speedRatio * (mMaxRpm - mIdleRpm));
+    }
     private void updateAudioMixer() {
         if (mSoundPool == null || (!mIsDualLayer && mCurrentSamples == null) || (mIsDualLayer && mCurrentSamplesOn == null)) return;
 
@@ -1008,47 +1034,43 @@ public class EngineSoundManager {
             processLayer(mCurrentSamplesOff, rpm, offWeight * masterVol, masterVol, false);
 
         } else {
-            if (mCurrentSpeedKmh < 1.0f) {
-                for (int i = 0; i < mCurrentSamples.length; i++) {
-                    EngineSample s = mCurrentSamples[i];
-                    if (s.streamId == -1) continue;
-                    float targetVol = (i == 0) ? (masterVol * mCurrentIdleVolumeScale) : 0f;
-                    mSoundPool.setVolume(s.streamId, targetVol, targetVol);
-                    mSoundPool.setRate(s.streamId, mIdlePitch);
-                }
+            // SİNGLE LAYER MİKSERİ (Eski hız sıfırsa rölantiye kilitleyen blok TAMAMEN silindi)
+            EngineSample lower = mCurrentSamples[0], upper = mCurrentSamples[1];
+            if (rpm >= mCurrentSamples[mCurrentSamples.length - 1].baseRpm) {
+                lower = mCurrentSamples[mCurrentSamples.length - 1];
+                upper = lower;
             } else {
-                EngineSample lower = mCurrentSamples[0], upper = mCurrentSamples[1];
-                if (rpm >= mCurrentSamples[mCurrentSamples.length - 1].baseRpm) {
-                    lower = mCurrentSamples[mCurrentSamples.length - 1];
-                    upper = lower;
-                } else {
-                    for (int i = 0; i < mCurrentSamples.length - 1; i++) {
-                        if (rpm >= mCurrentSamples[i].baseRpm && rpm <= mCurrentSamples[i+1].baseRpm) {
-                            lower = mCurrentSamples[i]; upper = mCurrentSamples[i+1]; break;
-                        }
+                for (int i = 0; i < mCurrentSamples.length - 1; i++) {
+                    if (rpm >= mCurrentSamples[i].baseRpm && rpm <= mCurrentSamples[i+1].baseRpm) {
+                        lower = mCurrentSamples[i]; upper = mCurrentSamples[i+1]; break;
                     }
                 }
-                float rpmDiff = upper.baseRpm - lower.baseRpm;
-                float blend = Math.max(0f, Math.min(1f, (rpmDiff <= 0) ? 0 : (rpm - lower.baseRpm) / rpmDiff));
+            }
+            float rpmDiff = upper.baseRpm - lower.baseRpm;
+            float blend = Math.max(0f, Math.min(1f, (rpmDiff <= 0) ? 0 : (rpm - lower.baseRpm) / rpmDiff));
 
-                for (int i = 0; i < mCurrentSamples.length; i++) {
-                    EngineSample s = mCurrentSamples[i];
-                    if (s.streamId == -1) continue;
-                    float rawVol = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
-                    float shapedVol = (float) Math.sqrt(rawVol);
-                    if (Float.isNaN(shapedVol)) shapedVol = 0f;
-                    if (s == mCurrentSamples[0]) shapedVol *= mCurrentIdleVolumeScale;
+            for (int i = 0; i < mCurrentSamples.length; i++) {
+                EngineSample s = mCurrentSamples[i];
+                if (s.streamId == -1) continue;
+                float rawVol = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
+                float shapedVol = (float) Math.sqrt(rawVol);
+                if (Float.isNaN(shapedVol)) shapedVol = 0f;
+                if (s == mCurrentSamples[0]) shapedVol *= mCurrentIdleVolumeScale;
 
-                    float loadVolumeFactor = 0.5f + (mSimulatedThrottle * 0.5f);
-                    float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
-                    float modeVolumeBoost = (mDriveModeAggressiveness > 0.5f) ? 1.2f : 1.0f;
+                float loadVolumeFactor = 0.5f + (mSimulatedThrottle * 0.5f);
+                float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
+                float modeVolumeBoost = (mDriveModeAggressiveness > 0.5f) ? 1.2f : 1.0f;
 
-                    float finalVolume = Math.max(0.0f, Math.min(1.0f, shapedVol * masterVol * loadVolumeFactor * modeVolumeBoost));
-                    float pitch = Math.max(0.5f, Math.min(2.0f, (rpm / s.baseRpm) * loadPitchFactor));
+                float finalVolume = Math.max(0.0f, Math.min(1.0f, shapedVol * masterVol * loadVolumeFactor * modeVolumeBoost));
+                float pitch = Math.max(0.5f, Math.min(2.0f, (rpm / s.baseRpm) * loadPitchFactor));
 
-                    mSoundPool.setVolume(s.streamId, finalVolume, finalVolume);
-                    mSoundPool.setRate(s.streamId, Float.isNaN(pitch) ? 1.0f : pitch);
+                // Sadece araç dururken ve hiç gaz vermiyorken kullanıcı rölanti ayarını uygula
+                if (i == 0 && mCurrentSpeedKmh < 1.0f && mSimulatedThrottle < 0.05f) {
+                    pitch *= mIdlePitch;
                 }
+
+                mSoundPool.setVolume(s.streamId, finalVolume, finalVolume);
+                mSoundPool.setRate(s.streamId, Float.isNaN(pitch) ? 1.0f : pitch);
             }
         }
 
@@ -1063,6 +1085,7 @@ public class EngineSoundManager {
 
     /** YENİ SİSTEM İÇİN DUAL-LAYER KATMAN İŞLEYİCİ */
     // DÜZELTME: Parametrelere 'float fadedMasterVol' eklendi
+    /** YENİ SİSTEM İÇİN DUAL-LAYER KATMAN İŞLEYİCİ */
     private void processLayer(EngineSample[] layer, float rpm, float weightVol, float fadedMasterVol, boolean isOnLayer) {
         if (layer == null || layer.length == 0) return;
 
@@ -1100,9 +1123,10 @@ public class EngineSoundManager {
             if (isOnLayer) pitch *= (0.98f + (mSimulatedThrottle * 0.04f));
             pitch = Math.max(0.6f, Math.min(1.8f, pitch));
 
-            if (mCurrentSpeedKmh < 1.0f) {
-                finalVolume = (i == 0) ? (fadedMasterVol * mCurrentIdleVolumeScale) : 0f;
-                pitch = mIdlePitch;
+            // HATALI KİLİT BURADAN TAMAMEN SİLİNDİ!
+            // Sadece araç dururken ve hiç gaz verilmiyorken kullanıcı pitch (frekans) ayarını uygula
+            if (i == 0 && mCurrentSpeedKmh < 1.0f && mSimulatedThrottle < 0.05f) {
+                pitch *= mIdlePitch;
             }
 
             mSoundPool.setVolume(s.streamId, finalVolume, finalVolume);
