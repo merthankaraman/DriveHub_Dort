@@ -164,6 +164,8 @@
     <string name="gear_whine">Dişli ıslığını aktif et</string>
     <string name="gear_whine_on">Dişli ıslığı: Açık</string>
     <string name="gear_whine_off">Dişli ıslığı: Kapalı</string>
+    <string name="btn_subwave_on">Alt bas: Açık</string>
+    <string name="btn_subwave_off">Alt bas: Kapalı</string>
     <string name="btn_idle_settings">Rölanti ayarları</string>
 
     <!-- Rölanti paneli -->

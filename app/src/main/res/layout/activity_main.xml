@@ -1573,10 +1573,17 @@
                             android:textColor="#FFFFFF"
                             android:textSize="14sp" />
 
-                        <Space
+                        <Button
+                            android:id="@+id/btnSubwave"
                             android:layout_width="0dp"
                             android:layout_height="120dp"
-                            android:layout_weight="1" />
+                            android:layout_weight="1"
+                            android:backgroundTint="#21262D"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@string/btn_subwave_on"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
                     </LinearLayout>
 
                 </LinearLayout>

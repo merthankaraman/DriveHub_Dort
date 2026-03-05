@@ -75,7 +75,10 @@ public class EngineSoundManager {
     private boolean mEnableRevMatch = true;
     private float mRevMatchBoost = 0f;
     private boolean mGearWhineEnabled = true;
-
+    // SUBWAVE (DERİN BAS) DEĞİŞKENLERİ
+    private int mSubwaveSoundId = -1;
+    private int mSubwaveStreamId = -1;
+    private boolean mSubwaveEnabled = true;
     private int mFlutterSoundId = -1;
     private float mFlutterSoundmultiplier = 0.4f;
     private long mLastFlutterTime = 0;
@@ -696,7 +699,7 @@ public class EngineSoundManager {
         mLoadedSamplesCount = 0;
 
         int baseStreams = mIsDualLayer ? (mCurrentSamplesOn.length + mCurrentSamplesOff.length) : mCurrentSamples.length;
-        int extras = 2; // Turbo ve Whine her zaman yükleniyor
+        int extras = 3; // Turbo ve Whine Subwave
         if (mActiveProfile.hasTurbo == 1) extras++;
         if (mActiveProfile.startSoundResId != 0) extras++;
         if (mActiveProfile.stopSoundResId != 0) extras++;
@@ -738,6 +741,7 @@ public class EngineSoundManager {
 
                 mTurboStreamId = mSoundPool.play(mTurboSoundId, 0f, 0f, 1, -1, 1.0f);
                 mGearWhineStreamId = mSoundPool.play(mGearWhineSoundId, 0f, 0f, 1, -1, 1.0f);
+                mSubwaveStreamId = mSoundPool.play(mSubwaveSoundId, 0f, 0f, 1, -1, 1.0f);
 
                 // Marş: sadece vites 1 veya sim aktifken ve araç READY/sim ile (boot’ta READY olmadan çalmasın)
                 boolean mayPlayStart = mStartSoundId != -1
@@ -757,6 +761,7 @@ public class EngineSoundManager {
         // Yardımcı sesleri yükle
         mTurboSoundId = mSoundPool.load(mContext, (mActiveProfile.hasTurbo == 2) ? R.raw.supercharge : R.raw.turbo, 1);
         mGearWhineSoundId = mSoundPool.load(mContext, R.raw.transmission, 1);
+        mSubwaveSoundId = mSoundPool.load(mContext, R.raw.dp_in_subwave, 1);
         if (mActiveProfile.hasTurbo == 1) mFlutterSoundId = mSoundPool.load(mContext, R.raw.blowoff2, 1); else mFlutterSoundId = -1;
         if (mActiveProfile.startSoundResId != 0) mStartSoundId = mSoundPool.load(mContext, mActiveProfile.startSoundResId, 1); else mStartSoundId = -1;
         if (mActiveProfile.stopSoundResId != 0) mStopSoundId = mSoundPool.load(mContext, mActiveProfile.stopSoundResId, 1); else mStopSoundId = -1;
@@ -779,6 +784,7 @@ public class EngineSoundManager {
             if (mCurrentSamplesOff != null) for (EngineSample s : mCurrentSamplesOff) if(s.streamId != -1) mSoundPool.stop(s.streamId);
             if (mTurboStreamId != -1) mSoundPool.stop(mTurboStreamId);
             if (mGearWhineStreamId != -1) mSoundPool.stop(mGearWhineStreamId);
+            if (mSubwaveStreamId != -1) mSoundPool.stop(mSubwaveStreamId);
 
             // 2. İSTOP SESİNİ ÇAL
             if (mStopSoundId != -1) {
@@ -797,6 +803,15 @@ public class EngineSoundManager {
         }
 
         mTurboStreamId = -1; mFlutterSoundId = -1; mStartSoundId = -1; mStopSoundId = -1;
+        mSubwaveStreamId = -1; mSubwaveSoundId = -1;
+    }
+
+    public void setSubwaveEnabled(boolean enabled) {
+        mSubwaveEnabled = enabled;
+    }
+
+    public boolean isSubwaveEnabled() {
+        return mSubwaveEnabled;
     }
 
     public void onSpeedChanged(float speedKmh) {
@@ -1045,6 +1060,32 @@ public class EngineSoundManager {
                 float compVol = (0.2f + (mSimulatedThrottle * 0.8f)) * rpmRatio * masterVol * mCompressorMaxVol;
                 mSoundPool.setVolume(mTurboStreamId, compVol, compVol);
                 mSoundPool.setRate(mTurboStreamId, 0.8f + (rpmRatio * 1.7f));
+            }
+        }
+        // --- SUBWAVE (ALT BAS / GÖĞÜS TİTRETEN TOKLUK) KONTROLÜ ---
+        if (mSubwaveStreamId != -1) {
+            if (mSubwaveEnabled) {
+                // Şalter AÇIKSA: Motora yük bindikçe bas katmanı belirginleşir
+                float loadFactor = 0.4f + (mSimulatedThrottle * 0.6f);
+                float subVolume = masterVol * loadFactor * 1.5f; // Bas çarpanı
+
+                // Derinliği korumak için pitch çok tizleşmemeli (0.6 - 1.3 arası)
+                float subPitch = 0.6f + (rpmRatio * 0.7f);
+
+                // Araç dururken ve gaza basılmıyorken rölanti tokluğu
+                if (mCurrentSpeedKmh < 1.0f && mSimulatedThrottle < 0.05f) {
+                    subVolume = masterVol * mCurrentIdleVolumeScale * 0.6f;
+                    subPitch = mIdlePitch * 0.6f;
+                }
+
+                // Patlamaları önlemek için güvenlik limiti
+                subVolume = Math.max(0f, Math.min(1.0f, subVolume));
+
+                mSoundPool.setVolume(mSubwaveStreamId, subVolume, subVolume);
+                mSoundPool.setRate(mSubwaveStreamId, subPitch);
+            } else {
+                // Şalter KAPALIYSA: Derin bası tamamen sustur
+                mSoundPool.setVolume(mSubwaveStreamId, 0f, 0f);
             }
         }
 

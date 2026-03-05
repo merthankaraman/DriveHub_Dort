@@ -111,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnGearProfile;
     private Button mBtnRevMatch;
     private Button mBtnGearWhine;
+    private Button mBtnSubwave;
     private Button mBtnSpeedTest;
     private SeekBar mSeekSoundVolume;
     private TextView mTvAlarmVolumeHint;
@@ -529,6 +530,20 @@ public class MainActivity extends AppCompatActivity {
                 mEngineSound.setGearWhineEnabled(next);
                 prefsApp.edit().putBoolean("gear_whine_enabled", next).apply();
                 updateGearWhineButtonText(next);
+            });
+        }
+
+        mBtnSubwave = findViewById(R.id.btnSubwave);
+        if (mBtnSubwave != null) {
+            boolean subOn = prefsApp.getBoolean("subwave_enabled", false);
+            mEngineSound.setSubwaveEnabled(subOn);
+            updateSubwaveButtonText(subOn);
+            mBtnSubwave.setOnClickListener(v -> {
+                boolean current = mEngineSound.isSubwaveEnabled();
+                boolean next = !current;
+                mEngineSound.setSubwaveEnabled(next);
+                prefsApp.edit().putBoolean("subwave_enabled", next).apply();
+                updateSubwaveButtonText(next);
             });
         }
 
@@ -1667,6 +1682,11 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void updateGearWhineButtonText(boolean enabled) {
         if (mBtnGearWhine == null) return;
         mBtnGearWhine.setText(enabled ? getString(R.string.gear_whine_on) : getString(R.string.gear_whine_off));
+    }
+
+    private void updateSubwaveButtonText(boolean enabled) {
+        if (mBtnSubwave == null) return;
+        mBtnSubwave.setText(enabled ? getString(R.string.btn_subwave_on) : getString(R.string.btn_subwave_off));
     }
 
     private void cycleSoundCharacter() {
