@@ -158,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Şarj paneli
     private View     mLayoutStatusPanel;
+    private View     mLayoutChargingGraphPanel;
     private boolean  mChargingPanelOpen = false;
     private final Handler mChargingHandler = new Handler();
     private final Runnable mChargingRunnable = new Runnable() {
@@ -198,6 +199,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PANEL_SHORTCUTS = 5;
     private static final int PANEL_CONSUMPTION = 6;
     private static final int PANEL_IDLE = 7;
+    private static final int PANEL_CHARGING_GRAPH = 8;
     private int mCurrentPanel = PANEL_MAIN;
 
     // Tüketim paneli
@@ -626,6 +628,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
         // Şarj paneli
         mLayoutStatusPanel  = findViewById(R.id.layoutStatusPanel);
+        mLayoutChargingGraphPanel = findViewById(R.id.layoutChargingGraphPanel);
         mTvChargingDuration = findViewById(R.id.tvChargingDuration);
         mTvChargingStatus   = findViewById(R.id.tvChargingStatus);
         mTvExpectedPower    = findViewById(R.id.tvExpectedPower);
@@ -642,6 +645,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
         findViewById(R.id.btnStatusPanel).setOnClickListener(v -> openStatusPanel());
         findViewById(R.id.btnStatusBack).setOnClickListener(v  -> closeStatusPanel());
+        findViewById(R.id.btnOpenChargingGraph).setOnClickListener(v -> openChargingGraphPanel());
+        findViewById(R.id.btnChargingGraphBack).setOnClickListener(v -> closeChargingGraphPanel());
+        findViewById(R.id.btnChargingGraphReset).setOnClickListener(v -> resetChargingGraph());
         findViewById(R.id.btnClimatePanel).setOnClickListener(v -> openClimatePanel());
 
         // ---- Tüketim paneli ----
@@ -757,6 +763,8 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             swChargingWakeLock.setChecked(wakeLockEnabled);
             swChargingWakeLock.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 p.edit().putBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, isChecked).apply();
+                // Kullanıcı bu düğmeye bastığı anda ekran uyuma davranışını hemen güncelle
+                updateKeepScreenOn();
             });
         }
         Button btnShowHistory = findViewById(R.id.btnShowChargingHistory);
@@ -801,6 +809,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             case PANEL_STATUS:
                 openStatusPanel();
                 break;
+            case PANEL_CHARGING_GRAPH:
+                openChargingGraphPanel();
+                break;
             case PANEL_REGEN:
                 openRegenPanel();
                 break;
@@ -812,6 +823,12 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
                 break;
             case PANEL_CONSUMPTION:
                 openConsumptionPanel();
+                break;
+            case PANEL_SOUND:
+                openSoundPanel();
+                break;
+            case PANEL_IDLE:
+                openIdlePanel();
                 break;
             case PANEL_MAIN:
             default:
@@ -836,6 +853,8 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         if (mEngineSound != null && mSoundEnabled) {
             mEngineSound.start();
         }
+        // Kullanıcı \"Şarj sırasında ekran uyuma engelle\" düğmesini açtıysa, Activity ön plandayken ekranı uyutma
+        updateKeepScreenOn();
     }
 
     @Override
@@ -1054,6 +1073,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mCurrentPanel = PANEL_STATUS;
         mLayoutMain.setVisibility(View.GONE);
         mLayoutStatusPanel.setVisibility(View.VISIBLE);
+        if (mLayoutChargingGraphPanel != null) {
+            mLayoutChargingGraphPanel.setVisibility(View.GONE);
+        }
         mChargingPanelOpen = true;
         refreshStatusPanel();
         updateKeepScreenOn();//new_flag
@@ -1069,11 +1091,29 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mCurrentPanel = PANEL_MAIN;
     }
 
-    /** Şarj paneli açık + ayar açık + şarjda ise ekran uyumasın (FLAG_KEEP_SCREEN_ON). */
+    private void openChargingGraphPanel() {
+        mCurrentPanel = PANEL_CHARGING_GRAPH;
+        mLayoutMain.setVisibility(View.GONE);
+        mLayoutStatusPanel.setVisibility(View.GONE);
+        if (mLayoutChargingGraphPanel != null) {
+            mLayoutChargingGraphPanel.setVisibility(View.VISIBLE);
+        }
+        mChargingPanelOpen = true;
+        mChargingHandler.removeCallbacks(mChargingRunnable);
+        mChargingHandler.post(mChargingRunnable);
+    }
+
+    private void closeChargingGraphPanel() {
+        if (mLayoutChargingGraphPanel != null) {
+            mLayoutChargingGraphPanel.setVisibility(View.GONE);
+        }
+        openStatusPanel();
+    }
+
+    /** Kullanıcı \"Şarj sırasında ekran uyuma engelle\" düğmesini açtıysa ekran uyumasın (FLAG_KEEP_SCREEN_ON). */
     private void updateKeepScreenOn() {//new_flag
-        boolean keepOn = mChargingPanelOpen
-                && getSharedPreferences("mg4_v3", MODE_PRIVATE).getBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, false)
-                && MG4Hardware.isChargingNow();
+        boolean keepOn = getSharedPreferences("mg4_v3", MODE_PRIVATE)
+                .getBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, false);
         if (keepOn) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         } else {
@@ -1168,30 +1208,48 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         int textColor = 0xFF8B949E;
         LineChart chart = mChartChargingPower;
         chart.getDescription().setEnabled(false);
-        chart.getLegend().setEnabled(true);
-        chart.getLegend().setTextColor(textColor);
-        chart.getLegend().setTextSize(10f);
         chart.setTouchEnabled(false);
         chart.setDrawGridBackground(false);
+        chart.setDrawBorders(false);
+        chart.setNoDataText("");
+
+        // Legend: minimalist, küçük ama okunur
+        chart.getLegend().setEnabled(true);
+        chart.getLegend().setTextColor(textColor);
+        chart.getLegend().setTextSize(11f);
+        chart.getLegend().setFormSize(8f);
+        chart.getLegend().setForm(com.github.mikephil.charting.components.Legend.LegendForm.LINE);
+
         XAxis xAxis = chart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setTextColor(textColor);
         xAxis.setDrawGridLines(false);
+        xAxis.setDrawAxisLine(false);
+        xAxis.setDrawLabels(false); // zaman eksenini sade tut
         xAxis.setGranularity(1f);
+
         YAxis yAxisL = chart.getAxisLeft();
         yAxisL.setTextColor(textColor);
+        yAxisL.setTextSize(10f);
         yAxisL.setDrawGridLines(true);
-        yAxisL.setGridColor(0x408B949E);
+        yAxisL.setGridColor(0x308B949E);
+        yAxisL.enableGridDashedLine(8f, 8f, 0f);
+        yAxisL.setAxisLineColor(0x208B949E);
+        yAxisL.setLabelCount(5, false);
         chart.getAxisRight().setEnabled(false);
     }
 
     private static LineDataSet makeDataSet(ArrayList<Entry> entries, int color, String label) {
         LineDataSet set = new LineDataSet(entries, label);
         set.setColor(color);
-        set.setLineWidth(1.5f);
+        set.setLineWidth(2f);
         set.setDrawCircles(false);
         set.setDrawValues(false);
-        set.setMode(LineDataSet.Mode.LINEAR);
+        set.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        // Yumuşak gradient benzeri dolgu
+        set.setDrawFilled(true);
+        set.setFillAlpha(60);
+        set.setFillColor(color);
         return set;
     }
 
@@ -1217,6 +1275,17 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         data.addDataSet(makeDataSet(mChartEntriesBatt, COLOR_CHART_BATT, getString(R.string.chart_legend_batt)));
         mChartChargingPower.setData(data);
         mChartChargingPower.invalidate();
+    }
+
+    private void resetChargingGraph() {
+        mChartEntriesMaxDc.clear();
+        mChartEntriesAc.clear();
+        mChartEntriesBatt.clear();
+        mChargingChartIndex = 0f;
+        if (mChartChargingPower != null) {
+            mChartChargingPower.clear();
+            mChartChargingPower.invalidate();
+        }
     }
 
     private void trimChartEntries(ArrayList<Entry> entries) {
@@ -1335,7 +1404,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         }
         // Ortalama tüketim (kWh/100km) = bu oturum enerjisi / bu oturum yolu * 100
         if (mTvConsumptionAvgKwhPer100km != null) {
-            if (tripDistanceKm > 0.01 && tripEnergyKwh >= 0) {
+            if (tripDistanceKm > 0.01) {
                 double avgKwhPer100 = (tripEnergyKwh / tripDistanceKm) * 100.0;
                 mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f kWh/100 km", avgKwhPer100));
             } else {
@@ -1569,6 +1638,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             return;
         } else if (mCurrentPanel == PANEL_IDLE) {
             closeIdlePanel();
+            return;
+        } else if (mCurrentPanel == PANEL_CHARGING_GRAPH) {
+            closeChargingGraphPanel();
             return;
         }
         super.onBackPressed();

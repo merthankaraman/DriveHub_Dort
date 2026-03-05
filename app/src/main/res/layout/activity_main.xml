@@ -2090,13 +2090,70 @@
 
         </LinearLayout>
 
+        <!-- Grafik yerine tam ekran grafik için buton -->
+        <Button
+            android:id="@+id/btnOpenChargingGraph"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/charging_graph_open" />
+
+    </LinearLayout>
+
+    <!-- ============================================================ -->
+    <!-- ŞARJ GRAFİĞİ PANELİ (tam ekran LineChart)                     -->
+    <!-- ============================================================ -->
+    <LinearLayout
+        android:id="@+id/layoutChargingGraphPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/surface"
+        android:orientation="vertical"
+        android:paddingStart="40dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="40dp"
+        android:paddingBottom="20dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnChargingGraphBack"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_marginEnd="16dp"
+                android:text="@string/back" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:text="@string/charging_graph_title"
+                android:textColor="@android:color/white"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnChargingGraphReset"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:text="@string/charging_graph_reset" />
+
+        </LinearLayout>
+
         <!-- Tek grafik: Maks DC / AC / Batt (kW) — AC 0 ise 2 çizgi -->
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/chartChargingPower"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="8dp"
-            android:layout_weight="0.4" />
+            android:layout_weight="1" />
 
     </LinearLayout>
 

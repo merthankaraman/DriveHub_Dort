@@ -253,4 +253,9 @@
 
     <!-- Charging history month total -->
     <string name="charging_history_month_total_format">Ay toplamı: %.2f kWh AC, %.2f kWh DC</string>
+
+    <!-- Charging power full-screen graph -->
+    <string name="charging_graph_open">Grafiği aç</string>
+    <string name="charging_graph_title">Şarj gücü grafiği</string>
+    <string name="charging_graph_reset">Grafiği sıfırla</string>
 </resources>

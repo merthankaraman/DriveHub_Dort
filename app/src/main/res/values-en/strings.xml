@@ -253,4 +253,9 @@
 
     <!-- Charging history month total -->
     <string name="charging_history_month_total_format">Month total: %.2f kWh AC, %.2f kWh DC</string>
+
+    <!-- Charging power full-screen graph -->
+    <string name="charging_graph_open">Open graph</string>
+    <string name="charging_graph_title">Charging power graph</string>
+    <string name="charging_graph_reset">Reset graph</string>
 </resources>
