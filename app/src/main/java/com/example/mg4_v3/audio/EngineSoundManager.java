@@ -186,6 +186,7 @@ public class EngineSoundManager {
             "Nissan GT-R GT3",
             "McLaren GT3",
             "BMW Z4 GT3",
+            "GTR R34",
             "Mazda 3-Rotor",
             "Modern F1 V10"
     };
@@ -200,6 +201,7 @@ public class EngineSoundManager {
         else if ("Nissan GT-R GT3".equals(profile)) setVehicleProfile(PROFILE_NISSAN_GT3());
         else if ("McLaren GT3".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_GT3());
         else if ("BMW Z4 GT3".equals(profile)) setVehicleProfile(PROFILE_BMW_Z4_GT3());
+        else if ("GTR R34".equals(profile)) setVehicleProfile(PROFILE_GTRR34());
         else if ("Mazda 3-Rotor".equals(profile)) setVehicleProfile(PROFILE_MAZDA_ROTOR());
         else if ("Modern F1 V10".equals(profile)) setVehicleProfile(PROFILE_F1_V10());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
@@ -223,17 +225,17 @@ public class EngineSoundManager {
         return new VehicleProfile("Lotus Exige 240", 800, 9000f, 1,
                 2,
                 new float[][]{
-                        {0f, 40f},
+                        {0f, 35f},
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
-                        {70f, 110f},
                         {80f, 120f},
                         {100f, 140f},
-                        {110f, 150f},
-                        {120f, 160f},
-                        {140f, 180f},
-                        {160f, 200f}
+                        {120f, 180f},
+                        // {110f, 150f},
+                        //{120f, 160f},
+                        //{140f, 180f},
+                        //{160f, 200f}
                 },
                 1f, 0.1f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 0,0,
@@ -262,17 +264,17 @@ public class EngineSoundManager {
         return new VehicleProfile("Porsche GT3 997", 2000f, 9400f, 0.7f,
                 0,
                 new float[][]{
-                        {0f, 40f},
+                        {0f, 35f},
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
-                        {70f, 110f},
                         {80f, 120f},
                         {100f, 140f},
-                        {110f, 150f},
-                        {120f, 160f},
-                        {140f, 180f},
-                        {160f, 200f}
+                        {120f, 180f},
+                        //{110f, 150f},
+                        //{120f, 160f},
+                        //{140f, 180f},
+                        //{160f, 200f}
                 },
                 1f, 1f, 110, 250f,
                 R.raw.por911rsr_on_start, R.raw.por911rsr_on_stop,
@@ -303,17 +305,13 @@ public class EngineSoundManager {
 
                 // LFA'nın SpeedPerThousandRPM değerlerinin 9.55 (Max RPM) ile çarpılmış gerçek vites hızları
                 new float[][]{
-                        {0f, 40f},
+                        {0f, 35f},
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
-                        {70f, 110f},
                         {80f, 120f},
                         {100f, 140f},
-                        {110f, 150f},
-                        {120f, 160f},
-                        {140f, 180f},
-                        {160f, 200f}
+                        {120f, 180f},
                 },
 
                 // Orijinal LFA Fizik Karakteristiği
@@ -356,17 +354,13 @@ public class EngineSoundManager {
 
                 // txt'deki SpeedPerThousandRPM değerlerinin 6.1 (Max RPM) ile çarpılmış gerçek vites hızları [cite: 7, 8]
                 new float[][]{
-                        {0f, 40f},
+                        {0f, 35f},
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
-                        {70f, 110f},
                         {80f, 120f},
                         {100f, 140f},
-                        {110f, 150f},
-                        {120f, 160f},
-                        {140f, 180f},
-                        {160f, 200f}
+                        {120f, 180f},
                 },
 
                 // Orijinal Hellcat Fizik Karakteristiği
@@ -410,17 +404,13 @@ public class EngineSoundManager {
                 1.0f,
                 1,
                 new float[][]{
-                        {0f, 40f},
+                        {0f, 35f},
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
-                        {70f, 110f},
                         {80f, 120f},
                         {100f, 140f},
-                        {110f, 150f},
-                        {120f, 160f},
-                        {140f, 180f},
-                        {160f, 200f}
+                        {120f, 180f},
                 },
 
                 1f, 1f,
@@ -463,17 +453,13 @@ public class EngineSoundManager {
                 1,
 
                 new float[][]{
-                        {0f, 40f},
+                        {0f, 35f},
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
-                        {70f, 110f},
                         {80f, 120f},
                         {100f, 140f},
-                        {110f, 150f},
-                        {120f, 160f},
-                        {140f, 180f},
-                        {160f, 200f}
+                        {120f, 180f},
                 },
 
                 1f, 1f,
@@ -512,17 +498,13 @@ public class EngineSoundManager {
                 0,
 
                 new float[][]{
-                        {0f, 40f},
+                        {0f, 35f},
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
-                        {70f, 110f},
                         {80f, 120f},
                         {100f, 140f},
-                        {110f, 150f},
-                        {120f, 160f},
-                        {140f, 180f},
-                        {160f, 200f}
+                        {120f, 180f},
                 },
                 1f, 1f,
                 200,
@@ -564,17 +546,13 @@ public class EngineSoundManager {
 
                 // txt'deki SpeedPerThousandRPM değerlerinin 9.55 (Max RPM) ile çarpılmış gerçek vites hızları
                 new float[][]{
-                        {0f, 40f},
+                        {0f, 35f},
                         {20f, 60f},
                         {40f, 80f},
                         {60f, 100f},
-                        {70f, 110f},
                         {80f, 120f},
                         {100f, 140f},
-                        {110f, 150f},
-                        {120f, 160f},
-                        {140f, 180f},
-                        {160f, 200f}
+                        {120f, 180f},
                 },
                 1f, 1f,
                 200,
@@ -605,20 +583,20 @@ public class EngineSoundManager {
         return new VehicleProfile("Modern F1 V10",
                 4000f,
                 20050f,
-                0.8f,
+                0.6f,
                 0,
         new float[][]{
-                    {0f, 40f},
-                    {20f, 60f},
-                    {40f, 80f},
-                    {60f, 100f},
-                    {70f, 110f},
-                    {80f, 120f},
-                    {100f, 140f},
-                    {110f, 150f},
-                    {120f, 160f},
-                    {140f, 180f},
-                    {160f, 200f}
+                {0f, 35f},
+                {20f, 60f},
+                {40f, 80f},
+                {60f, 100f},
+                {80f, 120f},
+                {100f, 140f},
+                {120f, 180f},
+                   // {110f, 150f},
+                    //{120f, 160f},
+                    //{140f, 180f},
+                    //{160f, 200f}
                 },
                 1f, 1f,
                 80,380f,
@@ -646,6 +624,38 @@ public class EngineSoundManager {
                         {R.raw.modgpv10_offlow, 11000},
                         {R.raw.modgpv10_offmid, 15000},
                         {R.raw.modgpv10_offhigh, 20050}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_GTRR34() {
+        return new VehicleProfile("GTR R34", 1000f, 8200, 0.5f,
+                1,
+                new float[][]{
+                        {0f, 90f},
+                        {45f, 110f},
+                        {55f, 140f},
+                        {70f, 160f},
+                        {80f, 180f},
+                        {120f, 200f},
+                },
+                1f, 1f, 110, 250f,
+                0,0,
+                // ON Katmanı
+                new int[][]{
+                        {R.raw.rb26_idle, 1000},
+                        {R.raw.rb26_2_in_on_verylow2, 2000},
+                        {R.raw.rb26_2_in_on_verylow, 3500},
+                        {R.raw.rb26_2_in_on_low3, 5000},
+                        {R.raw.rb26_2_in_on_mid3, 6500},
+                        {R.raw.rb26_in_2_onhigh, 7500},
+                        {R.raw.rb26_in_2_onhigh2, 8200}
+                },
+                // OFF Katmanı
+                new int[][]{
+                        {R.raw.rb26_idle, 1000},
+                        {R.raw.rb26_ex_5_offverylow, 1500},
+                        {R.raw.rb26_ex_5_offlow, 4000},
+                        {R.raw.rb26_ex_5_offmid, 6500}
                 }
         );
     }
