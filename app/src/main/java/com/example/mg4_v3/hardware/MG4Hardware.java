@@ -67,7 +67,6 @@ public class MG4Hardware {
     private static final String DESCRIPTOR_VEHICLE =
             "com.saicmotor.sdk.vehiclesettings.IVehicleSettingService";
     private static final int TX_SET_DRIVE_MODE         = 130; // 0x82 — Hüseyin smali analizi
-    private static final int TX_SET_REGEN_BRAKE_SWITCH = 138; // 0x8A — Hüseyin smali analizi
     private static final int TX_SET_REGEN_LEVEL        = 161; // 0xA1 — Hüseyin smali analizi
     private static final int TX_SET_ONE_PEDAL          = 164; // 0xA4 — Hüseyin smali analizi
     private static final int COUNT = 1;
@@ -793,14 +792,6 @@ public class MG4Hardware {
     public static int getGear() {
         return getIntPropertyCPM(PROP_GEAR, AREA_GLOBAL);
     }
-
-    /** Anlık tüketim — kWh/km. Float.NaN = okunamadı. Güç: P(kW) = consumption * speed(km/h). */
-    public static float getConsumptionKwhPerKm() {
-        float v = getFloatPropertyCPM(PROP_ELEC_CSUMP_PER_KM, AREA_GLOBAL);
-        if (Float.isNaN(v)) v = bmsFloat(PROP_ELEC_CSUMP_PER_KM);
-        return v;
-    }
-
     // -------------------------------------------------------------------------
     // Enerji integrasyonu (serviste 100ms'de bir çalışır; uygulama açık olmasa da boot'tan itibaren)
     // Sadece DC/AC kW üzerinden hesaplanır; consumption*hız tabanlı "sürüş gücü" kullanılmaz.
@@ -819,7 +810,6 @@ public class MG4Hardware {
     private static volatile int sLastGear = -1;
     private static volatile int elseifcounter = 0;
     private static volatile int elsecounter = 0;
-    private static volatile int elsecounter2 = 0;
     private static volatile int dtHourscounter = 0;
     private static volatile int dtHourscounter1 = 0;
 
@@ -827,7 +817,6 @@ public class MG4Hardware {
     public static void integrateConsumptionData() {
         float speedKmh = getSpeedKmh();
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
-        float consumption = getConsumptionKwhPerKm();
 
         // DC güç (sürüş + şarj): V * A / 1000 → kW (işaretli)
         float dcVolt = getDcVoltage();
@@ -835,9 +824,6 @@ public class MG4Hardware {
         float dcKw;
         if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct)) {
             dcKw = (dcVolt * dcAmpAct) / 1000f;
-        } else if (!Float.isNaN(consumption) && !Float.isNaN(speedKmh) && speedKmh >= 0f) {
-            dcKw = consumption * speedKmh;
-            elseifcounter += 1;
         } else {
             dcKw = Float.NaN;
             elsecounter += 1;
@@ -848,13 +834,13 @@ public class MG4Hardware {
             if (sLogEnabled) {
                 Log.w(TAG, "integral_diag: dcKw clamp edildi dcKw=" + dcKw
                         + " dcVolt=" + dcVolt + " dcAmpAct=" + dcAmpAct
-                        + " consumption=" + consumption + " speedKmh=" + speedKmh);
+                        + " speedKmh=" + speedKmh);
             }
-            elsecounter2 += 1;
+            elseifcounter += 1;
             dcKw = Float.NaN;
         }
 
-        if ((elseifcounter > 0 || elsecounter > 0 || elsecounter2 > 0)) Log.i(TAG,"integral_diag: dcVolt ve dcAmp NAN elseif: " + elseifcounter + " else: " + elsecounter + " else2: " + elsecounter2 + " consumption: " + consumption + "kwh/km speedKmh " + speedKmh);
+        if ((elseifcounter > 0 || elsecounter > 0)) Log.i(TAG,"integral_diag: dcVolt ve dcAmp NAN elseif: " + elseifcounter + " else: " + elsecounter + "kwh/km speedKmh " + speedKmh);
 
 
         float acVolt = getAcVoltage();
@@ -918,8 +904,6 @@ public class MG4Hardware {
         sAcAmp  = acAmp;
         sAcKw   = acKw;
         sLastSpeedKmh = speedKmh;
-        sLastConsumption = consumption;
-        sLastTotalKm = getTotalMileage();
         sLastGear = getGear();
 
         int enginestate = getIntPropertyCPM(PROP_ENGINE_STATE, AREA_GLOBAL);
@@ -944,10 +928,7 @@ public class MG4Hardware {
 
     public static double getTripEnergyKwh() { return sTripEnergyKwh; }
     public static double getTripDistanceKm() { return sTripDistanceKm; }
-    public static int getMileageAtConsumptionStart() { return sMileageAtConsumptionStart; }
     public static float getLastSpeedKmh() { return sLastSpeedKmh; }
-    public static float getLastConsumption() { return sLastConsumption; }
-    public static int getLastTotalKm() { return sLastTotalKm; }
     public static int getLastGear() { return sLastGear; }
 
     // Sürüş grafiği sayaçları (UI trip reset'inden bağımsız)
@@ -1026,7 +1007,8 @@ public class MG4Hardware {
         //durdu 8
         // precharge 5
         //
-        if (sLogEnabled) Log.i(TAG, "CHG CHECK → status=" + (val instanceof Number ? ((Number) val).intValue() : -1)
+        int st = val instanceof Number ? ((Number) val).intValue() : -1;
+        if (sLogEnabled) Log.i(TAG, "CHG CHECK → status=" + st
                 + " acA=" + acA + " dcA=" + dcA + " dcV=" + dcV + " speed=" + sLastSpeedKmh);
 
 

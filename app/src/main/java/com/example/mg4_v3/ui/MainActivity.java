@@ -249,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
                     mTvGaugeRpm.setText(String.format("%.0f", rpm));
                 }
                 if (mTvGaugeGear != null) {
-                    mTvGaugeGear.setText("A" + mEngineSound.getCurrentGear());
+                    mTvGaugeGear.setText("A" + (mEngineSound.getCurrentGear() == 0 ? "1" : mEngineSound.getCurrentGear()));
                 }
                 if (mTvGaugePower != null) {
                     mTvGaugePower.setText(String.format("%.2f", dcPowerKw));
@@ -1266,11 +1266,8 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
     /** Panelde servisin güncellediği önbellek + trip enerji gösterilir (UI 500ms'de bir). */
     private void refreshConsumptionPanel() {
-        int totalKm = MG4Hardware.getLastTotalKm();
-        int mileageStart = MG4Hardware.getMileageAtConsumptionStart();
         double tripDistanceKm = MG4Hardware.getTripDistanceKm();
         float speedKmh = MG4Hardware.getLastSpeedKmh();
-        float consumption = MG4Hardware.getLastConsumption();
         float powerKw = MG4Hardware.getDcKwGlobal();
         powerKw = Float.isNaN(powerKw) ? Float.NaN : powerKw;
         int gear = MG4Hardware.getLastGear();

@@ -229,12 +229,13 @@ public class EngineSoundManager {
                         {60f, 100f},
                         {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f},
-                        {140f, 200f},
-                        {160f, 220f}
+                        {100f, 140f},
+                        {110f, 150f},
+                        {120f, 160f},
+                        {140f, 180f},
+                        {160f, 200f}
                 },
-                1f, 1f, 150, 150f, // Hafif ve atik (Moderate Wobble)
+                1f, 0.1f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 0,0,
                 // ON Katmanı (Gaza Basıldığında)
                 new int[][]{
@@ -267,10 +268,11 @@ public class EngineSoundManager {
                         {60f, 100f},
                         {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f},
-                        {140f, 200f},
-                        {160f, 220f}
+                        {100f, 140f},
+                        {110f, 150f},
+                        {120f, 160f},
+                        {140f, 180f},
+                        {160f, 200f}
                 },
                 1f, 1f, 110, 250f,
                 R.raw.por911rsr_on_start, R.raw.por911rsr_on_stop,
@@ -296,7 +298,7 @@ public class EngineSoundManager {
         return new VehicleProfile("Lexus LFA",
                 984f,   // Orijinal Rölanti (IdleRPM)
                 9550f,  // Orijinal Kesici (MaxRPM)
-                0.6f,
+                1f,
                 0,      // Atmosferik (Turbo yok)
 
                 // LFA'nın SpeedPerThousandRPM değerlerinin 9.55 (Max RPM) ile çarpılmış gerçek vites hızları
@@ -307,10 +309,11 @@ public class EngineSoundManager {
                         {60f, 100f},
                         {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f},
-                        {140f, 200f},
-                        {160f, 220f}
+                        {100f, 140f},
+                        {110f, 150f},
+                        {120f, 160f},
+                        {140f, 180f},
+                        {160f, 200f}
                 },
 
                 // Orijinal LFA Fizik Karakteristiği
@@ -325,16 +328,16 @@ public class EngineSoundManager {
 
                 // ON Katmanı (Gaza Basıldığında V10 Çığlığı)
                 new int[][]{
-                        {R.raw.lfa_in_onidle, 984},
+                        {R.raw.lfa_in_idle, 984},
                         {R.raw.lfa_in_onverylow_1, 2500},
                         {R.raw.lfa_in_onlow, 4500},
                         {R.raw.lfa_in_onmid, 6500},
                         {R.raw.lfa_in_onhigh, 8500},
-                        {R.raw.lfa_in_limiter, 9550}
+                        {R.raw.lfa_in_onhigh, 9550}
                 },
                 // OFF Katmanı (Gaz Çekildiğinde Gelen Yırtıcı Kompresyon)
                 new int[][]{
-                        {R.raw.lfa_in_offidle, 984},
+                        {R.raw.lfa_in_idle, 984},
                         {R.raw.lfa_in_offverylow_2, 2500},
                         {R.raw.lfa_in_offlow, 4500},
                         {R.raw.lfa_in_offmid, 6500},
@@ -359,10 +362,11 @@ public class EngineSoundManager {
                         {60f, 100f},
                         {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f},
-                        {140f, 200f},
-                        {160f, 220f}
+                        {100f, 140f},
+                        {110f, 150f},
+                        {120f, 160f},
+                        {140f, 180f},
+                        {160f, 200f}
                 },
 
                 // Orijinal Hellcat Fizik Karakteristiği
@@ -412,10 +416,11 @@ public class EngineSoundManager {
                         {60f, 100f},
                         {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f},
-                        {140f, 200f},
-                        {160f, 220f}
+                        {100f, 140f},
+                        {110f, 150f},
+                        {120f, 160f},
+                        {140f, 180f},
+                        {160f, 200f}
                 },
 
                 1f, 1f,
@@ -464,10 +469,11 @@ public class EngineSoundManager {
                         {60f, 100f},
                         {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f},
-                        {140f, 200f},
-                        {160f, 220f}
+                        {100f, 140f},
+                        {110f, 150f},
+                        {120f, 160f},
+                        {140f, 180f},
+                        {160f, 200f}
                 },
 
                 1f, 1f,
@@ -512,10 +518,11 @@ public class EngineSoundManager {
                         {60f, 100f},
                         {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f},
-                        {140f, 200f},
-                        {160f, 220f}
+                        {100f, 140f},
+                        {110f, 150f},
+                        {120f, 160f},
+                        {140f, 180f},
+                        {160f, 200f}
                 },
                 1f, 1f,
                 200,
@@ -563,10 +570,11 @@ public class EngineSoundManager {
                         {60f, 100f},
                         {70f, 110f},
                         {80f, 120f},
-                        {100f, 160f},
-                        {120f, 180f},
-                        {140f, 200f},
-                        {160f, 220f}
+                        {100f, 140f},
+                        {110f, 150f},
+                        {120f, 160f},
+                        {140f, 180f},
+                        {160f, 200f}
                 },
                 1f, 1f,
                 200,
@@ -600,16 +608,17 @@ public class EngineSoundManager {
                 0.8f,
                 0,
         new float[][]{
-                {0f, 40f},
-                {20f, 60f},
-                {40f, 80f},
-                {60f, 100f},
-                {70f, 110f},
-                {80f, 120f},
-                {100f, 160f},
-                {120f, 180f},
-                {140f, 200f},
-                {160f, 220f}
+                    {0f, 40f},
+                    {20f, 60f},
+                    {40f, 80f},
+                    {60f, 100f},
+                    {70f, 110f},
+                    {80f, 120f},
+                    {100f, 140f},
+                    {110f, 150f},
+                    {120f, 160f},
+                    {140f, 180f},
+                    {160f, 200f}
                 },
                 1f, 1f,
                 80,380f,
@@ -979,7 +988,6 @@ public class EngineSoundManager {
             }
         }
 
-        // --- MİKSER: HİBRİT KARAR MEKANİZMASI ---
         // --- MİKSER: HİBRİT KARAR MEKANİZMASI ---
         if (mIsDualLayer) {
             float onWeight = (float) Math.sqrt(mSimulatedThrottle);
