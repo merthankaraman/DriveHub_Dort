@@ -118,8 +118,8 @@ public class EngineSoundManager {
             this.idleVolumeScale = idleVolumeScale;
             this.hasTurbo = hasTurbo;
             this.gearRanges = gearRanges;
-            this.rpmOnSmooth = 0.5f;//rpmOnSmooth;
-            this.rpmOffSmooth = 0.5f;//rpmOffSmooth;
+            this.rpmOnSmooth = rpmOnSmooth;
+            this.rpmOffSmooth = rpmOffSmooth;
             this.shiftDurationMs = shiftDurationMs;
             this.wobbleMagnitude = wobbleMagnitude;
             this.startSoundResId = startSoundResId;
@@ -236,7 +236,7 @@ public class EngineSoundManager {
                         {18f, 180f},   // 6. Vites (Rölantide 18 km/h - Kesicide 180 km/h)
                         {20f, 320f}   // 7. VİTES (OVERDRIVE): Uzun yol vitesidir. 175'te devri 5000'e, 120'de 3500'e düşürür!
                 },
-                1f, 0.1f, 150, 150f, // Hafif ve atik (Moderate Wobble)
+                0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 0,0,
                 // ON Katmanı (Gaza Basıldığında)
                 new int[][]{
@@ -271,7 +271,7 @@ public class EngineSoundManager {
                         {25f, 315f},  // 6. Vites (Son Hız)
                         {30f, 370f}   // 7. VİTES (OVERDRIVE)
                 },
-                1f, 1f, 110, 250f,
+                0.18f, 0.08f, 110, 250f,
                 R.raw.por911rsr_on_start, R.raw.por911rsr_on_stop,
                 new int[][]{
                         {R.raw.por911rsr_on_idle, 2000},
@@ -308,12 +308,7 @@ public class EngineSoundManager {
                         {30f, 400f}   // 7. VİTES (OVERDRIVE): Uzun yol fısıltısı.
                 },
 
-                1f,  // Çılgın bir devir yükselme hızı
-                1f,  // Çok daha hızlı devir düşüşü (Hafif volan)
-                200,      // 200ms Vites Geçişi (Tek kavramalı ASG şanzıman hissi)
-                180f,     // 180 RPM Wobble (Porsche kadar sarsıntılı değil, daha pürüzsüz)
-
-                // Marş ve İstop Sesleri
+                0.25f,0.15f,200,180f,
                 R.raw.lfa_in_startup,
                 R.raw.lfa_in_stop,
 
@@ -354,11 +349,7 @@ public class EngineSoundManager {
                         {25f, 325f},  // 7. Vites (Son hız)
                         {30f, 420f}   // 8. VİTES (OVERDRIVE): 160 ile giderken V8 mırıldanarak çalışır.
                 },
-                1f,
-                1f,
-                110,
-                250f,
-
+                0.12f,0.05f,110,250f,
                 R.raw.hellcat_ex_startup_1,
                 R.raw.hellcat_ex_stop_1,
 
@@ -401,10 +392,7 @@ public class EngineSoundManager {
                         {30f, 305f}   // 6. Vites Son
                 },
 
-                1f, 1f,
-                200,
-                250f,
-
+                0.18f, 0.08f,200,250f,
                 R.raw.nisgt3_startup,
                 R.raw.nisgt3_stop,
 
@@ -447,11 +435,7 @@ public class EngineSoundManager {
                         {25f, 260f},
                         {30f, 300f}   // 6. Vites Son
                 },
-
-                1f, 1f,
-                100,
-                250f,
-
+                0.18f, 0.08f,100,250f,
                 R.raw.mp412c_start,
                 R.raw.mp412c_stop,
 
@@ -491,10 +475,7 @@ public class EngineSoundManager {
                         {22f, 255f},
                         {26f, 295f}   // 6. Vites Son
                 },
-                1f, 1f,
-                200,
-                250f,
-
+                0.18f, 0.08f,200,250f,
                 // Marş ve İstop Sesleri
                 R.raw.bmwz4gt3_startup,
                 R.raw.bmwz4gt3_stop,
@@ -538,9 +519,7 @@ public class EngineSoundManager {
                         {26f, 320f},
                         {30f, 390f}   // 7. VİTES (OVERDRIVE)
                 },
-                1f, 1f,
-                200,
-                180f,
+                0.18f, 0.08f,200,180f,
                 R.raw.mazda3rotor_startup,
                 0,
                 new int[][]{
@@ -578,8 +557,7 @@ public class EngineSoundManager {
                         {30f, 290f},
                         {35f, 335f}   // 7. Vites Son Hız (Sürekli Bağırtı)
                 },
-                1f, 1f,
-                80,380f,
+                0.25f, 0.15f,80,380f,
 
                 R.raw.modgpv10_startup,
                 0,
@@ -619,7 +597,7 @@ public class EngineSoundManager {
                         {25f, 310f},  // 6. Vites
                         {30f, 380f}   // 7. VİTES (OVERDRIVE)
                 },
-                1f, 1f, 110, 250f,
+                0.18f, 0.08f,110,250f,
                 0,0,
                 // ON Katmanı
                 new int[][]{
@@ -944,33 +922,22 @@ public class EngineSoundManager {
             if (timeSinceShift < shiftDur && mActiveProfile.wobbleMagnitude > 0) {
                 float timeSec = timeSinceShift / 1000f;
                 float durSec = shiftDur / 1000f;
-                // Sarsıntı, ayarladığın süre boyunca yavaşça sönümlenir
                 float dampening = Math.max(0f, 1.0f - (timeSec / durSec));
                 float wobbleOffset = (float) Math.sin(timeSec * 15.0f * Math.PI * 2) * mActiveProfile.wobbleMagnitude * dampening;
                 targetRpmFinal += wobbleOffset;
             }
 
-            // --- DEVİR GEÇİŞ YUMUŞATMASI (Rev Match ve Debriyaj Simülasyonu) ---
             float currentSmooth;
 
             if (mRevMatchBoost > 50f) {
-                // 1. Ara gaz (Rev Match) devredeyken motor kusursuz bir fırlama hızıyla (0.25f) kükrer!
                 currentSmooth = 0.25f;
             }
             else if (timeSinceShift < shiftDur) {
-                // 2. VİTES GEÇİŞ SÜRESİ (Debriyaj Basılı): Devir sürtünmeyle süzülerek hedefe varır.
-                // Eğer 11.000 yaparsan devrin yeni vitese oturması tam 11 saniye sürer!
                 currentSmooth = 16f / (float) shiftDur;
-                // Güvenlik: Matematik çökmesin diye limitliyoruz
                 currentSmooth = Math.max(0.002f, Math.min(0.2f, currentSmooth));
             }
-            else if (throttle > 0.05f) {
-                // 3. Vites geçmiş ve gaza basılıyken normal atiklik
-                currentSmooth = mActiveProfile.rpmOnSmooth;
-            }
             else {
-                // 4. Vites geçmiş ve gazdan çekilmişken normal kompresyon düşüşü
-                currentSmooth = mActiveProfile.rpmOffSmooth;
+                currentSmooth = 0.8f;
             }
 
             mCurrentRpm = (mCurrentRpm * (1.0f - currentSmooth)) + (targetRpmFinal * currentSmooth);
