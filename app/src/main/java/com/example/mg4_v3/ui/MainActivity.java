@@ -122,6 +122,14 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             if (mCurrentPanel == PANEL_SOUND && mTvAlarmVolumeHint != null) {
                 refreshAlarmVolumeHint();
+                // Vol↓+Ana ekran tuş kombinasyonu ile servis tarafında motor sesi toggle edilirse,
+                // UI'daki düğme durumu da prefs'ten senkronize olsun.
+                SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+                boolean enabledFromPrefs = prefs.getBoolean(PREF_SOUND_ENABLED, false);
+                if (enabledFromPrefs != mSoundEnabled) {
+                    mSoundEnabled = enabledFromPrefs;
+                    updateSoundToggleButton();
+                }
                 mAlarmVolumeHandler.postDelayed(this, 1500);
             }
         }
@@ -849,6 +857,13 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     protected void onResume() {
         super.onResume();
         mTvStatus.setText("✅ " + getString(R.string.status_service_ok));
+        // Servis tarafında tuş kombinasyonu ile değişmiş olabilecek motor sesi tercihlerini senkronize et
+        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        boolean enabledFromPrefs = prefs.getBoolean(PREF_SOUND_ENABLED, false);
+        if (enabledFromPrefs != mSoundEnabled) {
+            mSoundEnabled = enabledFromPrefs;
+            updateSoundToggleButton();
+        }
         // Yapay motor sesini başlat (eğer açıksa)
         if (mEngineSound != null && mSoundEnabled) {
             mEngineSound.start();

@@ -1,5 +1,6 @@
 package com.example.mg4_v3.ui;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -35,8 +36,13 @@ public class ChargingHistoryActivity extends AppCompatActivity {
     private static final SimpleDateFormat SDF_ROW = new SimpleDateFormat("dd.MM HH:mm", Locale.getDefault());
     private static final SimpleDateFormat SDF_DAY = new SimpleDateFormat("d MMMM yyyy", new Locale("tr"));
     private static final SimpleDateFormat SDF_MONTH = new SimpleDateFormat("MMMM yyyy", new Locale("tr"));
+    // ChargingHistory ile aynı SharedPreferences anahtarı; yeni veri yazıldığında ekranı otomatik yenilemek için dinleyeceğiz.
+    private static final String PREF_NAME = "mg4_v3";
+    private static final String KEY_HISTORY = "charging_history";
 
     private LinearLayout mHistoryTableBody;
+    private SharedPreferences mPrefs;
+    private SharedPreferences.OnSharedPreferenceChangeListener mPrefsListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +50,15 @@ public class ChargingHistoryActivity extends AppCompatActivity {
         setContentView(R.layout.activity_charging_history);
 
         mHistoryTableBody = findViewById(R.id.historyTableBody);
+
+        // Şarj geçmişi SharedPreferences'ını dinle: yeni kayıt eklendiğinde tabloyu otomatik yenile.
+        mPrefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        mPrefsListener = (sharedPreferences, key) -> {
+            if (KEY_HISTORY.equals(key)) {
+                refreshTable();
+            }
+        };
+        mPrefs.registerOnSharedPreferenceChangeListener(mPrefsListener);
 
         Button btnBack = findViewById(R.id.btnChargingHistoryBack);
         btnBack.setOnClickListener(v -> finish());
@@ -91,6 +106,14 @@ public class ChargingHistoryActivity extends AppCompatActivity {
             cal.set(Calendar.MILLISECOND, 0);
             long monthStart = cal.getTimeInMillis();
             byMonth.computeIfAbsent(monthStart, k -> new ArrayList<>()).add(r);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mPrefs != null && mPrefsListener != null) {
+            mPrefs.unregisterOnSharedPreferenceChangeListener(mPrefsListener);
         }
 
         List<Long> monthKeys = new ArrayList<>(byMonth.keySet());
