@@ -145,6 +145,8 @@ public class MG4ControlService extends Service {
 
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
     private boolean mDriveRegenRememberInitialized = false;
+    /** Boot sonrası sürüş modu / regen uygulaması için gecikme (ms). Debug için biraz kısaltıldı. */
+    private static final long REMEMBER_APPLY_DELAY_MS = 10_000L;
 
     // Sistem medya sesini kontrol etmek için
     private AudioManager mAudioManager;
@@ -335,11 +337,14 @@ public class MG4ControlService extends Service {
         MG4Hardware.ensureConsumptionTripStarted();
         mConsumptionHandler.post(mConsumptionIntegrationRunnable);
 
+        // Boot veya servis ilk kez başlarken X sn sonra profili uygula (ve debug için Toast göster).
         mMainHandler.postDelayed(() -> {
+            Toast.makeText(getApplicationContext(),
+                    "Remember profil kontrol ediliyor...", Toast.LENGTH_SHORT).show();
             applyRememberedDriveModeIfNeeded();
             applyRememberedRegenIfNeeded();
             mDriveRegenRememberInitialized = true;
-        }, 30000);
+        }, REMEMBER_APPLY_DELAY_MS);
 
         if (MG4Hardware.isLogEnabled()) {
             Log.i(TAG, "=== onCreate tamamlandı ===");
