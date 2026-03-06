@@ -798,6 +798,7 @@ public class MG4Hardware {
     // -------------------------------------------------------------------------
     private static volatile double sTripEnergyKwh = 0.0;
     private static volatile double sTripDistanceKm = 0.0;
+    private static volatile double sTripDistanceKm_trim = 0.0;
     // Sürüş grafiği için bağımsız sayaçlar (UI trip reset'inden etkilenmez)
     private static volatile double sDriveGraphEnergyKwh = 0.0;
     private static volatile double sDriveGraphDistanceKm = 0.0;
@@ -875,6 +876,9 @@ public class MG4Hardware {
             if (!Float.isNaN(speedKmh)) {
                 // Yol integrali: v(km/h) * dt(h) = km
                 sTripDistanceKm += speedKmh * dtHours;
+                // Trim versiyon: hızı 0.1 km/h hassasiyetine yuvarlayarak integre et
+                float speedTrim = Math.round(speedKmh * 10f) / 10f;
+                sTripDistanceKm_trim += speedTrim * dtHours;
             }
             // Sürüş grafiği sayaçları: sadece araç READY iken entegre et
             if (isVehicleReady()) {
@@ -915,6 +919,7 @@ public class MG4Hardware {
         sMileageAtConsumptionStart = getTotalMileage();
         sTripEnergyKwh = 0.0;
         sTripDistanceKm = 0.0;
+        sTripDistanceKm_trim = 0.0;
         sConsumptionLastRealtimeMs = SystemClock.elapsedRealtime();
     }
 
@@ -925,21 +930,17 @@ public class MG4Hardware {
             sConsumptionLastRealtimeMs = SystemClock.elapsedRealtime();
         }
     }
-
     public static double getTripEnergyKwh() { return sTripEnergyKwh; }
     public static double getTripDistanceKm() { return sTripDistanceKm; }
+    public static double getTripDistanceKm_Trim() { return sTripDistanceKm_trim; }
     public static float getLastSpeedKmh() { return sLastSpeedKmh; }
     public static int getLastGear() { return sLastGear; }
-
-    // Sürüş grafiği sayaçları (UI trip reset'inden bağımsız)
     public static double getDriveGraphEnergyKwh() { return sDriveGraphEnergyKwh; }
     public static double getDriveGraphDistanceKm() { return sDriveGraphDistanceKm; }
     public static void resetDriveGraphCounters() {
         sDriveGraphEnergyKwh = 0.0;
         sDriveGraphDistanceKm = 0.0;
     }
-
-    // Global cache getter'ları (100ms polling ile güncellenen değerler)
     public static float getDcVoltGlobal() { return sDcVolt; }
     public static float getDcAmpGlobal()  { return sDcAmp; }
     public static float getDcKwGlobal()   { return sDcKw; }

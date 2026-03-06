@@ -1409,7 +1409,8 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         }
         if (mTvConsumptionTripKm != null) {
             if (tripDistanceKm >= 0) {
-                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", tripDistanceKm));
+                double tripDistanceTrim = MG4Hardware.getTripDistanceKm_Trim();
+                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km --- %.2f km", tripDistanceKm, tripDistanceTrim));
             } else {
                 mTvConsumptionTripKm.setText("--");
             }
