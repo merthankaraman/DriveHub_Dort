@@ -291,9 +291,9 @@ public class MG4ControlService extends Service {
             mCurrentDriveMode = DriveMode.fromValue(modeValue);
             updateNotification("Sürüş: " + mCurrentDriveMode.label);
 
-            // Kullanıcı mod/regen hatırlamayı açtıktan ve ilk "remember" denemesi yapıldıktan SONRA
-            // CPM callback'lerinden gelen değerleri de son bilinen mod/regen olarak hafızaya yaz.
-            if (mDriveRegenRememberInitialized) {
+            // Son modu sadece araç READY iken hafızaya yaz. Araç kapanırken son anda Normal/regen 3'e
+            // çektiği değerleri yazmayalım (hatırlama yanlış değerle üzerine yazılmasın).
+            if (mDriveRegenRememberInitialized && (MG4Hardware.getVehicleIgnition() >= 2)) {
                 SharedPreferences sp = getSharedPreferences("mg4_v3", MODE_PRIVATE);
                 sp.edit().putInt(PREF_LAST_DRIVE_MODE, modeValue).apply();
 
@@ -426,7 +426,7 @@ public class MG4ControlService extends Service {
         SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
         if (!prefs.getBoolean(PREF_REMEMBER_REGEN, false)) return false;
 
-        int lastValue = prefs.getInt(PREF_LAST_REGEN_LEVEL, RegenLevel.HIGH.value);
+        int lastValue = prefs.getInt(PREF_LAST_REGEN_LEVEL, RegenLevel.LOW.value);
         RegenLevel rl = RegenLevel.fromValue(lastValue);
         if (rl == null) {
             Toast.makeText(getApplicationContext(),

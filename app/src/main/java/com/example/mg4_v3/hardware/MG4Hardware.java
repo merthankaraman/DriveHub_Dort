@@ -122,6 +122,7 @@ public class MG4Hardware {
     private static volatile long  sChargingStartWallMs = 0L;
     // READY durumu (100ms polling ile güncellenen cache)
     private static volatile boolean sVehicleReady       = false;
+    private static volatile int sVehicleIgnition        = 0;
     /** Şarj başlangıcını persist etmek için (BMS'te set, getChargingDurationMs'te geri yükle). */
     private static Context sAppContext = null;
     // Detay log açık mı? (BMS/StatusPanel spam'i için)
@@ -765,6 +766,10 @@ public class MG4Hardware {
     public static boolean isVehicleReady() {
         return sVehicleReady;
     }
+    /** Araç kontak durumu 2 ise ekran kontak açık frene basıldığında anlık 3 sonra tekrar 2 */
+    public static int getVehicleIgnition() {
+        return sVehicleIgnition;
+    }
 
     /** SOC — % (0.0–100.0). CPM'den oku, yoksa BMS cache'e bak. */
     public static float getSoc() {
@@ -910,8 +915,8 @@ public class MG4Hardware {
         sLastSpeedKmh = speedKmh;
         sLastGear = getGear();
 
-        int enginestate = getIntPropertyCPM(PROP_ENGINE_STATE, AREA_GLOBAL);
-        sVehicleReady = (enginestate == 1);
+        sVehicleIgnition = getIntPropertyCPM(PROP_VEHICLE_IGNITION, AREA_GLOBAL);
+        sVehicleReady = (getIntPropertyCPM(PROP_ENGINE_STATE, AREA_GLOBAL) == 1);
     }
 
     /** Yol sıfırla: trip başlangıç km = şimdiki toplam km, enerji + mesafe = 0. */
