@@ -107,14 +107,6 @@ public class ChargingHistoryActivity extends AppCompatActivity {
             long monthStart = cal.getTimeInMillis();
             byMonth.computeIfAbsent(monthStart, k -> new ArrayList<>()).add(r);
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mPrefs != null && mPrefsListener != null) {
-            mPrefs.unregisterOnSharedPreferenceChangeListener(mPrefsListener);
-        }
 
         List<Long> monthKeys = new ArrayList<>(byMonth.keySet());
         monthKeys.sort((a, b) -> Long.compare(b, a));
@@ -231,6 +223,14 @@ public class ChargingHistoryActivity extends AppCompatActivity {
             View monthSpacer = new View(this);
             monthSpacer.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp8 * 3));
             mHistoryTableBody.addView(monthSpacer);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mPrefs != null && mPrefsListener != null) {
+            mPrefs.unregisterOnSharedPreferenceChangeListener(mPrefsListener);
         }
     }
 
