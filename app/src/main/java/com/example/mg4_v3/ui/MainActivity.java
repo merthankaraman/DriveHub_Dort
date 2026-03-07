@@ -1271,13 +1271,15 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void updateChargingCharts(float maxDcKw, float acKw, float battKw) {
         if (mChartChargingPower == null) return;
         float x = mChargingChartIndex++;
-        // Grafikte şarj gücü negatif aksında gösterilsin: beklenen gücü de negatif tarafta çiz.
         if (!Float.isNaN(maxDcKw)) {
-            float maxDcForChart = (maxDcKw > 0f) ? -maxDcKw : maxDcKw;
+            float maxDcForChart = Math.abs(maxDcKw);
             mChartEntriesMaxDc.add(new Entry(x, maxDcForChart));
         }
         if (!Float.isNaN(acKw))    mChartEntriesAc.add(new Entry(x, acKw));
-        if (!Float.isNaN(battKw))  mChartEntriesBatt.add(new Entry(x, battKw));
+        if (!Float.isNaN(battKw)) {
+            float DcForChart = (battKw < 0f) ? -battKw : 0f;
+            mChartEntriesBatt.add(new Entry(x, DcForChart));
+        }
         trimChartEntries(mChartEntriesMaxDc);
         trimChartEntries(mChartEntriesAc);
         trimChartEntries(mChartEntriesBatt);
@@ -1409,8 +1411,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         }
         if (mTvConsumptionTripKm != null) {
             if (tripDistanceKm >= 0) {
-                double tripDistanceTrim = MG4Hardware.getTripDistanceKm_Trim();
-                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km --- %.2f km", tripDistanceKm, tripDistanceTrim));
+                //double tripDistanceTrim = MG4Hardware.getTripDistanceKm_Trim();
+                //mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km --- %.2f km", tripDistanceKm, tripDistanceTrim));
+                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", tripDistanceKm));
             } else {
                 mTvConsumptionTripKm.setText("--");
             }

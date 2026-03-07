@@ -146,7 +146,7 @@ public class MG4ControlService extends Service {
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
     private boolean mDriveRegenRememberInitialized = false;
     /** Boot sonrası sürüş modu / regen uygulaması için gecikme (ms). Debug için biraz kısaltıldı. */
-    private static final long REMEMBER_APPLY_DELAY_MS = 10_000L;
+    private static final long REMEMBER_APPLY_DELAY_MS = 5_000L;
 
     // Sistem medya sesini kontrol etmek için
     private AudioManager mAudioManager;
@@ -337,13 +337,14 @@ public class MG4ControlService extends Service {
         MG4Hardware.ensureConsumptionTripStarted();
         mConsumptionHandler.post(mConsumptionIntegrationRunnable);
 
-        // Boot veya servis ilk kez başlarken X sn sonra profili uygula (ve debug için Toast göster).
         mMainHandler.postDelayed(() -> {
-            Toast.makeText(getApplicationContext(),
-                    "Remember profil kontrol ediliyor...", Toast.LENGTH_SHORT).show();
             applyRememberedDriveModeIfNeeded();
             applyRememberedRegenIfNeeded();
-            mDriveRegenRememberInitialized = true;
+            // Profil uygulandıktan sonra 5 saniye daha bekle - araç reddetse bile o callback'ler
+            // mDriveRegenRememberInitialized=false olduğu için kaydedilmez.
+            mMainHandler.postDelayed(() -> {
+                mDriveRegenRememberInitialized = true;
+            }, 5000);
         }, REMEMBER_APPLY_DELAY_MS);
 
         if (MG4Hardware.isLogEnabled()) {
@@ -392,32 +393,24 @@ public class MG4ControlService extends Service {
     /** Boot sonrası sürüş modunu otomatik geri yükle (kullanıcı \"sürüş modunu hatırla\" switch'ini açtıysa). */
     private boolean applyRememberedDriveModeIfNeeded() {
         SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
-        if (!prefs.getBoolean(PREF_REMEMBER_DRIVE_MODE, false)) return false;
-
+        boolean rememberEnabled = prefs.getBoolean(PREF_REMEMBER_DRIVE_MODE, false);
         int lastValue = prefs.getInt(PREF_LAST_DRIVE_MODE, DriveMode.NORMAL.value);
+        
+        if (!rememberEnabled) {
+            return false;
+        }
+
         DriveMode dm = DriveMode.fromValue(lastValue);
         if (dm == null) {
-            Toast.makeText(getApplicationContext(),
-                    "Hatırlanmış sürüş modu bulunamadı", Toast.LENGTH_SHORT).show();
             return false;
         }
 
         boolean ok = MG4Hardware.setDriveMode(dm);
         if (!ok) {
-            if (MG4Hardware.isLogEnabled()) {
-                Log.w(TAG, "RememberDrive: setDriveMode(" + dm + ") başarısız");
-            }
-            Toast.makeText(getApplicationContext(),
-                    "Sürüş modu ayarlanamadı: " + dm.label, Toast.LENGTH_SHORT).show();
             return false;
         }
         mCurrentDriveMode = dm;
         updateNotification("Sürüş: " + mCurrentDriveMode.label);
-        if (MG4Hardware.isLogEnabled()) {
-            Log.i(TAG, "RememberDrive: uygulandı → " + dm + " (" + dm.value + ")");
-        }
-        Toast.makeText(getApplicationContext(),
-                "Sürüş modu yüklendi: " + dm.label, Toast.LENGTH_SHORT).show();
         return true;
     }
 
@@ -429,8 +422,6 @@ public class MG4ControlService extends Service {
         int lastValue = prefs.getInt(PREF_LAST_REGEN_LEVEL, RegenLevel.LOW.value);
         RegenLevel rl = RegenLevel.fromValue(lastValue);
         if (rl == null) {
-            Toast.makeText(getApplicationContext(),
-                    "Hatırlanmış regen seviyesi bulunamadı", Toast.LENGTH_SHORT).show();
             return false;
         }
 
@@ -440,15 +431,11 @@ public class MG4ControlService extends Service {
             if (MG4Hardware.isLogEnabled()) {
                 Log.i(TAG, "RememberRegen: uygulandı → " + rl + " (" + rl.value + ")");
             }
-            Toast.makeText(getApplicationContext(),
-                    "Regen seviyesi yüklendi: " + rl.label, Toast.LENGTH_SHORT).show();
             return true;
         } else {
             if (MG4Hardware.isLogEnabled()) {
                 Log.w(TAG, "RememberRegen: setRegenLevel(" + rl + ") başarısız");
             }
-            Toast.makeText(getApplicationContext(),
-                    "Regen seviyesi ayarlanamadı: " + rl.label, Toast.LENGTH_SHORT).show();
             return false;
         }
     }
@@ -1189,9 +1176,11 @@ public class MG4ControlService extends Service {
                 mCurrentDriveMode = mCurrentDriveMode.next();
                 MG4Hardware.setDriveMode(mCurrentDriveMode);
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
-                // Son seçilen modu kaydet
-                getSharedPreferences("mg4_v3", MODE_PRIVATE)
-                        .edit().putInt(PREF_LAST_DRIVE_MODE, mCurrentDriveMode.value).apply();
+                // Son seçilen modu kaydet (sadece flag aktifse)
+                if (mDriveRegenRememberInitialized && (MG4Hardware.getVehicleIgnition() >= 2)) {
+                    getSharedPreferences("mg4_v3", MODE_PRIVATE)
+                            .edit().putInt(PREF_LAST_DRIVE_MODE, mCurrentDriveMode.value).apply();
+                }
                 break;
             case "DRIVE_SET":
                 DriveMode dm = DriveMode.fromValue(
@@ -1199,8 +1188,11 @@ public class MG4ControlService extends Service {
                 MG4Hardware.setDriveMode(dm);
                 mCurrentDriveMode = dm;
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
-                getSharedPreferences("mg4_v3", MODE_PRIVATE)
-                        .edit().putInt(PREF_LAST_DRIVE_MODE, mCurrentDriveMode.value).apply();
+                // Son seçilen modu kaydet (sadece flag aktifse)
+                if (mDriveRegenRememberInitialized && (MG4Hardware.getVehicleIgnition() >= 2)) {
+                    getSharedPreferences("mg4_v3", MODE_PRIVATE)
+                            .edit().putInt(PREF_LAST_DRIVE_MODE, mCurrentDriveMode.value).apply();
+                }
                 break;
             case "REGEN_SET":
                 RegenLevel rl = RegenLevel.fromValue(

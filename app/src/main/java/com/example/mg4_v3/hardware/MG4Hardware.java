@@ -888,8 +888,7 @@ public class MG4Hardware {
             if (!Float.isNaN(speedKmh)) {
                 // Yol integrali: v(km/h) * dt(h) = km
                 sTripDistanceKm += speedKmh * dtHours;
-                // Trim versiyon: hızı 0.1 km/h hassasiyetine yuvarlayarak integre et
-                float speedTrim = Math.round(speedKmh * 10f) / 10f;
+                float speedTrim = speedKmh * 1.03f;
                 sTripDistanceKm_trim += speedTrim * dtHours;
             }
             // Sürüş grafiği sayaçları: sadece araç READY iken entegre et
