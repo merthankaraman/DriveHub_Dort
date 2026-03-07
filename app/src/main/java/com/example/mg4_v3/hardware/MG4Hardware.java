@@ -923,6 +923,11 @@ public class MG4Hardware {
 
         sVehicleIgnition = getIntPropertyCPM(PROP_VEHICLE_IGNITION, AREA_GLOBAL);
         sVehicleReady = (getIntPropertyCPM(PROP_ENGINE_STATE, AREA_GLOBAL) == 1);
+        // Şarj durumu: callback gelmeden (uygulama yeniden başladıysa) polling ile cache'e yaz
+        int chgSt = getIntPropertyCPM(PROP_CHG_STATUS, AREA_GLOBAL);
+        if (chgSt >= 0) {
+            sBmsCache.put(PROP_CHG_STATUS, Integer.valueOf(chgSt));
+        }
     }
 
     /** Yol sıfırla: trip başlangıç km = şimdiki toplam km, enerji + mesafe = 0. */
@@ -1008,27 +1013,20 @@ public class MG4Hardware {
         return Float.NaN;
     }
 
-    /** Araç şarjda mı? Önce PROP_CHG_STATUS; yoksa AC/DC akım ve voltajdan çıkarım. */
+    /** Araç şarjda mı? Önce PROP_CHG_STATUS (cache veya polling); yoksa AC/DC akım çıkarımı (uygulama yeniden başladıysa). */
     private static boolean isCharging() {
         Object val = sBmsCache.get(PROP_CHG_STATUS);
         float acA = getAcAmpGlobal();
         float dcA = getDcAmpGlobal();
         float dcV = getDcVoltGlobal();
 
-        // 10 dc şarj
-        // 1 ac şarj
-        // 8 durdu
-        // 5 bağlanıyor
-        // 7 bağlandı şarj olmuyor
+        // 10 dc şarj, 1 ac şarj, 8 durdu, 5 bağlanıyor, 7 bağlandı şarj olmuyor
         int st = val instanceof Number ? ((Number) val).intValue() : -1;
-        if (sLogEnabled) Log.i(TAG, "CHG CHECK → status=" + st
-                + " acA=" + acA + " dcA=" + dcA + " dcV=" + dcV + " speed=" + sLastSpeedKmh);
-        return (st == 1) || (st == 10);
-
-        // Araç PROP_CHG_STATUS göndermiyorsa: AC'den anlamlı akım çekiliyorsa veya DC tarafında güç var ise şarjda say
-        //if (!Float.isNaN(acA) && acA > 0.5f) return true;
-        //else if (!Float.isNaN(dcA) && !Float.isNaN(dcV) && dcV > 200f && dcA <= -1f && sLastSpeedKmh == 0) return true;
-        //return false;
+        if ((st == 1) || (st == 10)) return true;
+        // Cache boş veya şarj değil: uygulama yeniden başladıysa callback henüz gelmemiş olabilir → AC/DC fallback
+        if (!Float.isNaN(acA) && acA > 0.5f) return true;
+        if (!Float.isNaN(dcA) && !Float.isNaN(dcV) && dcV > 200f && dcA <= -1f && sLastSpeedKmh == 0) return true;
+        return false;
     }
 
     /** BMS cache güncellendiğinde çağrılır; şarj ilk tespit edildiğinde başlangıç zamanını kaydedip persist eder. */
