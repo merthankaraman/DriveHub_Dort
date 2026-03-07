@@ -1127,8 +1127,8 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
     /** Kullanıcı \"Şarj sırasında ekran uyuma engelle\" düğmesini açtıysa ekran uyumasın (FLAG_KEEP_SCREEN_ON). */
     private void updateKeepScreenOn() {//new_flag
-        boolean keepOn = getSharedPreferences("mg4_v3", MODE_PRIVATE)
-                .getBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, false);
+        boolean keepOn = false;//getSharedPreferences("mg4_v3", MODE_PRIVATE)
+                //.getBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, false);
         if (keepOn) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         } else {
