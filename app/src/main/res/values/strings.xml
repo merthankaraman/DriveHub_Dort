@@ -74,6 +74,9 @@
     <!-- Tüketim / Durum -->
     <string name="consumption">TÜKETİM</string>
     <string name="consumption_screen">📊 Tüketim Ekranı</string>
+    <string name="consumption_mode_since_start">Motor çalıştıktan itibaren</string>
+    <string name="consumption_mode_current">Şu anki veriler</string>
+    <string name="consumption_mode_trip">Sürüş</string>
     <string name="status">DURUM</string>
     <string name="status_charging">📊 Şarj ve Durum</string>
     <string name="charging_status_title">ŞARJ DURUMU</string>
@@ -233,7 +236,7 @@
     <string name="unit_kw_label">kW</string>
     <string name="unit_kwh_label">kWh</string>
     <string name="batarya">Batarya</string>
-    <string name="btn_reset_trip">Yol sıfırla</string>
+    <string name="btn_reset_trip">Sürüş sıfırla</string>
     <string name="consumption_gear">Vites</string>
     <string name="consumption_speed">Hız</string>
     <string name="consumption_power">Güç</string>

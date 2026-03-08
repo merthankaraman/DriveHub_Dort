@@ -19,46 +19,108 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/btnConsumptionBack"
+            <!-- Sol: Geri + Tüketim -->
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="44dp"
-                android:layout_marginEnd="16dp"
-                android:backgroundTint="#21262D"
-                android:minWidth="0dp"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:text="@string/back"
-                android:textColor="#C9D1D9"
-                android:textSize="18sp" />
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-            <TextView
+                <Button
+                    android:id="@+id/btnConsumptionBack"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginEnd="16dp"
+                    android:backgroundTint="#21262D"
+                    android:minWidth="0dp"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:text="@string/back"
+                    android:textColor="#C9D1D9"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/consumption"
+                    android:textColor="@color/status_value"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Orta: İki konumlu seçici (segmented) -->
+            <FrameLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/consumption"
-                android:textColor="@color/status_value"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:gravity="center">
 
-            <Button
-                android:id="@+id/btnConsumptionResetTrip"
-                android:layout_width="wrap_content"
-                android:layout_height="44dp"
-                android:layout_marginEnd="8dp"
-                android:backgroundTint="#21262D"
-                android:text="@string/btn_reset_trip"
-                android:textColor="#C9D1D9"
-                android:textSize="12sp" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_consumption_segmented"
+                    android:padding="4dp">
 
-            <Button
-                android:id="@+id/btnDrivingHistory"
+                    <Button
+                        android:id="@+id/btnConsumptionModeCurrent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:minWidth="80dp"
+                        android:minHeight="0dp"
+                        android:text="@string/consumption_mode_trip"
+                        android:textSize="14sp"
+                        android:backgroundTint="#21262D"
+                        android:textColor="#C9D1D9"
+                        android:gravity="center"
+                        android:paddingStart="20dp"
+                        android:paddingEnd="20dp"/>
+
+                    <Button
+                        android:id="@+id/btnConsumptionModeSinceStart"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:minWidth="80dp"
+                        android:minHeight="0dp"
+                        android:layout_marginStart="4dp"
+                        android:text="@string/consumption_mode_since_start"
+                        android:textSize="14sp"
+                        android:backgroundTint="#21262D"
+                        android:textColor="#C9D1D9"
+                        android:gravity="center"
+                        android:paddingStart="20dp"
+                        android:paddingEnd="20dp"/>
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- Sağ: Yol sıfırla + Sürüş geçmişi -->
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="44dp"
-                android:backgroundTint="#1F6FEB"
-                android:text="@string/driving_history_title"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <Button
+                    android:id="@+id/btnConsumptionResetTrip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginEnd="8dp"
+                    android:backgroundTint="#21262D"
+                    android:text="@string/btn_reset_trip"
+                    android:textColor="#C9D1D9"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/btnDrivingHistory"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:backgroundTint="#1F6FEB"
+                    android:text="@string/driving_history_title"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp" />
+            </LinearLayout>
 
         </LinearLayout>
 

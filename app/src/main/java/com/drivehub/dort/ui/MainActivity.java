@@ -86,6 +86,12 @@ public class MainActivity extends AppCompatActivity {
     private static final int    DEFAULT_CAMERA_360_KEY = -1;
     private static final int COLOR_ACTIVE   = 0xFF1F6FEB; // mavi — seçili
     private static final int COLOR_INACTIVE = 0xFF21262D; // koyu gri — seçilmemiş
+
+    /** Tüketim ekranı: 0 = motor çalıştıktan itibaren (trip), 1 = şu anki veriler (anlık) */
+    private static final String PREF_CONSUMPTION_DISPLAY_MODE = "consumption_display_mode";
+    private static final int CONSUMPTION_MODE_SINCE_START = 0;
+    private static final int CONSUMPTION_MODE_CURRENT = 1;
+    private int mConsumptionDisplayMode = CONSUMPTION_MODE_CURRENT; // varsayılan: Sürüş (trip)
     private static final int COLOR_HEAT_ON  = 0xFF9E3333; // kırmızı — ısıtma aktif
 
     // Tema modu (AppCompatDelegate sabitleriyle aynı)
@@ -210,6 +216,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PANEL_CONSUMPTION = 6;
     private static final int PANEL_IDLE = 7;
     private static final int PANEL_CHARGING_GRAPH = 8;
+    private static final int PANEL_SETTINGS = 9;
     private int mCurrentPanel = PANEL_MAIN;
 
     // Tüketim paneli
@@ -683,6 +690,10 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new android.content.Intent(this, DrivingHistoryActivity.class)));
         findViewById(R.id.btnConsumptionBack).setOnClickListener(v -> closeConsumptionPanel());
         findViewById(R.id.btnConsumptionResetTrip).setOnClickListener(v -> resetConsumptionTrip());
+        mConsumptionDisplayMode = getSharedPreferences("drivehub_dort", MODE_PRIVATE).getInt(PREF_CONSUMPTION_DISPLAY_MODE, CONSUMPTION_MODE_CURRENT);
+        findViewById(R.id.btnConsumptionModeSinceStart).setOnClickListener(v -> setConsumptionDisplayMode(CONSUMPTION_MODE_SINCE_START));
+        findViewById(R.id.btnConsumptionModeCurrent).setOnClickListener(v -> setConsumptionDisplayMode(CONSUMPTION_MODE_CURRENT));
+        updateConsumptionModeButtons();
 
         // ---- Regen paneli ----
         mLayoutRegenPanel = findViewById(R.id.layoutRegenPanel);
@@ -849,10 +860,14 @@ public class MainActivity extends AppCompatActivity {
             case PANEL_IDLE:
                 openIdlePanel();
                 break;
+            case PANEL_SETTINGS:
+                openSettingsPanel();
+                break;
             case PANEL_MAIN:
             default:
                 mLayoutMain.setVisibility(View.VISIBLE);
                 mLayoutStatusPanel.setVisibility(View.GONE);
+                if (mLayoutSettingsPanel != null) mLayoutSettingsPanel.setVisibility(View.GONE);
                 if (mLayoutRegenPanel != null) mLayoutRegenPanel.setVisibility(View.GONE);
                 if (mLayoutShortcutsPanel != null) mLayoutShortcutsPanel.setVisibility(View.GONE);
                 if (mLayoutClimatePanel != null) mLayoutClimatePanel.setVisibility(View.GONE);
@@ -907,6 +922,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void openSettingsPanel() {
         if (mLayoutSettingsPanel == null) return;
+        mCurrentPanel = PANEL_SETTINGS;
         mLayoutMain.setVisibility(View.GONE);
         mLayoutSettingsPanel.setVisibility(View.VISIBLE);
         updateThemeButtons();
@@ -917,6 +933,7 @@ public class MainActivity extends AppCompatActivity {
         if (mLayoutSettingsPanel != null) {
             mLayoutSettingsPanel.setVisibility(View.GONE);
         }
+        mCurrentPanel = PANEL_MAIN;
         mLayoutMain.setVisibility(View.VISIBLE);
     }
 
@@ -1488,14 +1505,35 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "Yol ve enerji sıfırlandı", Toast.LENGTH_SHORT).show();
     }
 
-    /** Panelde servisin güncellediği önbellek + trip enerji gösterilir (UI 500ms'de bir). */
+    private void setConsumptionDisplayMode(int mode) {
+        mConsumptionDisplayMode = mode;
+        getSharedPreferences("drivehub_dort", MODE_PRIVATE).edit().putInt(PREF_CONSUMPTION_DISPLAY_MODE, mode).apply();
+        updateConsumptionModeButtons();
+        refreshConsumptionPanel();
+    }
+
+    private void updateConsumptionModeButtons() {
+        Button btnSince = findViewById(R.id.btnConsumptionModeSinceStart);
+        Button btnCurrent = findViewById(R.id.btnConsumptionModeCurrent);
+        if (btnSince == null || btnCurrent == null) return;
+        boolean sinceActive = (mConsumptionDisplayMode == CONSUMPTION_MODE_SINCE_START);
+        btnSince.setBackgroundTintList(android.content.res.ColorStateList.valueOf(sinceActive ? COLOR_ACTIVE : COLOR_INACTIVE));
+        btnSince.setTextColor(sinceActive ? 0xFFFFFFFF : 0xFF8B949E);
+        btnCurrent.setBackgroundTintList(android.content.res.ColorStateList.valueOf(sinceActive ? COLOR_INACTIVE : COLOR_ACTIVE));
+        btnCurrent.setTextColor(sinceActive ? 0xFF8B949E : 0xFFFFFFFF);
+    }
+
+    /** Panelde servisin güncellediği önbellek gösterilir. Şu anki veriler = trip (Yol sıfırla); Motor çalıştıktan itibaren = driveGraph (sürüş geçmişi). */
     private void refreshConsumptionPanel() {
         double tripDistanceKm = MG4Hardware.getTripDistanceKm();
+        double tripEnergyKwh = MG4Hardware.getTripEnergyKwh();
+        double driveGraphDistanceKm = MG4Hardware.getDriveGraphDistanceKm();
+        double driveGraphEnergyKwh = MG4Hardware.getDriveGraphEnergyKwh();
         float speedKmh = MG4Hardware.getLastSpeedKmh();
         float powerKw = MG4Hardware.getDcKwGlobal();
         powerKw = Float.isNaN(powerKw) ? Float.NaN : powerKw;
         int gear = MG4Hardware.getLastGear();
-        double tripEnergyKwh = MG4Hardware.getTripEnergyKwh();
+        boolean sinceStart = (mConsumptionDisplayMode == CONSUMPTION_MODE_SINCE_START);
 
         if (mTvConsumptionGear != null) {
             String gearText;
@@ -1522,25 +1560,43 @@ public class MainActivity extends AppCompatActivity {
                 mTvConsumptionPower.setText(String.format(Locale.US, "%.2f kW", powerKw));
             }
         }
-        if (mTvConsumptionTripKm != null) {
-            if (tripDistanceKm >= 0) {
-                double tripDistanceTrim = MG4Hardware.getTripDistanceKm_Trim();
-                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km --- %.2f km", tripDistanceKm, tripDistanceTrim));
-                //mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", tripDistanceKm));
-            } else {
-                mTvConsumptionTripKm.setText("--");
+
+        if (sinceStart) {
+            // Motor çalıştıktan itibaren: sDriveGraphDistanceKm, sDriveGraphEnergyKwh (sürüş geçmişi verileri)
+            if (mTvConsumptionTripKm != null) {
+                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", driveGraphDistanceKm));
             }
-        }
-        if (mTvConsumptionEnergy != null) {
-            mTvConsumptionEnergy.setText(String.format(Locale.US, "%.3f kWh", tripEnergyKwh));
-        }
-        // Ortalama tüketim (kWh/100km) = bu oturum enerjisi / bu oturum yolu * 100
-        if (mTvConsumptionAvgKwhPer100km != null) {
-            if (tripDistanceKm > 0.01) {
-                double avgKwhPer100 = (tripEnergyKwh / tripDistanceKm) * 100.0;
-                mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f kWh/100 km", avgKwhPer100));
-            } else {
-                mTvConsumptionAvgKwhPer100km.setText("--");
+            if (mTvConsumptionEnergy != null) {
+                mTvConsumptionEnergy.setText(String.format(Locale.US, "%.3f kWh", driveGraphEnergyKwh));
+            }
+            if (mTvConsumptionAvgKwhPer100km != null) {
+                if (driveGraphDistanceKm > 0.01) {
+                    double avgKwhPer100 = (driveGraphEnergyKwh / driveGraphDistanceKm) * 100.0;
+                    mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f kWh/100 km", avgKwhPer100));
+                } else {
+                    mTvConsumptionAvgKwhPer100km.setText("--");
+                }
+            }
+        } else {
+            // Şu anki veriler: normal trip (tripDistanceKm, tripEnergyKwh, Yol sıfırla ile sıfırlanan)
+            if (mTvConsumptionTripKm != null) {
+                if (tripDistanceKm >= 0) {
+                    double tripDistanceTrim = MG4Hardware.getTripDistanceKm_Trim();
+                    mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km --- %.2f km", tripDistanceKm, tripDistanceTrim));
+                } else {
+                    mTvConsumptionTripKm.setText("--");
+                }
+            }
+            if (mTvConsumptionEnergy != null) {
+                mTvConsumptionEnergy.setText(String.format(Locale.US, "%.3f kWh", tripEnergyKwh));
+            }
+            if (mTvConsumptionAvgKwhPer100km != null) {
+                if (tripDistanceKm > 0.01) {
+                    double avgKwhPer100 = (tripEnergyKwh / tripDistanceKm) * 100.0;
+                    mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f kWh/100 km", avgKwhPer100));
+                } else {
+                    mTvConsumptionAvgKwhPer100km.setText("--");
+                }
             }
         }
     }
@@ -1776,6 +1832,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         } else if (mCurrentPanel == PANEL_CHARGING_GRAPH) {
             closeChargingGraphPanel();
+            return;
+        } else if (mCurrentPanel == PANEL_SETTINGS) {
+            closeSettingsPanel();
             return;
         }
         super.onBackPressed();

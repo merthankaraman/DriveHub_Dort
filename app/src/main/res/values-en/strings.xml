@@ -74,6 +74,9 @@
     <!-- Consumption / Status -->
     <string name="consumption">CONSUMPTION</string>
     <string name="consumption_screen">📊 Consumption screen</string>
+    <string name="consumption_mode_since_start">Since engine start</string>
+    <string name="consumption_mode_current">Current data</string>
+    <string name="consumption_mode_trip">Trip</string>
     <string name="status">STATUS</string>
     <string name="status_charging">📊 Charging &amp; status</string>
     <string name="charging_status_title">CHARGING STATUS</string>
