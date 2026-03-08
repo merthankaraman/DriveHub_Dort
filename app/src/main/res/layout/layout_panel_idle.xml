@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layoutIdlePanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/surface"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="24dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnIdlePanelBack"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginEnd="16dp"
+                android:backgroundTint="#21262D"
+                android:minWidth="48dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="@string/back"
+                android:textColor="#C9D1D9"
+                android:textSize="20sp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_idle_settings"
+                android:textColor="@color/status_value"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvIdleProfile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="@string/idle_vehicle_placeholder"
+            android:textColor="#8B949E"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/idle_volume_hint"
+            android:textColor="#8B949E"
+            android:textSize="13sp" />
+
+        <SeekBar
+            android:id="@+id/seekIdleVolume"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:max="100"
+            android:minHeight="32dp" />
+
+        <TextView
+            android:id="@+id/tvIdleVolumeValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:text="100%"
+            android:textColor="@color/status_value"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/idle_pitch_hint"
+            android:textColor="#8B949E"
+            android:textSize="13sp" />
+
+        <SeekBar
+            android:id="@+id/seekIdlePitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:max="150"
+            android:minHeight="32dp" />
+
+        <TextView
+            android:id="@+id/tvIdlePitchValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1.00"
+            android:textColor="@color/status_value"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btnIdleResetAll"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#DA3633"
+            android:text="@string/btn_idle_reset_all"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
+    </LinearLayout>

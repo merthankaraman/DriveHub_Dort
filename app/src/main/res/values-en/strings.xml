@@ -11,6 +11,12 @@
     <string name="theme_night">Night</string>
     <string name="theme_auto">Auto</string>
 
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="btn_settings">⚙ Settings</string>
+    <string name="settings_section_theme">Theme</string>
+    <string name="settings_section_language">Language</string>
+
     <!-- Main screen -->
     <string name="main_title">DriveHub Dort</string>
     <string name="main_version">EH32 · Android Automotive</string>
@@ -23,6 +29,10 @@
     <string name="btn_motor_sound_settings">MOTOR SOUND SETTINGS</string>
     <string name="btn_shortcuts">Button shortcuts</string>
     <string name="logs_detail">Logs (detail)</string>
+
+    <!-- Drive + Regen screen -->
+    <string name="drive_regen_screen_title">Drive &amp; Comfort</string>
+    <string name="btn_drive_regen">Drive &amp; Comfort</string>
 
     <!-- Drive mode -->
     <string name="drive_mode">DRIVE MODE</string>

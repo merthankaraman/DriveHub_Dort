@@ -11,6 +11,12 @@
     <string name="theme_night">Gece</string>
     <string name="theme_auto">Oto</string>
 
+    <!-- Ayarlar -->
+    <string name="settings_title">Ayarlar</string>
+    <string name="btn_settings">⚙ Ayarlar</string>
+    <string name="settings_section_theme">Tema</string>
+    <string name="settings_section_language">Dil</string>
+
     <!-- Ana ekran -->
     <string name="main_title">DriveHub Dort</string>
     <string name="main_version">EH32 · Android Automotive</string>
@@ -23,6 +29,10 @@
     <string name="btn_motor_sound_settings">MOTOR SESİ AYARLARI</string>
     <string name="btn_shortcuts">Düğme kısayolları</string>
     <string name="logs_detail">Loglar (detay)</string>
+
+    <!-- Sürüş modu + Regen ekranı -->
+    <string name="drive_regen_screen_title">Sürüş &amp; Konfor</string>
+    <string name="btn_drive_regen">Sürüş &amp; Konfor</string>
 
     <!-- Sürüş modu -->
     <string name="drive_mode">SÜRÜŞ MODU</string>

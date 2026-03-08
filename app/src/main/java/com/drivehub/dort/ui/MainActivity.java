@@ -137,6 +137,8 @@ public class MainActivity extends AppCompatActivity {
 
     // Ana ekran
     private View mLayoutMain;
+    private View mLayoutSettingsPanel;
+    private View mLayoutDriveRegenPanel;
     private View mLayoutSpeedTest;
     private View mLayoutSoundPanel;
     private View mLayoutIdlePanel;
@@ -618,16 +620,26 @@ public class MainActivity extends AppCompatActivity {
 
         // Ana layout referansı
         mLayoutMain = findViewById(R.id.layoutMain);
+        mLayoutSettingsPanel = findViewById(R.id.layoutSettingsPanel);
+        mLayoutDriveRegenPanel = findViewById(R.id.layoutDriveRegenPanel);
         mLayoutSoundPanel = findViewById(R.id.layoutSoundPanel);
+
+        findViewById(R.id.btnSettings).setOnClickListener(v -> openSettingsPanel());
+        View btnSettingsBack = findViewById(R.id.btnSettingsBack);
+        if (btnSettingsBack != null) btnSettingsBack.setOnClickListener(v -> closeSettingsPanel());
+
+        findViewById(R.id.btnDriveRegenPanel).setOnClickListener(v -> openDriveRegenPanel());
+        findViewById(R.id.btnDriveRegenBack).setOnClickListener(v -> closeDriveRegenPanel());
 
         // Ana ekran butonları
         findViewById(R.id.btnShortcuts).setOnClickListener(v -> openShortcutsPanel());
+        findViewById(R.id.btnSoundPanel).setOnClickListener(v -> openSoundPanel());
+        // Sürüş modu ve Regen butonları layout_panel_drive_regen içinde
         findViewById(R.id.btnDrive).setOnClickListener(v     -> sendDriveMode(DriveMode.CUSTOM));
-findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.ECO));
+        findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.ECO));
         findViewById(R.id.btnNormal).setOnClickListener(v    -> sendDriveMode(DriveMode.NORMAL));
         findViewById(R.id.btnSport).setOnClickListener(v     -> sendDriveMode(DriveMode.SPORT));
         findViewById(R.id.btnSnow).setOnClickListener(v      -> sendDriveMode(DriveMode.SNOW));
-        findViewById(R.id.btnSoundPanel).setOnClickListener(v -> openSoundPanel());
         findViewById(R.id.btnSoundBack).setOnClickListener(v -> closeSoundPanel());
         mLayoutIdlePanel = findViewById(R.id.layoutIdlePanel);
         findViewById(R.id.btnIdleSettings).setOnClickListener(v -> openIdlePanel());
@@ -682,8 +694,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mBtnRegenOnePedal = findViewById(R.id.btnRegenOnePedal);
         mTvRegenCurrent   = findViewById(R.id.tvRegenCurrent);
 
-        findViewById(R.id.btnRegenPanel).setOnClickListener(v -> openRegenPanel());
-        findViewById(R.id.btnRegenBack).setOnClickListener(v  -> closeRegenPanel());
+        findViewById(R.id.btnRegenBack).setOnClickListener(v -> closeRegenPanel());
 
         mLayoutShortcutsPanel = findViewById(R.id.layoutShortcutsPanel);
         findViewById(R.id.btnShortcutsBack).setOnClickListener(v -> closeShortcutsPanel());
@@ -891,6 +902,78 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     // -------------------------------------------------------------------------
+    // Ayarlar paneli
+    // -------------------------------------------------------------------------
+
+    private void openSettingsPanel() {
+        if (mLayoutSettingsPanel == null) return;
+        mLayoutMain.setVisibility(View.GONE);
+        mLayoutSettingsPanel.setVisibility(View.VISIBLE);
+        updateThemeButtons();
+        updateLanguageButtons();
+    }
+
+    private void closeSettingsPanel() {
+        if (mLayoutSettingsPanel != null) {
+            mLayoutSettingsPanel.setVisibility(View.GONE);
+        }
+        mLayoutMain.setVisibility(View.VISIBLE);
+    }
+
+    // -------------------------------------------------------------------------
+    // Sürüş modu + Regen ekranı (tek panel)
+    // -------------------------------------------------------------------------
+
+    private void openDriveRegenPanel() {
+        if (mLayoutDriveRegenPanel == null) return;
+        mLayoutMain.setVisibility(View.GONE);
+        mLayoutDriveRegenPanel.setVisibility(View.VISIBLE);
+        refreshDriveRegenPanelState();
+    }
+
+    private void closeDriveRegenPanel() {
+        if (mLayoutDriveRegenPanel != null) {
+            mLayoutDriveRegenPanel.setVisibility(View.GONE);
+        }
+        mLayoutMain.setVisibility(View.VISIBLE);
+    }
+
+    private void refreshDriveRegenPanelState() {
+        int dm = MG4Hardware.getDriveMode();
+        if (dm >= 0) {
+            highlightDriveModeButton(DriveMode.fromValue(dm));
+        }
+        int rg = MG4Hardware.getRegenLevel();
+        if (rg >= 0) {
+            RegenLevel rl = RegenLevel.fromValue(rg);
+            highlightRegenButton(regenButton(rl));
+            if (mTvRegenCurrent != null) {
+                mTvRegenCurrent.setText(rl == RegenLevel.ONE_PEDAL
+                    ? getString(R.string.one_pedal_active)
+                    : getString(R.string.regen_active, rl.label));
+            }
+        } else if (mTvRegenCurrent != null) {
+            mTvRegenCurrent.setText("");
+        }
+    }
+
+    private void highlightDriveModeButton(DriveMode current) {
+        Button btnEco    = findViewById(R.id.btnEco);
+        Button btnNormal = findViewById(R.id.btnNormal);
+        Button btnSport  = findViewById(R.id.btnSport);
+        Button btnSnow   = findViewById(R.id.btnSnow);
+        Button btnDrive  = findViewById(R.id.btnDrive);
+        if (btnEco == null) return;
+        Button[] all = { btnEco, btnNormal, btnSport, btnSnow, btnDrive };
+        DriveMode[] modes = { DriveMode.ECO, DriveMode.NORMAL, DriveMode.SPORT, DriveMode.SNOW, DriveMode.CUSTOM };
+        for (int i = 0; i < all.length; i++) {
+            boolean active = (current == modes[i]);
+            all[i].setBackgroundTintList(android.content.res.ColorStateList.valueOf(active ? COLOR_ACTIVE : COLOR_INACTIVE));
+            all[i].setTextColor(active ? 0xFFFFFFFF : 0xFF8B949E);
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Regen paneli
     // -------------------------------------------------------------------------
 
@@ -944,6 +1027,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
             case MEDIUM:   return mBtnRegenMedium;
             case HIGH:     return mBtnRegenHigh;
             case ADAPTIVE: return mBtnRegenAdaptive;
+            case ONE_PEDAL: return mBtnRegenOnePedal;
             default:       return mBtnRegenMedium;
         }
     }
@@ -1347,6 +1431,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void openClimatePanel() {
         mCurrentPanel = PANEL_CLIMATE;
         mLayoutMain.setVisibility(View.GONE);
+        if (mLayoutDriveRegenPanel != null) {
+            mLayoutDriveRegenPanel.setVisibility(View.GONE);
+        }
         mLayoutClimatePanel.setVisibility(View.VISIBLE);
         // Tüm butonlar başlangıçta gri (mevcut durum okunamıyor henüz)
         highlightSteerButton(null);
@@ -1364,6 +1451,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         mCurrentPanel = PANEL_SHORTCUTS;
         updateShortcutsPanelVisibility();
         mLayoutMain.setVisibility(View.GONE);
+        if (mLayoutSettingsPanel != null) {
+            mLayoutSettingsPanel.setVisibility(View.GONE);
+        }
         mLayoutShortcutsPanel.setVisibility(View.VISIBLE);
     }
 
@@ -1462,6 +1552,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     private void openSoundPanel() {
         mCurrentPanel = PANEL_SOUND;
         mLayoutMain.setVisibility(View.GONE);
+        if (mLayoutSettingsPanel != null) {
+            mLayoutSettingsPanel.setVisibility(View.GONE);
+        }
         if (mLayoutSoundPanel != null) {
             mLayoutSoundPanel.setVisibility(View.VISIBLE);
         }

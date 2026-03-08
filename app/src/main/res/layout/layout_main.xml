@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layoutMain"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <!-- Üst bar: sağda ayarlar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+        <Button
+            android:id="@+id/btnSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:minWidth="0dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:text="@string/btn_settings"
+            android:backgroundTint="#21262D"
+            android:textColor="#C9D1D9"
+            android:textSize="14sp"/>
+    </LinearLayout>
+
+    <!-- 2 kolon: Sol (durum + motor sesi + kısayollar) | Sağ (Sürüş/Regen giriş + Klima + Tüketim + Durum) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <!-- SOL KOLON -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginEnd="16dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/main_title"
+                android:textSize="22sp"
+                android:textColor="@color/status_value"
+                android:textStyle="bold"
+                android:layout_marginBottom="2dp"/>
+
+            <TextView
+                android:id="@+id/tvVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/main_version"
+                android:textSize="11sp"
+                android:textColor="@color/status_value"
+                android:layout_marginBottom="14dp"/>
+
+            <Button
+                android:id="@+id/btnPermission"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="@string/permission_write_settings"
+                android:backgroundTint="#DA3633"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:visibility="gone"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/status_loading"
+                android:textSize="13sp"
+                android:textColor="@color/status_value"
+                android:layout_marginBottom="10dp"/>
+
+            <TextView
+                android:id="@+id/tvSpeed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/speed_placeholder"
+                android:textSize="20sp"
+                android:textColor="@color/status_value"
+                android:fontFamily="monospace"
+                android:layout_marginBottom="8dp"/>
+
+            <Button
+                android:id="@+id/btnSoundPanel"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="@string/btn_motor_sound_settings"
+                android:backgroundTint="#21262D"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
+
+            <TextView
+                android:id="@+id/tvBinderStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="12sp"
+                android:textColor="@color/status_value"
+                android:fontFamily="monospace"
+                android:lineSpacingExtra="4dp"/>
+        </LinearLayout>
+
+        <!-- SAĞ KOLON: Sürüş/Regen ekranı girişi + Klima + Tüketim + Durum -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical">
+
+            <Button
+                android:id="@+id/btnDriveRegenPanel"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="@string/btn_drive_regen"
+                android:backgroundTint="#1F6FEB"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="20dp"/>
+
+            <Button
+                android:id="@+id/btnConsumptionPanel"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="@string/consumption_screen"
+                android:backgroundTint="#21262D"
+                android:textColor="#C9D1D9"
+                android:textSize="16sp"
+                android:layout_marginBottom="10dp"/>
+
+            <Button
+                android:id="@+id/btnStatusPanel"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="@string/status_charging"
+                android:backgroundTint="#21262D"
+                android:textColor="#C9D1D9"
+                android:textSize="16sp"/>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
