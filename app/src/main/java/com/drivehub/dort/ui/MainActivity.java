@@ -1,4 +1,4 @@
-package com.example.mg4_v3.ui;
+package com.drivehub.dort.ui;
 
 import android.content.Context;
 import android.content.Intent;
@@ -29,14 +29,14 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.os.LocaleListCompat;
 
-import com.example.mg4_v3.R;
-import com.example.mg4_v3.audio.EngineSoundManager;
-import com.example.mg4_v3.hardware.MG4Hardware;
-import com.example.mg4_v3.model.ChargingRecord;
-import com.example.mg4_v3.model.DriveMode;
-import com.example.mg4_v3.model.RegenLevel;
-import com.example.mg4_v3.service.MG4ControlService;
-import com.example.mg4_v3.util.ChargingHistory;
+import com.drivehub.dort.R;
+import com.drivehub.dort.audio.EngineSoundManager;
+import com.drivehub.dort.hardware.MG4Hardware;
+import com.drivehub.dort.model.ChargingRecord;
+import com.drivehub.dort.model.DriveMode;
+import com.drivehub.dort.model.RegenLevel;
+import com.drivehub.dort.service.MG4ControlService;
+import com.drivehub.dort.util.ChargingHistory;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -52,7 +52,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import static com.example.mg4_v3.audio.EngineSoundManager.SoundMode;
+import static com.drivehub.dort.audio.EngineSoundManager.SoundMode;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
                 refreshAlarmVolumeHint();
                 // Vol↓+Ana ekran tuş kombinasyonu ile servis tarafında motor sesi toggle edilirse,
                 // UI'daki düğme durumu da prefs'ten senkronize olsun.
-                SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+                SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
                 boolean enabledFromPrefs = prefs.getBoolean(PREF_SOUND_ENABLED, false);
                 if (enabledFromPrefs != mSoundEnabled) {
                     mSoundEnabled = enabledFromPrefs;
@@ -327,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         mThemeMode = prefs.getInt(PREF_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         AppCompatDelegate.setDefaultNightMode(mThemeMode);
         String lang = prefs.getString(PREF_LANGUAGE, "");
@@ -376,7 +376,7 @@ public class MainActivity extends AppCompatActivity {
         // Yapay motor sesi yöneticisini başlat (önce instance al)
         mEngineSound = EngineSoundManager.getInstance(this);
 
-        SharedPreferences prefsApp = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefsApp = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
 
         // Şanzıman karakteri: Eco / Normal / Sport (döngüsel)
         String savedChar = prefsApp.getString("sound_character", "NORMAL");
@@ -413,7 +413,7 @@ public class MainActivity extends AppCompatActivity {
 
             final float currentPowerInit = initialPower;
             mBtnMotorPower.setOnClickListener(v -> {
-                SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+                SharedPreferences p = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
                 float current = p.getFloat(PREF_MOTOR_POWER, currentPowerInit);
                 float next = (current >= 149f) ? 125f : 150f;
                 int showKw = (int) next;
@@ -486,7 +486,7 @@ public class MainActivity extends AppCompatActivity {
         // Motor sesi aç/kapa butonu
         mBtnSoundToggle.setOnClickListener(v -> {
             mSoundEnabled = !mSoundEnabled;
-            getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putBoolean(PREF_SOUND_ENABLED, mSoundEnabled).apply();
+            getSharedPreferences("drivehub_dort", MODE_PRIVATE).edit().putBoolean(PREF_SOUND_ENABLED, mSoundEnabled).apply();
             if (mSoundEnabled) {
                 // Ses sadece araç READY olduğunda gerçekten çalsın;
                 // değilse tercih ON kalır, READY olunca mSpeedRunnable içinde otomatik başlar.
@@ -585,7 +585,7 @@ public class MainActivity extends AppCompatActivity {
         if (swLogs != null) {
             swLogs.setChecked(logsEnabled);
             swLogs.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                getSharedPreferences("mg4_v3", MODE_PRIVATE)
+                getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                         .edit().putBoolean("logs_enabled", isChecked).apply();
                 MG4Hardware.setLogEnabled(isChecked);
             });
@@ -713,7 +713,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         updateShortcutsPanelVisibility();
 
         // Sürüş modunu / regen seviyesini hatırla (düğme kısayolları panelindeki switch'ler)
-        SharedPreferences pShortcuts = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences pShortcuts = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
 
         SwitchCompat swRememberDrive = findViewById(R.id.switchRememberDriveMode);
         if (swRememberDrive != null) {
@@ -752,7 +752,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         // Overlay görünürlüğü (klima ekranı üstünde)
         SwitchCompat swOverlay = findViewById(R.id.switchOverlay);
         if (swOverlay != null) {
-            SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+            SharedPreferences p = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
             boolean enabled = p.getBoolean(PREF_OVERLAY_ENABLED, false);
             swOverlay.setChecked(enabled);
             swOverlay.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -766,7 +766,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         // Şarj durumu paneli: uyuma engelle toggle (hafızalı) + şarj geçmişi butonu
         SwitchCompat swChargingWakeLock = findViewById(R.id.switchChargingWakeLock);
         if (swChargingWakeLock != null) {
-            SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+            SharedPreferences p = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
             boolean wakeLockEnabled = p.getBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, false);
             swChargingWakeLock.setChecked(wakeLockEnabled);
             swChargingWakeLock.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -858,7 +858,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         super.onResume();
         mTvStatus.setText("✅ " + getString(R.string.status_service_ok));
         // Servis tarafında tuş kombinasyonu ile değişmiş olabilecek motor sesi tercihlerini senkronize et
-        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         boolean enabledFromPrefs = prefs.getBoolean(PREF_SOUND_ENABLED, false);
         if (enabledFromPrefs != mSoundEnabled) {
             mSoundEnabled = enabledFromPrefs;
@@ -949,7 +949,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void setupOnePedalKeyPrefs() {
-        SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences p = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         if (mSpinnerOnePedalKey != null) {
             ArrayAdapter<CharSequence> adapterKey = ArrayAdapter.createFromResource(this, R.array.one_pedal_key_labels, android.R.layout.simple_spinner_item);
             adapterKey.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -997,7 +997,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void setupCamera360KeyPrefs() {
-        SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences p = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         if (mSpinnerCamera360Key != null) {
             ArrayAdapter<CharSequence> adapterKey = ArrayAdapter.createFromResource(this, R.array.one_pedal_key_labels, android.R.layout.simple_spinner_item);
             adapterKey.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -1044,7 +1044,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void updateShortcutsPanelVisibility() {
-        SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences p = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         int onePedalKey = p.getInt(PREF_ONE_PEDAL_KEY, DEFAULT_ONE_PEDAL_KEY);
         int camera360Key = p.getInt(PREF_CAMERA_360_KEY, DEFAULT_CAMERA_360_KEY);
         if (mLayoutOnePedalOptions != null) {
@@ -1063,7 +1063,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void syncOnePedalSpinnersFromPrefs() {
-        SharedPreferences p = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences p = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         if (mSpinnerOnePedalKey != null) {
             mSpinnerOnePedalKey.setSelection(indexOfOnePedalKey(p.getInt(PREF_ONE_PEDAL_KEY, DEFAULT_ONE_PEDAL_KEY)));
         }
@@ -1127,7 +1127,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
     /** Kullanıcı \"Şarj sırasında ekran uyuma engelle\" düğmesini açtıysa ekran uyumasın (FLAG_KEEP_SCREEN_ON). */
     private void updateKeepScreenOn() {//new_flag
-        boolean keepOn = false;//getSharedPreferences("mg4_v3", MODE_PRIVATE)
+        boolean keepOn = false;//getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                 //.getBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, false);
         if (keepOn) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -1499,7 +1499,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void setupIdlePanelFromPrefs() {
-        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         // Anahtarı her zaman prefs'teki seçili profilden türet (Service/Activity aynı key'i kullansın)
         String profileName = prefs.getString(PREF_SOUND_PROFILE, "Lotus Exige 240");
         String suffix = EngineSoundManager.profileToPrefsSuffix(profileName);
@@ -1561,7 +1561,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
     /** Tüm araçların rölanti ayarlarını (seviye + pitch) varsayılana döndürür ve paneli günceller. */
     private void resetAllIdleProfiles() {
-        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         android.content.SharedPreferences.Editor editor = prefs.edit();
         for (String profileName : EngineSoundManager.getProfileLabels()) {
             String suffix = EngineSoundManager.profileToPrefsSuffix(profileName);
@@ -1602,7 +1602,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void updateSoundSourceButton(Button btn) {
-        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         String source = prefs.getString("sound_source", "notification");
         if ("media".equals(source)) {
             btn.setText(getString(R.string.sound_source_media));
@@ -1612,7 +1612,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void toggleSoundSource() {
-        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         String source = prefs.getString("sound_source", "notification");
         String newSource = "media".equals(source) ? "notification" : "media";
         prefs.edit().putString("sound_source", newSource).apply();
@@ -1804,7 +1804,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void cycleSoundCharacter() {
-        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         String current = prefs.getString("sound_character", SOUND_CHAR_NORMAL);
         int idx = 0;
         for (int i = 0; i < SOUND_CHAR_CYCLE.length; i++) {
@@ -1850,7 +1850,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
                 .setTitle(getString(R.string.dialog_vehicle_sound_title))
                 .setItems(options, (dialog, which) -> {
                     String label = options[which];
-                    getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_SOUND_PROFILE, label).apply();
+                    getSharedPreferences("drivehub_dort", MODE_PRIVATE).edit().putString(PREF_SOUND_PROFILE, label).apply();
                     if (mBtnSoundProfile != null) {
                         mBtnSoundProfile.setText(getString(R.string.vehicle_sound_format, label));
                     }
@@ -1866,7 +1866,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     /** Tema modunu kaydet, uygula ve ekranı yenile (Gündüz / Gece / Oto). */
     private void applyThemeMode(int mode) {
         mThemeMode = mode;
-        getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putInt(PREF_THEME_MODE, mode).apply();
+        getSharedPreferences("drivehub_dort", MODE_PRIVATE).edit().putInt(PREF_THEME_MODE, mode).apply();
         sRecreatedDueToThemeChange = true; // recreate sonrası onCreate'de sese dokunma
         AppCompatDelegate.setDefaultNightMode(mode);
         updateThemeButtons();
@@ -1874,7 +1874,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
     /** Dili kaydet, uygula ve Activity’yi yeniden oluştur. */
     private void applyLanguage(String lang) {
-        getSharedPreferences("mg4_v3", MODE_PRIVATE).edit().putString(PREF_LANGUAGE, lang).apply();
+        getSharedPreferences("drivehub_dort", MODE_PRIVATE).edit().putString(PREF_LANGUAGE, lang).apply();
         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(lang));
         recreate();
     }
@@ -1896,7 +1896,7 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
     }
 
     private void updateLanguageButtons() {
-        String lang = getSharedPreferences("mg4_v3", MODE_PRIVATE).getString(PREF_LANGUAGE, "");
+        String lang = getSharedPreferences("drivehub_dort", MODE_PRIVATE).getString(PREF_LANGUAGE, "");
         Button btnTr = findViewById(R.id.btnLangTr);
         Button btnEn = findViewById(R.id.btnLangEn);
         if (btnTr != null) {

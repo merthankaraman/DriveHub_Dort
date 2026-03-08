@@ -1,10 +1,10 @@
-package com.example.mg4_v3.receiver;
+package com.drivehub.dort.receiver;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.example.mg4_v3.service.MG4ControlService;
+import com.drivehub.dort.service.MG4ControlService;
 
 public class BootReceiver extends BroadcastReceiver {
     @Override

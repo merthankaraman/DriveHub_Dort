@@ -1,4 +1,4 @@
-package com.example.mg4_v3.audio;
+package com.drivehub.dort.audio;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -10,14 +10,14 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import com.example.mg4_v3.R;
-import com.example.mg4_v3.hardware.MG4Hardware;
+import com.drivehub.dort.R;
+import com.drivehub.dort.hardware.MG4Hardware;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * MG4 V3 Simülasyon Motoru (Hibrit Sistem: Single-Layer + FMOD Dual-Layer)
+ * DriveHub Dort — Simülasyon Motoru (Hibrit Sistem: Single-Layer + FMOD Dual-Layer)
  * Modüler Yapı: Araç Profilleri -> TCU (Şanzıman Beyni) -> SoundPool Mikser
  */
 public class EngineSoundManager {
@@ -144,7 +144,7 @@ public class EngineSoundManager {
     public void setMotorMaxPower(float powerKw) { mMotorMaxPower = (Math.max(50f, Math.min(200f, powerKw)) - 20f); }
 
     public void initFromPreferences(Context context) {
-        android.content.SharedPreferences prefs = context.getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
+        android.content.SharedPreferences prefs = context.getSharedPreferences("drivehub_dort", Context.MODE_PRIVATE);
         String profile = prefs.getString("sound_profile", "Lotus Exige 240");
         applyProfileLabel(profile);
         loadIdleSettingsForProfile(context, profile);
@@ -157,7 +157,7 @@ public class EngineSoundManager {
 
     public void loadIdleSettingsForProfile(Context context, String profileName) {
         if (context == null || profileName == null) return;
-        android.content.SharedPreferences prefs = context.getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
+        android.content.SharedPreferences prefs = context.getSharedPreferences("drivehub_dort", Context.MODE_PRIVATE);
         String suffix = profileToPrefsSuffix(profileName);
         int vol = prefs.getInt("idle_volume_scale_" + suffix, 100);
         float pitch = prefs.getFloat("idle_pitch_" + suffix, 1f);
@@ -687,7 +687,7 @@ public class EngineSoundManager {
 
         boolean useMedia = false;
         try {
-            SharedPreferences prefs = mContext.getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
+            SharedPreferences prefs = mContext.getSharedPreferences("drivehub_dort", Context.MODE_PRIVATE);
             useMedia = "media".equals(prefs.getString("sound_source", "notification"));
         } catch (Throwable ignored) {}
 

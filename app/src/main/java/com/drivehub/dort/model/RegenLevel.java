@@ -1,4 +1,4 @@
-package com.example.mg4_v3.model;
+package com.drivehub.dort.model;
 
 public enum RegenLevel {
     // VehicleSettingService setRegenerativeLevel() değerleri (araçta doğrulandı):

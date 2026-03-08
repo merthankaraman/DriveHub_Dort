@@ -1,4 +1,4 @@
-# MG4 Controller
+# DriveHub Dort
 
 > MG4 EH32 (SAIC Motor) Android Automotive multimedya sistemi üzerinde çalışan,  
 > direksiyon hardkey tuşlarını dinleyen ve araç ayarlarını kontrol eden yardımcı uygulama.
@@ -60,10 +60,10 @@ writeByteArray(new byte[0])  → Boş byte listesi
 ## 📁 Proje Yapısı
 
 ```
-MG4_V3/
+DriveHubDort/
 └── app/src/main/
     ├── AndroidManifest.xml
-    └── java/com/example/MG4_V3/
+    └── java/com/example/DriveHubDort/
         ├── hardware/
         │   └── MG4Hardware.java        # Binder haberleşme katmanı
         ├── model/
@@ -146,7 +146,7 @@ Proje kökündeki `tools/sign_and_install.bat` dosyasını **çift tıklayarak**
 Script otomatik olarak şunları yapar:
 1. `app-debug.apk` dosyasını `platform.pk8` + `platform.x509.pem` ile imzalar
 2. Çıktıyı `app-debug-signed.apk` olarak kaydeder
-3. ADB ile araçtaki eski sürümü kaldırır (`adb uninstall com.example.mg4_v3`)
+3. ADB ile araçtaki eski sürümü kaldırır (`adb uninstall com.drivehub.dort`)
 4. Yeni imzalı APK'yı yükler (`adb install app-debug-signed.apk`)
 
 **Manuel yapmak istersen (script yerine):**
@@ -158,7 +158,7 @@ java -jar apksigner.jar sign ^
     app-debug.apk
 
 # 2. Eski sürümü kaldır (şifre değişikliği varsa zorunlu)
-adb uninstall com.example.mg4_v3
+adb uninstall com.drivehub.dort
 
 # 3. Yükle
 adb install app-debug-signed.apk

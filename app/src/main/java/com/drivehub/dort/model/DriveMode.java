@@ -1,4 +1,4 @@
-package com.example.mg4_v3.model;
+package com.drivehub.dort.model;
 
 public enum DriveMode {
     ECO   ("Eco",    2),

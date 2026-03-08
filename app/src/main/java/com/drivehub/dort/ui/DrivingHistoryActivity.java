@@ -1,4 +1,4 @@
-package com.example.mg4_v3.ui;
+package com.drivehub.dort.ui;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -14,9 +14,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import com.example.mg4_v3.R;
-import com.example.mg4_v3.model.ChargingRecord;
-import com.example.mg4_v3.util.ChargingHistory;
+import com.drivehub.dort.R;
+import com.drivehub.dort.model.DrivingRecord;
+import com.drivehub.dort.util.DrivingHistory;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -29,16 +29,16 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Şarj geçmişi tablosunu geniş ekranda gösterir (Status panelinden açılır).
+ * Sürüş geçmişi tablosunu geniş ekranda gösterir (Tüketim panelinden açılır).
  */
-public class ChargingHistoryActivity extends AppCompatActivity {
+public class DrivingHistoryActivity extends AppCompatActivity {
 
     private static final SimpleDateFormat SDF_ROW = new SimpleDateFormat("dd.MM HH:mm", Locale.getDefault());
     private static final SimpleDateFormat SDF_DAY = new SimpleDateFormat("d MMMM yyyy", new Locale("tr"));
     private static final SimpleDateFormat SDF_MONTH = new SimpleDateFormat("MMMM yyyy", new Locale("tr"));
-    // ChargingHistory ile aynı SharedPreferences anahtarı; yeni veri yazıldığında ekranı otomatik yenilemek için dinleyeceğiz.
-    private static final String PREF_NAME = "mg4_v3";
-    private static final String KEY_HISTORY = "charging_history";
+    // DrivingHistory ile aynı SharedPreferences anahtarı; yeni veri yazıldığında ekranı otomatik yenilemek için dinleyeceğiz.
+    private static final String PREF_NAME = "drivehub_dort";
+    private static final String KEY_HISTORY = "driving_history";
 
     private LinearLayout mHistoryTableBody;
     private SharedPreferences mPrefs;
@@ -47,11 +47,11 @@ public class ChargingHistoryActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_charging_history);
+        setContentView(R.layout.activity_driving_history);
 
         mHistoryTableBody = findViewById(R.id.historyTableBody);
 
-        // Şarj geçmişi SharedPreferences'ını dinle: yeni kayıt eklendiğinde tabloyu otomatik yenile.
+        // Sürüş geçmişi SharedPreferences'ını dinle: yeni kayıt eklendiğinde tabloyu otomatik yenile.
         mPrefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
         mPrefsListener = (sharedPreferences, key) -> {
             if (KEY_HISTORY.equals(key)) {
@@ -60,27 +60,27 @@ public class ChargingHistoryActivity extends AppCompatActivity {
         };
         mPrefs.registerOnSharedPreferenceChangeListener(mPrefsListener);
 
-        Button btnBack = findViewById(R.id.btnChargingHistoryBack);
+        Button btnBack = findViewById(R.id.btnDrivingHistoryBack);
         btnBack.setOnClickListener(v -> finish());
 
-        findViewById(R.id.btnExportChargingHistoryCsv).setOnClickListener(v -> {
-            File f = ChargingHistory.exportToCsv(this);
+        findViewById(R.id.btnExportDrivingHistoryCsv).setOnClickListener(v -> {
+            File f = DrivingHistory.exportToCsv(this);
             if (f != null) {
-                Toast.makeText(this, getString(R.string.charging_history_toast_saved, f.getAbsolutePath()), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.driving_history_toast_saved, f.getAbsolutePath()), Toast.LENGTH_LONG).show();
             } else {
-                Toast.makeText(this, getString(R.string.charging_history_toast_export_failed), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.driving_history_toast_export_failed), Toast.LENGTH_SHORT).show();
             }
         });
 
-        findViewById(R.id.btnClearChargingHistory).setOnClickListener(v -> {
+        findViewById(R.id.btnClearDrivingHistory).setOnClickListener(v -> {
             new AlertDialog.Builder(this)
-                    .setMessage(getString(R.string.charging_history_confirm_clear))
-                    .setPositiveButton(getString(R.string.charging_history_yes), (dialog, which) -> {
-                        ChargingHistory.clearAll(this);
+                    .setMessage(getString(R.string.driving_history_confirm_clear))
+                    .setPositiveButton(getString(R.string.driving_history_yes), (dialog, which) -> {
+                        DrivingHistory.clearAll(this);
                         refreshTable();
-                        Toast.makeText(this, getString(R.string.charging_history_toast_cleared), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(R.string.driving_history_toast_cleared), Toast.LENGTH_SHORT).show();
                     })
-                    .setNegativeButton(getString(R.string.charging_history_no), null)
+                    .setNegativeButton(getString(R.string.driving_history_no), null)
                     .show();
         });
 
@@ -90,14 +90,14 @@ public class ChargingHistoryActivity extends AppCompatActivity {
     private void refreshTable() {
         if (mHistoryTableBody == null) return;
         mHistoryTableBody.removeAllViews();
-        List<ChargingRecord> list = ChargingHistory.load(this);
+        List<DrivingRecord> list = DrivingHistory.load(this);
         if (list.isEmpty()) return;
 
         Calendar cal = Calendar.getInstance();
 
         // Önce ay bazında grupla
-        Map<Long, List<ChargingRecord>> byMonth = new LinkedHashMap<>();
-        for (ChargingRecord r : list) {
+        Map<Long, List<DrivingRecord>> byMonth = new LinkedHashMap<>();
+        for (DrivingRecord r : list) {
             cal.setTimeInMillis(r.startMs);
             cal.set(Calendar.DAY_OF_MONTH, 1);
             cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -116,7 +116,7 @@ public class ChargingHistoryActivity extends AppCompatActivity {
         int dp4 = (int) (getResources().getDisplayMetrics().density * 4 + 0.5f);
 
         for (Long monthStart : monthKeys) {
-            List<ChargingRecord> monthList = byMonth.get(monthStart);
+            List<DrivingRecord> monthList = byMonth.get(monthStart);
             if (monthList == null) continue;
 
             // Ay başlığı (örn. "Şubat 2026")
@@ -129,8 +129,8 @@ public class ChargingHistoryActivity extends AppCompatActivity {
             mHistoryTableBody.addView(monthHeader);
 
             // Bu ay içinde gün bazında grupla
-            Map<Long, List<ChargingRecord>> byDay = new LinkedHashMap<>();
-            for (ChargingRecord r : monthList) {
+            Map<Long, List<DrivingRecord>> byDay = new LinkedHashMap<>();
+            for (DrivingRecord r : monthList) {
                 cal.setTimeInMillis(r.startMs);
                 cal.set(Calendar.HOUR_OF_DAY, 0);
                 cal.set(Calendar.MINUTE, 0);
@@ -144,7 +144,7 @@ public class ChargingHistoryActivity extends AppCompatActivity {
             dayKeys.sort((a, b) -> Long.compare(b, a));
 
             for (Long dayStart : dayKeys) {
-                List<ChargingRecord> dayList = byDay.get(dayStart);
+                List<DrivingRecord> dayList = byDay.get(dayStart);
                 if (dayList == null) continue;
                 dayList.sort((a, b) -> Long.compare(b.startMs, a.startMs));
 
@@ -160,25 +160,27 @@ public class ChargingHistoryActivity extends AppCompatActivity {
                     mHistoryTableBody.addView(dayHeader);
                 }
 
-                for (ChargingRecord r : dayList) {
+                for (DrivingRecord r : dayList) {
                     LinearLayout row = new LinearLayout(this);
                     row.setOrientation(LinearLayout.HORIZONTAL);
                     row.setGravity(Gravity.CENTER_VERTICAL);
                     row.setPadding(0, dp4, dp12, dp4);
                     addCell(row, 1.2f, SDF_ROW.format(new Date(r.startMs)));
                     addCell(row, 1.2f, SDF_ROW.format(new Date(r.endMs)));
-                    addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.acKwh));
-                    addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.dcKwh));
+                    addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.distanceKm));
+                    addCell(row, 0.7f, String.format(Locale.US, "%.3f", r.energyKwh));
+                    addCell(row, 0.7f, String.format(Locale.US, "%.1f", r.avgKwhPer100km));
                     addCell(row, 0.5f, formatDuration(r));
                     mHistoryTableBody.addView(row);
                 }
 
                 if (multiple) {
-                    float sumAc = 0f, sumDc = 0f;
-                    for (ChargingRecord r : dayList) {
-                        sumAc += r.acKwh;
-                        sumDc += r.dcKwh;
+                    float sumDistance = 0f, sumEnergy = 0f;
+                    for (DrivingRecord r : dayList) {
+                        sumDistance += r.distanceKm;
+                        sumEnergy += r.energyKwh;
                     }
+                    float dayAvg = (sumDistance > 0f) ? (sumEnergy / sumDistance) * 100f : 0f;
                     LinearLayout bar = new LinearLayout(this);
                     bar.setOrientation(LinearLayout.HORIZONTAL);
                     bar.setGravity(Gravity.CENTER_VERTICAL);
@@ -187,7 +189,7 @@ public class ChargingHistoryActivity extends AppCompatActivity {
                     bar.setPadding(pad, pad, pad, pad);
                     bar.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                     TextView barText = new TextView(this);
-                    barText.setText(getString(R.string.charging_history_total_format, sumAc, sumDc));
+                    barText.setText(getString(R.string.driving_history_total_with_avg_format, sumDistance, sumEnergy, dayAvg));
                     barText.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
                     barText.setTextSize(12);
                     bar.addView(barText);
@@ -199,12 +201,13 @@ public class ChargingHistoryActivity extends AppCompatActivity {
                 mHistoryTableBody.addView(daySpacer);
             }
 
-            // Ay toplamı (AC/DC kWh)
-            float monthSumAc = 0f, monthSumDc = 0f;
-            for (ChargingRecord r : monthList) {
-                monthSumAc += r.acKwh;
-                monthSumDc += r.dcKwh;
+            // Ay toplamı (km, kWh, ortalama tüketim)
+            float monthSumDistance = 0f, monthSumEnergy = 0f;
+            for (DrivingRecord r : monthList) {
+                monthSumDistance += r.distanceKm;
+                monthSumEnergy += r.energyKwh;
             }
+            float monthAvg = (monthSumDistance > 0f) ? (monthSumEnergy / monthSumDistance) * 100f : 0f;
             LinearLayout monthBar = new LinearLayout(this);
             monthBar.setOrientation(LinearLayout.HORIZONTAL);
             monthBar.setGravity(Gravity.CENTER_VERTICAL);
@@ -213,7 +216,8 @@ public class ChargingHistoryActivity extends AppCompatActivity {
             monthBar.setPadding(padMonth, padMonth, padMonth, padMonth);
             monthBar.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             TextView monthBarText = new TextView(this);
-            monthBarText.setText(getString(R.string.charging_history_month_total_format, monthSumAc, monthSumDc));
+            monthBarText.setText(getString(R.string.driving_history_month_total_with_avg_format,
+                    monthSumDistance, monthSumEnergy, monthAvg));
             monthBarText.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
             monthBarText.setTextSize(12);
             monthBar.addView(monthBarText);
@@ -234,7 +238,7 @@ public class ChargingHistoryActivity extends AppCompatActivity {
         }
     }
 
-    private String formatDuration(ChargingRecord r) {
+    private String formatDuration(DrivingRecord r) {
         int[] p = r.getDurationParts();
         int h = p[0], m = p[1], s = p[2];
         if (h > 0) {
@@ -252,3 +256,4 @@ public class ChargingHistoryActivity extends AppCompatActivity {
         row.addView(tv);
     }
 }
+

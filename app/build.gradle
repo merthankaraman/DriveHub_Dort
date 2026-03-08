@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace 'com.example.mg4_v3'
+    namespace 'com.drivehub.dort'
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -11,11 +11,11 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.mg4_v3"
+        applicationId "com.drivehub.dort"
         minSdk 28
         targetSdk 36
         versionCode 1
-        versionName "1.7.7.2"
+        versionName "0.1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -25,13 +25,13 @@ android {
     productFlavors {
         car {
             dimension "env"
-            // Araç için orijinal paket adı
-            applicationId "com.example.mg4_v3"
+            // Araç için
+            applicationId "com.drivehub.dort"
         }
         sim {
             dimension "env"
             // Simülasyon / emulator için ayrı paket
-            applicationId "com.example.mg4_v3.sim"
+            applicationId "com.drivehub.dort.sim"
         }
     }
 

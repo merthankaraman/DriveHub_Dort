@@ -1,9 +1,9 @@
-package com.example.mg4_v3.util;
+package com.drivehub.dort.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.example.mg4_v3.model.DrivingRecord;
+import com.drivehub.dort.model.DrivingRecord;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,7 +23,7 @@ import java.util.Locale;
  */
 public final class DrivingHistory {
 
-    private static final String PREF_NAME = "mg4_v3";
+    private static final String PREF_NAME = "drivehub_dort";
     private static final String KEY_HISTORY = "driving_history";
 
     private DrivingHistory() {}
@@ -106,7 +106,7 @@ public final class DrivingHistory {
         List<DrivingRecord> list = load(context);
         File dir = context.getExternalFilesDir(null);
         if (dir == null) return null;
-        File out = new File(dir, "mg4_driving_history.csv");
+        File out = new File(dir, "drivehub_dort_driving_history.csv");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
         try (FileWriter fw = new FileWriter(out, false)) {
             String header = "Start,End,DistanceKm,EnergyKwh,AvgSpeedKmh,AvgKwhPer100km,Hours\n";

@@ -1,4 +1,4 @@
-package com.example.mg4_v3.model;
+package com.drivehub.dort.model;
 
 /**
  * Tek bir şarj seansı: başlangıç/bitiş zamanı ve o seanstaki AC/DC kWh.

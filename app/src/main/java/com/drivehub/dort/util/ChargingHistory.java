@@ -1,11 +1,11 @@
-package com.example.mg4_v3.util;
+package com.drivehub.dort.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.example.mg4_v3.R;
-import com.example.mg4_v3.hardware.MG4Hardware;
-import com.example.mg4_v3.model.ChargingRecord;
+import com.drivehub.dort.R;
+import com.drivehub.dort.hardware.MG4Hardware;
+import com.drivehub.dort.model.ChargingRecord;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,7 +24,7 @@ import java.util.List;
  */
 public final class ChargingHistory {
 
-    private static final String PREF_NAME = "mg4_v3";
+    private static final String PREF_NAME = "drivehub_dort";
     private static final String KEY_HISTORY = "charging_history";
     /** Şarj başlangıç zamanı (wall ms) — uygulama kapalıyken başlayan şarjda süreyi geri yüklemek için. */
     private static final String KEY_CHARGING_START_WALL_MS = "charging_start_wall_ms";
@@ -119,7 +119,7 @@ public final class ChargingHistory {
         List<ChargingRecord> list = load(context);
         File dir = context.getExternalFilesDir(null);
         if (dir == null) return null;
-        File out = new File(dir, "mg4_charging_history.csv");
+        File out = new File(dir, "drivehub_dort_charging_history.csv");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault());
         try (FileWriter fw = new FileWriter(out, false)) {
             String header = context.getString(R.string.csv_header_start) + ","

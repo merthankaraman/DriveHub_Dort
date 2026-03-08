@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">MG4 V3</string>
+    <string name="app_name">DriveHub Dort</string>
 
     <!-- Dil -->
     <string name="lang_tr">Türkçe</string>
@@ -12,7 +12,7 @@
     <string name="theme_auto">Oto</string>
 
     <!-- Ana ekran -->
-    <string name="main_title">MG4 Controller</string>
+    <string name="main_title">DriveHub Dort</string>
     <string name="main_version">EH32 · Android Automotive</string>
     <string name="permission_write_settings">WRITE_SETTINGS Izni Ver</string>
     <string name="status_loading">Hazırlanıyor…</string>

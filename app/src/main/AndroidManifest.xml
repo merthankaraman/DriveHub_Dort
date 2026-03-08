@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.mg4_v3"
+    package="com.drivehub.dort"
     android:sharedUserId="android.uid.system">
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -28,7 +28,7 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
-        android:theme="@style/Theme.MG4_V3"
+        android:theme="@style/Theme.DriveHubDort"
         android:localeConfig="@xml/locale_config">
 
         <activity
@@ -50,7 +50,7 @@
             android:name=".ui.ChargingHistoryActivity"
             android:exported="false"
             android:screenOrientation="landscape"
-            android:theme="@style/Theme.MG4_V3" />
+            android:theme="@style/Theme.DriveHubDort" />
 
         <service
             android:name=".service.MG4ControlService"

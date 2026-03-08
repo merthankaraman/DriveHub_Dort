@@ -1,4 +1,4 @@
-package com.example.mg4_v3;
+package com.drivehub.dort;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.example.mg4_v3", appContext.getPackageName());
+        assertEquals("com.drivehub.dort", appContext.getPackageName());
     }
 }

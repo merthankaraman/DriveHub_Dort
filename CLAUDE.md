@@ -1,8 +1,8 @@
-# MG4 EH32 Android Controller
+# DriveHub Dort (MG4 EH32)
 
-> **Proje:** MG4 elektrikli araç için Android Automotive controller uygulaması  
+> **Proje:** MG4 elektrikli araç için Android Automotive controller uygulaması (DriveHub Dort)  
 > **Platform:** Android Automotive OS (AAOS) - EH32 donanım  
-> **Paket:** `com.example.mg4_v3`  
+> **Paket:** `com.drivehub.dort`  
 > **Dil:** Java  
 > **Min SDK:** 28 (Android 9)  
 > **Target SDK:** 33 (Android 13)
@@ -66,9 +66,9 @@ binder.transact(TX_ID, data, reply, 0);
 ## 📁 Proje Yapısı
 
 ```
-MG4_V3/
+DriveHubDort/
 ├── app/src/main/
-│   ├── java/com/example/MG4_V3/
+│   ├── java/com/example/DriveHubDort/
 │   │   ├── ui/
 │   │   │   └── MainActivity.java          # Ana UI, buton yönetimi
 │   │   ├── service/
@@ -158,7 +158,7 @@ MG4 EH32 firmware'indeki TÜM sistem APK'ları (launcher, vehiclesettings, HVAC 
 
 ### Platform Key Dosyaları (Proje Kökünde Mevcut)
 ```
-MG4_V3/
+DriveHubDort/
 ├── platform.x509.pem   # AOSP sertifika
 ├── platform.pk8        # AOSP private key (binary)
 ├── platform.key        # PEM formatı (dönüştürülmüş)

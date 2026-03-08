@@ -1,4 +1,4 @@
-package com.example.mg4_v3.hardware;
+package com.drivehub.dort.hardware;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -8,8 +8,8 @@ import android.os.Parcel;
 import android.os.SystemClock;
 import android.util.Log;
 
-import com.example.mg4_v3.model.DriveMode;
-import com.example.mg4_v3.model.RegenLevel;
+import com.drivehub.dort.model.DriveMode;
+import com.drivehub.dort.model.RegenLevel;
 
 /**
  * MG4 EH32 — CarPropertyManager (reflection) ile araç kontrolü.
@@ -1035,7 +1035,7 @@ public class MG4Hardware {
         long now = System.currentTimeMillis();
         sChargingStartWallMs = now;
         if (sAppContext != null) {
-            com.example.mg4_v3.util.ChargingHistory.saveChargingStart(sAppContext, now);
+            com.drivehub.dort.util.ChargingHistory.saveChargingStart(sAppContext, now);
             if (sLogEnabled) Log.i(TAG, "Şarj başlangıcı kaydedildi (BMS) → persist");
         }
     }
@@ -1057,7 +1057,7 @@ public class MG4Hardware {
         // Şarj görüldüğünde ve henüz başlangıç yoksa: hep "şimdi"den başlat (ekran uyandığında 0 görünsün).
         if (charging && sChargingStartWallMs == 0L) {
             sChargingStartWallMs = now;
-            if (sAppContext != null) com.example.mg4_v3.util.ChargingHistory.saveChargingStart(sAppContext, now);
+            if (sAppContext != null) com.drivehub.dort.util.ChargingHistory.saveChargingStart(sAppContext, now);
         }
         if (charging) {
             return Math.max(0L, now - sChargingStartWallMs);
@@ -1079,7 +1079,7 @@ public class MG4Hardware {
         sAcChargeEnergyKwh         = 0f;
         sDcChargeEnergyKwh         = 0f;
         sLastBmsEventMs      = 0L;
-        if (sAppContext != null) com.example.mg4_v3.util.ChargingHistory.clearChargingStart(sAppContext);
+        if (sAppContext != null) com.drivehub.dort.util.ChargingHistory.clearChargingStart(sAppContext);
     }
 
     /** Enerji ve süre sayaçlarını sıfırla */
@@ -1568,7 +1568,7 @@ public class MG4Hardware {
                         if (propId != null && value != null) {
                             if (propId == PROP_DRIVE_MODE) {
                                 sCachedDriveMode = value;
-                                Log.i(TAG, "  Sürüş modu (vehicle manager) 0x" + Integer.toHexString(propId) + " → " + value + " (mg4_v3 abonesi)");
+                                Log.i(TAG, "  Sürüş modu (vehicle manager) 0x" + Integer.toHexString(propId) + " → " + value + " (DriveHub Dort abonesi)");
                                 DriveModeListener listener = sDriveModeListener;
                                 if (listener != null) listener.onDriveModeChanged(value);
                             } else if (propId == PROP_REGEN_LEVEL) {

@@ -1,4 +1,4 @@
-package com.example.mg4_v3.model;
+package com.drivehub.dort.model;
 
 /**
  * Tek bir sürüş oturumu: başlangıç/bitiş zamanı, yol, enerji ve özet istatistikler.

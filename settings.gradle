@@ -23,5 +23,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MG4_V3"
+rootProject.name = "DriveHubDort"
 include ':app'

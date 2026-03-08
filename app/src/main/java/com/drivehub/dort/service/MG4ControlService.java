@@ -1,4 +1,4 @@
-package com.example.mg4_v3.service;
+package com.drivehub.dort.service;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
@@ -34,22 +34,22 @@ import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
-import com.example.mg4_v3.R;
-import com.example.mg4_v3.hardware.MG4Hardware;
-import com.example.mg4_v3.audio.EngineSoundManager;
-import com.example.mg4_v3.model.DriveMode;
-import com.example.mg4_v3.model.RegenLevel;
-import com.example.mg4_v3.util.ChargingHistory;
+import com.drivehub.dort.R;
+import com.drivehub.dort.hardware.MG4Hardware;
+import com.drivehub.dort.audio.EngineSoundManager;
+import com.drivehub.dort.model.DriveMode;
+import com.drivehub.dort.model.RegenLevel;
+import com.drivehub.dort.util.ChargingHistory;
 
 import java.util.List;
 
 public class MG4ControlService extends Service {
 
     private static final String TAG = "MG4_SERVICE";
-    private static final String CHANNEL_ID = "mg4_channel";
+    private static final String CHANNEL_ID = "drivehub_dort_channel";
     private static final int    NOTIF_ID   = 1001;
     /** Ekrandan müzik duraklat/devam için Activity'nin servise gönderdiği action */
-    public static final String ACTION_TOGGLE_MUSIC = "com.example.mg4_v3.TOGGLE_MUSIC";
+    public static final String ACTION_TOGGLE_MUSIC = "com.drivehub.dort.TOGGLE_MUSIC";
 
     // Hardkey broadcast — logcat'ten doğrulandı (1902260031.txt):
     //   action: com.saic.keyevent.hardkey.report
@@ -167,7 +167,7 @@ public class MG4ControlService extends Service {
             boolean ready = MG4Hardware.isVehicleReady() || MG4Hardware.isSimSpeedActive();
             float dcPowerKw = MG4Hardware.getDcKwGlobal();
 
-            SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+            SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
             boolean soundEnabled = prefs.getBoolean("sound_enabled", false);
 
             if (soundEnabled && ready) {
@@ -242,7 +242,7 @@ public class MG4ControlService extends Service {
             double durationMinutes = (now - mDriveStartWallMs) / 60000.0;
 
             if ((distKm > 0.01 || energyKwh > 0.001) && durationMinutes >= 5.0) {
-                com.example.mg4_v3.util.DrivingHistory.addSession(
+                com.drivehub.dort.util.DrivingHistory.addSession(
                         getApplicationContext(),
                         mDriveStartWallMs,
                         now,
@@ -276,7 +276,7 @@ public class MG4ControlService extends Service {
         updateNotification("Bağlanıyor...");
         registerHardkeyReceiver();
 
-        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         boolean overlayEnabled = prefs.getBoolean("overlay_enabled", false);
         if (overlayEnabled) {
             showOverlay();
@@ -294,7 +294,7 @@ public class MG4ControlService extends Service {
             // Son modu sadece araç READY iken hafızaya yaz. Araç kapanırken son anda Normal/regen 3'e
             // çektiği değerleri yazmayalım (hatırlama yanlış değerle üzerine yazılmasın).
             if (mDriveRegenRememberInitialized && (MG4Hardware.getVehicleIgnition() >= 2)) {
-                SharedPreferences sp = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+                SharedPreferences sp = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
                 sp.edit().putInt(PREF_LAST_DRIVE_MODE, modeValue).apply();
 
                 int regenVal = MG4Hardware.getRegenLevel();
@@ -327,7 +327,7 @@ public class MG4ControlService extends Service {
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         if (pm != null) {
-            mChargingWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "mg4_v3:charging");
+            mChargingWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "drivehub_dort:charging");
             mChargingWakeLock.setReferenceCounted(false);
         }
         // Şarj bittiğinde oturumu hafızaya kaydet (uygulama kapalı veya başka ekrandayken de)
@@ -377,7 +377,7 @@ public class MG4ControlService extends Service {
     /** Şarjdayken PARTIAL_WAKE_LOCK al (ekran kapanabilir, CPU uyumaz). Ayar SharedPreferences'tan okunur. */
     private void updateChargingWakeLock() {
         if (mChargingWakeLock == null) return;
-        boolean enabled = getSharedPreferences("mg4_v3", MODE_PRIVATE).getBoolean(PREF_CHARGING_WAKE_LOCK, false);
+        boolean enabled = getSharedPreferences("drivehub_dort", MODE_PRIVATE).getBoolean(PREF_CHARGING_WAKE_LOCK, false);
         if (!enabled) {
             if (mChargingWakeLock.isHeld()) mChargingWakeLock.release();
             return;
@@ -392,7 +392,7 @@ public class MG4ControlService extends Service {
 
     /** Boot sonrası sürüş modunu otomatik geri yükle (kullanıcı \"sürüş modunu hatırla\" switch'ini açtıysa). */
     private boolean applyRememberedDriveModeIfNeeded() {
-        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         boolean rememberEnabled = prefs.getBoolean(PREF_REMEMBER_DRIVE_MODE, false);
         int lastValue = prefs.getInt(PREF_LAST_DRIVE_MODE, DriveMode.NORMAL.value);
         
@@ -416,7 +416,7 @@ public class MG4ControlService extends Service {
 
     /** Boot sonrası regen seviyesini otomatik geri yükle (kullanıcı \"Regen seviyesini hatırla\" switch'ini açtıysa). */
     private boolean applyRememberedRegenIfNeeded() {
-        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         if (!prefs.getBoolean(PREF_REMEMBER_REGEN, false)) return false;
 
         int lastValue = prefs.getInt(PREF_LAST_REGEN_LEVEL, RegenLevel.LOW.value);
@@ -735,7 +735,7 @@ public class MG4ControlService extends Service {
                             + " label=" + keycodeLabel(keyCode));
                 }
 
-                SharedPreferences prefs = getSharedPreferences("mg4_v3", Context.MODE_PRIVATE);
+                SharedPreferences prefs = getSharedPreferences("drivehub_dort", Context.MODE_PRIVATE);
                 int assignedKey = prefs.getInt(PREF_ONE_PEDAL_KEY, DEFAULT_ONE_PEDAL_KEY);
                 // Eski tercih: 18→286 (Sağ yıldız), 5→291 (Telefon) — araç InputReader keyCode ile eşleşir
                 int keyToMatch = (assignedKey == 18) ? 286 : (assignedKey == 5) ? 291 : assignedKey;
@@ -984,7 +984,7 @@ public class MG4ControlService extends Service {
 
     /** Tuş kombo ile tetiklenen motor sesi aç/kapa (SharedPreferences + EngineSoundManager). */
     private void onMotorSoundToggleFromKey() {
-        SharedPreferences prefs = getSharedPreferences("mg4_v3", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         boolean current = prefs.getBoolean("sound_enabled", false);
         boolean next = !current;
         prefs.edit().putBoolean("sound_enabled", next).apply();
@@ -1178,7 +1178,7 @@ public class MG4ControlService extends Service {
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
                 // Son seçilen modu kaydet (sadece flag aktifse)
                 if (mDriveRegenRememberInitialized && (MG4Hardware.getVehicleIgnition() >= 2)) {
-                    getSharedPreferences("mg4_v3", MODE_PRIVATE)
+                    getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                             .edit().putInt(PREF_LAST_DRIVE_MODE, mCurrentDriveMode.value).apply();
                 }
                 break;
@@ -1190,7 +1190,7 @@ public class MG4ControlService extends Service {
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
                 // Son seçilen modu kaydet (sadece flag aktifse)
                 if (mDriveRegenRememberInitialized && (MG4Hardware.getVehicleIgnition() >= 2)) {
-                    getSharedPreferences("mg4_v3", MODE_PRIVATE)
+                    getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                             .edit().putInt(PREF_LAST_DRIVE_MODE, mCurrentDriveMode.value).apply();
                 }
                 break;
@@ -1205,7 +1205,7 @@ public class MG4ControlService extends Service {
                     updateNotification("Regen: " + rl.label);
                 }
                 // Son seçilen regen seviyesini kaydet (hatırlama açıksa boot sonrasında tekrar göndereceğiz)
-                getSharedPreferences("mg4_v3", MODE_PRIVATE)
+                getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                         .edit().putInt(PREF_LAST_REGEN_LEVEL, rl.value).apply();
                 break;
             case "PEDAL_ON":
@@ -1297,7 +1297,7 @@ public class MG4ControlService extends Service {
 
     private void createNotificationChannel() {
         NotificationChannel ch = new NotificationChannel(
-                CHANNEL_ID, "MG4 Kontrol", NotificationManager.IMPORTANCE_MIN);
+                CHANNEL_ID, getString(R.string.app_name), NotificationManager.IMPORTANCE_MIN);
         ch.setShowBadge(false);
         NotificationManager nm = getSystemService(NotificationManager.class);
         if (nm != null) nm.createNotificationChannel(ch);
@@ -1310,7 +1310,7 @@ public class MG4ControlService extends Service {
 
     private Notification buildNotification(String text) {
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("MG4 Controller")
+                .setContentTitle(getString(R.string.app_name))
                 .setContentText(text)
                 .setSmallIcon(android.R.drawable.ic_menu_compass)
                 .setOngoing(true).setSilent(true).build();
