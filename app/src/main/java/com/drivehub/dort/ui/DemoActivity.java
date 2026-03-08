@@ -135,7 +135,7 @@ public class DemoActivity extends AppCompatActivity {
             });
             refreshWindowPercentages();
         }
-
+        refreshAirQuality();
     }
 
     @Override
@@ -170,6 +170,7 @@ public class DemoActivity extends AppCompatActivity {
             if (mode >= 0) switchNearfieldUnlock.setChecked(mode == 1);
             updateNearfieldUnlockStatus(tvNearfieldUnlockStatus, mode);
         }
+        refreshAirQuality();
     }
 
     private void updateEspStatus(TextView tv, int value) {
@@ -190,6 +191,41 @@ public class DemoActivity extends AppCompatActivity {
     private void updateNearfieldUnlockStatus(TextView tv, int value) {
         if (tv == null) return;
         tv.setText(getString(R.string.nearfield_unlock_status, value));
+    }
+
+    private void refreshAirQuality() {
+        String unknown = getString(R.string.air_quality_unknown);
+        TextView tvPm25 = findViewById(R.id.tvAirQualityPm25);
+        TextView tvOutTemp = findViewById(R.id.tvAirQualityOutdoorTemp);
+        TextView tvFilter = findViewById(R.id.tvAirQualityPm25Filter);
+        TextView tvAqs = findViewById(R.id.tvAirQualityAqs);
+        if (tvPm25 != null) {
+            int pm = MG4Hardware.getPm25Concentration();
+            tvPm25.setText(getString(R.string.air_quality_pm25, pm >= 0 ? String.valueOf(pm) : unknown));
+        }
+        if (tvOutTemp != null) {
+            float t = MG4Hardware.getOutCarTemp();
+            tvOutTemp.setText(getString(R.string.air_quality_outdoor_temp,
+                    !Float.isNaN(t) ? String.format(Locale.getDefault(), "%.1f °C", t) : unknown));
+        }
+        TextView tvDrvTemp = findViewById(R.id.tvAirQualityDrvTemp);
+        TextView tvPsgTemp = findViewById(R.id.tvAirQualityPsgTemp);
+        if (tvDrvTemp != null) {
+            int drv = MG4Hardware.getDrvTemp();
+            tvDrvTemp.setText(getString(R.string.air_quality_drv_temp, drv >= 0 ? String.valueOf(drv) : unknown));
+        }
+        if (tvPsgTemp != null) {
+            int psg = MG4Hardware.getPsgTemp();
+            tvPsgTemp.setText(getString(R.string.air_quality_psg_temp, psg >= 0 ? String.valueOf(psg) : unknown));
+        }
+        if (tvFilter != null) {
+            int f = MG4Hardware.getPm25Filter();
+            tvFilter.setText(getString(R.string.air_quality_pm25_filter, f >= 0 ? String.valueOf(f) : unknown));
+        }
+        if (tvAqs != null) {
+            int aqs = MG4Hardware.getAqsSensitivity();
+            tvAqs.setText(getString(R.string.air_quality_aqs, aqs >= 0 ? String.valueOf(aqs) : unknown));
+        }
     }
 
     private void refreshWindowPercentages() {

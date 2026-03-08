@@ -89,6 +89,16 @@
     <string name="window_level_format">Seviye: %d%%</string>
     <string name="window_scale_hint">Cam: 0 = tam kapalı, 100 = tam açık</string>
 
+    <!-- Hava kalitesi (Demo) -->
+    <string name="air_quality_section_title">HAVA KALİTESİ</string>
+    <string name="air_quality_pm25">PM2.5 (toz/partikül): %s</string>
+    <string name="air_quality_outdoor_temp">Dış sıcaklık: %s</string>
+    <string name="air_quality_drv_temp">İç sıcaklık (sürücü): %s</string>
+    <string name="air_quality_psg_temp">İç sıcaklık (yolcu): %s</string>
+    <string name="air_quality_pm25_filter">PM2.5 filtre: %s</string>
+    <string name="air_quality_aqs">AQS hassasiyeti: %s</string>
+    <string name="air_quality_unknown">--</string>
+
     <!-- Isıtma / Klima -->
     <string name="climate">ISITMA</string>
     <string name="climate_settings">♨ Isıtma Ayarları</string>

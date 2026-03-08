@@ -139,6 +139,8 @@ public class MG4Hardware {
     private static volatile Object  sVehicleSettingService = null;
     /** Kapı/cam/sunroof için — hub.getService("vehiclecontrol") → IVehicleControlService */
     private static volatile Object  sVehicleControlService = null;
+    /** Klima / hava kalitesi — hub.getService("aircondition") → IAirConditionService */
+    private static volatile Object  sAirConditionService = null;
     private static volatile boolean sVsBindAttempted       = false;
 
     // -------------------------------------------------------------------------
@@ -526,6 +528,29 @@ public class MG4Hardware {
                         } else {
                             Log.w(TAG, "  Katman3: vehiclecontrol binder null");
                         }
+                        // aircondition — klima, PM2.5, dış sıcaklık (IAirConditionService)
+                        IBinder acBinder = null;
+                        for (String key : new String[]{"aircondition", "air_condition"}) {
+                            try {
+                                IBinder b = (IBinder) getService.invoke(hub, key);
+                                if (b != null) { acBinder = b; Log.i(TAG, "  Katman3: aircondition key=" + key + " ✓"); break; }
+                            } catch (Throwable ignored) {}
+                        }
+                        if (acBinder != null) {
+                            Class<?> acStub = findVsClass(loaders, java.util.Arrays.asList(
+                                    "com.saicmotor.sdk.vehiclesettings.IAirConditionService$Stub",
+                                    "com.saicvehicleservice.sdk.vehiclesettings.IAirConditionService$Stub"
+                            ));
+                            if (acStub != null) {
+                                java.lang.reflect.Method acAsIface = acStub.getMethod("asInterface", IBinder.class);
+                                sAirConditionService = acAsIface.invoke(null, acBinder);
+                                Log.i(TAG, "  ✓ Katman3: AirConditionService HAZIR (PM2.5, dış sıcaklık)");
+                            } else {
+                                Log.w(TAG, "  Katman3: IAirConditionService$Stub bulunamadı");
+                            }
+                        } else {
+                            Log.w(TAG, "  Katman3: aircondition binder null");
+                        }
                     } catch (Throwable t) {
                         Log.e(TAG, "  ✗ Katman3: onServiceConnected hata: " + t);
                     }
@@ -534,6 +559,7 @@ public class MG4Hardware {
                 public void onServiceDisconnected(ComponentName name) {
                     sVehicleSettingService = null;
                     sVehicleControlService = null;
+                    sAirConditionService = null;
                     Log.w(TAG, "  Katman3: VehicleSettingService/VehicleControlService bağlantısı kesildi");
                 }
             }, Context.BIND_AUTO_CREATE);
@@ -609,19 +635,31 @@ public class MG4Hardware {
     }
 
     /** Uzaklaşma ile kilitleme: 0=Kapalı, 1=Açık. Anahtar uzaklaşınca araç kilitlenir (PEPS). */
-    public static int getLeaveAutoLockMode() { return vsGetInt("getLeaveAutoLockMode"); }
+    public static int getLeaveAutoLockMode() {
+        int v = vsGetInt("getLeaveAutoLockMode");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getLeaveAutoLockMode => " + v);
+        return v;
+    }
 
     /** Uzaklaşma ile kilitleme aç (1) veya kapat (0). */
     public static boolean setLeaveAutoLockMode(int value) { return vsSetInt("setLeaveAutoLockMode", value); }
 
     /** Yaklaşma ile açma: 0=Kapalı, 1=Açık. Anahtar yaklaşınca kilit açılır (PEPS). */
-    public static int getApproachUnlockMode() { return vsGetInt("getApproachUnlockMode"); }
+    public static int getApproachUnlockMode() {
+        int v = vsGetInt("getApproachUnlockMode");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getApproachUnlockMode => " + v);
+        return v;
+    }
 
     /** Yaklaşma ile açma aç (1) veya kapat (0). */
     public static boolean setApproachUnlockMode(int value) { return vsSetInt("setApproachUnlockMode", value); }
 
     /** Yakın alan açma (kapı kolu yakınında). */
-    public static int getNearfieldUnlockMode() { return vsGetInt("getNearfieldUnlockMode"); }
+    public static int getNearfieldUnlockMode() {
+        int v = vsGetInt("getNearfieldUnlockMode");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getNearfieldUnlockMode => " + v);
+        return v;
+    }
 
     public static boolean setNearfieldUnlockMode(int value) { return vsSetInt("setNearfieldUnlockMode", value); }
 
@@ -733,16 +771,103 @@ public class MG4Hardware {
     }
 
     /** Cam yüzdelerini oku (0–100). Okunamazsa -1. */
-    public static float getDriveWindow() { return vsControlGetFloat("getDriveWindow"); }
-    public static float getPassengerWindow() { return vsControlGetFloat("getPassengerWindow"); }
-    public static float getLeftRearWindow() { return vsControlGetFloat("getLeftRearWindow"); }
-    public static float getRightRearWindow() { return vsControlGetFloat("getRightRearWindow"); }
+    public static float getDriveWindow() {
+        float v = vsControlGetFloat("getDriveWindow");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getDriveWindow => " + v);
+        return v;
+    }
+    public static float getPassengerWindow() {
+        float v = vsControlGetFloat("getPassengerWindow");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getPassengerWindow => " + v);
+        return v;
+    }
+    public static float getLeftRearWindow() {
+        float v = vsControlGetFloat("getLeftRearWindow");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getLeftRearWindow => " + v);
+        return v;
+    }
+    public static float getRightRearWindow() {
+        float v = vsControlGetFloat("getRightRearWindow");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getRightRearWindow => " + v);
+        return v;
+    }
 
     /** ESP: 0=Kapalı, 1=Açık (API’de set 0..3 geçerli). Okunamazsa -1. */
-    public static int getEspSwitch() { return vsControlGetInt("getEspSwitch"); }
+    public static int getEspSwitch() {
+        int v = vsControlGetInt("getEspSwitch");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getEspSwitch => " + v);
+        return v;
+    }
 
     /** ESP kapat (0) veya aç (1). Karlı/buzda tekerleklerin tutunması için 0 denenebilir. */
     public static boolean setEspSwitch(int value) { return vsControlSetInt("setEspSwitch", value); }
+
+    // -------------------------------------------------------------------------
+    // Hava kalitesi / Klima — IAirConditionService (hub.getService("aircondition"))
+    // -------------------------------------------------------------------------
+
+    private static int acGetInt(String methodName) {
+        Object ac = sAirConditionService;
+        if (ac == null) return -1;
+        try {
+            java.lang.reflect.Method m = ac.getClass().getMethod(methodName);
+            Object result = m.invoke(ac);
+            if (result instanceof Number) return ((Number) result).intValue();
+            return -1;
+        } catch (Throwable t) { return -1; }
+    }
+
+    private static float acGetFloat(String methodName) {
+        Object ac = sAirConditionService;
+        if (ac == null) return Float.NaN;
+        try {
+            java.lang.reflect.Method m = ac.getClass().getMethod(methodName);
+            Object result = m.invoke(ac);
+            if (result instanceof Number) return ((Number) result).floatValue();
+            return Float.NaN;
+        } catch (Throwable t) { return Float.NaN; }
+    }
+
+    /** PM2.5 (partikül/toz) yoğunluğu. Okunamazsa -1. */
+    public static int getPm25Concentration() {
+        int v = acGetInt("getPm25Concentration");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getPm25Concentration => " + v);
+        return v;
+    }
+    /** PM2.5 filtre durumu. Okunamazsa -1. */
+    public static int getPm25Filter() {
+        int v = acGetInt("getPm25Filter");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getPm25Filter => " + v);
+        return v;
+    }
+    /** Negatif iyon durumu. Okunamazsa -1. */
+    public static int getAnionStatus() { return acGetInt("getAnionStatus"); }
+    /** Dış ortam sıcaklığı (°C). Okunamazsa NaN. */
+    public static float getOutCarTemp() {
+        float v = acGetFloat("getOutCarTemp");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getOutCarTemp => " + (Float.isNaN(v) ? "NaN" : v));
+        return v;
+    }
+    /** Sürücü bölge sıcaklığı (hedef veya sensör; birim araça göre). Okunamazsa -1. */
+    public static int getDrvTemp() {
+        int v = acGetInt("getDrvTemp");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getDrvTemp => " + v);
+        return v;
+    }
+    /** Yolcu bölge sıcaklığı (hedef veya sensör). Okunamazsa -1. */
+    public static int getPsgTemp() {
+        int v = acGetInt("getPsgTemp");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getPsgTemp => " + v);
+        return v;
+    }
+
+    /** Hava kalitesi hassasiyeti (AQS). IVehicleSettingService. Okunamazsa -1. */
+    public static int getAqsSensitivity() {
+        int v = vsGetInt("getAqsSensitivity");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getAqsSensitivity => " + v);
+        return v;
+    }
+    public static boolean setAqsSensitivity(int value) { return vsSetInt("setAqsSensitivity", value); }
 
     // -------------------------------------------------------------------------
     // Setter'lar

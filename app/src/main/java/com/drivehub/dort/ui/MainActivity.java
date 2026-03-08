@@ -407,7 +407,7 @@ public class MainActivity extends AppCompatActivity {
         SoundMode savedMode = soundModeFromString(prefsSound.getString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2"));
         // Loglar varsayılan olarak KAPALI olsun
         boolean logsEnabled = prefsSound.getBoolean("logs_enabled", false);
-        int savedMaster = prefsSound.getInt(PREF_SOUND_MASTER, 60);
+        int savedMaster = prefsSound.getInt(PREF_SOUND_MASTER, 20);
         float savedMotorPower = prefsSound.getFloat(PREF_MOTOR_POWER, 150f);
         MG4Hardware.setLogEnabled(logsEnabled);
         updateSoundToggleButton();

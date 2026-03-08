@@ -213,6 +213,58 @@
         android:textColor="#6E7681"
         android:textSize="11sp"/>
 
+    <!-- Hava kalitesi -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center_horizontal"
+        android:text="@string/air_quality_section_title"
+        android:textColor="@color/status_value"
+        android:textSize="18sp"/>
+    <TextView
+        android:id="@+id/tvAirQualityPm25"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#8B949E"
+        android:textSize="14sp"/>
+    <TextView
+        android:id="@+id/tvAirQualityOutdoorTemp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="#8B949E"
+        android:textSize="14sp"/>
+    <TextView
+        android:id="@+id/tvAirQualityDrvTemp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="#8B949E"
+        android:textSize="14sp"/>
+    <TextView
+        android:id="@+id/tvAirQualityPsgTemp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="#8B949E"
+        android:textSize="14sp"/>
+    <TextView
+        android:id="@+id/tvAirQualityPm25Filter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="#8B949E"
+        android:textSize="14sp"/>
+    <TextView
+        android:id="@+id/tvAirQualityAqs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="#8B949E"
+        android:textSize="14sp"/>
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
