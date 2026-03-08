@@ -828,7 +828,7 @@ public class MG4Hardware {
 
     /** Serviste 100ms'de bir çağrılır: DC/AC güçleri oku, enerjiyi ve mesafeyi integre et, önbelleğe yaz. */
     public static void integrateConsumptionData() {
-        float speedKmh = getSpeedKmh();
+        float speedKmh = getSpeedKmh() * 1.003f;
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
 
         // DC güç (sürüş + şarj): V * A / 1000 → kW (işaretli)
@@ -887,8 +887,8 @@ public class MG4Hardware {
             }
             if (!Float.isNaN(speedKmh)) {
                 // Yol integrali: v(km/h) * dt(h) = km
-                sTripDistanceKm += speedKmh * dtHours;
-                float speedTrim = speedKmh * 1.03f;
+                sTripDistanceKm += Math.abs(speedKmh) * dtHours;
+                float speedTrim = speedKmh / 1.003f;
                 sTripDistanceKm_trim += speedTrim * dtHours;
             }
             // Sürüş grafiği sayaçları: sadece araç READY iken entegre et
@@ -1054,20 +1054,10 @@ public class MG4Hardware {
     public static long getChargingDurationMs() {
         boolean charging = isCharging();
         long now = System.currentTimeMillis();
+        // Şarj görüldüğünde ve henüz başlangıç yoksa: hep "şimdi"den başlat (ekran uyandığında 0 görünsün).
         if (charging && sChargingStartWallMs == 0L) {
-            if (sAppContext != null) {
-                long loaded = com.example.mg4_v3.util.ChargingHistory.loadChargingStart(sAppContext);
-                if (loaded > 0 && (now - loaded) < 48L * 3600 * 1000) {
-                    sChargingStartWallMs = loaded;
-                    if (sLogEnabled) Log.i(TAG, "Şarj süresi başlangıcı geri yüklendi: " + (now - loaded) / 60000 + " dk önce");
-                }
-            }
-            // Persist'ten gelmediyse: isCharging() true olduğu anda süreyi buradan başlat
-            if (sChargingStartWallMs == 0L) {
-                sChargingStartWallMs = now;
-                if (sAppContext != null) com.example.mg4_v3.util.ChargingHistory.saveChargingStart(sAppContext, now);
-                if (sLogEnabled) Log.i(TAG, "Şarj süresi başlatıldı (isCharging true)");
-            }
+            sChargingStartWallMs = now;
+            if (sAppContext != null) com.example.mg4_v3.util.ChargingHistory.saveChargingStart(sAppContext, now);
         }
         if (charging) {
             return Math.max(0L, now - sChargingStartWallMs);

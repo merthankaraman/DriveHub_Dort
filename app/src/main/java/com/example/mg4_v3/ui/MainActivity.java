@@ -1207,7 +1207,13 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
 
         // Güç grafiklerini güncelle (kW) — sadece şarjdayken aktif olsun
         if (charging) {
-            float maxDcKw = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) ? (dcVolt * dcAmpExp) / 1000f : Float.NaN;
+            // AC şarjda (acVolt > 0) maks DC kW grafikte gösterilmez
+            float maxDcKw = Float.NaN;
+            if (Float.isNaN(acVolt) || acVolt <= 0f) {
+                if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) {
+                    maxDcKw = (dcVolt * dcAmpExp) / 1000f;
+                }
+            }
             float acKw    = (!Float.isNaN(acVolt) && !Float.isNaN(acAmp))   ? (acVolt * acAmp) / 1000f : Float.NaN;
             float battKw  = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct))   ? (dcVolt * dcAmpAct) / 1000f : Float.NaN;
             updateChargingCharts(maxDcKw, acKw, battKw);
@@ -1284,12 +1290,29 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         trimChartEntries(mChartEntriesAc);
         trimChartEntries(mChartEntriesBatt);
 
-        LineData data = new LineData();
-        data.addDataSet(makeDataSet(mChartEntriesMaxDc, COLOR_CHART_MAX_DC, getString(R.string.chart_legend_max_dc)));
-        if (acKw > 0f) {
-            data.addDataSet(makeDataSet(mChartEntriesAc, COLOR_CHART_AC, getString(R.string.chart_legend_ac)));
+        // Legend'da son değeri "x.xx kW" olarak göster
+        String labelMaxDc = getString(R.string.chart_legend_max_dc);
+        String labelAc    = getString(R.string.chart_legend_ac);
+        String labelBatt  = getString(R.string.chart_legend_batt);
+        if (!mChartEntriesMaxDc.isEmpty()) {
+            float last = mChartEntriesMaxDc.get(mChartEntriesMaxDc.size() - 1).getY();
+            labelMaxDc = labelMaxDc + "  " + String.format("%.2f kW", last);
         }
-        data.addDataSet(makeDataSet(mChartEntriesBatt, COLOR_CHART_BATT, getString(R.string.chart_legend_batt)));
+        if (!mChartEntriesAc.isEmpty()) {
+            float last = mChartEntriesAc.get(mChartEntriesAc.size() - 1).getY();
+            labelAc = labelAc + "  " + String.format("%.2f kW", last);
+        }
+        if (!mChartEntriesBatt.isEmpty()) {
+            float last = mChartEntriesBatt.get(mChartEntriesBatt.size() - 1).getY();
+            labelBatt = labelBatt + "  " + String.format("%.2f kW", last);
+        }
+
+        LineData data = new LineData();
+        data.addDataSet(makeDataSet(mChartEntriesMaxDc, COLOR_CHART_MAX_DC, labelMaxDc));
+        if (acKw > 0f) {
+            data.addDataSet(makeDataSet(mChartEntriesAc, COLOR_CHART_AC, labelAc));
+        }
+        data.addDataSet(makeDataSet(mChartEntriesBatt, COLOR_CHART_BATT, labelBatt));
         mChartChargingPower.setData(data);
         mChartChargingPower.invalidate();
     }
@@ -1411,9 +1434,9 @@ findViewById(R.id.btnEco).setOnClickListener(v       -> sendDriveMode(DriveMode.
         }
         if (mTvConsumptionTripKm != null) {
             if (tripDistanceKm >= 0) {
-                //double tripDistanceTrim = MG4Hardware.getTripDistanceKm_Trim();
-                //mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km --- %.2f km", tripDistanceKm, tripDistanceTrim));
-                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", tripDistanceKm));
+                double tripDistanceTrim = MG4Hardware.getTripDistanceKm_Trim();
+                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km --- %.2f km", tripDistanceKm, tripDistanceTrim));
+                //mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", tripDistanceKm));
             } else {
                 mTvConsumptionTripKm.setText("--");
             }
