@@ -218,6 +218,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PANEL_IDLE = 7;
     private static final int PANEL_CHARGING_GRAPH = 8;
     private static final int PANEL_SETTINGS = 9;
+    private static final int PANEL_DRIVE_REGEN = 10;
     private int mCurrentPanel = PANEL_MAIN;
 
     // Tüketim paneli
@@ -865,12 +866,16 @@ public class MainActivity extends AppCompatActivity {
             case PANEL_SETTINGS:
                 openSettingsPanel();
                 break;
+            case PANEL_DRIVE_REGEN:
+                openDriveRegenPanel();
+                break;
             case PANEL_MAIN:
             default:
                 mLayoutMain.setVisibility(View.VISIBLE);
                 mLayoutStatusPanel.setVisibility(View.GONE);
                 if (mLayoutSettingsPanel != null) mLayoutSettingsPanel.setVisibility(View.GONE);
                 if (mLayoutRegenPanel != null) mLayoutRegenPanel.setVisibility(View.GONE);
+                if (mLayoutDriveRegenPanel != null) mLayoutDriveRegenPanel.setVisibility(View.GONE);
                 if (mLayoutShortcutsPanel != null) mLayoutShortcutsPanel.setVisibility(View.GONE);
                 if (mLayoutClimatePanel != null) mLayoutClimatePanel.setVisibility(View.GONE);
                 if (mLayoutConsumptionPanel != null) mLayoutConsumptionPanel.setVisibility(View.GONE);
@@ -945,12 +950,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void openDriveRegenPanel() {
         if (mLayoutDriveRegenPanel == null) return;
+        mCurrentPanel = PANEL_DRIVE_REGEN;
         mLayoutMain.setVisibility(View.GONE);
         mLayoutDriveRegenPanel.setVisibility(View.VISIBLE);
         refreshDriveRegenPanelState();
     }
 
     private void closeDriveRegenPanel() {
+        mCurrentPanel = PANEL_MAIN;
         if (mLayoutDriveRegenPanel != null) {
             mLayoutDriveRegenPanel.setVisibility(View.GONE);
         }
@@ -1848,6 +1855,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         } else if (mCurrentPanel == PANEL_REGEN) {
             closeRegenPanel();
+            return;
+        } else if (mCurrentPanel == PANEL_DRIVE_REGEN) {
+            closeDriveRegenPanel();
             return;
         } else if (mCurrentPanel == PANEL_STATUS) {
             closeStatusPanel();

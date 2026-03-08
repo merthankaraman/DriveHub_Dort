@@ -816,7 +816,7 @@ public class MG4Hardware {
     private static volatile double sLifetimeKwh = 0.0;
     private static final String PREF_NAME_LIFETIME = "drivehub_dort";
     private static final String PREF_LIFETIME_KM = "consumption_lifetime_km";
-    private static final String PREF_LIFETIME_KWH = "consumption_lifetime_kwh";
+    private static final String PREF_LIFETIME_KWH = "consumption_lifetime_kwh1";
     // Sürüş grafiği için bağımsız sayaçlar (UI trip reset'inden etkilenmez)
     private static volatile double sDriveGraphEnergyKwh = 0.0;
     private static volatile double sDriveGraphDistanceKm = 0.0;
@@ -888,11 +888,14 @@ public class MG4Hardware {
 
         sConsumptionLastRealtimeMs = nowRealtimeMs;
         if (dtHours > 0) {
-            if (!Float.isNaN(dcKw)) {
-                sTripEnergyKwh += dcKw * dtHours;
-                sLifetimeKwh += dcKw * dtHours;
-            }
+            double drivedKwh = 0;
             double dKm = speedKmh * dtHours;
+            if (!Float.isNaN(dcKw)){
+                if (speedKmh == 0f && dcKw < 0f) drivedKwh = 0f;
+                else drivedKwh = dcKw * dtHours;
+            }
+            sTripEnergyKwh += drivedKwh;
+            sLifetimeKwh += drivedKwh;
             sTripDistanceKm += dKm;
             sLifetimeKm += dKm;
             float speedTrim = (speedKmh / 1.003f) * 1.004f;
@@ -903,7 +906,7 @@ public class MG4Hardware {
                     sDriveGraphDistanceKm += dKm;
                 }
                 if (!Float.isNaN(dcKw)) {
-                    sDriveGraphEnergyKwh += dcKw * dtHours;
+                    sDriveGraphEnergyKwh += drivedKwh;
                 }
             }
             if (isCharging()) {
