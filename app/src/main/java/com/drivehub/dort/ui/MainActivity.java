@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_CONSUMPTION_DISPLAY_MODE = "consumption_display_mode";
     private static final int CONSUMPTION_MODE_SINCE_START = 0;
     private static final int CONSUMPTION_MODE_CURRENT = 1;
+    private static final int CONSUMPTION_MODE_LIFETIME = 2;
     private int mConsumptionDisplayMode = CONSUMPTION_MODE_CURRENT; // varsayılan: Sürüş (trip)
     private static final int COLOR_HEAT_ON  = 0xFF9E3333; // kırmızı — ısıtma aktif
 
@@ -693,6 +694,7 @@ public class MainActivity extends AppCompatActivity {
         mConsumptionDisplayMode = getSharedPreferences("drivehub_dort", MODE_PRIVATE).getInt(PREF_CONSUMPTION_DISPLAY_MODE, CONSUMPTION_MODE_CURRENT);
         findViewById(R.id.btnConsumptionModeSinceStart).setOnClickListener(v -> setConsumptionDisplayMode(CONSUMPTION_MODE_SINCE_START));
         findViewById(R.id.btnConsumptionModeCurrent).setOnClickListener(v -> setConsumptionDisplayMode(CONSUMPTION_MODE_CURRENT));
+        findViewById(R.id.btnConsumptionModeLifetime).setOnClickListener(v -> setConsumptionDisplayMode(CONSUMPTION_MODE_LIFETIME));
         updateConsumptionModeButtons();
 
         // ---- Regen paneli ----
@@ -1502,7 +1504,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void resetConsumptionTrip() {
         MG4Hardware.resetConsumptionTrip();
-        Toast.makeText(this, "Yol ve enerji sıfırlandı", Toast.LENGTH_SHORT).show();
+        refreshConsumptionPanel();
+        Toast.makeText(this, getString(R.string.consumption_trip_reset_toast), Toast.LENGTH_SHORT).show();
     }
 
     private void setConsumptionDisplayMode(int mode) {
@@ -1515,12 +1518,21 @@ public class MainActivity extends AppCompatActivity {
     private void updateConsumptionModeButtons() {
         Button btnSince = findViewById(R.id.btnConsumptionModeSinceStart);
         Button btnCurrent = findViewById(R.id.btnConsumptionModeCurrent);
-        if (btnSince == null || btnCurrent == null) return;
+        Button btnLifetime = findViewById(R.id.btnConsumptionModeLifetime);
+        if (btnSince == null || btnCurrent == null || btnLifetime == null) return;
         boolean sinceActive = (mConsumptionDisplayMode == CONSUMPTION_MODE_SINCE_START);
-        btnSince.setBackgroundTintList(android.content.res.ColorStateList.valueOf(sinceActive ? COLOR_ACTIVE : COLOR_INACTIVE));
-        btnSince.setTextColor(sinceActive ? 0xFFFFFFFF : 0xFF8B949E);
-        btnCurrent.setBackgroundTintList(android.content.res.ColorStateList.valueOf(sinceActive ? COLOR_INACTIVE : COLOR_ACTIVE));
-        btnCurrent.setTextColor(sinceActive ? 0xFF8B949E : 0xFFFFFFFF);
+        boolean currentActive = (mConsumptionDisplayMode == CONSUMPTION_MODE_CURRENT);
+        boolean lifetimeActive = (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME);
+        int activeColor = COLOR_ACTIVE;
+        int inactiveColor = COLOR_INACTIVE;
+        int textActive = 0xFFFFFFFF;
+        int textInactive = 0xFF8B949E;
+        btnSince.setBackgroundTintList(android.content.res.ColorStateList.valueOf(sinceActive ? activeColor : inactiveColor));
+        btnSince.setTextColor(sinceActive ? textActive : textInactive);
+        btnCurrent.setBackgroundTintList(android.content.res.ColorStateList.valueOf(currentActive ? activeColor : inactiveColor));
+        btnCurrent.setTextColor(currentActive ? textActive : textInactive);
+        btnLifetime.setBackgroundTintList(android.content.res.ColorStateList.valueOf(lifetimeActive ? activeColor : inactiveColor));
+        btnLifetime.setTextColor(lifetimeActive ? textActive : textInactive);
     }
 
     /** Panelde servisin güncellediği önbellek gösterilir. Şu anki veriler = trip (Yol sıfırla); Motor çalıştıktan itibaren = driveGraph (sürüş geçmişi). */
@@ -1534,6 +1546,9 @@ public class MainActivity extends AppCompatActivity {
         powerKw = Float.isNaN(powerKw) ? Float.NaN : powerKw;
         int gear = MG4Hardware.getLastGear();
         boolean sinceStart = (mConsumptionDisplayMode == CONSUMPTION_MODE_SINCE_START);
+        boolean lifetimeMode = (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME);
+        double lifetimeKm = MG4Hardware.getLifetimeKm();
+        double lifetimeKwh = MG4Hardware.getLifetimeKwh();
 
         if (mTvConsumptionGear != null) {
             String gearText;
@@ -1561,8 +1576,24 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        if (sinceStart) {
-            // Motor çalıştıktan itibaren: sDriveGraphDistanceKm, sDriveGraphEnergyKwh (sürüş geçmişi verileri)
+        if (lifetimeMode) {
+            // Hayat boyu: toplam km, toplam kWh, ortalama
+            if (mTvConsumptionTripKm != null) {
+                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", lifetimeKm));
+            }
+            if (mTvConsumptionEnergy != null) {
+                mTvConsumptionEnergy.setText(String.format(Locale.US, "%.3f kWh", lifetimeKwh));
+            }
+            if (mTvConsumptionAvgKwhPer100km != null) {
+                if (lifetimeKm > 0.01) {
+                    double avgKwhPer100 = (lifetimeKwh / lifetimeKm) * 100.0;
+                    mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f kWh/100 km", avgKwhPer100));
+                } else {
+                    mTvConsumptionAvgKwhPer100km.setText("--");
+                }
+            }
+        } else if (sinceStart) {
+            // Motor çalıştıktan itibaren: sDriveGraphDistanceKm, sDriveGraphEnergyKwh
             if (mTvConsumptionTripKm != null) {
                 mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", driveGraphDistanceKm));
             }
@@ -1578,7 +1609,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         } else {
-            // Şu anki veriler: normal trip (tripDistanceKm, tripEnergyKwh, Yol sıfırla ile sıfırlanan)
+            // Sürüş: trip (Sürüş sıfırla ile sıfırlanan)
             if (mTvConsumptionTripKm != null) {
                 if (tripDistanceKm >= 0) {
                     double tripDistanceTrim = MG4Hardware.getTripDistanceKm_Trim();

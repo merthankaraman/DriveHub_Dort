@@ -243,6 +243,8 @@
     <string name="consumption_trip">Trip Km</string>
     <string name="consumption_energy">Energy </string>
     <string name="consumption_avg">Avg. consumption </string>
+    <string name="consumption_lifetime">Lifetime</string>
+    <string name="consumption_trip_reset_toast">Trip reset.</string>
 
     <!-- Driving history -->
     <string name="driving_history_title">Driving history</string>

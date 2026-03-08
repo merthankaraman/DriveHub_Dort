@@ -243,6 +243,8 @@
     <string name="consumption_trip">Yol Km</string>
     <string name="consumption_energy">Enerji </string>
     <string name="consumption_avg">Ort. tüketim </string>
+    <string name="consumption_lifetime">Hayat boyu</string>
+    <string name="consumption_trip_reset_toast">Sürüş sıfırlandı.</string>
 
     <!-- Driving history -->
     <string name="driving_history_title">Sürüş geçmişi</string>

@@ -811,6 +811,12 @@ public class MG4Hardware {
     private static volatile double sTripEnergyKwh = 0.0;
     private static volatile double sTripDistanceKm = 0.0;
     private static volatile double sTripDistanceKm_trim = 0.0;
+    /** Hayat boyu km/kWh — trip gibi integral, periyodik hafızaya yazılır (sıfırlanmaz). */
+    private static volatile double sLifetimeKm = 0.0;
+    private static volatile double sLifetimeKwh = 0.0;
+    private static final String PREF_NAME_LIFETIME = "drivehub_dort";
+    private static final String PREF_LIFETIME_KM = "consumption_lifetime_km";
+    private static final String PREF_LIFETIME_KWH = "consumption_lifetime_kwh";
     // Sürüş grafiği için bağımsız sayaçlar (UI trip reset'inden etkilenmez)
     private static volatile double sDriveGraphEnergyKwh = 0.0;
     private static volatile double sDriveGraphDistanceKm = 0.0;
@@ -884,17 +890,17 @@ public class MG4Hardware {
         if (dtHours > 0) {
             if (!Float.isNaN(dcKw)) {
                 sTripEnergyKwh += dcKw * dtHours;
+                sLifetimeKwh += dcKw * dtHours;
             }
-            if (!Float.isNaN(speedKmh)) {
-                // Yol integrali: v(km/h) * dt(h) = km
-                sTripDistanceKm += Math.abs(speedKmh) * dtHours;
-                float speedTrim = speedKmh / 1.003f;
-                sTripDistanceKm_trim += speedTrim * dtHours;
-            }
-            // Sürüş grafiği sayaçları: sadece araç READY iken entegre et
+            double dKm = speedKmh * dtHours;
+            sTripDistanceKm += dKm;
+            sLifetimeKm += dKm;
+            float speedTrim = (speedKmh / 1.003f) * 1.004f;
+            sTripDistanceKm_trim += speedTrim * dtHours;
+
             if (isVehicleReady()) {
                 if (!Float.isNaN(speedKmh)) {
-                    sDriveGraphDistanceKm += speedKmh * dtHours;
+                    sDriveGraphDistanceKm += dKm;
                 }
                 if (!Float.isNaN(dcKw)) {
                     sDriveGraphEnergyKwh += dcKw * dtHours;
@@ -911,7 +917,7 @@ public class MG4Hardware {
         } else {
             dtHourscounter += 1;
         }
-        // Global cache'i güncelle (diğer ekranlar buradan okur)
+
         sDcVolt = dcVolt;
         sDcAmp  = dcAmpAct;
         sDcKw   = dcKw;
@@ -949,6 +955,25 @@ public class MG4Hardware {
     public static double getTripEnergyKwh() { return sTripEnergyKwh; }
     public static double getTripDistanceKm() { return sTripDistanceKm; }
     public static double getTripDistanceKm_Trim() { return sTripDistanceKm_trim; }
+    public static double getLifetimeKm() { return sLifetimeKm; }
+    public static double getLifetimeKwh() { return sLifetimeKwh; }
+
+    /** Hayat boyu değerlerini hafızadan yükle (servis başlarken bir kez çağrılmalı). */
+    public static void loadLifetimeFromPrefs(Context ctx) {
+        if (ctx == null) return;
+        android.content.SharedPreferences p = ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE);
+        sLifetimeKm = p.getFloat(PREF_LIFETIME_KM, 0f);
+        sLifetimeKwh = p.getFloat(PREF_LIFETIME_KWH, 0f);
+    }
+
+    /** Hayat boyu değerlerini hafızaya yaz (serviste arada bir çağrılmalı; veri kaybı olmasın). */
+    public static void persistLifetimeToPrefs(Context ctx) {
+        if (ctx == null) return;
+        ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE).edit()
+            .putFloat(PREF_LIFETIME_KM, (float) sLifetimeKm)
+            .putFloat(PREF_LIFETIME_KWH, (float) sLifetimeKwh)
+            .apply();
+    }
     public static float getLastSpeedKmh() { return sLastSpeedKmh; }
     public static int getLastGear() { return sLastGear; }
     public static double getDriveGraphEnergyKwh() { return sDriveGraphEnergyKwh; }

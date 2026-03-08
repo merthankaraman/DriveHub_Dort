@@ -48,7 +48,7 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Orta: İki konumlu seçici (segmented) -->
+            <!-- Orta: Üç konumlu seçici — Sürüş | Motor çalıştıktan itibaren | Hayat boyu -->
             <FrameLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -68,30 +68,45 @@
                         android:id="@+id/btnConsumptionModeCurrent"
                         android:layout_width="wrap_content"
                         android:layout_height="44dp"
-                        android:minWidth="80dp"
+                        android:minWidth="72dp"
                         android:minHeight="0dp"
                         android:text="@string/consumption_mode_trip"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:backgroundTint="#21262D"
                         android:textColor="#C9D1D9"
                         android:gravity="center"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"/>
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"/>
 
                     <Button
                         android:id="@+id/btnConsumptionModeSinceStart"
                         android:layout_width="wrap_content"
                         android:layout_height="44dp"
-                        android:minWidth="80dp"
+                        android:minWidth="72dp"
                         android:minHeight="0dp"
                         android:layout_marginStart="4dp"
                         android:text="@string/consumption_mode_since_start"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:backgroundTint="#21262D"
                         android:textColor="#C9D1D9"
                         android:gravity="center"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"/>
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"/>
+
+                    <Button
+                        android:id="@+id/btnConsumptionModeLifetime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:minWidth="72dp"
+                        android:minHeight="0dp"
+                        android:layout_marginStart="4dp"
+                        android:text="@string/consumption_lifetime"
+                        android:textSize="13sp"
+                        android:backgroundTint="#21262D"
+                        android:textColor="#C9D1D9"
+                        android:gravity="center"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"/>
                 </LinearLayout>
             </FrameLayout>
 
