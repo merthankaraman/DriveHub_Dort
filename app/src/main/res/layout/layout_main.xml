@@ -195,6 +195,18 @@
                     android:paddingEnd="12dp"
                     android:minHeight="80dp"/>
             </LinearLayout>
+
+            <!-- Demo: ESP, cam, vb. -->
+            <Button
+                android:id="@+id/btnDemo"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="14dp"
+                android:backgroundTint="#388BFD"
+                android:text="@string/btn_demo"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold"/>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

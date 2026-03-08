@@ -137,6 +137,8 @@ public class MG4Hardware {
 
     // Katman 3 — VehicleService direct bind (Hüseyin yöntemi)
     private static volatile Object  sVehicleSettingService = null;
+    /** Kapı/cam/sunroof için — hub.getService("vehiclecontrol") → IVehicleControlService */
+    private static volatile Object  sVehicleControlService = null;
     private static volatile boolean sVsBindAttempted       = false;
 
     // -------------------------------------------------------------------------
@@ -500,6 +502,30 @@ public class MG4Hardware {
                         sVehicleSettingService = vsAsIface.invoke(null, vsBinder);
                         Log.i(TAG, "  ✓ Katman3: VehicleSettingService HAZIR: "
                                 + sVehicleSettingService.getClass().getName());
+
+                        // vehiclecontrol — kapı kilidi, camlar, sunroof (IVehicleControlService)
+                        IBinder vcBinder = null;
+                        for (String key : new String[]{"vehiclecontrol", "vehicle_control", "vehicle_control_service"}) {
+                            try {
+                                IBinder b = (IBinder) getService.invoke(hub, key);
+                                if (b != null) { vcBinder = b; Log.i(TAG, "  Katman3: vehiclecontrol key=" + key + " ✓"); break; }
+                            } catch (Throwable ignored) {}
+                        }
+                        if (vcBinder != null) {
+                            Class<?> vcStub = findVsClass(loaders, java.util.Arrays.asList(
+                                    "com.saicmotor.sdk.vehiclesettings.IVehicleControlService$Stub",
+                                    "com.saicvehicleservice.sdk.vehiclesettings.IVehicleControlService$Stub"
+                            ));
+                            if (vcStub != null) {
+                                java.lang.reflect.Method vcAsIface = vcStub.getMethod("asInterface", IBinder.class);
+                                sVehicleControlService = vcAsIface.invoke(null, vcBinder);
+                                Log.i(TAG, "  ✓ Katman3: VehicleControlService HAZIR (kapı/cam)");
+                            } else {
+                                Log.w(TAG, "  Katman3: IVehicleControlService$Stub bulunamadı");
+                            }
+                        } else {
+                            Log.w(TAG, "  Katman3: vehiclecontrol binder null");
+                        }
                     } catch (Throwable t) {
                         Log.e(TAG, "  ✗ Katman3: onServiceConnected hata: " + t);
                     }
@@ -507,7 +533,8 @@ public class MG4Hardware {
                 @Override
                 public void onServiceDisconnected(ComponentName name) {
                     sVehicleSettingService = null;
-                    Log.w(TAG, "  Katman3: VehicleSettingService bağlantısı kesildi");
+                    sVehicleControlService = null;
+                    Log.w(TAG, "  Katman3: VehicleSettingService/VehicleControlService bağlantısı kesildi");
                 }
             }, Context.BIND_AUTO_CREATE);
             if (sLogEnabled) {
@@ -566,6 +593,156 @@ public class MG4Hardware {
             return false;
         }
     }
+
+    /** Katman 3: sVehicleSettingService — int getter. Okunamazsa -1. */
+    private static int vsGetInt(String methodName) {
+        Object vs = sVehicleSettingService;
+        if (vs == null) return -1;
+        try {
+            java.lang.reflect.Method m = vs.getClass().getMethod(methodName);
+            Object result = m.invoke(vs);
+            if (result instanceof Number) return ((Number) result).intValue();
+            return -1;
+        } catch (Throwable t) {
+            return -1;
+        }
+    }
+
+    /** Uzaklaşma ile kilitleme: 0=Kapalı, 1=Açık. Anahtar uzaklaşınca araç kilitlenir (PEPS). */
+    public static int getLeaveAutoLockMode() { return vsGetInt("getLeaveAutoLockMode"); }
+
+    /** Uzaklaşma ile kilitleme aç (1) veya kapat (0). */
+    public static boolean setLeaveAutoLockMode(int value) { return vsSetInt("setLeaveAutoLockMode", value); }
+
+    /** Yaklaşma ile açma: 0=Kapalı, 1=Açık. Anahtar yaklaşınca kilit açılır (PEPS). */
+    public static int getApproachUnlockMode() { return vsGetInt("getApproachUnlockMode"); }
+
+    /** Yaklaşma ile açma aç (1) veya kapat (0). */
+    public static boolean setApproachUnlockMode(int value) { return vsSetInt("setApproachUnlockMode", value); }
+
+    /** Yakın alan açma (kapı kolu yakınında). */
+    public static int getNearfieldUnlockMode() { return vsGetInt("getNearfieldUnlockMode"); }
+
+    public static boolean setNearfieldUnlockMode(int value) { return vsSetInt("setNearfieldUnlockMode", value); }
+
+    /** Katman 3: VehicleControlService (kapı/cam) — int setter. */
+    private static boolean vsControlSetInt(String methodName, int value) {
+        Object vc = sVehicleControlService;
+        if (vc == null) {
+            if (sLogEnabled) Log.w(TAG, "  Katman3: vsControlSetInt — VehicleControlService bağlı değil");
+            return false;
+        }
+        try {
+            java.lang.reflect.Method m = vc.getClass().getMethod(methodName, int.class);
+            m.invoke(vc, value);
+            if (sLogEnabled) Log.i(TAG, "  Katman3: VehicleControl." + methodName + "(" + value + ") ✓");
+            return true;
+        } catch (Throwable t) {
+            Log.e(TAG, "  Katman3: VehicleControl." + methodName + "(" + value + ") HATA: " + t);
+            return false;
+        }
+    }
+
+    /** Katman 3: VehicleControlService (cam pozisyonu 0–100) — float setter. */
+    private static boolean vsControlSetFloat(String methodName, float value) {
+        Object vc = sVehicleControlService;
+        if (vc == null) {
+            if (sLogEnabled) Log.w(TAG, "  Katman3: vsControlSetFloat — VehicleControlService bağlı değil");
+            return false;
+        }
+        try {
+            java.lang.reflect.Method m = vc.getClass().getMethod(methodName, float.class);
+            m.invoke(vc, value);
+            if (sLogEnabled) Log.i(TAG, "  Katman3: VehicleControl." + methodName + "(" + value + ") ✓");
+            return true;
+        } catch (Throwable t) {
+            Log.e(TAG, "  Katman3: VehicleControl." + methodName + "(" + value + ") HATA: " + t);
+            return false;
+        }
+    }
+
+    /** Katman 3: VehicleControlService — float getter (cam yüzdesi 0–100). Okunamazsa -1. */
+    private static float vsControlGetFloat(String methodName) {
+        Object vc = sVehicleControlService;
+        if (vc == null) return -1f;
+        try {
+            java.lang.reflect.Method m = vc.getClass().getMethod(methodName);
+            Object result = m.invoke(vc);
+            if (result instanceof Number) return ((Number) result).floatValue();
+            return -1f;
+        } catch (Throwable t) {
+            return -1f;
+        }
+    }
+
+    /** Katman 3: VehicleControlService — int getter (ESP vb.). Okunamazsa -1. */
+    private static int vsControlGetInt(String methodName) {
+        Object vc = sVehicleControlService;
+        if (vc == null) return -1;
+        try {
+            java.lang.reflect.Method m = vc.getClass().getMethod(methodName);
+            Object result = m.invoke(vc);
+            if (result instanceof Number) return ((Number) result).intValue();
+            return -1;
+        } catch (Throwable t) {
+            return -1;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Kapı / Cam — VehicleControlService (Property ID yerine tek metot)
+    // -------------------------------------------------------------------------
+
+    /** Kapı kilitle (1) veya aç (0). VehicleSettingsService bağlıysa kullanır. */
+    public static boolean setDoorLock(int lock) {
+        return vsControlSetInt("setDoorLock", lock);
+    }
+
+    /** Sürücü camı: 0f=kapalı, 100f=tam açık. */
+    public static boolean setDriveWindow(float position) {
+        return vsControlSetFloat("setDriveWindow", position);
+    }
+
+    /** Yolcu camı: 0f=kapalı, 100f=tam açık. */
+    public static boolean setPassengerWindow(float position) {
+        return vsControlSetFloat("setPassengerWindow", position);
+    }
+
+    /** Sol arka cam. */
+    public static boolean setLeftRearWindow(float position) {
+        return vsControlSetFloat("setLeftRearWindow", position);
+    }
+
+    /** Sağ arka cam. */
+    public static boolean setRightRearWindow(float position) {
+        return vsControlSetFloat("setRightRearWindow", position);
+    }
+
+    /** Tüm camları kapat (0). */
+    public static boolean closeAllWindows() {
+        boolean a = vsControlSetFloat("setDriveWindow", 0f);
+        boolean b = vsControlSetFloat("setPassengerWindow", 0f);
+        boolean c = vsControlSetFloat("setLeftRearWindow", 0f);
+        boolean d = vsControlSetFloat("setRightRearWindow", 0f);
+        return a || b || c || d;
+    }
+
+    /** VehicleControlService (kapı/cam) bağlı mı? */
+    public static boolean isVehicleControlServiceBound() {
+        return sVehicleControlService != null;
+    }
+
+    /** Cam yüzdelerini oku (0–100). Okunamazsa -1. */
+    public static float getDriveWindow() { return vsControlGetFloat("getDriveWindow"); }
+    public static float getPassengerWindow() { return vsControlGetFloat("getPassengerWindow"); }
+    public static float getLeftRearWindow() { return vsControlGetFloat("getLeftRearWindow"); }
+    public static float getRightRearWindow() { return vsControlGetFloat("getRightRearWindow"); }
+
+    /** ESP: 0=Kapalı, 1=Açık (API’de set 0..3 geçerli). Okunamazsa -1. */
+    public static int getEspSwitch() { return vsControlGetInt("getEspSwitch"); }
+
+    /** ESP kapat (0) veya aç (1). Karlı/buzda tekerleklerin tutunması için 0 denenebilir. */
+    public static boolean setEspSwitch(int value) { return vsControlSetInt("setEspSwitch", value); }
 
     // -------------------------------------------------------------------------
     // Setter'lar

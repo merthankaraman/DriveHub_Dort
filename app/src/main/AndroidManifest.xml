@@ -52,6 +52,12 @@
             android:screenOrientation="landscape"
             android:theme="@style/Theme.DriveHubDort" />
 
+        <activity
+            android:name=".ui.DemoActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.DriveHubDort" />
+
         <service
             android:name=".service.MG4ControlService"
             android:exported="false"

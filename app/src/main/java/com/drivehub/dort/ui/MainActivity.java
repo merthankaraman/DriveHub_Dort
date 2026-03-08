@@ -221,6 +221,9 @@ public class MainActivity extends AppCompatActivity {
     private static final int PANEL_DRIVE_REGEN = 10;
     private int mCurrentPanel = PANEL_MAIN;
 
+    /** Demo ekranından "Isıtma Ayarları" ile dönüldüğünde klima panelini aç */
+    public static final String EXTRA_OPEN_CLIMATE = "OPEN_CLIMATE";
+
     // Tüketim paneli
     private View mLayoutConsumptionPanel;
     private TextView mTvConsumptionGear;
@@ -678,6 +681,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnChargingGraphBack).setOnClickListener(v -> closeChargingGraphPanel());
         findViewById(R.id.btnChargingGraphReset).setOnClickListener(v -> resetChargingGraph());
         findViewById(R.id.btnClimatePanel).setOnClickListener(v -> openClimatePanel());
+        findViewById(R.id.btnDemo).setOnClickListener(v -> startActivity(new android.content.Intent(this, DemoActivity.class)));
 
         // ---- Tüketim paneli ----
         mLayoutConsumptionPanel   = findViewById(R.id.layoutConsumptionPanel);
@@ -903,6 +907,11 @@ public class MainActivity extends AppCompatActivity {
         }
         // Kullanıcı \"Şarj sırasında ekran uyuma engelle\" düğmesini açtıysa, Activity ön plandayken ekranı uyutma
         updateKeepScreenOn();
+        // Demo ekranından "Isıtma Ayarları" ile gelindiyse klima panelini aç
+        if (getIntent().getBooleanExtra(EXTRA_OPEN_CLIMATE, false)) {
+            getIntent().removeExtra(EXTRA_OPEN_CLIMATE);
+            openClimatePanel();
+        }
     }
 
     @Override

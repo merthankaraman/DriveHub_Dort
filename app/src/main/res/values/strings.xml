@@ -30,6 +30,10 @@
     <string name="btn_shortcuts">Düğme kısayolları</string>
     <string name="logs_detail">Loglar (detay)</string>
 
+    <!-- Demo ekranı (ESP, cam, vb.) -->
+    <string name="btn_demo">Demo</string>
+    <string name="demo_screen_title">Demo</string>
+
     <!-- Sürüş modu + Regen ekranı -->
     <string name="drive_regen_screen_title">Sürüş &amp; Konfor</string>
     <string name="btn_drive_regen">Sürüş &amp; Konfor</string>
@@ -55,6 +59,35 @@
     <string name="regen_one_pedal">TEK PEDAL</string>
     <string name="regen_active">Aktif: %s</string>
     <string name="one_pedal_active">Aktif: Tek Pedal</string>
+
+    <!-- ESP (Sürüş &amp; Konfor — karlı/buzda kapatılabilir) -->
+    <string name="esp_section_title">ESP</string>
+    <string name="esp_on">Açık</string>
+    <string name="esp_off">Kapalı</string>
+    <string name="esp_status">Okunan: %d (0=Kapalı, 1=Açık, -1=yanıt yok)</string>
+
+    <!-- Uzaklaşma ile kilitleme (anahtar gidince araç kilitlensin) -->
+    <string name="leave_auto_lock_title">Anahtar uzaklaşınca kilitle</string>
+    <string name="leave_auto_lock_status">Okunan: %d (0=Kapalı, 1=Açık, -1=yanıt yok)</string>
+
+    <!-- Yaklaşma ile açma (anahtar gelince kilit açılsın) -->
+    <string name="approach_unlock_title">Yaklaşınca kilidi aç</string>
+    <string name="approach_unlock_status">Okunan: %d (0=Kapalı, 1=Açık, -1=yanıt yok)</string>
+
+    <!-- Yakın alan açma (kapı kolu yakınında) -->
+    <string name="nearfield_unlock_title">Yakın alan kilidi aç</string>
+    <string name="nearfield_unlock_status">Okunan: %d (0=Kapalı, 1=Açık, -1=yanıt yok)</string>
+
+    <!-- Pencere / Cam (Sürüş &amp; Konfor) -->
+    <string name="window_section_title">PENCERE</string>
+    <string name="window_select_hint">Cam seçin</string>
+    <string name="window_driver">Sürücü camı</string>
+    <string name="window_passenger">Yolcu camı</string>
+    <string name="window_rear_left">Sol arka</string>
+    <string name="window_rear_right">Sağ arka</string>
+    <string name="window_all">Tümü birden</string>
+    <string name="window_level_format">Seviye: %d%%</string>
+    <string name="window_scale_hint">Cam: 0 = tam kapalı, 100 = tam açık</string>
 
     <!-- Isıtma / Klima -->
     <string name="climate">ISITMA</string>
