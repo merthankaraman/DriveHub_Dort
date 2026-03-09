@@ -302,6 +302,16 @@
     <string name="door_lock_btn_unlock">Aç</string>
     <string name="door_lock_status_format">Kapı kilidi: %s (ham: %d)</string>
 
+    <!-- Demo: Bluetooth kilidi (deneysel) -->
+    <string name="bt_lock_section_title">BLUETOOTH KİLİT (DENEYSEL)</string>
+    <string name="bt_lock_select_device">Telefonu Seç</string>
+    <string name="bt_lock_status_no_device">Seçili cihaz yok</string>
+    <string name="bt_lock_status_device">Cihaz: %s</string>
+    <string name="bt_lock_enabled_label">Bluetooth kilidi aktif</string>
+    <string name="bt_lock_toast_locked">Bluetooth kilidi: Araç kilitle komutu gönderildi</string>
+    <string name="bt_lock_toast_bt_off">Bluetooth kapalı, kilit izleme yapılamıyor</string>
+    <string name="bt_lock_toast_no_permission">Bluetooth izni yok</string>
+
     <!-- Driving history -->
     <string name="driving_history_title">Sürüş geçmişi</string>
     <string name="driving_history_table_start">Başlangıç</string>

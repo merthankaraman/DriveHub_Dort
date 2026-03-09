@@ -301,6 +301,60 @@
         android:textColor="#6E7681"
         android:textSize="12sp"/>
 
+    <!-- Bluetooth kilidi (deneysel) -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="center_horizontal"
+        android:text="@string/bt_lock_section_title"
+        android:textColor="@color/status_value"
+        android:textSize="18sp"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btnBtLockSelectDevice"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="#21262D"
+            android:minWidth="0dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="@string/bt_lock_select_device"
+            android:textColor="#C9D1D9"
+            android:textSize="14sp"/>
+        <TextView
+            android:id="@+id/tvBtLockStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/bt_lock_status_no_device"
+            android:textColor="#6E7681"
+            android:textSize="12sp"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/bt_lock_enabled_label"
+            android:textColor="#6E7681"
+            android:textSize="12sp"/>
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchBtLockEnabled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
     <!-- Hava kalitesi -->
     <TextView
         android:layout_width="match_parent"

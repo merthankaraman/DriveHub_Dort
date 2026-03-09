@@ -1,5 +1,11 @@
 package com.drivehub.dort.ui;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -38,6 +44,62 @@ public class DemoActivity extends AppCompatActivity {
         public void run() {
             pollDemoValues();
             mHandler.postDelayed(this, 2000); // 2 saniyede bir
+        }
+    };
+
+    // Bluetooth kilidi (deneysel)
+    private static final String PREF_BT_LOCK_DEVICE_ADDR = "bt_lock_device_addr";
+    private static final String PREF_BT_LOCK_DEVICE_NAME = "bt_lock_device_name";
+    private static final String PREF_BT_LOCK_ENABLED = "bt_lock_enabled";
+    private static final long BT_LOCK_TIMEOUT_MS = 15_000L; // 15 sn boyunca hiç görülmezse "uzak" say
+    // RSSI eşikleri (dBm) — yaklaşık: -60 çok yakın, -90 çok uzak
+    private static final int BT_NEAR_RSSI_DBM = -70;
+    private static final int BT_FAR_RSSI_DBM = -85;
+
+    private BluetoothAdapter mBtAdapter;
+    private String mBtLockDeviceAddr;
+    private String mBtLockDeviceName;
+    private long mBtLockLastSeen = 0L;
+    private boolean mBtLockReceiverRegistered = false;
+    private int mBtLockLastRssi = Integer.MIN_VALUE;
+    private boolean mBtLockWasNearOnce = false;
+    private TextView mBtLockStatusView;
+
+    private final Handler mBtHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mBtScanRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mBtAdapter == null) return;
+            if (!mBtAdapter.isEnabled()) return;
+            if (!mBtAdapter.isDiscovering()) {
+                mBtAdapter.startDiscovery();
+            }
+            // Daha sık tarama: yaklaşık 2 sn arayla
+            mBtHandler.postDelayed(this, 2_000L);
+        }
+    };
+
+    private final BroadcastReceiver mBtReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                if (device == null || mBtLockDeviceAddr == null) return;
+                String addr = device.getAddress();
+                if (addr != null && addr.equals(mBtLockDeviceAddr)) {
+                    mBtLockLastSeen = System.currentTimeMillis();
+                    int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
+                    mBtLockLastRssi = rssi;
+                    if (rssi != Short.MIN_VALUE && rssi >= BT_NEAR_RSSI_DBM) {
+                        // En az bir kez gerçekten yakında görmüş olalım
+                        mBtLockWasNearOnce = true;
+                    }
+                    updateBtLockStatusText();
+                }
+            } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                maybeAutoLockByBluetooth();
+            }
         }
     };
 
@@ -182,6 +244,26 @@ public class DemoActivity extends AppCompatActivity {
                 updateDoorLockStatus();
             });
         }
+
+        // Bluetooth kilidi (deneysel)
+        mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+        mBtLockStatusView = findViewById(R.id.tvBtLockStatus);
+        SwitchCompat swBtEnabled = findViewById(R.id.switchBtLockEnabled);
+        Button btnBtSelect = findViewById(R.id.btnBtLockSelectDevice);
+        if (mBtLockStatusView != null && swBtEnabled != null && btnBtSelect != null) {
+            loadBtLockPrefs(swBtEnabled);
+            updateBtLockStatusText();
+            btnBtSelect.setOnClickListener(v -> showBtDevicePicker(swBtEnabled));
+            swBtEnabled.setOnCheckedChangeListener((v, isChecked) -> {
+                getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                        .edit().putBoolean(PREF_BT_LOCK_ENABLED, isChecked).apply();
+                if (!isChecked) {
+                    stopBluetoothLockMonitoring();
+                } else {
+                    startBluetoothLockMonitoring();
+                }
+            });
+        }
     }
 
     @Override
@@ -219,12 +301,14 @@ public class DemoActivity extends AppCompatActivity {
         refreshAirQuality();
         updateDoorLockStatus();
         mHandler.post(mPollRunnable);
+        startBluetoothLockMonitoring();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mHandler.removeCallbacks(mPollRunnable);
+        stopBluetoothLockMonitoring();
     }
 
     private void updateEspStatus(TextView tv, int value) {
@@ -329,6 +413,139 @@ public class DemoActivity extends AppCompatActivity {
             human = "--";
         }
         tv.setText(getString(R.string.door_lock_status_format, human, v));
+    }
+
+    private void loadBtLockPrefs(SwitchCompat swEnabled) {
+        String addr = getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                .getString(PREF_BT_LOCK_DEVICE_ADDR, null);
+        String name = getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                .getString(PREF_BT_LOCK_DEVICE_NAME, null);
+        boolean enabled = getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                .getBoolean(PREF_BT_LOCK_ENABLED, false);
+        mBtLockDeviceAddr = addr;
+        mBtLockDeviceName = name;
+        swEnabled.setChecked(enabled);
+    }
+
+    private void showBtDevicePicker(SwitchCompat swEnabled) {
+        if (mBtAdapter == null) {
+            if (mBtLockStatusView != null) {
+                mBtLockStatusView.setText(R.string.bt_lock_toast_bt_off);
+            }
+            return;
+        }
+        if (!mBtAdapter.isEnabled()) {
+            if (mBtLockStatusView != null) {
+                mBtLockStatusView.setText(R.string.bt_lock_toast_bt_off);
+            }
+            return;
+        }
+        // Basit: eşleştirilmiş (bonded) cihazlardan seçim
+        java.util.Set<BluetoothDevice> bonded = mBtAdapter.getBondedDevices();
+        if (bonded == null || bonded.isEmpty()) {
+            if (mBtLockStatusView != null) {
+                mBtLockStatusView.setText(R.string.bt_lock_status_no_device);
+            }
+            return;
+        }
+        final java.util.List<BluetoothDevice> list = new java.util.ArrayList<>(bonded);
+        CharSequence[] names = new CharSequence[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            BluetoothDevice d = list.get(i);
+            String n = d.getName();
+            if (n == null || n.isEmpty()) n = d.getAddress();
+            names[i] = n + " (" + d.getAddress() + ")";
+        }
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(R.string.bt_lock_select_device)
+                .setItems(names, (dialog, which) -> {
+                    BluetoothDevice d = list.get(which);
+                    mBtLockDeviceAddr = d.getAddress();
+                    mBtLockDeviceName = d.getName() != null ? d.getName() : d.getAddress();
+                    mBtLockLastSeen = 0L;
+                    mBtLockLastRssi = Integer.MIN_VALUE;
+                    mBtLockWasNearOnce = false;
+                    getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                            .edit()
+                            .putString(PREF_BT_LOCK_DEVICE_ADDR, mBtLockDeviceAddr)
+                            .putString(PREF_BT_LOCK_DEVICE_NAME, mBtLockDeviceName)
+                            .apply();
+                    updateBtLockStatusText();
+                    if (swEnabled.isChecked()) {
+                        startBluetoothLockMonitoring();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void startBluetoothLockMonitoring() {
+        if (mBtAdapter == null) return;
+        boolean enabled = getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                .getBoolean(PREF_BT_LOCK_ENABLED, false);
+        if (!enabled) return;
+        // Fail-safe: Bluetooth kapalıysa asla kilitleme denemesi yapma
+        if (!mBtAdapter.isEnabled()) return;
+        if (!mBtLockReceiverRegistered) {
+            IntentFilter f = new IntentFilter();
+            f.addAction(BluetoothDevice.ACTION_FOUND);
+            f.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+            registerReceiver(mBtReceiver, f);
+            mBtLockReceiverRegistered = true;
+        }
+        mBtHandler.removeCallbacks(mBtScanRunnable);
+        mBtHandler.post(mBtScanRunnable);
+    }
+
+    private void stopBluetoothLockMonitoring() {
+        mBtHandler.removeCallbacks(mBtScanRunnable);
+        if (mBtAdapter != null && mBtAdapter.isDiscovering()) {
+            mBtAdapter.cancelDiscovery();
+        }
+        if (mBtLockReceiverRegistered) {
+            try {
+                unregisterReceiver(mBtReceiver);
+            } catch (Exception ignored) {}
+            mBtLockReceiverRegistered = false;
+        }
+    }
+
+    private void maybeAutoLockByBluetooth() {
+        if (mBtLockDeviceAddr == null) return;
+        boolean enabled = getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                .getBoolean(PREF_BT_LOCK_ENABLED, false);
+        if (!enabled) return;
+        if (mBtAdapter == null || !mBtAdapter.isEnabled()) return; // fail-safe: BT kapalıyken kilitleme
+        // Araç çalışıyorken (READY) asla otomatik kilitleme denemesi yapma
+        if (MG4Hardware.isVehicleReady()) return;
+        long now = System.currentTimeMillis();
+        // En az bir kez gerçekten yakında görmeden kilitlemeye kalkma
+        if (!mBtLockWasNearOnce) return;
+
+        boolean longTimeNoSee = (mBtLockLastSeen == 0L) || ((now - mBtLockLastSeen) > BT_LOCK_TIMEOUT_MS);
+        boolean veryWeakSignal = (mBtLockLastRssi != Integer.MIN_VALUE && mBtLockLastRssi <= BT_FAR_RSSI_DBM);
+
+        if (longTimeNoSee || veryWeakSignal) {
+            // Cihaz belirgin biçimde uzaklaştı: kilitle
+            MG4Hardware.setDoorLock(1);
+            updateDoorLockStatus();
+            android.widget.Toast.makeText(this, R.string.bt_lock_toast_locked, android.widget.Toast.LENGTH_SHORT).show();
+            // Bir kere kilitledikten sonra yeniden yakınlaşana kadar tekrar tetikleme
+            mBtLockWasNearOnce = false;
+        }
+    }
+
+    private void updateBtLockStatusText() {
+        if (mBtLockStatusView == null) return;
+        if (mBtLockDeviceAddr == null || mBtLockDeviceName == null) {
+            mBtLockStatusView.setText(R.string.bt_lock_status_no_device);
+        } else {
+            String base = getString(R.string.bt_lock_status_device, mBtLockDeviceName);
+            if (mBtLockLastRssi != Integer.MIN_VALUE) {
+                base = base + " (" + mBtLockLastRssi + " dBm)";
+            }
+            mBtLockStatusView.setText(base);
+        }
     }
 
     private void refreshWindowPercentages() {

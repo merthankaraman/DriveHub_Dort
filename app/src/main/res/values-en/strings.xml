@@ -302,6 +302,16 @@
     <string name="door_lock_btn_unlock">Unlock</string>
     <string name="door_lock_status_format">Door lock: %s (raw: %d)</string>
 
+    <!-- Demo: Bluetooth lock (experimental) -->
+    <string name="bt_lock_section_title">BLUETOOTH LOCK (EXPERIMENTAL)</string>
+    <string name="bt_lock_select_device">Select phone</string>
+    <string name="bt_lock_status_no_device">No device selected</string>
+    <string name="bt_lock_status_device">Device: %s</string>
+    <string name="bt_lock_enabled_label">Bluetooth lock enabled</string>
+    <string name="bt_lock_toast_locked">Bluetooth lock: sent vehicle lock command</string>
+    <string name="bt_lock_toast_bt_off">Bluetooth is off, cannot monitor lock</string>
+    <string name="bt_lock_toast_no_permission">Bluetooth permission missing</string>
+
     <!-- Driving history -->
     <string name="driving_history_title">Driving history</string>
     <string name="driving_history_table_start">Start</string>
