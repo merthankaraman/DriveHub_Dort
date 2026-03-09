@@ -885,11 +885,25 @@ public class MG4ControlService extends Service {
         }
     }
 
-    /** 360 kamera — sadece Intent ile aç; tuş taklidi yok. */
+    /** 360 kamera — önce modlu varsa onu, yoksa orijinal 360'ı aç. */
     private void open360() {
         Intent intent = new Intent();
-        intent.setComponent(new ComponentName("com.saicmotor.hmi.aroundview", "com.saicmotor.hmi.aroundview.AVMActivity"));
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        // Varsayılan: orijinal sistem 360
+        String pkg = "com.saicmotor.hmi.aroundview";
+        String cls = "com.saicmotor.hmi.aroundview.AVMActivity";
+
+        try {
+            // Eğer modlu 360 yüklüyse, onu kullan
+            getPackageManager().getPackageInfo("com.saicmotor.hmi.cam360v2", 0);
+            pkg = "com.saicmotor.hmi.cam360v2";
+            cls = "com.saicmotor.hmi.cam360v2.AVMActivity";
+        } catch (Exception ignored) {
+            // Modlu paket yoksa, orijinale düş
+        }
+
+        intent.setComponent(new ComponentName(pkg, cls));
         try {
             startActivity(intent);
             updateNotification("360 kamera açıldı");
@@ -908,10 +922,16 @@ public class MG4ControlService extends Service {
             List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(1);
             if (tasks != null && !tasks.isEmpty()) {
                 ComponentName top = tasks.get(0).topActivity;
-                if (top != null
-                    && "com.saicmotor.hmi.aroundview".equals(top.getPackageName())
-                    && "com.saicmotor.hmi.aroundview.AVMActivity".equals(top.getClassName())) {
-                    return true;
+                if (top != null) {
+                    String pkg = top.getPackageName();
+                    String cls = top.getClassName();
+                    boolean isOriginal = "com.saicmotor.hmi.aroundview".equals(pkg)
+                            && "com.saicmotor.hmi.aroundview.AVMActivity".equals(cls);
+                    boolean isMod = "com.saicmotor.hmi.cam360v2".equals(pkg)
+                            && "com.saicmotor.hmi.cam360v2.AVMActivity".equals(cls);
+                    if (isOriginal || isMod) {
+                        return true;
+                    }
                 }
             }
         } catch (Exception e) {
