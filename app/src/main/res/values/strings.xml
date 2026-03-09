@@ -88,6 +88,12 @@
     <string name="window_all">Tümü birden</string>
     <string name="window_level_format">Seviye: %d%%</string>
     <string name="window_scale_hint">Cam: 0 = tam kapalı, 100 = tam açık</string>
+    <string name="window_cmd_none">Komut: --</string>
+    <string name="window_cmd_step_close">Komut: 1 kademe kapat</string>
+    <string name="window_cmd_step_open">Komut: 1 kademe aç</string>
+    <string name="window_cmd_full_close">Komut: Tam kapat</string>
+    <string name="window_cmd_full_open">Komut: Tam aç</string>
+    <string name="window_command_hint">0=--, 1=1 kademe kapat, 2=1 kademe aç, 3=Tam kapat, 4=Tam aç</string>
 
     <!-- Hava kalitesi (Demo) -->
     <string name="air_quality_section_title">HAVA KALİTESİ</string>

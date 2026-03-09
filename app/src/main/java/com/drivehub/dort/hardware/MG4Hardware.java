@@ -642,7 +642,10 @@ public class MG4Hardware {
     }
 
     /** Uzaklaşma ile kilitleme aç (1) veya kapat (0). */
-    public static boolean setLeaveAutoLockMode(int value) { return vsSetInt("setLeaveAutoLockMode", value); }
+    public static boolean setLeaveAutoLockMode(int value) {
+        if (sLogEnabled) Log.i(TAG, "DEMO: setLeaveAutoLockMode(" + value + ")");
+        return vsSetInt("setLeaveAutoLockMode", value);
+    }
 
     /** Yaklaşma ile açma: 0=Kapalı, 1=Açık. Anahtar yaklaşınca kilit açılır (PEPS). */
     public static int getApproachUnlockMode() {
@@ -652,7 +655,10 @@ public class MG4Hardware {
     }
 
     /** Yaklaşma ile açma aç (1) veya kapat (0). */
-    public static boolean setApproachUnlockMode(int value) { return vsSetInt("setApproachUnlockMode", value); }
+    public static boolean setApproachUnlockMode(int value) {
+        if (sLogEnabled) Log.i(TAG, "DEMO: setApproachUnlockMode(" + value + ")");
+        return vsSetInt("setApproachUnlockMode", value);
+    }
 
     /** Yakın alan açma (kapı kolu yakınında). */
     public static int getNearfieldUnlockMode() {
@@ -661,7 +667,10 @@ public class MG4Hardware {
         return v;
     }
 
-    public static boolean setNearfieldUnlockMode(int value) { return vsSetInt("setNearfieldUnlockMode", value); }
+    public static boolean setNearfieldUnlockMode(int value) {
+        if (sLogEnabled) Log.i(TAG, "DEMO: setNearfieldUnlockMode(" + value + ")");
+        return vsSetInt("setNearfieldUnlockMode", value);
+    }
 
     /** Katman 3: VehicleControlService (kapı/cam) — int setter. */
     private static boolean vsControlSetInt(String methodName, int value) {
@@ -800,7 +809,10 @@ public class MG4Hardware {
     }
 
     /** ESP kapat (0) veya aç (1). Karlı/buzda tekerleklerin tutunması için 0 denenebilir. */
-    public static boolean setEspSwitch(int value) { return vsControlSetInt("setEspSwitch", value); }
+    public static boolean setEspSwitch(int value) {
+        if (sLogEnabled) Log.i(TAG, "DEMO: setEspSwitch(" + value + ")");
+        return vsControlSetInt("setEspSwitch", value);
+    }
 
     // -------------------------------------------------------------------------
     // Hava kalitesi / Klima — IAirConditionService (hub.getService("aircondition"))

@@ -186,16 +186,43 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:gravity="center"
-        android:text="@string/window_level_format"
+        android:text="@string/window_cmd_none"
         android:textColor="#8B949E"
         android:textSize="14sp"/>
-    <SeekBar
-        android:id="@+id/seekBarWindowLevel"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:max="100"
-        android:progress="0"/>
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btnWindowStepClose"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:text="@string/window_cmd_step_close"/>
+        <Button
+            android:id="@+id/btnWindowStepOpen"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:text="@string/window_cmd_step_open"/>
+        <Button
+            android:id="@+id/btnWindowFullClose"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:text="@string/window_cmd_full_close"/>
+        <Button
+            android:id="@+id/btnWindowFullOpen"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="@string/window_cmd_full_open"/>
+    </LinearLayout>
     <TextView
         android:id="@+id/tvWindowPercentages"
         android:layout_width="match_parent"
@@ -209,7 +236,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
         android:gravity="center"
-        android:text="@string/window_scale_hint"
+        android:text="@string/window_command_hint"
         android:textColor="#6E7681"
         android:textSize="11sp"/>
 

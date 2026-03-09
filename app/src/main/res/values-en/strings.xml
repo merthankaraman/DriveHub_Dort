@@ -62,6 +62,12 @@
     <string name="window_all">All</string>
     <string name="window_level_format">Level: %d%%</string>
     <string name="window_scale_hint">Window: 0 = fully closed, 100 = fully open</string>
+    <string name="window_cmd_none">Command: --</string>
+    <string name="window_cmd_step_close">Command: Step close</string>
+    <string name="window_cmd_step_open">Command: Step open</string>
+    <string name="window_cmd_full_close">Command: Full close</string>
+    <string name="window_cmd_full_open">Command: Full open</string>
+    <string name="window_command_hint">0=--, 1=step close, 2=step open, 3=Full close, 4=Full open</string>
 
     <!-- Air quality (Demo) -->
     <string name="air_quality_section_title">AIR QUALITY</string>

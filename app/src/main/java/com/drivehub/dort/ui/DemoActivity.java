@@ -1,8 +1,10 @@
 package com.drivehub.dort.ui;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.ArrayAdapter;
-import android.widget.SeekBar;
+import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -23,6 +25,17 @@ import java.util.Locale;
  * Arka planda veya periyodik yenileme yok; sadece kullanıcı Demo'ya girip çıktığında güncellenir.
  */
 public class DemoActivity extends AppCompatActivity {
+
+    private Spinner mWindowSpinner;
+    private TextView mWindowLevel;
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mPollRunnable = new Runnable() {
+        @Override
+        public void run() {
+            pollDemoValues();
+            mHandler.postDelayed(this, 2000); // 2 saniyede bir
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,11 +97,10 @@ public class DemoActivity extends AppCompatActivity {
         }
 
         // Pencere: spinner + seekbar + yüzdeler
-        Spinner spinner = findViewById(R.id.spinnerWindowSelect);
-        SeekBar seekBar = findViewById(R.id.seekBarWindowLevel);
-        TextView tvLevel = findViewById(R.id.tvWindowLevel);
+        mWindowSpinner = findViewById(R.id.spinnerWindowSelect);
+        mWindowLevel = findViewById(R.id.tvWindowLevel);
         TextView tvPercentages = findViewById(R.id.tvWindowPercentages);
-        if (spinner != null && seekBar != null && tvLevel != null) {
+        if (mWindowSpinner != null && mWindowLevel != null) {
             String[] items = {
                 getString(R.string.window_driver),
                 getString(R.string.window_passenger),
@@ -98,41 +110,27 @@ public class DemoActivity extends AppCompatActivity {
             };
             ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, items);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinner.setAdapter(adapter);
+            mWindowSpinner.setAdapter(adapter);
 
-            seekBar.setMax(100);
-            seekBar.setProgress(0);
-            tvLevel.setText(getString(R.string.window_level_format, 0));
+            Button btnStepClose = findViewById(R.id.btnWindowStepClose);
+            Button btnStepOpen = findViewById(R.id.btnWindowStepOpen);
+            Button btnFullClose = findViewById(R.id.btnWindowFullClose);
+            Button btnFullOpen = findViewById(R.id.btnWindowFullOpen);
 
-            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar s, int progress, boolean fromUser) {
-                    if (!fromUser) return;
-                    tvLevel.setText(getString(R.string.window_level_format, progress));
-                    float value = (float) progress;
-                    int sel = spinner.getSelectedItemPosition();
-                    if (sel < 0) sel = 0;
-                    switch (sel) {
-                        case 0: MG4Hardware.setDriveWindow(value); break;
-                        case 1: MG4Hardware.setPassengerWindow(value); break;
-                        case 2: MG4Hardware.setLeftRearWindow(value); break;
-                        case 3: MG4Hardware.setRightRearWindow(value); break;
-                        case 4:
-                            MG4Hardware.setDriveWindow(value);
-                            MG4Hardware.setPassengerWindow(value);
-                            MG4Hardware.setLeftRearWindow(value);
-                            MG4Hardware.setRightRearWindow(value);
-                            break;
-                        default: break;
-                    }
-                }
-                @Override
-                public void onStartTrackingTouch(SeekBar s) {}
-                @Override
-                public void onStopTrackingTouch(SeekBar s) {
-                    refreshWindowPercentages();
-                }
-            });
+            if (btnStepClose != null) {
+                btnStepClose.setOnClickListener(v -> sendWindowCommand(1));
+            }
+            if (btnStepOpen != null) {
+                btnStepOpen.setOnClickListener(v -> sendWindowCommand(2));
+            }
+            if (btnFullClose != null) {
+                btnFullClose.setOnClickListener(v -> sendWindowCommand(3));
+            }
+            if (btnFullOpen != null) {
+                btnFullOpen.setOnClickListener(v -> sendWindowCommand(4));
+            }
+
+            updateWindowCommandLabel(0);
             refreshWindowPercentages();
         }
         refreshAirQuality();
@@ -171,6 +169,13 @@ public class DemoActivity extends AppCompatActivity {
             updateNearfieldUnlockStatus(tvNearfieldUnlockStatus, mode);
         }
         refreshAirQuality();
+        mHandler.post(mPollRunnable);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mHandler.removeCallbacks(mPollRunnable);
     }
 
     private void updateEspStatus(TextView tv, int value) {
@@ -228,6 +233,49 @@ public class DemoActivity extends AppCompatActivity {
         }
     }
 
+    /** ESP + kilitleme/kilit açma + pencere yüzdeleri ve hava kalitesini periyodik güncelle. */
+    private void pollDemoValues() {
+        // ESP
+        SwitchCompat switchEsp = findViewById(R.id.switchEsp);
+        TextView tvEspStatus = findViewById(R.id.tvEspStatus);
+        if (switchEsp != null) {
+            int esp = MG4Hardware.getEspSwitch();
+            if (esp >= 0) switchEsp.setChecked(esp == 1);
+            updateEspStatus(tvEspStatus, esp);
+        }
+
+        // Uzaklaşma ile kilitleme
+        SwitchCompat switchLeaveAutoLock = findViewById(R.id.switchLeaveAutoLock);
+        TextView tvLeaveAutoLockStatus = findViewById(R.id.tvLeaveAutoLockStatus);
+        if (switchLeaveAutoLock != null) {
+            int mode = MG4Hardware.getLeaveAutoLockMode();
+            if (mode >= 0) switchLeaveAutoLock.setChecked(mode == 1);
+            updateLeaveAutoLockStatus(tvLeaveAutoLockStatus, mode);
+        }
+
+        // Yaklaşınca kilidi aç
+        SwitchCompat switchApproachUnlock = findViewById(R.id.switchApproachUnlock);
+        TextView tvApproachUnlockStatus = findViewById(R.id.tvApproachUnlockStatus);
+        if (switchApproachUnlock != null) {
+            int mode = MG4Hardware.getApproachUnlockMode();
+            if (mode >= 0) switchApproachUnlock.setChecked(mode == 1);
+            updateApproachUnlockStatus(tvApproachUnlockStatus, mode);
+        }
+
+        // Yakın alan kilidi aç
+        SwitchCompat switchNearfieldUnlock = findViewById(R.id.switchNearfieldUnlock);
+        TextView tvNearfieldUnlockStatus = findViewById(R.id.tvNearfieldUnlockStatus);
+        if (switchNearfieldUnlock != null) {
+            int mode = MG4Hardware.getNearfieldUnlockMode();
+            if (mode >= 0) switchNearfieldUnlock.setChecked(mode == 1);
+            updateNearfieldUnlockStatus(tvNearfieldUnlockStatus, mode);
+        }
+
+        // Pencere yüzdeleri + hava kalitesi
+        refreshWindowPercentages();
+        refreshAirQuality();
+    }
+
     private void refreshWindowPercentages() {
         TextView tv = findViewById(R.id.tvWindowPercentages);
         if (tv == null) return;
@@ -243,5 +291,62 @@ public class DemoActivity extends AppCompatActivity {
                 + getString(R.string.window_passenger) + " " + sp + "% · "
                 + getString(R.string.window_rear_left) + " " + sl + "% · "
                 + getString(R.string.window_rear_right) + " " + sr + "%");
+    }
+
+    private void sendWindowCommand(int command) {
+        if (command < 1 || command > 4) return;
+        if (mWindowSpinner == null) return;
+        int sel = mWindowSpinner.getSelectedItemPosition();
+        if (sel < 0) sel = 0;
+
+        switch (sel) {
+            case 0:
+                MG4Hardware.setDriveWindow((float) command);
+                break;
+            case 1:
+                MG4Hardware.setPassengerWindow((float) command);
+                break;
+            case 2:
+                MG4Hardware.setLeftRearWindow((float) command);
+                break;
+            case 3:
+                MG4Hardware.setRightRearWindow((float) command);
+                break;
+            case 4:
+                MG4Hardware.setDriveWindow((float) command);
+                MG4Hardware.setPassengerWindow((float) command);
+                MG4Hardware.setLeftRearWindow((float) command);
+                MG4Hardware.setRightRearWindow((float) command);
+                break;
+            default:
+                break;
+        }
+
+        updateWindowCommandLabel(command);
+        refreshWindowPercentages();
+    }
+
+    private void updateWindowCommandLabel(int command) {
+        if (mWindowLevel == null) return;
+        int resId;
+        switch (command) {
+            case 1:
+                resId = R.string.window_cmd_step_close;
+                break;
+            case 2:
+                resId = R.string.window_cmd_step_open;
+                break;
+            case 3:
+                resId = R.string.window_cmd_full_close;
+                break;
+            case 4:
+                resId = R.string.window_cmd_full_open;
+                break;
+            case 0:
+            default:
+                resId = R.string.window_cmd_none;
+                break;
+        }
+        mWindowLevel.setText(getString(resId));
     }
 }
