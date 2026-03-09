@@ -1,21 +1,16 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+## DriveHub Dort – ProGuard/R8 rules
 #
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Not: R8, manifest'te kayıtlı Activity/Service/BroadcastReceiver sınıflarını
+# zaten otomatik olarak korur (silmez). Bu dosyada sadece özel durumları
+# tanımlıyoruz.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Eğer ileride @Keep anotasyonu kullanırsan, bu üyeler olduğu gibi korunur.
+-keepclassmembers class * {
+    @androidx.annotation.Keep *;
+}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
+## İsteğe bağlı: stack trace debug için satır numaralarını koru
 #-keepattributes SourceFile,LineNumberTable
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
+## Satır numaralarını koruyup sadece kaynak dosya adını gizlemek için
 #-renamesourcefileattribute SourceFile

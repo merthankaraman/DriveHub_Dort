@@ -1519,9 +1519,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void resetConsumptionTrip() {
-        MG4Hardware.resetConsumptionTrip();
+        // Görüntülenen moda göre ilgili sayaçları sıfırla:
+        // - CONSUMPTION_MODE_CURRENT  → Trip (Sürüş) sayaçları
+        // - CONSUMPTION_MODE_LIFETIME → Hayat boyu tüketim sayaçları
+        // - CONSUMPTION_MODE_SINCE_START → Motor çalıştıktan itibaren sayaçlar (otomatik; sıfırlanmaz)
+        if (mConsumptionDisplayMode == CONSUMPTION_MODE_CURRENT) {
+            MG4Hardware.resetConsumptionTrip();
+            Toast.makeText(this, getString(R.string.consumption_trip_reset_toast), Toast.LENGTH_SHORT).show();
+        } else if (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME) {
+            MG4Hardware.resetLifetime(this);
+            Toast.makeText(this, getString(R.string.consumption_trip_reset_toast), Toast.LENGTH_SHORT).show();
+        } else if (mConsumptionDisplayMode == CONSUMPTION_MODE_SINCE_START) {
+            // Motor çalıştıktan itibaren sayaçları kullanıcı sıfırlayamaz; bu mod sadece READY durumuna göre baştan başlar.
+            // Burada hiçbir şey yapmıyoruz (gerekirse ayrı bir toast eklenebilir).
+        }
         refreshConsumptionPanel();
-        Toast.makeText(this, getString(R.string.consumption_trip_reset_toast), Toast.LENGTH_SHORT).show();
     }
 
     private void setConsumptionDisplayMode(int mode) {
@@ -1535,6 +1547,7 @@ public class MainActivity extends AppCompatActivity {
         Button btnSince = findViewById(R.id.btnConsumptionModeSinceStart);
         Button btnCurrent = findViewById(R.id.btnConsumptionModeCurrent);
         Button btnLifetime = findViewById(R.id.btnConsumptionModeLifetime);
+        Button btnReset = findViewById(R.id.btnConsumptionResetTrip);
         if (btnSince == null || btnCurrent == null || btnLifetime == null) return;
         boolean sinceActive = (mConsumptionDisplayMode == CONSUMPTION_MODE_SINCE_START);
         boolean currentActive = (mConsumptionDisplayMode == CONSUMPTION_MODE_CURRENT);
@@ -1549,6 +1562,11 @@ public class MainActivity extends AppCompatActivity {
         btnCurrent.setTextColor(currentActive ? textActive : textInactive);
         btnLifetime.setBackgroundTintList(android.content.res.ColorStateList.valueOf(lifetimeActive ? activeColor : inactiveColor));
         btnLifetime.setTextColor(lifetimeActive ? textActive : textInactive);
+
+        // Motor çalıştıktan itibaren (SINCE_START) modunda reset düğmesini gizle
+        if (btnReset != null) {
+            btnReset.setVisibility(sinceActive ? View.GONE : View.VISIBLE);
+        }
     }
 
     /** Panelde servisin güncellediği önbellek gösterilir. Şu anki veriler = trip (Yol sıfırla); Motor çalıştıktan itibaren = driveGraph (sürüş geçmişi). */

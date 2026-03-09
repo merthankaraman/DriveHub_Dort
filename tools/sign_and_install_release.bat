@@ -14,8 +14,8 @@ setlocal EnableDelayedExpansion
 
 set SCRIPT_DIR=%~dp0
 set PROJECT_DIR=%SCRIPT_DIR%..
-set APK_IN=%PROJECT_DIR%\app\build\outputs\apk\car\debug\app-car-debug.apk
-set APK_OUT=%PROJECT_DIR%\app\build\outputs\apk\car\debug\app-debug-signed.apk
+set APK_IN=%PROJECT_DIR%\app\build\outputs\apk\car\release\app-car-release-unsigned.apk
+set APK_OUT=%PROJECT_DIR%\app\build\outputs\apk\car\release\app-release-signed.apk
 set PLATFORM_PK8=%SCRIPT_DIR%platform.pk8
 set PLATFORM_PEM=%SCRIPT_DIR%platform.x509.pem
 

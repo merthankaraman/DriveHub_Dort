@@ -15,7 +15,7 @@ android {
         minSdk 28
         targetSdk 36
         versionCode 1
-        versionName "0.7.1"
+        versionName "0.7.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -38,10 +38,10 @@ android {
     buildTypes {
         debug {
             // Android Studio Run butonu → debug keystore (hızlı geliştirme)
-            // Araca yüklemek için sign_and_install.bat kullan
         }
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

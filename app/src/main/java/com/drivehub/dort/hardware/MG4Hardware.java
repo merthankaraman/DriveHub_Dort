@@ -1293,6 +1293,12 @@ public class MG4Hardware {
     public static int getLastGear() { return sLastGear; }
     public static double getDriveGraphEnergyKwh() { return sDriveGraphEnergyKwh; }
     public static double getDriveGraphDistanceKm() { return sDriveGraphDistanceKm; }
+    /** Hayat boyu sayaçlarını ve persist değerlerini sıfırla. */
+    public static void resetLifetime(Context ctx) {
+        sLifetimeKm = 0.0;
+        sLifetimeKwh = 0.0;
+        persistLifetimeToPrefs(ctx);
+    }
     public static void resetDriveGraphCounters() {
         sDriveGraphEnergyKwh = 0.0;
         sDriveGraphDistanceKm = 0.0;
