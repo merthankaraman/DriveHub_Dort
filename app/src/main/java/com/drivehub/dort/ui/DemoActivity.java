@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -28,6 +29,9 @@ public class DemoActivity extends AppCompatActivity {
 
     private Spinner mWindowSpinner;
     private TextView mWindowLevel;
+    private TextView mWindowTargetLabel;
+    private int mWindowTarget = 0;
+    private boolean mWindowAutoRunning = false;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private final Runnable mPollRunnable = new Runnable() {
         @Override
@@ -99,6 +103,9 @@ public class DemoActivity extends AppCompatActivity {
         // Pencere: spinner + seekbar + yüzdeler
         mWindowSpinner = findViewById(R.id.spinnerWindowSelect);
         mWindowLevel = findViewById(R.id.tvWindowLevel);
+        mWindowTargetLabel = findViewById(R.id.tvWindowTarget);
+        SeekBar seekTarget = findViewById(R.id.seekBarWindowTarget);
+        Button btnGoToTarget = findViewById(R.id.btnWindowGoToTarget);
         TextView tvPercentages = findViewById(R.id.tvWindowPercentages);
         if (mWindowSpinner != null && mWindowLevel != null) {
             String[] items = {
@@ -132,8 +139,49 @@ public class DemoActivity extends AppCompatActivity {
 
             updateWindowCommandLabel(0);
             refreshWindowPercentages();
+
+            if (seekTarget != null && mWindowTargetLabel != null) {
+                seekTarget.setMax(100);
+                seekTarget.setProgress(0);
+                updateWindowTargetLabel(0);
+                seekTarget.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        if (!fromUser) return;
+                        mWindowTarget = progress;
+                        updateWindowTargetLabel(progress);
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {}
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {}
+                });
+            }
+
+            if (btnGoToTarget != null) {
+                btnGoToTarget.setOnClickListener(v -> startWindowAutoProgram());
+            }
         }
         refreshAirQuality();
+
+        // Kapı kilidi butonları
+        Button btnDoorLock = findViewById(R.id.btnDoorLock);
+        Button btnDoorUnlock = findViewById(R.id.btnDoorUnlock);
+        if (btnDoorLock != null) {
+            btnDoorLock.setOnClickListener(v -> {
+                MG4Hardware.setDoorLock(1);
+                updateDoorLockStatus();
+            });
+        }
+        if (btnDoorUnlock != null) {
+            btnDoorUnlock.setOnClickListener(v -> {
+                // MG4 binder tarafında 2 değeri kilit açma komutu gibi davranıyor
+                MG4Hardware.setDoorLock(2);
+                updateDoorLockStatus();
+            });
+        }
     }
 
     @Override
@@ -169,6 +217,7 @@ public class DemoActivity extends AppCompatActivity {
             updateNearfieldUnlockStatus(tvNearfieldUnlockStatus, mode);
         }
         refreshAirQuality();
+        updateDoorLockStatus();
         mHandler.post(mPollRunnable);
     }
 
@@ -212,16 +261,6 @@ public class DemoActivity extends AppCompatActivity {
             float t = MG4Hardware.getOutCarTemp();
             tvOutTemp.setText(getString(R.string.air_quality_outdoor_temp,
                     !Float.isNaN(t) ? String.format(Locale.getDefault(), "%.1f °C", t) : unknown));
-        }
-        TextView tvDrvTemp = findViewById(R.id.tvAirQualityDrvTemp);
-        TextView tvPsgTemp = findViewById(R.id.tvAirQualityPsgTemp);
-        if (tvDrvTemp != null) {
-            int drv = MG4Hardware.getDrvTemp();
-            tvDrvTemp.setText(getString(R.string.air_quality_drv_temp, drv >= 0 ? String.valueOf(drv) : unknown));
-        }
-        if (tvPsgTemp != null) {
-            int psg = MG4Hardware.getPsgTemp();
-            tvPsgTemp.setText(getString(R.string.air_quality_psg_temp, psg >= 0 ? String.valueOf(psg) : unknown));
         }
         if (tvFilter != null) {
             int f = MG4Hardware.getPm25Filter();
@@ -274,6 +313,22 @@ public class DemoActivity extends AppCompatActivity {
         // Pencere yüzdeleri + hava kalitesi
         refreshWindowPercentages();
         refreshAirQuality();
+        updateDoorLockStatus();
+    }
+
+    private void updateDoorLockStatus() {
+        TextView tv = findViewById(R.id.tvDoorLockStatus);
+        if (tv == null) return;
+        int v = MG4Hardware.getDoorLock();
+        String human;
+        if (v == 1 || v == 2) {
+            human = getString(R.string.door_lock_lock);
+        } else if (v == 0) {
+            human = getString(R.string.door_lock_unlock);
+        } else {
+            human = "--";
+        }
+        tv.setText(getString(R.string.door_lock_status_format, human, v));
     }
 
     private void refreshWindowPercentages() {
@@ -291,6 +346,78 @@ public class DemoActivity extends AppCompatActivity {
                 + getString(R.string.window_passenger) + " " + sp + "% · "
                 + getString(R.string.window_rear_left) + " " + sl + "% · "
                 + getString(R.string.window_rear_right) + " " + sr + "%");
+    }
+
+    private void startWindowAutoProgram() {
+        if (mWindowSpinner == null) return;
+        mWindowAutoRunning = true;
+        stepWindowTowardsTarget();
+    }
+
+    private void stepWindowTowardsTarget() {
+        if (!mWindowAutoRunning || mWindowSpinner == null) return;
+
+        int sel = mWindowSpinner.getSelectedItemPosition();
+        if (sel < 0) sel = 0;
+
+        float current;
+        switch (sel) {
+            case 0:
+                current = MG4Hardware.getDriveWindow();
+                break;
+            case 1:
+                current = MG4Hardware.getPassengerWindow();
+                break;
+            case 2:
+                current = MG4Hardware.getLeftRearWindow();
+                break;
+            case 3:
+                current = MG4Hardware.getRightRearWindow();
+                break;
+            default:
+                current = -1f;
+                break;
+        }
+
+        if (current < 0f || Float.isNaN(current)) {
+            mWindowAutoRunning = false;
+            return;
+        }
+
+        float target = mWindowTarget;
+
+        // Uç değerlerde direkt tam aç / tam kapat komutlarını kullan
+        if (target <= 5f) {
+            sendWindowCommand(3); // Tam kapat
+            mWindowAutoRunning = false;
+            refreshWindowPercentages();
+            return;
+        } else if (target >= 95f) {
+            sendWindowCommand(4); // Tam aç
+            mWindowAutoRunning = false;
+            refreshWindowPercentages();
+            return;
+        }
+
+        float diff = target - current;
+        if (Math.abs(diff) <= 15f) {
+            // Hedefe yeterince yaklaştık (±15%)
+            mWindowAutoRunning = false;
+            refreshWindowPercentages();
+            return;
+        }
+
+        // Hedefe doğru bir kademe git
+        if (diff > 0f) {
+            // Açma yönü
+            sendWindowCommand(2);
+        } else {
+            // Kapama yönü
+            sendWindowCommand(1);
+        }
+
+        // Biraz bekleyip tekrar ölç
+        mHandler.postDelayed(this::stepWindowTowardsTarget, 800);
     }
 
     private void sendWindowCommand(int command) {
@@ -348,5 +475,10 @@ public class DemoActivity extends AppCompatActivity {
                 break;
         }
         mWindowLevel.setText(getString(resId));
+    }
+
+    private void updateWindowTargetLabel(int target) {
+        if (mWindowTargetLabel == null) return;
+        mWindowTargetLabel.setText(getString(R.string.window_target_label, target));
     }
 }

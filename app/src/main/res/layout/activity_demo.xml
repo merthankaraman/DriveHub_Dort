@@ -224,6 +224,29 @@
             android:text="@string/window_cmd_full_open"/>
     </LinearLayout>
     <TextView
+        android:id="@+id/tvWindowTarget"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="@string/window_target_label"
+        android:textColor="#8B949E"
+        android:textSize="14sp"/>
+    <SeekBar
+        android:id="@+id/seekBarWindowTarget"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:max="100"
+        android:progress="0"/>
+    <Button
+        android:id="@+id/btnWindowGoToTarget"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="4dp"
+        android:text="@string/window_target_go"/>
+    <TextView
         android:id="@+id/tvWindowPercentages"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -239,6 +262,44 @@
         android:text="@string/window_command_hint"
         android:textColor="#6E7681"
         android:textSize="11sp"/>
+
+    <!-- Kapı kilidi -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center_horizontal"
+        android:text="@string/door_lock_title"
+        android:textColor="@color/status_value"
+        android:textSize="18sp"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btnDoorLock"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="@string/door_lock_btn_lock"/>
+        <Button
+            android:id="@+id/btnDoorUnlock"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="@string/door_lock_btn_unlock"/>
+    </LinearLayout>
+    <TextView
+        android:id="@+id/tvDoorLockStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:textColor="#6E7681"
+        android:textSize="12sp"/>
 
     <!-- Hava kalitesi -->
     <TextView
@@ -258,20 +319,6 @@
         android:textSize="14sp"/>
     <TextView
         android:id="@+id/tvAirQualityOutdoorTemp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:textColor="#8B949E"
-        android:textSize="14sp"/>
-    <TextView
-        android:id="@+id/tvAirQualityDrvTemp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:textColor="#8B949E"
-        android:textSize="14sp"/>
-    <TextView
-        android:id="@+id/tvAirQualityPsgTemp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"

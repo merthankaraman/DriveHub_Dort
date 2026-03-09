@@ -742,7 +742,16 @@ public class MG4Hardware {
 
     /** Kapı kilitle (1) veya aç (0). VehicleSettingsService bağlıysa kullanır. */
     public static boolean setDoorLock(int lock) {
-        return vsControlSetInt("setDoorLock", lock);
+        boolean ok = vsControlSetInt("setDoorLock", lock);
+        if (sLogEnabled) Log.i(TAG, "DEMO: setDoorLock(" + lock + ") => " + ok);
+        return ok;
+    }
+
+    /** Kapı kilit durumu: 0=Açık, 1=Kilitli. Okunamazsa -1. */
+    public static int getDoorLock() {
+        int v = vsControlGetInt("getDoorLock");
+        if (sLogEnabled) Log.i(TAG, "DEMO: getDoorLock => " + v);
+        return v;
     }
 
     /** Sürücü camı: 0f=kapalı, 100f=tam açık. */
@@ -860,18 +869,7 @@ public class MG4Hardware {
         if (sLogEnabled) Log.i(TAG, "DEMO: getOutCarTemp => " + (Float.isNaN(v) ? "NaN" : v));
         return v;
     }
-    /** Sürücü bölge sıcaklığı (hedef veya sensör; birim araça göre). Okunamazsa -1. */
-    public static int getDrvTemp() {
-        int v = acGetInt("getDrvTemp");
-        if (sLogEnabled) Log.i(TAG, "DEMO: getDrvTemp => " + v);
-        return v;
-    }
-    /** Yolcu bölge sıcaklığı (hedef veya sensör). Okunamazsa -1. */
-    public static int getPsgTemp() {
-        int v = acGetInt("getPsgTemp");
-        if (sLogEnabled) Log.i(TAG, "DEMO: getPsgTemp => " + v);
-        return v;
-    }
+    // getDrvTemp / getPsgTemp bilinçli olarak Demo ekranında kullanılmıyor (klima set derecesi).
 
     /** Hava kalitesi hassasiyeti (AQS). IVehicleSettingService. Okunamazsa -1. */
     public static int getAqsSensitivity() {

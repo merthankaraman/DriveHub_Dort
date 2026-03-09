@@ -68,13 +68,13 @@
     <string name="window_cmd_full_close">Command: Full close</string>
     <string name="window_cmd_full_open">Command: Full open</string>
     <string name="window_command_hint">0=--, 1=step close, 2=step open, 3=Full close, 4=Full open</string>
+    <string name="window_target_label">Target level: %d%%</string>
+    <string name="window_target_go">Go to level</string>
 
     <!-- Air quality (Demo) -->
     <string name="air_quality_section_title">AIR QUALITY</string>
     <string name="air_quality_pm25">PM2.5 (dust/particles): %s</string>
     <string name="air_quality_outdoor_temp">Outdoor temp: %s</string>
-    <string name="air_quality_drv_temp">Interior temp (driver): %s</string>
-    <string name="air_quality_psg_temp">Interior temp (passenger): %s</string>
     <string name="air_quality_pm25_filter">PM2.5 filter: %s</string>
     <string name="air_quality_aqs">AQS sensitivity: %s</string>
     <string name="air_quality_unknown">--</string>
@@ -294,6 +294,14 @@
     <string name="consumption_avg">Avg. consumption </string>
     <string name="consumption_lifetime">Lifetime</string>
     <string name="consumption_trip_reset_toast">Trip reset.</string>
+
+    <!-- Demo: door lock -->
+    <string name="door_lock_title">DOOR LOCK</string>
+    <string name="door_lock_lock">Locked</string>
+    <string name="door_lock_unlock">Unlocked</string>
+    <string name="door_lock_btn_lock">Lock</string>
+    <string name="door_lock_btn_unlock">Unlock</string>
+    <string name="door_lock_status_format">Door lock: %s (raw: %d)</string>
 
     <!-- Driving history -->
     <string name="driving_history_title">Driving history</string>

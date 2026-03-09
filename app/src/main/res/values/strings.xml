@@ -94,13 +94,13 @@
     <string name="window_cmd_full_close">Komut: Tam kapat</string>
     <string name="window_cmd_full_open">Komut: Tam aç</string>
     <string name="window_command_hint">0=--, 1=1 kademe kapat, 2=1 kademe aç, 3=Tam kapat, 4=Tam aç</string>
+    <string name="window_target_label">Hedef seviye: %d%%</string>
+    <string name="window_target_go">Bu seviyeye git</string>
 
     <!-- Hava kalitesi (Demo) -->
     <string name="air_quality_section_title">HAVA KALİTESİ</string>
     <string name="air_quality_pm25">PM2.5 (toz/partikül): %s</string>
     <string name="air_quality_outdoor_temp">Dış sıcaklık: %s</string>
-    <string name="air_quality_drv_temp">İç sıcaklık (sürücü): %s</string>
-    <string name="air_quality_psg_temp">İç sıcaklık (yolcu): %s</string>
     <string name="air_quality_pm25_filter">PM2.5 filtre: %s</string>
     <string name="air_quality_aqs">AQS hassasiyeti: %s</string>
     <string name="air_quality_unknown">--</string>
@@ -294,6 +294,14 @@
     <string name="consumption_avg">Ort. tüketim </string>
     <string name="consumption_lifetime">Hayat boyu</string>
     <string name="consumption_trip_reset_toast">Sürüş sıfırlandı.</string>
+
+    <!-- Demo: kapı kilidi -->
+    <string name="door_lock_title">KAPI KİLİDİ</string>
+    <string name="door_lock_lock">Kilitli</string>
+    <string name="door_lock_unlock">Açık</string>
+    <string name="door_lock_btn_lock">Kilitli yap</string>
+    <string name="door_lock_btn_unlock">Aç</string>
+    <string name="door_lock_status_format">Kapı kilidi: %s (ham: %d)</string>
 
     <!-- Driving history -->
     <string name="driving_history_title">Sürüş geçmişi</string>
