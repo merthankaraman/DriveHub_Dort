@@ -188,12 +188,7 @@ public class MG4ControlService extends Service {
 
     /** Şarj bittiğinde oturumu hafızaya kaydet; uygulama kapalı veya başka ekrandayken de çalışır. */
     private static final long CHARGING_CHECK_INTERVAL_MS = 10_000L;
-    /** SharedPreferences anahtarı: şarjdayken ekran uyuma engelle (varsayılan false). */
-    public static final String PREF_CHARGING_WAKE_LOCK = "charging_wake_lock";
     private final Handler mChargingCheckHandler = new Handler(Looper.getMainLooper());
-    /** Şarjdayken ekran kapalı olsa bile cihaz uyumaya geçmesin (PARTIAL_WAKE_LOCK). */
-    private PowerManager.WakeLock mChargingWakeLock;
-
     private final Runnable mChargingCheckRunnable = new Runnable() {
         @Override
         public void run() {
@@ -202,7 +197,6 @@ public class MG4ControlService extends Service {
                     Log.i(TAG, "Şarj oturumu arka planda kaydedildi.");
                 }
             }
-            updateChargingWakeLock();
             mChargingCheckHandler.postDelayed(this, CHARGING_CHECK_INTERVAL_MS);
         }
     };
@@ -333,11 +327,6 @@ public class MG4ControlService extends Service {
             }
         }
 
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        if (pm != null) {
-            mChargingWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "drivehub_dort:charging");
-            mChargingWakeLock.setReferenceCounted(false);
-        }
         // Şarj bittiğinde oturumu hafızaya kaydet (uygulama kapalı veya başka ekrandayken de)
         mChargingCheckHandler.post(mChargingCheckRunnable);
 
@@ -376,27 +365,10 @@ public class MG4ControlService extends Service {
             try { unregisterReceiver(mHardkeyReceiver); } catch (Exception ignored) {}
         }
         removeOverlay();
-        releaseChargingWakeLock();
         MG4Hardware.destroy();
         mSoundHandler.removeCallbacks(mSoundRunnable);
         mChargingCheckHandler.removeCallbacks(mChargingCheckRunnable);
         mConsumptionHandler.removeCallbacks(mConsumptionIntegrationRunnable);
-    }
-
-    /** Şarjdayken PARTIAL_WAKE_LOCK al (ekran kapanabilir, CPU uyumaz). Ayar SharedPreferences'tan okunur. */
-    private void updateChargingWakeLock() {
-        if (mChargingWakeLock == null) return;
-        boolean enabled = getSharedPreferences("drivehub_dort", MODE_PRIVATE).getBoolean(PREF_CHARGING_WAKE_LOCK, false);
-        if (!enabled) {
-            if (mChargingWakeLock.isHeld()) mChargingWakeLock.release();
-            return;
-        }
-        boolean charging = MG4Hardware.isChargingNow();
-        if (charging && !mChargingWakeLock.isHeld()) {
-            mChargingWakeLock.acquire(30 * 60 * 1000L); // 30 dk timeout, yenileme her 10 sn
-        } else if (!charging && mChargingWakeLock.isHeld()) {
-            mChargingWakeLock.release();
-        }
     }
 
     /** Boot sonrası sürüş modunu otomatik geri yükle (kullanıcı \"sürüş modunu hatırla\" switch'ini açtıysa). */
@@ -447,11 +419,6 @@ public class MG4ControlService extends Service {
             }
             return false;
         }
-    }
-
-    private void releaseChargingWakeLock() {
-        if (mChargingWakeLock == null || !mChargingWakeLock.isHeld()) return;
-        mChargingWakeLock.release();
     }
 
     @Override

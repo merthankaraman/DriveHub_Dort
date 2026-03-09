@@ -792,18 +792,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // Şarj durumu paneli: uyuma engelle toggle (hafızalı) + şarj geçmişi butonu
-        SwitchCompat swChargingWakeLock = findViewById(R.id.switchChargingWakeLock);
-        if (swChargingWakeLock != null) {
-            SharedPreferences p = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-            boolean wakeLockEnabled = p.getBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, false);
-            swChargingWakeLock.setChecked(wakeLockEnabled);
-            swChargingWakeLock.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                p.edit().putBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, isChecked).apply();
-                // Kullanıcı bu düğmeye bastığı anda ekran uyuma davranışını hemen güncelle
-                updateKeepScreenOn();
-            });
-        }
         Button btnShowHistory = findViewById(R.id.btnShowChargingHistory);
         if (btnShowHistory != null) {
             btnShowHistory.setOnClickListener(v -> startActivity(new Intent(this, ChargingHistoryActivity.class)));
@@ -905,8 +893,6 @@ public class MainActivity extends AppCompatActivity {
         if (mEngineSound != null && mSoundEnabled) {
             mEngineSound.start();
         }
-        // Kullanıcı \"Şarj sırasında ekran uyuma engelle\" düğmesini açtıysa, Activity ön plandayken ekranı uyutma
-        updateKeepScreenOn();
         // Demo ekranından "Isıtma Ayarları" ile gelindiyse klima panelini aç
         if (getIntent().getBooleanExtra(EXTRA_OPEN_CLIMATE, false)) {
             getIntent().removeExtra(EXTRA_OPEN_CLIMATE);
@@ -927,9 +913,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // Arka plana geçince ekran uyuma flag'ini kaldır (şarj ekranı açık olsa bile)
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); //new_flag
-        // Bilerek hız/ses döngüsünü durdurmuyoruz: arka planda da devam etsin.
     }
 
     // -------------------------------------------------------------------------
@@ -1212,14 +1195,12 @@ public class MainActivity extends AppCompatActivity {
         }
         mChargingPanelOpen = true;
         refreshStatusPanel();
-        updateKeepScreenOn();//new_flag
         mChargingHandler.postDelayed(mChargingRunnable, 100);
     }
 
     private void closeStatusPanel() {
         mChargingPanelOpen = false;
         mChargingHandler.removeCallbacks(mChargingRunnable);
-        updateKeepScreenOn();//new_flag
         mLayoutStatusPanel.setVisibility(View.GONE);
         mLayoutMain.setVisibility(View.VISIBLE);
         mCurrentPanel = PANEL_MAIN;
@@ -1242,17 +1223,6 @@ public class MainActivity extends AppCompatActivity {
             mLayoutChargingGraphPanel.setVisibility(View.GONE);
         }
         openStatusPanel();
-    }
-
-    /** Kullanıcı \"Şarj sırasında ekran uyuma engelle\" düğmesini açtıysa ekran uyumasın (FLAG_KEEP_SCREEN_ON). */
-    private void updateKeepScreenOn() {//new_flag
-        boolean keepOn = false;//getSharedPreferences("drivehub_dort", MODE_PRIVATE)
-                //.getBoolean(MG4ControlService.PREF_CHARGING_WAKE_LOCK, false);
-        if (keepOn) {
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        } else {
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        }
     }
 
     private void refreshStatusPanel() {
@@ -1320,9 +1290,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             mTvChargingDuration.setText("--:--:--");
         }
-
-        // Şarjdayken + ayar açıksa ekran uyanık kalsın
-        updateKeepScreenOn();
 
         // Güç grafiklerini güncelle (kW) — sadece şarjdayken aktif olsun
         if (charging) {

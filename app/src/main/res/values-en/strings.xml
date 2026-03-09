@@ -131,7 +131,6 @@
     <string name="charging_status_title">CHARGING STATUS</string>
     <string name="charging_status_label">Charging status: --</string>
     <string name="charging_duration_placeholder">--:--:--</string>
-    <string name="charging_wake_lock">Keep screen on while charging</string>
     <string name="btn_charging_history">Show charging history</string>
     <string name="expected_charge_power">Expected charge power:  -- kW</string>
     <string name="expected_charge_power_format">Expected charge power:  %.2f kW</string>

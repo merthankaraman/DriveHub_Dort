@@ -286,7 +286,7 @@
 
                 </LinearLayout>
 
-                <!-- SatÄ±r 3: Ort. tÃ¼ketim | Yol (bu oturum) -->
+                <!-- Satır 3: Ort. tüketim | Yol (bu oturum) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
@@ -295,7 +295,7 @@
                     android:weightSum="2"
                     android:gravity="center_vertical">
 
-                    <!-- Ortalama tÃ¼ketim -->
+                    <!-- Ortalama tüketim -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"

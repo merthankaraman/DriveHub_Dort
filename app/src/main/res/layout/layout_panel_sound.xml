@@ -287,7 +287,7 @@
 
                 </LinearLayout>
 
-                <!-- SimÃ¼le hÄ±z + gaz (Ses Kapa'nÄ±n Ã¼stÃ¼nde; HÄ±z Testi ile aÃ§Ä±lÄ±r) -->
+                <!-- Simüle hız + gaz (Ses Kapa'nın üstünde; Hız Testi ile açılır) -->
                 <LinearLayout
                     android:id="@+id/layoutSpeedTest"
                     android:layout_width="match_parent"

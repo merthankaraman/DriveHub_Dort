@@ -65,44 +65,18 @@
 
         </LinearLayout>
 
-        <!-- Åarj uyuma engelle (toggle) + Åarj geÃ§miÅŸi butonu aynÄ± hizada -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+        <!-- Şarj geçmişi butonu -->
+        <Button
+            android:id="@+id/btnShowChargingHistory"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
             android:layout_marginBottom="16dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:backgroundTint="#21262D"
+            android:text="@string/btn_charging_history"
+            android:textColor="#C9D1D9"
+            android:textSize="12sp" />
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchChargingWakeLock"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:text=""
-                android:textColor="@color/status_value"
-                android:visibility="gone" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/charging_wake_lock"
-                android:textColor="@color/status_value"
-                android:textSize="14sp"
-                android:visibility="gone" />
-
-            <Button
-                android:id="@+id/btnShowChargingHistory"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:backgroundTint="#21262D"
-                android:text="@string/btn_charging_history"
-                android:textColor="#C9D1D9"
-                android:textSize="12sp" />
-
-        </LinearLayout>
-
-        <!-- Beklenen Åarj GÃ¼cÃ¼ -->
+        <!-- Beklenen Şarj Gücü -->
         <TextView
             android:id="@+id/tvExpectedPower"
             android:layout_width="wrap_content"

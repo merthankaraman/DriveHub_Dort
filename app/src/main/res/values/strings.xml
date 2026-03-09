@@ -131,7 +131,6 @@
     <string name="charging_status_title">ŞARJ DURUMU</string>
     <string name="charging_status_label">Şarj durumu: --</string>
     <string name="charging_duration_placeholder">--:--:--</string>
-    <string name="charging_wake_lock">Şarj sırasında ekran uyuma engelle</string>
     <string name="btn_charging_history">Şarj Geçmişini Göster</string>
     <string name="expected_charge_power">Beklenen Şarj Gücü:  -- kW</string>
     <string name="expected_charge_power_format">Beklenen Şarj Gücü:  %.2f kW</string>
