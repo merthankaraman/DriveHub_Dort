@@ -1123,24 +1123,29 @@ public class MG4Hardware {
     private static volatile double sTripEnergyKwh = 0.0;
     private static volatile double sTripDistanceKm = 0.0;
     private static volatile double sTripDistanceKm_trim = 0.0;
+    private static volatile double sTripHours = 0.0;
     /** Hayat boyu km/kWh — trip gibi integral, periyodik hafızaya yazılır (sıfırlanmaz). */
     private static volatile double sLifetimeKm = 0.0;
     private static volatile double sLifetimeKwh = 0.0;
+    /** Hayat boyu sürüş süresi — saat cinsinden (ortalama hız hesapları için). */
+    private static volatile double sLifetimeHours = 0.0;
     private static final String PREF_NAME_LIFETIME = "drivehub_dort";
     private static final String PREF_LIFETIME_KM = "consumption_lifetime_km";
     private static final String PREF_LIFETIME_KWH = "consumption_lifetime_kwh1";
+    private static final String PREF_LIFETIME_HOURS = "consumption_lifetime_hours";
 
-    // Kullanıcı tanımlı ek uzun dönem tüketim profilleri (Hayat boyu gibi davranır, ayrı ayrı sıfırlanabilir).
-    // Slot 0: her zaman ana "Hayat boyu" (sLifetimeKm/sLifetimeKwh) — ayrı sayaç tutulmaz.
-    // Slot 1..N-1: bağımsız sayaçlar ve isimler.
+    // Kullanıcı tanımlı ek uzun dönem tüketim profilleri (Hayat boyu'dan bağımsız, ayrı ayrı sıfırlanabilir).
+    // Dizideki tüm slotlar (0..N-1) gerçek profil; Lifetime ayrı değişkenlerde tutulur.
     private static final int CONSUMPTION_PROFILE_SLOTS = 3; // Bu sayıyı arttırmak yeni profiller ekler.
     private static final String PREF_CONS_PROFILE_KM_PREFIX  = "cons_profile_km_";
     private static final String PREF_CONS_PROFILE_KWH_PREFIX = "cons_profile_kwh_";
-    private static final String PREF_CONS_PROFILE_NAME_PREFIX = "cons_profile_name_";
+    private static final String PREF_CONS_PROFILE_NAME_PREFIX  = "cons_profile_name_";
+    private static final String PREF_CONS_PROFILE_HOURS_PREFIX = "cons_profile_hours_";
     private static final String PREF_CONS_PROFILE_DEFAULT_NAME_PREFIX = "Profil ";
-    private static final double[] sConsProfileKm  = new double[CONSUMPTION_PROFILE_SLOTS];
-    private static final double[] sConsProfileKwh = new double[CONSUMPTION_PROFILE_SLOTS];
-    private static final String[] sConsProfileName = new String[CONSUMPTION_PROFILE_SLOTS];
+    private static final double[] sConsProfileKm     = new double[CONSUMPTION_PROFILE_SLOTS];
+    private static final double[] sConsProfileKwh    = new double[CONSUMPTION_PROFILE_SLOTS];
+    private static final double[] sConsProfileHours  = new double[CONSUMPTION_PROFILE_SLOTS];
+    private static final String[] sConsProfileName   = new String[CONSUMPTION_PROFILE_SLOTS];
     // Sürüş grafiği için bağımsız sayaçlar (UI trip reset'inden etkilenmez)
     private static volatile double sDriveGraphEnergyKwh = 0.0;
     private static volatile double sDriveGraphDistanceKm = 0.0;
@@ -1148,8 +1153,7 @@ public class MG4Hardware {
     /** Son integrasyon anı (monotonik; SystemClock.elapsedRealtime()). Saat geri alınsa bile dt negatif olmaz. */
     private static volatile long sConsumptionLastRealtimeMs = 0;
     private static volatile float sLastSpeedKmh = Float.NaN;
-    private static volatile float sLastConsumption = Float.NaN;
-    private static volatile int sLastTotalKm = -1;
+    /** 1:P  2:R  3:N  4:D */
     private static volatile int sLastGear = -1;
     private static volatile int elseifcounter = 0;
     private static volatile int elsecounter = 0;
@@ -1229,20 +1233,25 @@ public class MG4Hardware {
             sLifetimeKm += dKm;
             float speedTrim = (speedKmh / 1.0035f);
 
-            sTripDistanceKm_trim += speedTrim * dtHours;
-            // Ek tüketim profilleri: ana "Hayat boyu" (slot 0) + kullanıcı profilleri (1..N-1).
-            // Slot 0 ana lifetime'a eşdeğer; 1..N-1 bağımsız sayaçlar.
-            for (int i = 1; i < CONSUMPTION_PROFILE_SLOTS; i++) {
-                sConsProfileKm[i]  += dKm;
+            for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
+                sConsProfileKm[i] += dKm;
                 sConsProfileKwh[i] += drivedKwh;
             }
+            sTripDistanceKm_trim += speedTrim * dtHours;
 
             if (isVehicleReady()) {
-                if (!Float.isNaN(speedKmh)) {
-                    sDriveGraphDistanceKm += dKm;
-                }
-                if (!Float.isNaN(dcKw)) {
-                    sDriveGraphEnergyKwh += drivedKwh;
+                if (sLastGear >= 2 && sLastGear <= 4) {
+                    sTripHours += dtHours;
+                    sLifetimeHours += dtHours;
+                    for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
+                        sConsProfileHours[i] += dtHours;
+                    }
+                    if (!Float.isNaN(speedKmh)) {
+                        sDriveGraphDistanceKm += dKm;
+                    }
+                    if (!Float.isNaN(dcKw)) {
+                        sDriveGraphEnergyKwh += drivedKwh;
+                    }
                 }
             }
             if (isCharging()) {
@@ -1281,6 +1290,7 @@ public class MG4Hardware {
         sTripEnergyKwh = 0.0;
         sTripDistanceKm = 0.0;
         sTripDistanceKm_trim = 0.0;
+        sTripHours = 0.0;
         sConsumptionLastRealtimeMs = SystemClock.elapsedRealtime();
     }
 
@@ -1294,8 +1304,7 @@ public class MG4Hardware {
     public static double getTripEnergyKwh() { return sTripEnergyKwh; }
     public static double getTripDistanceKm() { return sTripDistanceKm; }
     public static double getTripDistanceKm_Trim() { return sTripDistanceKm_trim; }
-    public static double getLifetimeKm() { return sLifetimeKm; }
-    public static double getLifetimeKwh() { return sLifetimeKwh; }
+    public static double getTripHours() { return sTripHours; }
 
     /** Hayat boyu değerlerini hafızadan yükle (servis başlarken bir kez çağrılmalı). */
     public static void loadLifetimeFromPrefs(Context ctx) {
@@ -1303,10 +1312,12 @@ public class MG4Hardware {
         android.content.SharedPreferences p = ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE);
         sLifetimeKm = p.getFloat(PREF_LIFETIME_KM, 0f);
         sLifetimeKwh = p.getFloat(PREF_LIFETIME_KWH, 0f);
-        // Ek profillerin sayaçlarını ve isimlerini yükle (slot 1..N-1)
-        for (int i = 1; i < CONSUMPTION_PROFILE_SLOTS; i++) {
+        sLifetimeHours = p.getFloat(PREF_LIFETIME_HOURS, 0f);
+        // Ek profillerin sayaçlarını ve isimlerini yükle (slot 0..N-1)
+        for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
             sConsProfileKm[i] = p.getFloat(PREF_CONS_PROFILE_KM_PREFIX + i, 0f);
             sConsProfileKwh[i] = p.getFloat(PREF_CONS_PROFILE_KWH_PREFIX + i, 0f);
+            sConsProfileHours[i] = p.getFloat(PREF_CONS_PROFILE_HOURS_PREFIX + i, 0f);
             sConsProfileName[i] = p.getString(PREF_CONS_PROFILE_NAME_PREFIX + i, null);
         }
     }
@@ -1317,22 +1328,30 @@ public class MG4Hardware {
         android.content.SharedPreferences.Editor e =
                 ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE).edit()
                         .putFloat(PREF_LIFETIME_KM, (float) sLifetimeKm)
-                        .putFloat(PREF_LIFETIME_KWH, (float) sLifetimeKwh);
+                        .putFloat(PREF_LIFETIME_KWH, (float) sLifetimeKwh)
+                        .putFloat(PREF_LIFETIME_HOURS, (float) sLifetimeHours);
         // Ek profillerin sayaçlarını da periyodik olarak persist et
-        for (int i = 1; i < CONSUMPTION_PROFILE_SLOTS; i++) {
+        for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
             e.putFloat(PREF_CONS_PROFILE_KM_PREFIX + i, (float) sConsProfileKm[i]);
             e.putFloat(PREF_CONS_PROFILE_KWH_PREFIX + i, (float) sConsProfileKwh[i]);
+            e.putFloat(PREF_CONS_PROFILE_HOURS_PREFIX + i, (float) sConsProfileHours[i]);
         }
         e.apply();
     }
     public static float getLastSpeedKmh() { return sLastSpeedKmh; }
+    /** 1:P  2:R  3:N  4:D */
     public static int getLastGear() { return sLastGear; }
     public static double getDriveGraphEnergyKwh() { return sDriveGraphEnergyKwh; }
     public static double getDriveGraphDistanceKm() { return sDriveGraphDistanceKm; }
+    // Hayat boyu sayaç getter'ları
+    public static double getLifetimeKm() { return sLifetimeKm; }
+    public static double getLifetimeKwh() { return sLifetimeKwh; }
+    public static double getLifetimeHours() { return sLifetimeHours; }
     /** Hayat boyu sayaçlarını ve persist değerlerini sıfırla. */
     public static void resetLifetime(Context ctx) {
         sLifetimeKm = 0.0;
         sLifetimeKwh = 0.0;
+        sLifetimeHours = 0.0;
         persistLifetimeToPrefs(ctx);
     }
     public static void resetDriveGraphCounters() {
@@ -1344,14 +1363,16 @@ public class MG4Hardware {
         return CONSUMPTION_PROFILE_SLOTS;
     }
     public static double getConsumptionProfileKm(int index) {
-        if (index <= 0) return sLifetimeKm;
-        if (index >= CONSUMPTION_PROFILE_SLOTS) return 0.0;
+        if (index < 0 || index >= CONSUMPTION_PROFILE_SLOTS) return 0.0;
         return sConsProfileKm[index];
     }
     public static double getConsumptionProfileKwh(int index) {
-        if (index <= 0) return sLifetimeKwh;
-        if (index >= CONSUMPTION_PROFILE_SLOTS) return 0.0;
+        if (index < 0 || index >= CONSUMPTION_PROFILE_SLOTS) return 0.0;
         return sConsProfileKwh[index];
+    }
+    public static double getConsumptionProfileHours(int index) {
+        if (index < 0 || index >= CONSUMPTION_PROFILE_SLOTS) return 0.0;
+        return sConsProfileHours[index];
     }
     public static String getConsumptionProfileName(int index) {
         if (index < 0 || index >= CONSUMPTION_PROFILE_SLOTS) return "";
@@ -1369,17 +1390,18 @@ public class MG4Hardware {
         }
     }
     public static void resetConsumptionProfile(Context ctx, int index) {
-        if (index <= 0 || index >= CONSUMPTION_PROFILE_SLOTS) {
-            // index 0 ana lifetime; ayrı reset için resetLifetime kullanılmalı
+        if (index < 0 || index >= CONSUMPTION_PROFILE_SLOTS) {
             return;
         }
         sConsProfileKm[index] = 0.0;
         sConsProfileKwh[index] = 0.0;
+        sConsProfileHours[index] = 0.0;
         if (ctx != null) {
             ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE)
                     .edit()
                     .remove(PREF_CONS_PROFILE_KM_PREFIX + index)
                     .remove(PREF_CONS_PROFILE_KWH_PREFIX + index)
+                    .remove(PREF_CONS_PROFILE_HOURS_PREFIX + index)
                     .apply();
         }
     }

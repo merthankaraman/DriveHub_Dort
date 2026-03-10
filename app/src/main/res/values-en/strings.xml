@@ -286,7 +286,7 @@
     <string name="unit_kwh_label">kWh</string>
     <string name="batarya">Battery</string>
     <string name="btn_reset_trip">Reset trip</string>
-    <string name="consumption_gear">Gear</string>
+    <string name="consumption_time_avg_speed">Time / Avg speed</string>
     <string name="consumption_speed">Speed</string>
     <string name="consumption_power">Power</string>
     <string name="consumption_trip">Trip Km</string>

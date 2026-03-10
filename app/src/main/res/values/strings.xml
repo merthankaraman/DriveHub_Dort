@@ -286,7 +286,7 @@
     <string name="unit_kwh_label">kWh</string>
     <string name="batarya">Batarya</string>
     <string name="btn_reset_trip">Sürüş sıfırla</string>
-    <string name="consumption_gear">Vites</string>
+    <string name="consumption_time_avg_speed">Süre / Ort. hız</string>
     <string name="consumption_speed">Hız</string>
     <string name="consumption_power">Güç</string>
     <string name="consumption_trip">Yol Km</string>

@@ -226,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Tüketim paneli
     private View mLayoutConsumptionPanel;
-    private TextView mTvConsumptionGear;
+    private TextView mTvConsumptionTimeAvg;
     private TextView mTvConsumptionSpeed;
     private TextView mTvConsumptionPower;
     private TextView mTvConsumptionTripKm;
@@ -234,33 +234,58 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvConsumptionAvgKwhPer100km;
     private android.widget.LinearLayout mLayoutConsumptionProfiles;
     private final java.util.ArrayList<Button> mConsumptionProfileButtons = new java.util.ArrayList<>();
-    private int mActiveConsumptionProfile = 0;
+    // -1 = Lifetime, 0..N-1 = ek profiller
+    private int mActiveConsumptionProfile = -1;
 
     private void setupConsumptionProfilesIfNeeded() {
         if (mLayoutConsumptionProfiles == null || !mConsumptionProfileButtons.isEmpty()) return;
         Context ctx = this;
         int slots = MG4Hardware.getConsumptionProfileSlots();
-        for (int i = 0; i < slots; i++) {
+
+        // 1) Lifetime butonu (tag = -1)
+        {
             Button b = new Button(ctx);
             android.widget.LinearLayout.LayoutParams lp =
                     new android.widget.LinearLayout.LayoutParams(
                             android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
                             android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
-            if (i > 0) lp.setMarginStart(8);
             b.setLayoutParams(lp);
             b.setMinWidth(0);
             b.setMinHeight(0);
             b.setPadding(20, 8, 20, 8);
             b.setTextSize(12f);
             b.setAllCaps(false);
-            b.setTag(i);
-            String name = MG4Hardware.getConsumptionProfileName(i);
+            b.setTag(-1);
+            b.setText(getString(R.string.consumption_lifetime));
+            b.setOnClickListener(v -> {
+                mActiveConsumptionProfile = -1;
+                updateConsumptionProfileButtons();
+                refreshConsumptionPanel();
+            });
+            // Lifetime adını şu anlık rename etmiyoruz; uzun basma yok.
+            mLayoutConsumptionProfiles.addView(b);
+            mConsumptionProfileButtons.add(b);
+        }
+
+        // 2) Ek profiller (0..slots-1)
+        for (int i = 0; i < slots; i++) {
+            Button b = new Button(ctx);
+            android.widget.LinearLayout.LayoutParams lp =
+                    new android.widget.LinearLayout.LayoutParams(
+                            android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                            android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.setMarginStart(8);
+            b.setLayoutParams(lp);
+            b.setMinWidth(0);
+            b.setMinHeight(0);
+            b.setPadding(20, 8, 20, 8);
+            b.setTextSize(12f);
+            b.setAllCaps(false);
+            int profileIndex = i;
+            b.setTag(profileIndex);
+            String name = MG4Hardware.getConsumptionProfileName(profileIndex);
             if (name == null || name.isEmpty()) {
-                if (i == 0) {
-                    name = getString(R.string.consumption_lifetime);
-                } else {
-                    name = getString(R.string.consumption_profile_default_format, i);
-                }
+                name = getString(R.string.consumption_profile_default_format, profileIndex + 1);
             }
             b.setText(name);
             b.setOnClickListener(v -> {
@@ -275,15 +300,12 @@ public class MainActivity extends AppCompatActivity {
                 Object tag = v.getTag();
                 if (!(tag instanceof Integer)) return true;
                 int index = (Integer) tag;
+                if (index < 0) return true; // Lifetime ismi değişmiyor
                 android.widget.EditText input = new android.widget.EditText(ctx);
                 input.setSingleLine();
                 String current = MG4Hardware.getConsumptionProfileName(index);
                 if (current == null || current.isEmpty()) {
-                    if (index == 0) {
-                        current = getString(R.string.consumption_lifetime);
-                    } else {
-                        current = getString(R.string.consumption_profile_default_format, index);
-                    }
+                    current = getString(R.string.consumption_profile_default_format, index + 1);
                 }
                 input.setText(current);
                 new androidx.appcompat.app.AlertDialog.Builder(ctx)
@@ -770,7 +792,7 @@ public class MainActivity extends AppCompatActivity {
 
         // ---- Tüketim paneli ----
         mLayoutConsumptionPanel   = findViewById(R.id.layoutConsumptionPanel);
-        mTvConsumptionGear        = findViewById(R.id.tvConsumptionGear);
+        mTvConsumptionTimeAvg     = findViewById(R.id.tvConsumptionTimeAvg);
         mTvConsumptionSpeed       = findViewById(R.id.tvConsumptionSpeed);
         mTvConsumptionPower       = findViewById(R.id.tvConsumptionPower);
         mTvConsumptionTripKm      = findViewById(R.id.tvConsumptionTripKm);
@@ -1581,7 +1603,8 @@ public class MainActivity extends AppCompatActivity {
             MG4Hardware.resetConsumptionTrip();
             Toast.makeText(this, getString(R.string.consumption_trip_reset_toast), Toast.LENGTH_SHORT).show();
         } else if (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME) {
-            if (mActiveConsumptionProfile == 0) {
+            // Lifetime seçiliyse global sayaçları, profil seçiliyse sadece o profili sıfırla.
+            if (mActiveConsumptionProfile < 0) {
                 MG4Hardware.resetLifetime(this);
             } else {
                 MG4Hardware.resetConsumptionProfile(this, mActiveConsumptionProfile);
@@ -1641,20 +1664,61 @@ public class MainActivity extends AppCompatActivity {
         float speedKmh = MG4Hardware.getLastSpeedKmh();
         float powerKw = MG4Hardware.getDcKwGlobal();
         powerKw = Float.isNaN(powerKw) ? Float.NaN : powerKw;
-        int gear = MG4Hardware.getLastGear();
         boolean sinceStart = (mConsumptionDisplayMode == CONSUMPTION_MODE_SINCE_START);
         boolean lifetimeMode = (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME);
 
-        if (mTvConsumptionGear != null) {
-            String gearText;
-            switch (gear) {
-                case 1:  gearText = "P"; break;
-                case 2:  gearText = "R"; break;
-                case 3:  gearText = "N"; break;
-                case 4:  gearText = "D"; break;
-                default: gearText = gear < 0 ? "--" : String.valueOf(gear); break;
+        if (mTvConsumptionTimeAvg != null) {
+            // Tüm modlar için ortak: önce saat ve km kaynağını seç, sonra formatla
+            double hours;
+            double km;
+
+            if (lifetimeMode) {
+                // Lifetime modu: -1 ise global lifetime, >=0 ise seçili profil
+                if (mActiveConsumptionProfile < 0) {
+                    hours = MG4Hardware.getLifetimeHours();
+                    km    = MG4Hardware.getLifetimeKm();
+                } else {
+                    hours = MG4Hardware.getConsumptionProfileHours(mActiveConsumptionProfile);
+                    km    = MG4Hardware.getConsumptionProfileKm(mActiveConsumptionProfile);
+                }
+            } else if (!sinceStart) {
+                // Trip modu
+                hours = MG4Hardware.getTripHours();
+                km    = MG4Hardware.getTripDistanceKm();
+            } else {
+                long durMs = MG4ControlService.getDriveSessionDurationMs();
+                if (durMs <= 0) {
+                    mTvConsumptionTimeAvg.setText("--:-- / --.- km/h");
+                    hours = 0.0;
+                    km = 0.0;
+                } else {
+                    hours = durMs / 3600000.0;
+                    km    = MG4Hardware.getDriveGraphDistanceKm();
+                }
             }
-            mTvConsumptionGear.setText(gearText);
+
+            if (hours <= 0.0) {
+                mTvConsumptionTimeAvg.setText("--:-- / --.- km/h");
+            } else {
+                long totalSec = (long) (hours * 3600.0);
+                long h = totalSec / 3600L;
+                long m = (totalSec % 3600L) / 60L;
+                long s = totalSec % 60L;
+                String timePart;
+                if (h > 0) {
+                    timePart = String.format(Locale.US, "%02d:%02d:%02d", h, m, s);
+                } else {
+                    timePart = String.format(Locale.US, "%02d:%02d", m, s);
+                }
+                if (km > 0.01 && hours > 0.0) {
+                    double avgSpeed = km / hours;
+                    mTvConsumptionTimeAvg.setText(
+                            String.format(Locale.US, "%s / %.1f km/h", timePart, avgSpeed));
+                } else {
+                    mTvConsumptionTimeAvg.setText(
+                            String.format(Locale.US, "%s / --.- km/h", timePart));
+                }
+            }
         }
         if (mTvConsumptionSpeed != null) {
             if (Float.isNaN(speedKmh)) {
@@ -1672,9 +1736,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (lifetimeMode) {
-            // Hayat boyu veya kayıtlı profil: aktif profil slotunun km/kWh değerleri
-            double lifetimeKm  = MG4Hardware.getConsumptionProfileKm(mActiveConsumptionProfile);
-            double lifetimeKwh = MG4Hardware.getConsumptionProfileKwh(mActiveConsumptionProfile);
+            // Lifetime modu: -1 ise global lifetime, >=0 ise seçili profilin toplamı
+            double lifetimeKm;
+            double lifetimeKwh;
+            if (mActiveConsumptionProfile < 0) {
+                lifetimeKm  = MG4Hardware.getLifetimeKm();
+                lifetimeKwh = MG4Hardware.getLifetimeKwh();
+            } else {
+                lifetimeKm  = MG4Hardware.getConsumptionProfileKm(mActiveConsumptionProfile);
+                lifetimeKwh = MG4Hardware.getConsumptionProfileKwh(mActiveConsumptionProfile);
+            }
             if (mTvConsumptionTripKm != null) {
                 mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", lifetimeKm));
             }

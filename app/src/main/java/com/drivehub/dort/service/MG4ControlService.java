@@ -208,7 +208,8 @@ public class MG4ControlService extends Service {
     private static final int LIFETIME_PERSIST_EVERY_N = 300;
     private final Handler mConsumptionHandler = new Handler(Looper.getMainLooper());
     private boolean mDriveSessionActive = false;
-    private long mDriveStartWallMs = 0L;
+    // READY oturumu başlangıcı (duvar saati, tüm app tarafından okunabilsin diye static)
+    private static long mDriveStartWallMs = 0L;
     private int mConsumptionLoopCount = 0;
 
     private final Runnable mConsumptionIntegrationRunnable = new Runnable() {
@@ -227,12 +228,12 @@ public class MG4ControlService extends Service {
 
     private void updateDriveSessionFromReady() {
         boolean ready = MG4Hardware.isVehicleReady();
-        long now = System.currentTimeMillis();
+        long nowWall = System.currentTimeMillis();
 
         if (!mDriveSessionActive && ready) {
             // Yeni sürüş oturumu başlıyor
             mDriveSessionActive = true;
-            mDriveStartWallMs = now;
+            mDriveStartWallMs = nowWall;
             MG4Hardware.resetDriveGraphCounters();
             return;
         }
@@ -242,18 +243,28 @@ public class MG4ControlService extends Service {
             mDriveSessionActive = false;
             double distKm = MG4Hardware.getDriveGraphDistanceKm();
             double energyKwh = MG4Hardware.getDriveGraphEnergyKwh();
-            double durationMinutes = (now - mDriveStartWallMs) / 60000.0;
+            double durationMinutes = (nowWall - mDriveStartWallMs) / 60000.0;
 
             if ((distKm > 0.01 || energyKwh > 0.001) && durationMinutes >= 5.0) {
                 com.drivehub.dort.util.DrivingHistory.addSession(
                         getApplicationContext(),
                         mDriveStartWallMs,
-                        now,
+                        nowWall,
                         (float) distKm,
                         (float) energyKwh
                 );
             }
         }
+    }
+
+    public static long getDriveSessionDurationMs() {
+        long start = mDriveStartWallMs;
+        if (start == 0L) {
+            return 0L;
+        }
+        long now = System.currentTimeMillis();
+        long dur = now - start;
+        return (dur > 0L) ? dur : 0L;
     }
 
     @Override
