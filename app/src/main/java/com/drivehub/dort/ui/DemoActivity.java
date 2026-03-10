@@ -74,8 +74,8 @@ public class DemoActivity extends AppCompatActivity {
             if (!mBtAdapter.isDiscovering()) {
                 mBtAdapter.startDiscovery();
             }
-            // Daha sık tarama: yaklaşık 2 sn arayla
-            mBtHandler.postDelayed(this, 2_000L);
+            // Daha sık tarama: yaklaşık 10 sn arayla
+            mBtHandler.postDelayed(this, 10_000L);
         }
     };
 
@@ -109,58 +109,6 @@ public class DemoActivity extends AppCompatActivity {
         setContentView(R.layout.activity_demo);
 
         findViewById(R.id.btnDemoBack).setOnClickListener(v -> finish());
-
-        // ESP
-        SwitchCompat switchEsp = findViewById(R.id.switchEsp);
-        TextView tvEspStatus = findViewById(R.id.tvEspStatus);
-        if (switchEsp != null) {
-            int esp = MG4Hardware.getEspSwitch();
-            switchEsp.setChecked(esp == 1);
-            updateEspStatus(tvEspStatus, esp);
-            switchEsp.setOnCheckedChangeListener((v, isChecked) -> {
-                MG4Hardware.setEspSwitch(isChecked ? 1 : 0);
-                if (tvEspStatus != null) updateEspStatus(tvEspStatus, isChecked ? 1 : 0);
-            });
-        }
-
-        // Uzaklaşma ile kilitleme (anahtar gidince araç kilitlensin)
-        SwitchCompat switchLeaveAutoLock = findViewById(R.id.switchLeaveAutoLock);
-        TextView tvLeaveAutoLockStatus = findViewById(R.id.tvLeaveAutoLockStatus);
-        if (switchLeaveAutoLock != null) {
-            int mode = MG4Hardware.getLeaveAutoLockMode();
-            switchLeaveAutoLock.setChecked(mode == 1);
-            updateLeaveAutoLockStatus(tvLeaveAutoLockStatus, mode);
-            switchLeaveAutoLock.setOnCheckedChangeListener((v, isChecked) -> {
-                MG4Hardware.setLeaveAutoLockMode(isChecked ? 1 : 0);
-                if (tvLeaveAutoLockStatus != null) updateLeaveAutoLockStatus(tvLeaveAutoLockStatus, isChecked ? 1 : 0);
-            });
-        }
-
-        // Yaklaşınca kilidi aç
-        SwitchCompat switchApproachUnlock = findViewById(R.id.switchApproachUnlock);
-        TextView tvApproachUnlockStatus = findViewById(R.id.tvApproachUnlockStatus);
-        if (switchApproachUnlock != null) {
-            int mode = MG4Hardware.getApproachUnlockMode();
-            switchApproachUnlock.setChecked(mode == 1);
-            updateApproachUnlockStatus(tvApproachUnlockStatus, mode);
-            switchApproachUnlock.setOnCheckedChangeListener((v, isChecked) -> {
-                MG4Hardware.setApproachUnlockMode(isChecked ? 1 : 0);
-                if (tvApproachUnlockStatus != null) updateApproachUnlockStatus(tvApproachUnlockStatus, isChecked ? 1 : 0);
-            });
-        }
-
-        // Yakın alan kilidi aç
-        SwitchCompat switchNearfieldUnlock = findViewById(R.id.switchNearfieldUnlock);
-        TextView tvNearfieldUnlockStatus = findViewById(R.id.tvNearfieldUnlockStatus);
-        if (switchNearfieldUnlock != null) {
-            int mode = MG4Hardware.getNearfieldUnlockMode();
-            switchNearfieldUnlock.setChecked(mode == 1);
-            updateNearfieldUnlockStatus(tvNearfieldUnlockStatus, mode);
-            switchNearfieldUnlock.setOnCheckedChangeListener((v, isChecked) -> {
-                MG4Hardware.setNearfieldUnlockMode(isChecked ? 1 : 0);
-                if (tvNearfieldUnlockStatus != null) updateNearfieldUnlockStatus(tvNearfieldUnlockStatus, isChecked ? 1 : 0);
-            });
-        }
 
         // Pencere: spinner + seekbar + yüzdeler
         mWindowSpinner = findViewById(R.id.spinnerWindowSelect);
@@ -270,34 +218,6 @@ public class DemoActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         refreshWindowPercentages();
-        SwitchCompat switchEsp = findViewById(R.id.switchEsp);
-        TextView tvEspStatus = findViewById(R.id.tvEspStatus);
-        if (switchEsp != null) {
-            int esp = MG4Hardware.getEspSwitch();
-            if (esp >= 0) switchEsp.setChecked(esp == 1);
-            updateEspStatus(tvEspStatus, esp);
-        }
-        SwitchCompat switchLeaveAutoLock = findViewById(R.id.switchLeaveAutoLock);
-        TextView tvLeaveAutoLockStatus = findViewById(R.id.tvLeaveAutoLockStatus);
-        if (switchLeaveAutoLock != null) {
-            int mode = MG4Hardware.getLeaveAutoLockMode();
-            if (mode >= 0) switchLeaveAutoLock.setChecked(mode == 1);
-            updateLeaveAutoLockStatus(tvLeaveAutoLockStatus, mode);
-        }
-        SwitchCompat switchApproachUnlock = findViewById(R.id.switchApproachUnlock);
-        TextView tvApproachUnlockStatus = findViewById(R.id.tvApproachUnlockStatus);
-        if (switchApproachUnlock != null) {
-            int mode = MG4Hardware.getApproachUnlockMode();
-            if (mode >= 0) switchApproachUnlock.setChecked(mode == 1);
-            updateApproachUnlockStatus(tvApproachUnlockStatus, mode);
-        }
-        SwitchCompat switchNearfieldUnlock = findViewById(R.id.switchNearfieldUnlock);
-        TextView tvNearfieldUnlockStatus = findViewById(R.id.tvNearfieldUnlockStatus);
-        if (switchNearfieldUnlock != null) {
-            int mode = MG4Hardware.getNearfieldUnlockMode();
-            if (mode >= 0) switchNearfieldUnlock.setChecked(mode == 1);
-            updateNearfieldUnlockStatus(tvNearfieldUnlockStatus, mode);
-        }
         refreshAirQuality();
         updateDoorLockStatus();
         mHandler.post(mPollRunnable);
@@ -309,26 +229,6 @@ public class DemoActivity extends AppCompatActivity {
         super.onPause();
         mHandler.removeCallbacks(mPollRunnable);
         stopBluetoothLockMonitoring();
-    }
-
-    private void updateEspStatus(TextView tv, int value) {
-        if (tv == null) return;
-        tv.setText(getString(R.string.esp_status, value));
-    }
-
-    private void updateLeaveAutoLockStatus(TextView tv, int value) {
-        if (tv == null) return;
-        tv.setText(getString(R.string.leave_auto_lock_status, value));
-    }
-
-    private void updateApproachUnlockStatus(TextView tv, int value) {
-        if (tv == null) return;
-        tv.setText(getString(R.string.approach_unlock_status, value));
-    }
-
-    private void updateNearfieldUnlockStatus(TextView tv, int value) {
-        if (tv == null) return;
-        tv.setText(getString(R.string.nearfield_unlock_status, value));
     }
 
     private void refreshAirQuality() {
@@ -356,44 +256,8 @@ public class DemoActivity extends AppCompatActivity {
         }
     }
 
-    /** ESP + kilitleme/kilit açma + pencere yüzdeleri ve hava kalitesini periyodik güncelle. */
+    /** Pencere yüzdeleri ve hava kalitesini periyodik güncelle. */
     private void pollDemoValues() {
-        // ESP
-        SwitchCompat switchEsp = findViewById(R.id.switchEsp);
-        TextView tvEspStatus = findViewById(R.id.tvEspStatus);
-        if (switchEsp != null) {
-            int esp = MG4Hardware.getEspSwitch();
-            if (esp >= 0) switchEsp.setChecked(esp == 1);
-            updateEspStatus(tvEspStatus, esp);
-        }
-
-        // Uzaklaşma ile kilitleme
-        SwitchCompat switchLeaveAutoLock = findViewById(R.id.switchLeaveAutoLock);
-        TextView tvLeaveAutoLockStatus = findViewById(R.id.tvLeaveAutoLockStatus);
-        if (switchLeaveAutoLock != null) {
-            int mode = MG4Hardware.getLeaveAutoLockMode();
-            if (mode >= 0) switchLeaveAutoLock.setChecked(mode == 1);
-            updateLeaveAutoLockStatus(tvLeaveAutoLockStatus, mode);
-        }
-
-        // Yaklaşınca kilidi aç
-        SwitchCompat switchApproachUnlock = findViewById(R.id.switchApproachUnlock);
-        TextView tvApproachUnlockStatus = findViewById(R.id.tvApproachUnlockStatus);
-        if (switchApproachUnlock != null) {
-            int mode = MG4Hardware.getApproachUnlockMode();
-            if (mode >= 0) switchApproachUnlock.setChecked(mode == 1);
-            updateApproachUnlockStatus(tvApproachUnlockStatus, mode);
-        }
-
-        // Yakın alan kilidi aç
-        SwitchCompat switchNearfieldUnlock = findViewById(R.id.switchNearfieldUnlock);
-        TextView tvNearfieldUnlockStatus = findViewById(R.id.tvNearfieldUnlockStatus);
-        if (switchNearfieldUnlock != null) {
-            int mode = MG4Hardware.getNearfieldUnlockMode();
-            if (mode >= 0) switchNearfieldUnlock.setChecked(mode == 1);
-            updateNearfieldUnlockStatus(tvNearfieldUnlockStatus, mode);
-        }
-
         // Pencere yüzdeleri + hava kalitesi
         refreshWindowPercentages();
         refreshAirQuality();

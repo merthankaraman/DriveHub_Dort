@@ -865,7 +865,9 @@ public class MG4ControlService extends Service {
             // Eğer modlu 360 yüklüyse, onu kullan
             getPackageManager().getPackageInfo("com.saicmotor.hmi.cam360v2", 0);
             pkg = "com.saicmotor.hmi.cam360v2";
-            cls = "com.saicmotor.hmi.cam360v2.AVMActivity";
+            // Modlu APK'nın manifest paketi cam360v2 ama AVMActivity sınıfı hâlâ
+            // com.saicmotor.hmi.aroundview.AVMActivity tam adını kullanıyor.
+            cls = "com.saicmotor.hmi.aroundview.AVMActivity";
         } catch (Exception ignored) {
             // Modlu paket yoksa, orijinale düş
         }
@@ -895,7 +897,7 @@ public class MG4ControlService extends Service {
                     boolean isOriginal = "com.saicmotor.hmi.aroundview".equals(pkg)
                             && "com.saicmotor.hmi.aroundview.AVMActivity".equals(cls);
                     boolean isMod = "com.saicmotor.hmi.cam360v2".equals(pkg)
-                            && "com.saicmotor.hmi.cam360v2.AVMActivity".equals(cls);
+                            && "com.saicmotor.hmi.aroundview.AVMActivity".equals(cls);
                     if (isOriginal || isMod) {
                         return true;
                     }
