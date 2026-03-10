@@ -21,7 +21,6 @@ import android.media.session.PlaybackState;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.os.PowerManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -95,7 +94,8 @@ public class MG4ControlService extends Service {
     private static final String DEFAULT_ONE_PEDAL_PRESS_TYPE = "long";
     private static final String DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF = "single";
     private static final long ONE_PEDAL_LONG_PRESS_MS = 1200;
-    private static final long ONE_PEDAL_DOUBLE_TAP_MS = 400;
+    /** Herhangi bir atanmış tuş için çift basma penceresi (ms). */
+    private static final long SHORTCUT_DOUBLE_PRESS_MS = 700;
 
     /** 360 kamera tuş atama (Düğme kısayolları panelinden) */
     private static final String PREF_CAMERA_360_KEY = "camera_360_key";
@@ -146,7 +146,8 @@ public class MG4ControlService extends Service {
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
     private boolean mDriveRegenRememberInitialized = false;
     /** Boot sonrası sürüş modu / regen uygulaması için gecikme (ms). Debug için biraz kısaltıldı. */
-    private static final long REMEMBER_APPLY_DELAY_MS = 20_000L;
+    private static final long REMEMBER_APPLY_START_UP_DELAY_MS = 5_000L;
+    private static final long REMEMBER_APPLY_LOOP_DELAY_MS = 1_000L;
 
     // Sistem medya sesini kontrol etmek için
     private AudioManager mAudioManager;
@@ -335,15 +336,30 @@ public class MG4ControlService extends Service {
         MG4Hardware.loadLifetimeFromPrefs(this);
         mConsumptionHandler.post(mConsumptionIntegrationRunnable);
 
-        mMainHandler.postDelayed(() -> {
-            applyRememberedDriveModeIfNeeded();
-            applyRememberedRegenIfNeeded();
-            // Profil uygulandıktan sonra 5 saniye daha bekle - araç reddetse bile o callback'ler
-            // mDriveRegenRememberInitialized=false olduğu için kaydedilmez.
-            mMainHandler.postDelayed(() -> {
-                mDriveRegenRememberInitialized = true;
-            }, 5000);
-        }, REMEMBER_APPLY_DELAY_MS);
+        // Profil remember:
+        //  - İlk deneme: servis başladıktan 5 sn sonra
+        //  - Kontak KAPALIYSA: her 1 sn'de bir tekrar dene
+        //  - Kontak AÇIKKEN (ignition >= 2): sürüş/regen profillerini BİR KEZ uygula
+        mMainHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                int ign = MG4Hardware.getVehicleIgnition();
+                if (ign < 2) {
+                    mMainHandler.postDelayed(this, REMEMBER_APPLY_LOOP_DELAY_MS);
+                    return;
+                }
+
+                // Kontak açıkken bir kere uygula
+                applyRememberedDriveModeIfNeeded();
+                applyRememberedRegenIfNeeded();
+
+                // Profil uygulandıktan kısa süre sonra kaydetme flag'ini aç
+                mMainHandler.postDelayed(
+                        () -> mDriveRegenRememberInitialized = true,
+                        REMEMBER_APPLY_START_UP_DELAY_MS
+                );
+            }
+        }, REMEMBER_APPLY_START_UP_DELAY_MS);
 
         if (MG4Hardware.isLogEnabled()) {
             Log.i(TAG, "=== onCreate tamamlandı ===");
@@ -372,38 +388,37 @@ public class MG4ControlService extends Service {
     }
 
     /** Boot sonrası sürüş modunu otomatik geri yükle (kullanıcı \"sürüş modunu hatırla\" switch'ini açtıysa). */
-    private boolean applyRememberedDriveModeIfNeeded() {
+    private void applyRememberedDriveModeIfNeeded() {
         SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         boolean rememberEnabled = prefs.getBoolean(PREF_REMEMBER_DRIVE_MODE, false);
         int lastValue = prefs.getInt(PREF_LAST_DRIVE_MODE, DriveMode.NORMAL.value);
         
         if (!rememberEnabled) {
-            return false;
+            return;
         }
 
         DriveMode dm = DriveMode.fromValue(lastValue);
         if (dm == null) {
-            return false;
+            return;
         }
 
         boolean ok = MG4Hardware.setDriveMode(dm);
         if (!ok) {
-            return false;
+            return;
         }
         mCurrentDriveMode = dm;
         updateNotification("Sürüş: " + mCurrentDriveMode.label);
-        return true;
     }
 
     /** Boot sonrası regen seviyesini otomatik geri yükle (kullanıcı \"Regen seviyesini hatırla\" switch'ini açtıysa). */
-    private boolean applyRememberedRegenIfNeeded() {
+    private void applyRememberedRegenIfNeeded() {
         SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-        if (!prefs.getBoolean(PREF_REMEMBER_REGEN, false)) return false;
+        if (!prefs.getBoolean(PREF_REMEMBER_REGEN, false)) return;
 
         int lastValue = prefs.getInt(PREF_LAST_REGEN_LEVEL, RegenLevel.LOW.value);
         RegenLevel rl = RegenLevel.fromValue(lastValue);
         if (rl == null) {
-            return false;
+            return;
         }
 
         boolean ok = MG4Hardware.setRegenLevel(rl);
@@ -412,12 +427,10 @@ public class MG4ControlService extends Service {
             if (MG4Hardware.isLogEnabled()) {
                 Log.i(TAG, "RememberRegen: uygulandı → " + rl + " (" + rl.value + ")");
             }
-            return true;
         } else {
             if (MG4Hardware.isLogEnabled()) {
                 Log.w(TAG, "RememberRegen: setRegenLevel(" + rl + ") başarısız");
             }
-            return false;
         }
     }
 
@@ -718,14 +731,14 @@ public class MG4ControlService extends Service {
                 if (assignedKey >= 0 && keyCode == keyToMatch) {
                     String pressOn = prefs.getString(PREF_ONE_PEDAL_PRESS_TYPE, DEFAULT_ONE_PEDAL_PRESS_TYPE);
                     String pressOff = prefs.getString(PREF_ONE_PEDAL_PRESS_TYPE_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF);
-                    onOnePedalKey(keyCode, isDown, isLong, pressOn, pressOff);
+                    onOnePedalKey(keyCode, isDown, pressOn, pressOff);
                 } else {
                     int camera360Key = prefs.getInt(PREF_CAMERA_360_KEY, DEFAULT_CAMERA_360_KEY);
                     int camera360KeyToMatch = (camera360Key == 18) ? 286 : (camera360Key == 5) ? 291 : camera360Key;
                     if (camera360Key >= 0 && keyCode == camera360KeyToMatch) {
                         String pressOn  = prefs.getString(PREF_CAMERA_360_PRESS_ON,  DEFAULT_ONE_PEDAL_PRESS_TYPE);
                         String pressOff = prefs.getString(PREF_CAMERA_360_PRESS_OFF, DEFAULT_ONE_PEDAL_PRESS_TYPE_OFF);
-                        onCamera360Key(keyCode, isDown, isLong, pressOn, pressOff);
+                        onCamera360Key(keyCode, isDown, pressOn, pressOff);
                     } else if (keyCode == KEYCODE_VOLUME_UP) {
                         onVolumeKey(KEYCODE_VOLUME_UP, isDown);
                     } else if (keyCode == KEYCODE_VOLUME_DOWN) {
@@ -751,7 +764,7 @@ public class MG4ControlService extends Service {
     // Tek Pedal atanmış tuş — Regen panelinde seçilen tuş (Telefon/Sol yıldız/Sağ yıldız) ve basma tipi (Tek/Uzun/Çift)
     // -------------------------------------------------------------------------
 
-    private void onOnePedalKey(int keyCode, boolean isDown, boolean isLong, String pressTypeOn, String pressTypeOff) {
+    private void onOnePedalKey(int keyCode, boolean isDown, String pressTypeOn, String pressTypeOff) {
         if (isDown) {
             mOnePedalKeyPressed = true;
             mOnePedalLongTriggered = false;
@@ -774,7 +787,8 @@ public class MG4ControlService extends Service {
                             mOnePedalKeyPressed = false;
                             break;
                         }
-                        try { Thread.sleep(50); } catch (Exception ignored) {}
+                        // Küçük bir uyku ile CPU'yu yorma (50 ms)
+                        android.os.SystemClock.sleep(50);
                     }
                 }).start();
             }
@@ -782,7 +796,7 @@ public class MG4ControlService extends Service {
             mOnePedalKeyPressed = false;
             if (!mOnePedalLongTriggered) {
                 long now = System.currentTimeMillis();
-                boolean isDouble = (mOnePedalLastTapKeyCode == keyCode && (now - mOnePedalLastTapTime) <= ONE_PEDAL_DOUBLE_TAP_MS);
+                boolean isDouble = (mOnePedalLastTapKeyCode == keyCode && (now - mOnePedalLastTapTime) <= SHORTCUT_DOUBLE_PRESS_MS);
                 if (isDouble) {
                     mOnePedalLastTapTime = 0;
                     mOnePedalLastTapKeyCode = -1;
@@ -809,7 +823,7 @@ public class MG4ControlService extends Service {
     }
 
     /** 360 kamera atanmış tuş — açma/kapama basma tipi (Tek/Uzun/Çift) ile tetiklenir. */
-    private void onCamera360Key(int keyCode, boolean isDown, boolean isLong, String pressTypeOn, String pressTypeOff) {
+    private void onCamera360Key(int keyCode, boolean isDown, String pressTypeOn, String pressTypeOff) {
         if (isDown) {
             mCamera360KeyPressed = true;
             mCamera360LongTriggered = false;
@@ -820,15 +834,18 @@ public class MG4ControlService extends Service {
                     while (mCamera360KeyPressed) {
                         if (System.currentTimeMillis() - start >= ONE_PEDAL_LONG_PRESS_MS) {
                             mCamera360LongTriggered = true;
+                            // Hem açma hem kapama için "long" desteklenebilir
                             if ("long".equals(pressTypeOn)) {
                                 open360();
-                            } else if ("long".equals(pressTypeOff)) {
+                            }
+                            if ("long".equals(pressTypeOff)) {
                                 close360();
                             }
                             mCamera360KeyPressed = false;
                             break;
                         }
-                        try { Thread.sleep(50); } catch (Exception ignored) {}
+                        // Küçük bir uyku ile CPU'yu yorma (50 ms)
+                        android.os.SystemClock.sleep(50);
                     }
                 }).start();
             }
@@ -836,7 +853,7 @@ public class MG4ControlService extends Service {
             mCamera360KeyPressed = false;
             if (!mCamera360LongTriggered) {
                 long now = System.currentTimeMillis();
-                boolean isDouble = (mCamera360LastTapKeyCode == keyCode && (now - mCamera360LastTapTime) <= ONE_PEDAL_DOUBLE_TAP_MS);
+                boolean isDouble = (mCamera360LastTapKeyCode == keyCode && (now - mCamera360LastTapTime) <= SHORTCUT_DOUBLE_PRESS_MS);
                 if (isDouble) {
                     mCamera360LastTapTime = 0;
                     mCamera360LastTapKeyCode = -1;
@@ -1269,26 +1286,26 @@ public class MG4ControlService extends Service {
      */
     private static String keycodeLabel(int keycode) {
         switch (keycode) {
-            case 5:   return "PHONE";
+            case 5:
+            case 291: return "PHONE";
             case 17:  return "STAR_LEFT";
             case 18:  return "STAR_RIGHT(alt)";
             case 24:  return "VOLUME_UP";
+            case 25:  return "VOLUME_DOWN";
             case 286: return "STAR_RIGHT";
             case 287: return "VOICE_ASSISTANT";
-            case 291: return "PHONE";
             case 297: return "KEY_297";
             case 298: return "KEY_298";
-            case 301: return "MEDIA_PLAY_PAUSE";
-            case 25:  return "VOLUME_DOWN";
-            case 66:  return "ENTER";
-            case 4:   return "BACK";
-            case 3:   return "HOME";
-            case 164: return "MUTE";
+            case 301:
             case 85:  return "MEDIA_PLAY_PAUSE";
             case 87:  return "MEDIA_NEXT";
             case 88:  return "MEDIA_PREV";
             case 126: return "MEDIA_PLAY";
             case 127: return "MEDIA_PAUSE";
+            case 66:  return "ENTER";
+            case 4:   return "BACK";
+            case 3:   return "HOME";
+            case 164: return "MUTE";
             default:  return "UNKNOWN(" + keycode + ")";
         }
     }

@@ -1146,7 +1146,7 @@ public class MG4Hardware {
 
     /** Serviste 100ms'de bir çağrılır: DC/AC güçleri oku, enerjiyi ve mesafeyi integre et, önbelleğe yaz. */
     public static void integrateConsumptionData() {
-        float speedKmh = getSpeedKmh() * 1.003f;
+        float speedKmh = getSpeedKmh() * 1.0035f;
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
 
         // DC güç (sürüş + şarj): V * A / 1000 → kW (işaretli)
@@ -1210,7 +1210,7 @@ public class MG4Hardware {
             sLifetimeKwh += drivedKwh;
             sTripDistanceKm += dKm;
             sLifetimeKm += dKm;
-            float speedTrim = (speedKmh / 1.003f) * 1.004f;
+            float speedTrim = (speedKmh / 1.0035f);
             sTripDistanceKm_trim += speedTrim * dtHours;
 
             if (isVehicleReady()) {

@@ -27,7 +27,6 @@ import java.util.Locale;
 /**
  * Demo ekranı: ESP, cam kontrolleri, kilit otomasyonu (uzaklaşma/yaklaşma/yakın alan), cam yüzdeleri.
  * Ana ekrandaki "Demo" düğmesiyle açılır.
- *
  * Get'ler (getEspSwitch, getLeaveAutoLockMode, getApproachUnlockMode, getNearfieldUnlockMode vb.)
  * sadece şu anlarda çağrılır: ekran açılırken (onCreate) ve ekran tekrar öne gelince (onResume).
  * Arka planda veya periyodik yenileme yok; sadece kullanıcı Demo'ya girip çıktığında güncellenir.
@@ -124,7 +123,6 @@ public class DemoActivity extends AppCompatActivity {
         mWindowTargetLabel = findViewById(R.id.tvWindowTarget);
         SeekBar seekTarget = findViewById(R.id.seekBarWindowTarget);
         Button btnGoToTarget = findViewById(R.id.btnWindowGoToTarget);
-        TextView tvPercentages = findViewById(R.id.tvWindowPercentages);
         if (mWindowSpinner != null && mWindowLevel != null) {
             String[] items = {
                 getString(R.string.window_driver),
