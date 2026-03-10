@@ -1129,6 +1129,18 @@ public class MG4Hardware {
     private static final String PREF_NAME_LIFETIME = "drivehub_dort";
     private static final String PREF_LIFETIME_KM = "consumption_lifetime_km";
     private static final String PREF_LIFETIME_KWH = "consumption_lifetime_kwh1";
+
+    // Kullanıcı tanımlı ek uzun dönem tüketim profilleri (Hayat boyu gibi davranır, ayrı ayrı sıfırlanabilir).
+    // Slot 0: her zaman ana "Hayat boyu" (sLifetimeKm/sLifetimeKwh) — ayrı sayaç tutulmaz.
+    // Slot 1..N-1: bağımsız sayaçlar ve isimler.
+    private static final int CONSUMPTION_PROFILE_SLOTS = 3; // Bu sayıyı arttırmak yeni profiller ekler.
+    private static final String PREF_CONS_PROFILE_KM_PREFIX  = "cons_profile_km_";
+    private static final String PREF_CONS_PROFILE_KWH_PREFIX = "cons_profile_kwh_";
+    private static final String PREF_CONS_PROFILE_NAME_PREFIX = "cons_profile_name_";
+    private static final String PREF_CONS_PROFILE_DEFAULT_NAME_PREFIX = "Profil ";
+    private static final double[] sConsProfileKm  = new double[CONSUMPTION_PROFILE_SLOTS];
+    private static final double[] sConsProfileKwh = new double[CONSUMPTION_PROFILE_SLOTS];
+    private static final String[] sConsProfileName = new String[CONSUMPTION_PROFILE_SLOTS];
     // Sürüş grafiği için bağımsız sayaçlar (UI trip reset'inden etkilenmez)
     private static volatile double sDriveGraphEnergyKwh = 0.0;
     private static volatile double sDriveGraphDistanceKm = 0.0;
@@ -1216,7 +1228,14 @@ public class MG4Hardware {
             sTripDistanceKm += dKm;
             sLifetimeKm += dKm;
             float speedTrim = (speedKmh / 1.0035f);
+
             sTripDistanceKm_trim += speedTrim * dtHours;
+            // Ek tüketim profilleri: ana "Hayat boyu" (slot 0) + kullanıcı profilleri (1..N-1).
+            // Slot 0 ana lifetime'a eşdeğer; 1..N-1 bağımsız sayaçlar.
+            for (int i = 1; i < CONSUMPTION_PROFILE_SLOTS; i++) {
+                sConsProfileKm[i]  += dKm;
+                sConsProfileKwh[i] += drivedKwh;
+            }
 
             if (isVehicleReady()) {
                 if (!Float.isNaN(speedKmh)) {
@@ -1284,15 +1303,27 @@ public class MG4Hardware {
         android.content.SharedPreferences p = ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE);
         sLifetimeKm = p.getFloat(PREF_LIFETIME_KM, 0f);
         sLifetimeKwh = p.getFloat(PREF_LIFETIME_KWH, 0f);
+        // Ek profillerin sayaçlarını ve isimlerini yükle (slot 1..N-1)
+        for (int i = 1; i < CONSUMPTION_PROFILE_SLOTS; i++) {
+            sConsProfileKm[i] = p.getFloat(PREF_CONS_PROFILE_KM_PREFIX + i, 0f);
+            sConsProfileKwh[i] = p.getFloat(PREF_CONS_PROFILE_KWH_PREFIX + i, 0f);
+            sConsProfileName[i] = p.getString(PREF_CONS_PROFILE_NAME_PREFIX + i, null);
+        }
     }
 
     /** Hayat boyu değerlerini hafızaya yaz (serviste arada bir çağrılmalı; veri kaybı olmasın). */
     public static void persistLifetimeToPrefs(Context ctx) {
         if (ctx == null) return;
-        ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE).edit()
-            .putFloat(PREF_LIFETIME_KM, (float) sLifetimeKm)
-            .putFloat(PREF_LIFETIME_KWH, (float) sLifetimeKwh)
-            .apply();
+        android.content.SharedPreferences.Editor e =
+                ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE).edit()
+                        .putFloat(PREF_LIFETIME_KM, (float) sLifetimeKm)
+                        .putFloat(PREF_LIFETIME_KWH, (float) sLifetimeKwh);
+        // Ek profillerin sayaçlarını da periyodik olarak persist et
+        for (int i = 1; i < CONSUMPTION_PROFILE_SLOTS; i++) {
+            e.putFloat(PREF_CONS_PROFILE_KM_PREFIX + i, (float) sConsProfileKm[i]);
+            e.putFloat(PREF_CONS_PROFILE_KWH_PREFIX + i, (float) sConsProfileKwh[i]);
+        }
+        e.apply();
     }
     public static float getLastSpeedKmh() { return sLastSpeedKmh; }
     public static int getLastGear() { return sLastGear; }
@@ -1307,6 +1338,50 @@ public class MG4Hardware {
     public static void resetDriveGraphCounters() {
         sDriveGraphEnergyKwh = 0.0;
         sDriveGraphDistanceKm = 0.0;
+    }
+    // --- Ek uzun dönem profiller API'si ---
+    public static int getConsumptionProfileSlots() {
+        return CONSUMPTION_PROFILE_SLOTS;
+    }
+    public static double getConsumptionProfileKm(int index) {
+        if (index <= 0) return sLifetimeKm;
+        if (index >= CONSUMPTION_PROFILE_SLOTS) return 0.0;
+        return sConsProfileKm[index];
+    }
+    public static double getConsumptionProfileKwh(int index) {
+        if (index <= 0) return sLifetimeKwh;
+        if (index >= CONSUMPTION_PROFILE_SLOTS) return 0.0;
+        return sConsProfileKwh[index];
+    }
+    public static String getConsumptionProfileName(int index) {
+        if (index < 0 || index >= CONSUMPTION_PROFILE_SLOTS) return "";
+        String name = sConsProfileName[index];
+        return (name != null) ? name : "";
+    }
+    public static void setConsumptionProfileName(Context ctx, int index, String name) {
+        if (index < 0 || index >= CONSUMPTION_PROFILE_SLOTS) return;
+        sConsProfileName[index] = name;
+        if (ctx != null && name != null) {
+            ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE)
+                    .edit()
+                    .putString(PREF_CONS_PROFILE_NAME_PREFIX + index, name)
+                    .apply();
+        }
+    }
+    public static void resetConsumptionProfile(Context ctx, int index) {
+        if (index <= 0 || index >= CONSUMPTION_PROFILE_SLOTS) {
+            // index 0 ana lifetime; ayrı reset için resetLifetime kullanılmalı
+            return;
+        }
+        sConsProfileKm[index] = 0.0;
+        sConsProfileKwh[index] = 0.0;
+        if (ctx != null) {
+            ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE)
+                    .edit()
+                    .remove(PREF_CONS_PROFILE_KM_PREFIX + index)
+                    .remove(PREF_CONS_PROFILE_KWH_PREFIX + index)
+                    .apply();
+        }
     }
     public static float getDcVoltGlobal() { return sDcVolt; }
     public static float getDcAmpGlobal()  { return sDcAmp; }

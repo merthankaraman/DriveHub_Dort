@@ -232,6 +232,91 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvConsumptionTripKm;
     private TextView mTvConsumptionEnergy;
     private TextView mTvConsumptionAvgKwhPer100km;
+    private android.widget.LinearLayout mLayoutConsumptionProfiles;
+    private final java.util.ArrayList<Button> mConsumptionProfileButtons = new java.util.ArrayList<>();
+    private int mActiveConsumptionProfile = 0;
+
+    private void setupConsumptionProfilesIfNeeded() {
+        if (mLayoutConsumptionProfiles == null || !mConsumptionProfileButtons.isEmpty()) return;
+        Context ctx = this;
+        int slots = MG4Hardware.getConsumptionProfileSlots();
+        for (int i = 0; i < slots; i++) {
+            Button b = new Button(ctx);
+            android.widget.LinearLayout.LayoutParams lp =
+                    new android.widget.LinearLayout.LayoutParams(
+                            android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                            android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+            if (i > 0) lp.setMarginStart(8);
+            b.setLayoutParams(lp);
+            b.setMinWidth(0);
+            b.setMinHeight(0);
+            b.setPadding(20, 8, 20, 8);
+            b.setTextSize(12f);
+            b.setAllCaps(false);
+            b.setTag(i);
+            String name = MG4Hardware.getConsumptionProfileName(i);
+            if (name == null || name.isEmpty()) {
+                if (i == 0) {
+                    name = getString(R.string.consumption_lifetime);
+                } else {
+                    name = getString(R.string.consumption_profile_default_format, i);
+                }
+            }
+            b.setText(name);
+            b.setOnClickListener(v -> {
+                Object tag = v.getTag();
+                if (tag instanceof Integer) {
+                    mActiveConsumptionProfile = (Integer) tag;
+                    updateConsumptionProfileButtons();
+                    refreshConsumptionPanel();
+                }
+            });
+            b.setOnLongClickListener(v -> {
+                Object tag = v.getTag();
+                if (!(tag instanceof Integer)) return true;
+                int index = (Integer) tag;
+                android.widget.EditText input = new android.widget.EditText(ctx);
+                input.setSingleLine();
+                String current = MG4Hardware.getConsumptionProfileName(index);
+                if (current == null || current.isEmpty()) {
+                    if (index == 0) {
+                        current = getString(R.string.consumption_lifetime);
+                    } else {
+                        current = getString(R.string.consumption_profile_default_format, index);
+                    }
+                }
+                input.setText(current);
+                new androidx.appcompat.app.AlertDialog.Builder(ctx)
+                        .setTitle(getString(R.string.consumption_profile_rename_title))
+                        .setView(input)
+                        .setPositiveButton(android.R.string.ok, (d, which) -> {
+                            String newName = input.getText().toString().trim();
+                            if (!newName.isEmpty()) {
+                                MG4Hardware.setConsumptionProfileName(ctx, index, newName);
+                                b.setText(newName);
+                            }
+                        })
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show();
+                return true;
+            });
+            mLayoutConsumptionProfiles.addView(b);
+            mConsumptionProfileButtons.add(b);
+        }
+        updateConsumptionProfileButtons();
+    }
+
+    private void updateConsumptionProfileButtons() {
+        for (Button b : mConsumptionProfileButtons) {
+            Object tag = b.getTag();
+            int index = (tag instanceof Integer) ? (Integer) tag : -1;
+            boolean active = (index == mActiveConsumptionProfile);
+            int bg = active ? COLOR_ACTIVE : COLOR_INACTIVE;
+            int text = active ? 0xFFFFFFFF : 0xFF8B949E;
+            b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(bg));
+            b.setTextColor(text);
+        }
+    }
 
     private final Handler mConsumptionHandler = new Handler();
     /** Sadece panel açıkken UI güncellemesi (daha akıcı olsun diye ~5 Hz); veri serviste 100ms'de bir zaten okunuyor. */
@@ -691,6 +776,7 @@ public class MainActivity extends AppCompatActivity {
         mTvConsumptionTripKm      = findViewById(R.id.tvConsumptionTripKm);
         mTvConsumptionEnergy      = findViewById(R.id.tvConsumptionEnergy);
         mTvConsumptionAvgKwhPer100km      = findViewById(R.id.tvConsumptionAvgKwhPer100km);
+        mLayoutConsumptionProfiles = findViewById(R.id.layoutConsumptionProfiles);
         findViewById(R.id.btnConsumptionPanel).setOnClickListener(v -> openConsumptionPanel());
         findViewById(R.id.btnDrivingHistory).setOnClickListener(v ->
                 startActivity(new android.content.Intent(this, DrivingHistoryActivity.class)));
@@ -1474,6 +1560,7 @@ public class MainActivity extends AppCompatActivity {
         mLayoutMain.setVisibility(View.GONE);
         mLayoutConsumptionPanel.setVisibility(View.VISIBLE);
         MG4Hardware.ensureConsumptionTripStarted();
+        setupConsumptionProfilesIfNeeded();
         refreshConsumptionPanel();
         mConsumptionHandler.postDelayed(mConsumptionUiRunnable, 200);
     }
@@ -1494,7 +1581,11 @@ public class MainActivity extends AppCompatActivity {
             MG4Hardware.resetConsumptionTrip();
             Toast.makeText(this, getString(R.string.consumption_trip_reset_toast), Toast.LENGTH_SHORT).show();
         } else if (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME) {
-            MG4Hardware.resetLifetime(this);
+            if (mActiveConsumptionProfile == 0) {
+                MG4Hardware.resetLifetime(this);
+            } else {
+                MG4Hardware.resetConsumptionProfile(this, mActiveConsumptionProfile);
+            }
             Toast.makeText(this, getString(R.string.consumption_trip_reset_toast), Toast.LENGTH_SHORT).show();
         } else if (mConsumptionDisplayMode == CONSUMPTION_MODE_SINCE_START) {
             // Motor çalıştıktan itibaren sayaçları kullanıcı sıfırlayamaz; bu mod sadece READY durumuna göre baştan başlar.
@@ -1532,7 +1623,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Motor çalıştıktan itibaren (SINCE_START) modunda reset düğmesini gizle
         if (btnReset != null) {
-            btnReset.setVisibility(sinceActive ? View.GONE : View.VISIBLE);
+            btnReset.setVisibility(sinceActive ? View.INVISIBLE : View.VISIBLE);
+        }
+
+        // Kayıtlı profiller satırının görünürlüğü: sadece Hayat boyu modunda göster.
+        if (mLayoutConsumptionProfiles != null) {
+            mLayoutConsumptionProfiles.setVisibility(lifetimeActive ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -1548,8 +1644,6 @@ public class MainActivity extends AppCompatActivity {
         int gear = MG4Hardware.getLastGear();
         boolean sinceStart = (mConsumptionDisplayMode == CONSUMPTION_MODE_SINCE_START);
         boolean lifetimeMode = (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME);
-        double lifetimeKm = MG4Hardware.getLifetimeKm();
-        double lifetimeKwh = MG4Hardware.getLifetimeKwh();
 
         if (mTvConsumptionGear != null) {
             String gearText;
@@ -1578,7 +1672,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (lifetimeMode) {
-            // Hayat boyu: toplam km, toplam kWh, ortalama
+            // Hayat boyu veya kayıtlı profil: aktif profil slotunun km/kWh değerleri
+            double lifetimeKm  = MG4Hardware.getConsumptionProfileKm(mActiveConsumptionProfile);
+            double lifetimeKwh = MG4Hardware.getConsumptionProfileKwh(mActiveConsumptionProfile);
             if (mTvConsumptionTripKm != null) {
                 mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", lifetimeKm));
             }

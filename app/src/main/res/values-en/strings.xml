@@ -256,6 +256,7 @@
 
     <!-- Dialog -->
     <string name="dialog_vehicle_sound_title">Vehicle sound profile</string>
+    <string name="consumption_profile_rename_title">Rename profile</string>
 
     <!-- Notification volume -->
     <string name="notification_volume_okunamadi">Notification volume: read failed</string>
@@ -292,6 +293,7 @@
     <string name="consumption_energy">Energy </string>
     <string name="consumption_avg">Avg. consumption </string>
     <string name="consumption_lifetime">Lifetime</string>
+    <string name="consumption_profile_default_format">Profile %1$d</string>
     <string name="consumption_trip_reset_toast">Trip reset.</string>
 
     <!-- Demo: door lock -->
