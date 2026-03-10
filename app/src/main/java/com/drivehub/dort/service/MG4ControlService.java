@@ -207,9 +207,9 @@ public class MG4ControlService extends Service {
     /** Hayat boyu km/kWh'ı bu kadar integrasyon sonrası bir kez hafızaya yaz (≈30 sn). */
     private static final int LIFETIME_PERSIST_EVERY_N = 300;
     private final Handler mConsumptionHandler = new Handler(Looper.getMainLooper());
-    private boolean mDriveSessionActive = false;
-    // READY oturumu başlangıcı (duvar saati, tüm app tarafından okunabilsin diye static)
     private static long mDriveStartWallMs = 0L;
+    private static volatile boolean sDriveSessionActive = false;
+    private static volatile long    sDriveSessionEndWallMs = 0L;
     private int mConsumptionLoopCount = 0;
 
     private final Runnable mConsumptionIntegrationRunnable = new Runnable() {
@@ -230,22 +230,23 @@ public class MG4ControlService extends Service {
         boolean ready = MG4Hardware.isVehicleReady();
         long nowWall = System.currentTimeMillis();
 
-        if (!mDriveSessionActive && ready) {
-            // Yeni sürüş oturumu başlıyor
-            mDriveSessionActive = true;
+        if (!sDriveSessionActive && ready) {
+            sDriveSessionActive = true;
             mDriveStartWallMs = nowWall;
+            sDriveSessionEndWallMs = 0L;
             MG4Hardware.resetDriveGraphCounters();
             return;
         }
 
-        if (mDriveSessionActive && !ready) {
-            // Sürüş oturumu bitti
-            mDriveSessionActive = false;
+        if (sDriveSessionActive && !ready) {
+            sDriveSessionActive = false;
+            sDriveSessionEndWallMs = nowWall;
+
             double distKm = MG4Hardware.getDriveGraphDistanceKm();
             double energyKwh = MG4Hardware.getDriveGraphEnergyKwh();
             double durationMinutes = (nowWall - mDriveStartWallMs) / 60000.0;
 
-            if ((distKm > 0.01 || energyKwh > 0.001) && durationMinutes >= 5.0) {
+            if ((distKm > 0.01) && durationMinutes >= 5.0) {
                 com.drivehub.dort.util.DrivingHistory.addSession(
                         getApplicationContext(),
                         mDriveStartWallMs,
@@ -262,9 +263,17 @@ public class MG4ControlService extends Service {
         if (start == 0L) {
             return 0L;
         }
-        long now = System.currentTimeMillis();
-        long dur = now - start;
-        return (dur > 0L) ? dur : 0L;
+        long end;
+        if (sDriveSessionActive) {
+            end = System.currentTimeMillis();
+        } else {
+            end = sDriveSessionEndWallMs;
+            if (end <= 0L) {
+                return 0L;
+            }
+        }
+        long dur = end - start;
+        return Math.max(dur, 0L);
     }
 
     @Override
@@ -864,7 +873,9 @@ public class MG4ControlService extends Service {
             mCamera360KeyPressed = false;
             if (!mCamera360LongTriggered) {
                 long now = System.currentTimeMillis();
-                boolean isDouble = (mCamera360LastTapKeyCode == keyCode && (now - mCamera360LastTapTime) <= SHORTCUT_DOUBLE_PRESS_MS);
+                long delta = now - mCamera360LastTapTime;
+                boolean isDouble = (mCamera360LastTapKeyCode == keyCode
+                        && delta <= SHORTCUT_DOUBLE_PRESS_MS);
                 if (isDouble) {
                     mCamera360LastTapTime = 0;
                     mCamera360LastTapKeyCode = -1;

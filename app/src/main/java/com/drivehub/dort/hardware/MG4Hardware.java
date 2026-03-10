@@ -1167,7 +1167,9 @@ public class MG4Hardware {
      *  - Global önbelleğe (sDcKw, sTripEnergyKwh, sTripDistanceKm, vb.) yaz
      */
     public static void run100msTask() {
-        float speedKmh = getSpeedKmh() * 1.0035f;
+        float speedKmh_raw = getSpeedKmh();
+        float speedKmh = speedKmh_raw * (speedKmh_raw >= 100 ? 1.004f : 1f);
+
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
 
         // DC güç (sürüş + şarj): V * A / 1000 → kW (işaretli)
@@ -1205,8 +1207,6 @@ public class MG4Hardware {
         double dtHours = (sConsumptionLastRealtimeMs > 0)
                 ? (nowRealtimeMs - sConsumptionLastRealtimeMs) / 3600000.0
                 : 0.0;
-
-        // Zaman için güvenlik sınırı: 0 veya 1 saatten büyük deltaları integrale sokma (dt artık negatif olmaz)
         if (dtHours <= 0.0 || dtHours > 1.0) {
             if (dtHours <= 0.0) dtHourscounter += 1;
             else dtHourscounter1 += 1;
@@ -1231,7 +1231,7 @@ public class MG4Hardware {
             sLifetimeKwh += drivedKwh;
             sTripDistanceKm += dKm;
             sLifetimeKm += dKm;
-            float speedTrim = (speedKmh / 1.0035f);
+            float speedTrim = speedKmh_raw * (speedKmh_raw >= 70 ? 1.004f : 1f);
 
             for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
                 sConsProfileKm[i] += dKm;
