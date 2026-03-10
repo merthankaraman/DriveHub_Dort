@@ -202,8 +202,8 @@ public class MG4ControlService extends Service {
         }
     };
 
-    /** Tüketim verisi + enerji integrasyonu (100ms); boot'tan itibaren, uygulama açılmasa da. */
-    private static final int CONSUMPTION_INTEGRATION_INTERVAL_MS = 100;
+    /** 100 ms'lik ana görev periyodu (enerji, mesafe, hazır/şarj durumu vb.). */
+    private static final int MAIN_100MS_TASK_INTERVAL_MS = 100;
     /** Hayat boyu km/kWh'ı bu kadar integrasyon sonrası bir kez hafızaya yaz (≈30 sn). */
     private static final int LIFETIME_PERSIST_EVERY_N = 300;
     private final Handler mConsumptionHandler = new Handler(Looper.getMainLooper());
@@ -214,14 +214,14 @@ public class MG4ControlService extends Service {
     private final Runnable mConsumptionIntegrationRunnable = new Runnable() {
         @Override
         public void run() {
-            MG4Hardware.integrateConsumptionData();
+            MG4Hardware.run100msTask();
             mConsumptionLoopCount++;
             if (mConsumptionLoopCount >= LIFETIME_PERSIST_EVERY_N) {
                 mConsumptionLoopCount = 0;
                 MG4Hardware.persistLifetimeToPrefs(MG4ControlService.this);
             }
             updateDriveSessionFromReady();
-            mConsumptionHandler.postDelayed(this, CONSUMPTION_INTEGRATION_INTERVAL_MS);
+            mConsumptionHandler.postDelayed(this, MAIN_100MS_TASK_INTERVAL_MS);
         }
     };
 

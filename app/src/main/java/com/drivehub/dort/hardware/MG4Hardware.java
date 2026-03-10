@@ -1144,8 +1144,13 @@ public class MG4Hardware {
     private static volatile int dtHourscounter = 0;
     private static volatile int dtHourscounter1 = 0;
 
-    /** Serviste 100ms'de bir çağrılır: DC/AC güçleri oku, enerjiyi ve mesafeyi integre et, önbelleğe yaz. */
-    public static void integrateConsumptionData() {
+    /**
+     * Serviste 100ms'de bir çağrılır:
+     *  - DC/AC güçleri oku
+     *  - Enerjiyi ve mesafeyi entegre et
+     *  - Global önbelleğe (sDcKw, sTripEnergyKwh, sTripDistanceKm, vb.) yaz
+     */
+    public static void run100msTask() {
         float speedKmh = getSpeedKmh() * 1.0035f;
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
 
