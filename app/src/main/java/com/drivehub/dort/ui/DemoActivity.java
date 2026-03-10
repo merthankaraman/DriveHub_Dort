@@ -1,5 +1,6 @@
 package com.drivehub.dort.ui;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -66,19 +67,26 @@ public class DemoActivity extends AppCompatActivity {
     private TextView mBtLockStatusView;
 
     private final Handler mBtHandler = new Handler(Looper.getMainLooper());
+    @SuppressLint("MissingPermission")
     private final Runnable mBtScanRunnable = new Runnable() {
         @Override
         public void run() {
             if (mBtAdapter == null) return;
             if (!mBtAdapter.isEnabled()) return;
-            if (!mBtAdapter.isDiscovering()) {
-                mBtAdapter.startDiscovery();
+            try {
+                if (!mBtAdapter.isDiscovering()) {
+                    mBtAdapter.startDiscovery();
+                }
+            } catch (SecurityException ignored) {
+                // İzin hatası olursa taramayı sessizce atla
+                return;
             }
             // Daha sık tarama: yaklaşık 10 sn arayla
             mBtHandler.postDelayed(this, 10_000L);
         }
     };
 
+    @SuppressLint("MissingPermission")
     private final BroadcastReceiver mBtReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -291,6 +299,7 @@ public class DemoActivity extends AppCompatActivity {
         swEnabled.setChecked(enabled);
     }
 
+    @SuppressLint("MissingPermission")
     private void showBtDevicePicker(SwitchCompat swEnabled) {
         if (mBtAdapter == null) {
             if (mBtLockStatusView != null) {
@@ -343,6 +352,7 @@ public class DemoActivity extends AppCompatActivity {
                 .show();
     }
 
+    @SuppressLint("MissingPermission")
     private void startBluetoothLockMonitoring() {
         if (mBtAdapter == null) return;
         boolean enabled = getSharedPreferences("drivehub_dort", MODE_PRIVATE)
@@ -361,10 +371,17 @@ public class DemoActivity extends AppCompatActivity {
         mBtHandler.post(mBtScanRunnable);
     }
 
+    @SuppressLint("MissingPermission")
     private void stopBluetoothLockMonitoring() {
         mBtHandler.removeCallbacks(mBtScanRunnable);
-        if (mBtAdapter != null && mBtAdapter.isDiscovering()) {
-            mBtAdapter.cancelDiscovery();
+        if (mBtAdapter != null) {
+            try {
+                if (mBtAdapter.isDiscovering()) {
+                    mBtAdapter.cancelDiscovery();
+                }
+            } catch (SecurityException ignored) {
+                // Güvenlik istisnasını görmezden gel
+            }
         }
         if (mBtLockReceiverRegistered) {
             try {
