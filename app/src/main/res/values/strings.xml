@@ -286,6 +286,10 @@
     <string name="unit_kwh_label">kWh</string>
     <string name="batarya">Batarya</string>
     <string name="btn_reset_trip">Sürüş sıfırla</string>
+    <string name="btn_reset_lifetime">Hayat boyu sıfırla</string>
+    <string name="btn_reset_profile_format">%1$s sıfırla</string>
+    <string name="consumption_reset_confirm_title">Sıfırlama onayı</string>
+    <string name="consumption_reset_confirm_message">Bu verileri sıfırlamak istediğinden emin misin?</string>
     <string name="consumption_time_avg_speed">Süre / Ort. hız</string>
     <string name="consumption_speed">Hız</string>
     <string name="consumption_power">Güç</string>

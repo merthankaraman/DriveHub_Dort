@@ -260,6 +260,7 @@ public class MainActivity extends AppCompatActivity {
             b.setOnClickListener(v -> {
                 mActiveConsumptionProfile = -1;
                 updateConsumptionProfileButtons();
+                updateConsumptionModeButtons();
                 refreshConsumptionPanel();
             });
             // Lifetime adını şu anlık rename etmiyoruz; uzun basma yok.
@@ -293,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
                 if (tag instanceof Integer) {
                     mActiveConsumptionProfile = (Integer) tag;
                     updateConsumptionProfileButtons();
+                    updateConsumptionModeButtons();
                     refreshConsumptionPanel();
                 }
             });
@@ -316,6 +318,7 @@ public class MainActivity extends AppCompatActivity {
                             if (!newName.isEmpty()) {
                                 MG4Hardware.setConsumptionProfileName(ctx, index, newName);
                                 b.setText(newName);
+                                updateConsumptionModeButtons();
                             }
                         })
                         .setNegativeButton(android.R.string.cancel, null)
@@ -803,7 +806,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnDrivingHistory).setOnClickListener(v ->
                 startActivity(new android.content.Intent(this, DrivingHistoryActivity.class)));
         findViewById(R.id.btnConsumptionBack).setOnClickListener(v -> closeConsumptionPanel());
-        findViewById(R.id.btnConsumptionResetTrip).setOnClickListener(v -> resetConsumptionTrip());
+        findViewById(R.id.btnConsumptionResetTrip).setOnClickListener(v -> showResetConsumptionConfirmDialog());
         mConsumptionDisplayMode = getSharedPreferences("drivehub_dort", MODE_PRIVATE).getInt(PREF_CONSUMPTION_DISPLAY_MODE, CONSUMPTION_MODE_CURRENT);
         findViewById(R.id.btnConsumptionModeSinceStart).setOnClickListener(v -> setConsumptionDisplayMode(CONSUMPTION_MODE_SINCE_START));
         findViewById(R.id.btnConsumptionModeCurrent).setOnClickListener(v -> setConsumptionDisplayMode(CONSUMPTION_MODE_CURRENT));
@@ -1594,6 +1597,43 @@ public class MainActivity extends AppCompatActivity {
         mCurrentPanel = PANEL_MAIN;
     }
 
+    private void showResetConsumptionConfirmDialog() {
+        // Hangi şeyi sıfırlayacağımızı buton metni için de kullanacağız
+        String targetLabel;
+        if (mConsumptionDisplayMode == CONSUMPTION_MODE_CURRENT) {
+            targetLabel = getString(R.string.consumption_mode_trip);
+        } else if (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME) {
+            if (mActiveConsumptionProfile < 0) {
+                targetLabel = getString(R.string.consumption_lifetime);
+            } else {
+                String profileName = MG4Hardware.getConsumptionProfileName(mActiveConsumptionProfile);
+                if (profileName == null || profileName.isEmpty()) {
+                    profileName = getString(R.string.consumption_profile_default_format, mActiveConsumptionProfile + 1);
+                }
+                targetLabel = profileName;
+            }
+        } else {
+            // Motor çalıştıktan itibaren modunda zaten reset yok; yine de güvenlik için direkt çık.
+            return;
+        }
+
+        String buttonText;
+        if (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME && mActiveConsumptionProfile < 0) {
+            buttonText = getString(R.string.btn_reset_lifetime);
+        } else if (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME) {
+            buttonText = getString(R.string.btn_reset_profile_format, targetLabel);
+        } else {
+            buttonText = getString(R.string.btn_reset_trip);
+        }
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(getString(R.string.consumption_reset_confirm_title))
+                .setMessage(getString(R.string.consumption_reset_confirm_message))
+                .setPositiveButton(buttonText, (d, which) -> resetConsumptionTrip())
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
     private void resetConsumptionTrip() {
         // Görüntülenen moda göre ilgili sayaçları sıfırla:
         // - CONSUMPTION_MODE_CURRENT  → Trip (Sürüş) sayaçları
@@ -1647,11 +1687,32 @@ public class MainActivity extends AppCompatActivity {
         // Motor çalıştıktan itibaren (SINCE_START) modunda reset düğmesini gizle
         if (btnReset != null) {
             btnReset.setVisibility(sinceActive ? View.INVISIBLE : View.VISIBLE);
+
+            // Reset butonunun metnini moda/profil adına göre dinamik ayarla
+            if (!sinceActive) {
+                String targetLabel;
+                if (mConsumptionDisplayMode == CONSUMPTION_MODE_CURRENT) {
+                    targetLabel = getString(R.string.consumption_mode_trip);
+                    btnReset.setText(getString(R.string.btn_reset_trip));
+                } else if (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME) {
+                    if (mActiveConsumptionProfile < 0) {
+                        targetLabel = getString(R.string.consumption_lifetime);
+                        btnReset.setText(getString(R.string.btn_reset_lifetime));
+                    } else {
+                        String profileName = MG4Hardware.getConsumptionProfileName(mActiveConsumptionProfile);
+                        if (profileName == null || profileName.isEmpty()) {
+                            profileName = getString(R.string.consumption_profile_default_format, mActiveConsumptionProfile + 1);
+                        }
+                        targetLabel = profileName;
+                        btnReset.setText(getString(R.string.btn_reset_profile_format, targetLabel));
+                    }
+                }
+            }
         }
 
         // Kayıtlı profiller satırının görünürlüğü: sadece Hayat boyu modunda göster.
         if (mLayoutConsumptionProfiles != null) {
-            mLayoutConsumptionProfiles.setVisibility(lifetimeActive ? View.VISIBLE : View.GONE);
+            mLayoutConsumptionProfiles.setVisibility(lifetimeActive ? View.VISIBLE : View.INVISIBLE);
         }
     }
 

@@ -163,17 +163,17 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
                 <!-- SatÄ±r 1: HÄ±z | Vites -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="8dp"
                     android:orientation="horizontal"
                     android:weightSum="2"
                     android:gravity="center_vertical">
@@ -193,7 +193,7 @@
                             android:fontFamily="monospace"
                             android:text="--"
                             android:textColor="@color/status_value"
-                            android:textSize="36sp"
+                            android:textSize="32sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -220,7 +220,7 @@
                             android:layout_weight="1"
                             android:text="@string/consumption_time_avg_speed"
                             android:textColor="#8B949E"
-                            android:textSize="24sp" />
+                            android:textSize="20sp" />
 
                         <TextView
                             android:id="@+id/tvConsumptionTimeAvg"
@@ -229,7 +229,7 @@
                             android:fontFamily="monospace"
                             android:text="--"
                             android:textColor="@color/status_value"
-                            android:textSize="36sp"
+                            android:textSize="32sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
