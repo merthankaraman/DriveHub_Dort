@@ -355,15 +355,17 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    // Hız güncelleme
-    private final Handler mSpeedHandler = new Handler();
-    private final Runnable mSpeedRunnable = new Runnable() {
+    // Ses paneli için hız / kadran güncelleme
+    private final Handler mSoundPanelHandler = new Handler();
+
+    private final Runnable mSoundPanelRunnable = new Runnable() {
         @Override
         public void run() {
             // Hız tek kaynak: MG4Hardware (servis oradan okuyor). UI için sim açıksa sim, değilse son okunan gerçek hız.
             MG4Hardware.setSimSpeed(mSimSpeedActive, mSimSpeedKmh);
             float speedForDisplay = mSimSpeedActive ? mSimSpeedKmh : MG4Hardware.getLastSpeedForDisplay();
 
+            // Ana hız yazısı (her panelde)
             if (mTvSpeed != null) {
                 if (Float.isNaN(speedForDisplay)) {
                     mTvSpeed.setText(getString(R.string.speed_placeholder));
@@ -371,28 +373,42 @@ public class MainActivity extends AppCompatActivity {
                     mTvSpeed.setText(getString(R.string.speed_format, speedForDisplay));
                 }
             }
-            if (!Float.isNaN(speedForDisplay) && mTvGaugeSpeed != null) {
-                mTvGaugeSpeed.setText(String.format("%.2f", speedForDisplay));
-            } else {
-                mTvGaugeSpeed.setText(getString(R.string.speed_placeholder));
-            }
-            if (mEngineSound != null) {
+
+            // Kadran + (sim ses): sadece ses paneli açıkken
+            if (mCurrentPanel == PANEL_SOUND) {
+                if (!Float.isNaN(speedForDisplay) && mTvGaugeSpeed != null) {
+                    mTvGaugeSpeed.setText(String.format("%.2f", speedForDisplay));
+                } else if (mTvGaugeSpeed != null) {
+                    mTvGaugeSpeed.setText(getString(R.string.speed_placeholder));
+                }
+
                 float dcPowerKw = MG4Hardware.getDcKwGlobal();
                 if (Float.isNaN(dcPowerKw)) dcPowerKw = 0f;
+
                 if (mTvGaugeRpm != null) {
                     float rpm = mEngineSound.getCurrentRpm();
                     mTvGaugeRpm.setText(String.format("%.0f", rpm));
                 }
                 if (mTvGaugeGear != null) {
                     int gear_real = MG4Hardware.getLastGear();
-                    if(mSimSpeedActive) gear_real = 4;
+                    if (mSimSpeedActive) gear_real = 4;
                     String gearText;
                     switch (gear_real) {
-                        case 1:  gearText = "P"; break;
-                        case 2:  gearText = "R"; break;
-                        case 3:  gearText = "N"; break;
-                        case 4:  gearText = "A" + (mEngineSound.getCurrentGear() == 0 ? "1" : mEngineSound.getCurrentGear()); break;
-                        default: gearText = "--"; break;
+                        case 1:
+                            gearText = "P";
+                            break;
+                        case 2:
+                            gearText = "R";
+                            break;
+                        case 3:
+                            gearText = "N";
+                            break;
+                        case 4:
+                            gearText = "A" + (mEngineSound.getCurrentGear() == 0 ? "1" : mEngineSound.getCurrentGear());
+                            break;
+                        default:
+                            gearText = "--";
+                            break;
                     }
                     mTvGaugeGear.setText(gearText);
                 }
@@ -404,30 +420,32 @@ public class MainActivity extends AppCompatActivity {
                     int pct = Math.round(throttle * 100f);
                     mTvGaugeThrottle.setText(pct + "%");
                 }
-            }
-            boolean ready = (MG4Hardware.isVehicleReady() || mSimSpeedActive);
-            if (mTvMotorState != null) {
-                String motorStr = ready ? getString(R.string.motor_state_ready) : getString(R.string.motor_state_off);
-                int modeVal = MG4Hardware.getDriveMode();
-                String modeStr = (modeVal >= 0) ? DriveMode.fromValue(modeVal).label : "";
-                mTvMotorState.setText(modeStr.isEmpty() ? motorStr : motorStr + getString(R.string.motor_state_drive_suffix, modeStr));
-            }
-            // Ses çalma: sadece ses açıksa ve (READY veya sim) ise start, değilse stop
-            if (mEngineSound != null && mSimSpeedActive) {
-                if (mSoundEnabled) {
-                    if (!mEngineSound.isPlaying()) {
-                        mEngineSound.start();
+
+                // Sim modunda ve ses açıkken: emülatörde servisin yerine sesi burada besle
+                /*if (mEngineSound != null) {
+                    if (mSoundEnabled && mSimSpeedActive) {
+                        if (!mEngineSound.isPlaying()) {
+                            mEngineSound.start();
+                        }
+                        mEngineSound.onSpeedChanged(mSimSpeedKmh, Float.NaN);
+                    } else {
+                        // Sim kapandığında veya ses kapandığında burada başlatılmış sesi durdur
+                        if (mEngineSound.isPlaying()) {
+                            mEngineSound.stop();
+                        }
                     }
-                    // Sim modunda hız ve throttle'ı doğrudan buradan ver (RPM artsın; throttle zaten slider'dan setSimulatedThrottle ile ayarlı)
-                    mEngineSound.onSpeedChanged(mSimSpeedKmh, Float.NaN);
-                } else {
-                    if (mEngineSound.isPlaying()) {
-                        mEngineSound.stop();
-                    }
+                }*/
+
+
+                boolean ready = (MG4Hardware.isVehicleReady() || mSimSpeedActive);
+                if (mTvMotorState != null) {
+                    String motorStr = ready ? getString(R.string.motor_state_ready) : getString(R.string.motor_state_off);
+                    int globalDriveMode = MG4Hardware.getDriveMode();
+                    String modeStr = (globalDriveMode >= 0) ? DriveMode.fromValue(globalDriveMode).label : "";
+                    mTvMotorState.setText(modeStr.isEmpty() ? motorStr : motorStr + getString(R.string.motor_state_drive_suffix, modeStr));
                 }
             }
-            // 2 Hz yerine ~10 Hz güncelle (daha akıcı ses için)
-            mSpeedHandler.postDelayed(this, 100);
+            mSoundPanelHandler.postDelayed(this, 100);
         }
     };
 
@@ -580,9 +598,6 @@ public class MainActivity extends AppCompatActivity {
                     if (mTvSpeedTestLabel != null) {
                         mTvSpeedTestLabel.setText(getString(R.string.sim_speed_format, speed));
                     }
-                    if (mSoundEnabled && mEngineSound != null && !mEngineSound.isPlaying()) {
-                        mEngineSound.start();
-                    }
                 }
 
                 @Override public void onStartTrackingTouch(SeekBar seekBar) {}
@@ -592,14 +607,11 @@ public class MainActivity extends AppCompatActivity {
             if (seekThrottleTest != null && mEngineSound != null) {
                 seekThrottleTest.setProgress(0);
                 seekThrottleTest.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                    @Override
-                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        float throttle = progress / 100f;
-                        mEngineSound.setSimulatedThrottle(throttle);
-                        if (mSoundEnabled && mEngineSound != null && !mEngineSound.isPlaying()) {
-                            mEngineSound.start();
-                        }
-                    }
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    float throttle = progress / 100f;
+                    mEngineSound.setSimulatedThrottle(throttle);
+                }
 
                     @Override public void onStartTrackingTouch(SeekBar seekBar) {}
                     @Override public void onStopTrackingTouch(SeekBar seekBar) {}
@@ -607,23 +619,14 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Motor sesi aç/kapa butonu
+        // Motor sesi aç/kapa butonu (sadece bayrağı ve UI'yı günceller; gerçek ses döngüsü serviste yönetilir)
         mBtnSoundToggle.setOnClickListener(v -> {
             mSoundEnabled = !mSoundEnabled;
-            getSharedPreferences("drivehub_dort", MODE_PRIVATE).edit().putBoolean(PREF_SOUND_ENABLED, mSoundEnabled).apply();
-            if (mSoundEnabled) {
-                // Ses sadece araç READY olduğunda gerçekten çalsın;
-                // değilse tercih ON kalır, READY olunca mSpeedRunnable içinde otomatik başlar.
-                if ((MG4Hardware.isVehicleReady() || mSimSpeedActive) && !mEngineSound.isPlaying()) {
-                    mEngineSound.start();
-                }
-                Toast.makeText(this, getString(R.string.toast_motor_sound_on), Toast.LENGTH_SHORT).show();
-            } else {
-                if (mEngineSound.isPlaying()) {
-                    mEngineSound.stop();
-                }
-                Toast.makeText(this, getString(R.string.toast_motor_sound_off), Toast.LENGTH_SHORT).show();
-            }
+            getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                    .edit().putBoolean(PREF_SOUND_ENABLED, mSoundEnabled).apply();
+            Toast.makeText(this,
+                    getString(mSoundEnabled ? R.string.toast_motor_sound_on : R.string.toast_motor_sound_off),
+                    Toast.LENGTH_SHORT).show();
             updateSoundToggleButton();
         });
 
@@ -700,8 +703,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // Hız döngüsünü başlat (UI açık/kapalı fark etmeksizin sürekli çalışsın)
-        mSpeedHandler.post(mSpeedRunnable);
         // Tüketim integrasyonu serviste 100ms'de bir (boot'tan itibaren); burada sadece UI döngüsü panel açıkken
 
         // Log (detay) switch'i
@@ -1014,7 +1015,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         mChargingHandler.removeCallbacks(mChargingRunnable);
         mConsumptionHandler.removeCallbacks(mConsumptionUiRunnable);
-        mSpeedHandler.removeCallbacks(mSpeedRunnable);
+        mSoundPanelHandler.removeCallbacks(mSoundPanelRunnable);
         // Motor sesini durdurmuyoruz: açıksa arkada çalmaya devam etsin (sadece kullanıcı kapatınca dursun)
         mEngineSound = null;
     }
@@ -1066,9 +1067,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void refreshDriveRegenPanelState() {
-        int dm = MG4Hardware.getDriveMode();
-        if (dm >= 0) {
-            highlightDriveModeButton(DriveMode.fromValue(dm));
+        int globalDriveMode = MG4Hardware.getDriveMode();
+        if (globalDriveMode >= 0) {
+            highlightDriveModeButton(DriveMode.fromValue(globalDriveMode));
         }
         int rg = MG4Hardware.getRegenLevel();
         if (rg >= 0) {
@@ -1872,6 +1873,9 @@ public class MainActivity extends AppCompatActivity {
         if (mLayoutSoundPanel != null) {
             mLayoutSoundPanel.setVisibility(View.VISIBLE);
         }
+        // Ses paneli açıldığında hız/kadran döngüsünü başlat
+        mSoundPanelHandler.removeCallbacks(mSoundPanelRunnable);
+        mSoundPanelHandler.post(mSoundPanelRunnable);
         refreshAlarmVolumeHint();
         mAlarmVolumeHandler.removeCallbacks(mAlarmVolumeRunnable);
         mAlarmVolumeHandler.postDelayed(mAlarmVolumeRunnable, 1500);
@@ -1879,6 +1883,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void closeSoundPanel() {
         mAlarmVolumeHandler.removeCallbacks(mAlarmVolumeRunnable);
+        mSoundPanelHandler.removeCallbacks(mSoundPanelRunnable);
         if (mLayoutSoundPanel != null) {
             mLayoutSoundPanel.setVisibility(View.GONE);
         }
@@ -2322,27 +2327,6 @@ public class MainActivity extends AppCompatActivity {
             btnEn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(enActive ? COLOR_ACTIVE : COLOR_INACTIVE));
             btnEn.setTextColor(enActive ? 0xFFFFFFFF : 0xFF8B949E);
         }
-    }
-
-    // -------------------------------------------------------------------------
-    // Binder test
-    // -------------------------------------------------------------------------
-
-    private void testCarProperty() {
-        MG4Hardware.init(this);
-        boolean ready = MG4Hardware.isReady();
-        String driveStr = "?";
-        String regenStr = "?";
-        if (ready) {
-            int dm = MG4Hardware.getDriveMode();
-            int rg = MG4Hardware.getRegenLevel();
-            driveStr = dm >= 0 ? DriveMode.fromValue(dm).label + " (" + dm + ")" : "okunamadı";
-            regenStr = rg >= 0 ? RegenLevel.fromValue(rg).label + " (" + rg + ")" : "okunamadı";
-        }
-        mTvBinder.setText(
-                "CarPropertyManager : " + (ready ? "✅ HAZIR" : "❌ YOK") + "\n"
-                + "Sürüş Modu        : " + driveStr + "\n"
-                + "Regen Seviyesi    : " + regenStr);
     }
 
     // -------------------------------------------------------------------------

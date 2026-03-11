@@ -61,14 +61,13 @@ public class MG4Hardware {
     // Tüketim ekranı (VehicleConditionBinder / BMS — MG4_BINDER_REFERENCE.md)
     private static final int PROP_TOTAL_MILEAGE = 557873939;   // getTotalMileage() — toplam km (VendorInstrumentCluster)
     private static final int PROP_GEAR         = 557847918;    // getCarGear() — vites konumu
-    private static final int PROP_ELEC_CSUMP_PER_KM = 560002077; // getElecCsumpPerKm() — kWh/km tüketim
 
     // Katman 2 — Binder (yedek, uid.system gerektirir)
     private static final String DESCRIPTOR_VEHICLE =
             "com.saicmotor.sdk.vehiclesettings.IVehicleSettingService";
-    private static final int TX_SET_DRIVE_MODE         = 130; // 0x82 — Hüseyin smali analizi
-    private static final int TX_SET_REGEN_LEVEL        = 161; // 0xA1 — Hüseyin smali analizi
-    private static final int TX_SET_ONE_PEDAL          = 164; // 0xA4 — Hüseyin smali analizi
+    private static final int TX_SET_DRIVE_MODE         = 130;
+    private static final int TX_SET_REGEN_LEVEL        = 161;
+    private static final int TX_SET_ONE_PEDAL          = 164;
     private static final int COUNT = 1;
 
     /** HVAC property değişikliğini dinlemek isteyen servis buraya register olur. */
@@ -134,8 +133,6 @@ public class MG4Hardware {
     private static boolean sCarBindAttempted       = false;
     private static IBinder sVehicleBinder          = null;
     private static boolean sInitialized            = false;
-
-    // Katman 3 — VehicleService direct bind (Hüseyin yöntemi)
     private static volatile Object  sVehicleSettingService = null;
     /** Kapı/cam/sunroof için — hub.getService("vehiclecontrol") → IVehicleControlService */
     private static volatile Object  sVehicleControlService = null;
@@ -162,8 +159,6 @@ public class MG4Hardware {
 
         // Katman 1: CarPropertyManager — com.android.car'a bind ol
         bindCarService(appContext);
-
-        // Katman 3: VehicleService direct bind (Hüseyin yöntemi)
         bindVehicleService(appContext);
 
         // Katman 2: Binder (yedek)
@@ -448,12 +443,6 @@ public class MG4Hardware {
                     + e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
-
-    // -------------------------------------------------------------------------
-    // Katman 3 — VehicleService direct bind (Hüseyin yöntemi)
-    // bindService → DexClassLoader → IHubService$Stub → hub.getService("vehiclesetting")
-    // → IVehicleSettingService$Stub.asInterface → doğrudan metod çağrısı
-    // -------------------------------------------------------------------------
 
     private static void bindVehicleService(Context context) {
         if (sVsBindAttempted) return;
