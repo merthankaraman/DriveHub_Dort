@@ -1,5 +1,6 @@
 package com.drivehub.dort.ui;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -24,6 +25,7 @@ import androidx.appcompat.widget.SwitchCompat;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.app.AppCompatActivity;
@@ -556,6 +558,39 @@ public class MainActivity extends AppCompatActivity {
         // Tam ekran tercihini uygula
         boolean fullscreen = prefsSound.getBoolean(PREF_FULLSCREEN, false);
         applyFullscreen(fullscreen);
+
+        // Geri tuşu davranışı: jest uyumlu OnBackPressedDispatcher
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // İç paneller açıksa önce bir seviye geri gel
+                if (mCurrentPanel == PANEL_SOUND) {
+                    closeSoundPanel();
+                } else if (mCurrentPanel == PANEL_CLIMATE) {
+                    closeClimatePanel();
+                } else if (mCurrentPanel == PANEL_REGEN) {
+                    closeRegenPanel();
+                } else if (mCurrentPanel == PANEL_DRIVE_REGEN) {
+                    closeDriveRegenPanel();
+                } else if (mCurrentPanel == PANEL_STATUS) {
+                    closeStatusPanel();
+                } else if (mCurrentPanel == PANEL_SHORTCUTS) {
+                    closeShortcutsPanel();
+                } else if (mCurrentPanel == PANEL_CONSUMPTION) {
+                    closeConsumptionPanel();
+                } else if (mCurrentPanel == PANEL_IDLE) {
+                    closeIdlePanel();
+                } else if (mCurrentPanel == PANEL_CHARGING_GRAPH) {
+                    closeChargingGraphPanel();
+                } else if (mCurrentPanel == PANEL_SETTINGS) {
+                    closeSettingsPanel();
+                } else {
+                    // Hiçbiri açık değilse normal back davranışı
+                    setEnabled(false);
+                    MainActivity.super.onBackPressed();
+                }
+            }
+        });
 
         // Motor gücü düğmesi (125 kW / 150 kW, hafızalı)
         if (mBtnMotorPower != null) {
@@ -2097,42 +2132,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        // İç paneller açıksa önce bir seviye geri gel
-        if (mCurrentPanel == PANEL_SOUND) {
-            closeSoundPanel();
-            return;
-        } else if (mCurrentPanel == PANEL_CLIMATE) {
-            closeClimatePanel();
-            return;
-        } else if (mCurrentPanel == PANEL_REGEN) {
-            closeRegenPanel();
-            return;
-        } else if (mCurrentPanel == PANEL_DRIVE_REGEN) {
-            closeDriveRegenPanel();
-            return;
-        } else if (mCurrentPanel == PANEL_STATUS) {
-            closeStatusPanel();
-            return;
-        } else if (mCurrentPanel == PANEL_SHORTCUTS) {
-            closeShortcutsPanel();
-            return;
-        } else if (mCurrentPanel == PANEL_CONSUMPTION) {
-            closeConsumptionPanel();
-            return;
-        } else if (mCurrentPanel == PANEL_IDLE) {
-            closeIdlePanel();
-            return;
-        } else if (mCurrentPanel == PANEL_CHARGING_GRAPH) {
-            closeChargingGraphPanel();
-            return;
-        } else if (mCurrentPanel == PANEL_SETTINGS) {
-            closeSettingsPanel();
-            return;
-        }
-        super.onBackPressed();
-    }
+    // onBackPressed mantığı artık OnBackPressedDispatcher içinde handleOnBackPressed ile yönetiliyor.
 
     // Direksiyon
     private void selectSteerHeat(int level) {
