@@ -26,7 +26,7 @@
     <string name="speed_placeholder">-- km/h</string>
     <string name="motor_power_format">Aracımın Motor Gücü: %d kW</string>
     <string name="motor_power_default">Aracımın Motor Gücü: 125 kW</string>
-    <string name="btn_motor_sound_settings">MOTOR SESİ AYARLARI</string>
+    <string name="btn_motor_sound_settings">Motor sesi ayarları</string>
     <string name="btn_shortcuts">Düğme kısayolları</string>
     <string name="logs_detail">Loglar (detay)</string>
 
@@ -40,9 +40,9 @@
 
     <!-- Sürüş modu -->
     <string name="drive_mode">SÜRÜŞ MODU</string>
-    <string name="drive_eco">ECO</string>
+    <string name="drive_eco">EKO</string>
     <string name="drive_normal">NORMAL</string>
-    <string name="drive_sport">SPORT</string>
+    <string name="drive_sport">SPOR</string>
     <string name="drive_snow">KAR</string>
     <string name="drive_custom">ÖZEL</string>
     <string name="drive_vehicle_mode">Araç modu: %s</string>
@@ -122,12 +122,12 @@
 
     <!-- Tüketim / Durum -->
     <string name="consumption">TÜKETİM</string>
-    <string name="consumption_screen">📊 Tüketim Ekranı</string>
+    <string name="consumption_screen">📈 Tüketim Ekranı</string>
     <string name="consumption_mode_since_start">Motor çalıştıktan itibaren</string>
     <string name="consumption_mode_current">Şu anki veriler</string>
     <string name="consumption_mode_trip">Sürüş</string>
     <string name="status">DURUM</string>
-    <string name="status_charging">📊 Şarj ve Durum</string>
+    <string name="status_charging">🔋 Şarj ve Durum</string>
     <string name="charging_status_title">ŞARJ DURUMU</string>
     <string name="charging_status_label">Şarj durumu: --</string>
     <string name="charging_duration_placeholder">--:--:--</string>
@@ -285,9 +285,9 @@
     <string name="unit_kw_label">kW</string>
     <string name="unit_kwh_label">kWh</string>
     <string name="batarya">Batarya</string>
-    <string name="btn_reset_trip">Sürüş sıfırla</string>
-    <string name="btn_reset_lifetime">Hayat boyu sıfırla</string>
-    <string name="btn_reset_profile_format">%1$s sıfırla</string>
+    <string name="btn_reset_trip">Sıfırla: Sürüş</string>
+    <string name="btn_reset_lifetime">Sıfırla: Hayat boyu</string>
+    <string name="btn_reset_profile_format">Sıfırla: %1$s</string>
     <string name="consumption_reset_confirm_title">Sıfırlama onayı</string>
     <string name="consumption_reset_confirm_message">Bu verileri sıfırlamak istediğinden emin misin?</string>
     <string name="consumption_time_avg_speed">Süre / Ort. hız</string>

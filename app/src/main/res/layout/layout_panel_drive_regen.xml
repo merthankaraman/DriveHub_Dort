@@ -12,7 +12,7 @@
     android:paddingBottom="24dp"
     android:visibility="gone">
 
-    <!-- Başlık + Geri -->
+    <!-- Başlık + Geri + Isıtma ayarları -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -41,6 +41,18 @@
             android:textColor="@color/status_value"
             android:textSize="22sp"
             android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnClimatePanel"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:minWidth="0dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="@string/climate_settings"
+            android:textColor="#C9D1D9"
+            android:textSize="13sp"
+            android:backgroundTint="#21262D" />
     </LinearLayout>
 
     <!-- Sürüş modu -->
@@ -49,76 +61,88 @@
         android:layout_height="wrap_content"
         android:text="@string/drive_mode"
         android:gravity="center_horizontal"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:textColor="@color/status_value"
         android:layout_marginBottom="8dp"/>
 
+    <!-- Sürüş modu butonları: 2x3 grid (Eco / Normal / Sport / Kar / Özel + boş) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="6dp">
+        android:layout_marginBottom="8dp">
+
         <Button
             android:id="@+id/btnEco"
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="112dp"
             android:layout_weight="1"
+            android:layout_marginEnd="6dp"
             android:text="@string/drive_eco"
             android:backgroundTint="#1A7F37"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:layout_marginEnd="6dp"/>
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
         <Button
             android:id="@+id/btnNormal"
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="112dp"
             android:layout_weight="1"
+            android:layout_marginEnd="6dp"
             android:text="@string/drive_normal"
             android:backgroundTint="#1F6FEB"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold"/>
-    </LinearLayout>
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="10dp">
         <Button
             android:id="@+id/btnSport"
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="112dp"
             android:layout_weight="1"
             android:text="@string/drive_sport"
             android:backgroundTint="#9E3333"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:layout_marginEnd="6dp"/>
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="20dp">
+
         <Button
             android:id="@+id/btnSnow"
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="112dp"
             android:layout_weight="1"
+            android:layout_marginEnd="6dp"
             android:text="@string/drive_snow"
             android:backgroundTint="#388BFD"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold"/>
-    </LinearLayout>
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/btnDrive"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginBottom="24dp"
-        android:text="@string/drive_custom"
-        android:backgroundTint="#6B3FA0"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:textStyle="bold"/>
+        <Button
+            android:id="@+id/btnDrive"
+            android:layout_width="0dp"
+            android:layout_height="112dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:text="@string/drive_custom"
+            android:backgroundTint="#6B3FA0"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="112dp"
+            android:layout_weight="1" />
+    </LinearLayout>
 
     <!-- Regen -->
     <TextView
@@ -126,7 +150,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:text="@string/regen"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:textColor="@color/status_value"
         android:layout_marginBottom="6dp"/>
 
@@ -138,34 +162,34 @@
         <Button
             android:id="@+id/btnRegenOff"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="100dp"
             android:layout_weight="1"
             android:layout_marginEnd="4dp"
             android:backgroundTint="#21262D"
             android:text="@string/regen_off"
             android:textColor="#FFFFFF"
-            android:textSize="12sp"
+            android:textSize="18sp"
             android:textStyle="bold"/>
         <Button
             android:id="@+id/btnRegenLow"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="100dp"
             android:layout_weight="1"
             android:layout_marginEnd="4dp"
             android:backgroundTint="#21262D"
             android:text="@string/regen_low"
             android:textColor="#FFFFFF"
-            android:textSize="12sp"
+            android:textSize="18sp"
             android:textStyle="bold"/>
         <Button
             android:id="@+id/btnRegenMedium"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="100dp"
             android:layout_weight="1"
             android:backgroundTint="#21262D"
             android:text="@string/regen_medium"
             android:textColor="#FFFFFF"
-            android:textSize="12sp"
+            android:textSize="18sp"
             android:textStyle="bold"/>
     </LinearLayout>
     <LinearLayout
@@ -175,34 +199,34 @@
         <Button
             android:id="@+id/btnRegenHigh"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="100dp"
             android:layout_weight="1"
             android:layout_marginEnd="4dp"
             android:backgroundTint="#21262D"
             android:text="@string/regen_high"
             android:textColor="#FFFFFF"
-            android:textSize="12sp"
+            android:textSize="18sp"
             android:textStyle="bold"/>
         <Button
             android:id="@+id/btnRegenAdaptive"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="100dp"
             android:layout_weight="1"
             android:layout_marginEnd="4dp"
             android:backgroundTint="#21262D"
             android:text="@string/regen_adaptive"
             android:textColor="#FFFFFF"
-            android:textSize="12sp"
+            android:textSize="18sp"
             android:textStyle="bold"/>
         <Button
             android:id="@+id/btnRegenOnePedal"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="100dp"
             android:layout_weight="1"
             android:backgroundTint="#21262D"
             android:text="@string/regen_one_pedal"
             android:textColor="#FFFFFF"
-            android:textSize="12sp"
+            android:textSize="18sp"
             android:textStyle="bold"/>
     </LinearLayout>
 
@@ -215,13 +239,4 @@
         android:textColor="#8B949E"
         android:textSize="14sp"/>
 
-    <Button
-        android:id="@+id/btnClimatePanel"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_marginTop="24dp"
-        android:text="@string/climate_settings"
-        android:backgroundTint="#21262D"
-        android:textColor="#C9D1D9"
-        android:textSize="16sp"/>
 </LinearLayout>

@@ -27,7 +27,7 @@
             android:text="@string/btn_settings"
             android:backgroundTint="#21262D"
             android:textColor="#C9D1D9"
-            android:textSize="14sp"/>
+            android:textSize="16sp"/>
     </LinearLayout>
 
     <!-- Sol: bilgi | Sağ: 2x2 ızgara -->
@@ -130,7 +130,7 @@
                     android:backgroundTint="#1F6FEB"
                     android:text="@string/btn_drive_regen"
                     android:textColor="#FFFFFF"
-                    android:textSize="17sp"
+                    android:textSize="20sp"
                     android:textStyle="bold"
                     android:gravity="center"
                     android:paddingStart="12dp"
@@ -147,7 +147,7 @@
                     android:backgroundTint="#21262D"
                     android:text="@string/btn_motor_sound_settings"
                     android:textColor="#C9D1D9"
-                    android:textSize="14sp"
+                    android:textSize="20sp"
                     android:textStyle="bold"
                     android:gravity="center"
                     android:paddingStart="12dp"
@@ -173,7 +173,8 @@
                     android:backgroundTint="#21262D"
                     android:text="@string/consumption_screen"
                     android:textColor="#C9D1D9"
-                    android:textSize="14sp"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
                     android:gravity="center"
                     android:paddingStart="12dp"
                     android:paddingEnd="12dp"
@@ -189,7 +190,8 @@
                     android:backgroundTint="#21262D"
                     android:text="@string/status_charging"
                     android:textColor="#C9D1D9"
-                    android:textSize="14sp"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
                     android:gravity="center"
                     android:paddingStart="12dp"
                     android:paddingEnd="12dp"

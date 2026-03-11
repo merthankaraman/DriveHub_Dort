@@ -26,7 +26,7 @@
     <string name="speed_placeholder">-- km/h</string>
     <string name="motor_power_format">My car\'s motor power: %d kW</string>
     <string name="motor_power_default">My car\'s motor power: 125 kW</string>
-    <string name="btn_motor_sound_settings">MOTOR SOUND SETTINGS</string>
+    <string name="btn_motor_sound_settings">Motor sound settings</string>
     <string name="btn_shortcuts">Button shortcuts</string>
     <string name="logs_detail">Logs (detail)</string>
 
@@ -122,12 +122,12 @@
 
     <!-- Consumption / Status -->
     <string name="consumption">CONSUMPTION</string>
-    <string name="consumption_screen">📊 Consumption screen</string>
+    <string name="consumption_screen">📈 Consumption screen</string>
     <string name="consumption_mode_since_start">Since engine start</string>
     <string name="consumption_mode_current">Current data</string>
     <string name="consumption_mode_trip">Trip</string>
     <string name="status">STATUS</string>
-    <string name="status_charging">📊 Charging &amp; status</string>
+    <string name="status_charging">🔋 Charging &amp; status</string>
     <string name="charging_status_title">CHARGING STATUS</string>
     <string name="charging_status_label">Charging status: --</string>
     <string name="charging_duration_placeholder">--:--:--</string>
