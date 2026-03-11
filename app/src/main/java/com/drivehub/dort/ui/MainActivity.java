@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     /** Dil: \"tr\", \"en\" veya \"\" (sistem) */
     private static final String PREF_LANGUAGE = "app_language";
     private static final String PREF_SOUND_ENABLED = "sound_enabled";
+    private static final String PREF_FULLSCREEN     = "fullscreen_mode";
     private static final String PREF_SOUND_MODE = "sound_mode";
     private static final String PREF_OVERLAY_ENABLED = "overlay_enabled";
     private static final String PREF_SOUND_PROFILE = "sound_profile";
@@ -141,6 +142,18 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
+    private void applyFullscreen(boolean enabled) {
+        View decor = getWindow().getDecorView();
+        if (enabled) {
+            int flags = View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            decor.setSystemUiVisibility(flags);
+        } else {
+            decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+        }
+    }
 
     // Ana ekran
     private View mLayoutMain;
@@ -540,6 +553,10 @@ public class MainActivity extends AppCompatActivity {
         MG4Hardware.setLogEnabled(logsEnabled);
         updateSoundToggleButton();
 
+        // Tam ekran tercihini uygula
+        boolean fullscreen = prefsSound.getBoolean(PREF_FULLSCREEN, false);
+        applyFullscreen(fullscreen);
+
         // Motor gücü düğmesi (125 kW / 150 kW, hafızalı)
         if (mBtnMotorPower != null) {
             // Başlangıç text'i
@@ -713,6 +730,17 @@ public class MainActivity extends AppCompatActivity {
                 getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                         .edit().putBoolean("logs_enabled", isChecked).apply();
                 MG4Hardware.setLogEnabled(isChecked);
+            });
+        }
+
+        // Tam ekran switch'i
+        SwitchCompat swFullscreen = findViewById(R.id.switchFullscreen);
+        if (swFullscreen != null) {
+            swFullscreen.setChecked(fullscreen);
+            swFullscreen.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                        .edit().putBoolean(PREF_FULLSCREEN, isChecked).apply();
+                applyFullscreen(isChecked);
             });
         }
 
