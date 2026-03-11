@@ -131,12 +131,28 @@ public class EngineSoundManager {
     private static class EngineSample {
         final int baseRpm;
         final int resourceId;
+        /**
+         * Opsiyonel aralık bilgisi (FMOD tarzı min/max RPM penceresi).
+         * Eğer minRpm/maxRpm < 0 ise, eski komşu tabanlı crossfade mantığı kullanılır.
+         */
+        final int minRpm;
+        final int maxRpm;
         int soundId = -1;
         int streamId = -1;
 
         EngineSample(int baseRpm, int resourceId) {
+            this(baseRpm, resourceId, -1, -1);
+        }
+
+        EngineSample(int baseRpm, int resourceId, int minRpm, int maxRpm) {
             this.baseRpm = baseRpm;
             this.resourceId = resourceId;
+            this.minRpm = minRpm;
+            this.maxRpm = maxRpm;
+        }
+
+        boolean hasWindow() {
+            return minRpm >= 0 && maxRpm > minRpm;
         }
     }
 
@@ -190,7 +206,9 @@ public class EngineSoundManager {
             "BMW Z4 GT3",
             "GTR R34",
             "Mazda 3-Rotor",
-            "Modern F1 V10"
+            "Modern F1 V10",
+            "Ferrari F2004",
+            "Ferrari F2004 NORMAL"
     };
 
     public static String[] getProfileLabels() { return PROFILE_LABELS; }
@@ -206,6 +224,8 @@ public class EngineSoundManager {
         else if ("GTR R34".equals(profile)) setVehicleProfile(PROFILE_GTRR34());
         else if ("Mazda 3-Rotor".equals(profile)) setVehicleProfile(PROFILE_MAZDA_ROTOR());
         else if ("Modern F1 V10".equals(profile)) setVehicleProfile(PROFILE_F1_V10());
+        else if ("Ferrari F2004".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004());
+        else if ("Ferrari F2004 NORMAL".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004_NORMAL());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
 
@@ -506,7 +526,7 @@ public class EngineSoundManager {
         return new VehicleProfile("Mazda 3-Rotor",
                 1980f,
                 9550f,
-                1.0f,
+                0.8f,
                 0,
 
                 new float[][]{
@@ -581,6 +601,87 @@ public class EngineSoundManager {
                         {R.raw.modgpv10_offlow, 11000},
                         {R.raw.modgpv10_offmid, 15000},
                         {R.raw.modgpv10_offhigh, 20050}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_FERRARI_F2004_NORMAL() {
+        return new VehicleProfile("Ferrari F2004 NORMAL",
+                4000f,   // Tahmini rölanti devri
+                19000f,  // Tahmini kesici
+                0.6f,
+                0,
+                new float[][]{
+                        {0f, 50f},    // 1. vites
+                        {10f, 80f},  // 2. vites
+                        {15f, 160f},  // 3. vites
+                        {20f, 215f},  // 4. vites
+                        {25f, 255f},  // 5. vites
+                        {30f, 290f},  // 6. vites
+                        {35f, 335f}   // 7. vites
+                },
+                0.25f, 0.15f, 80, 300f,
+                0, 0,
+                // ON katmanı (kokpit içi / iç mekan yükte sesler)
+                // Format: {resId, baseRpm, minRpm, maxRpm}
+                new int[][]{
+                        {R.raw.f2004_in_idle,        4000},   // idle, 3–5.2k
+                        {R.raw.f2004_in_verylow_2,     5500},   // 4.2–6.5k (idle ile overlap)
+                        {R.raw.f2004_in_verylow,   7000},   // 5.5–7.8k
+                        {R.raw.f2004_in_on_mid,      9000},   // 7–9.2k
+                        {R.raw.f2004_in_on_low,      11500},   // 8.7–11k
+                        {R.raw.f2004_in_on_mid2,    14000},   // 10.5–13.8k
+                        {R.raw.f2004_in_on_high_mix,16000},   // 13.5–17.2k
+                        {R.raw.f2004_in_on_veryhigh_mix,18500} // 16.8–19.5k
+                },
+                // OFF katmanı (kokpit içi gaz kesme / kompresyon)
+                new int[][]{
+                        {R.raw.f2004_in_idle,            4000},   // coast düşük devir kompresyon
+                        {R.raw.f2004_in_off_low,         6000},   // 4.8–7.2k
+                        {R.raw.f2004_in_offmid_pitchare, 8042},   // 7.2–10.2k (8042 merkez)
+                        {R.raw.f2004_in_off_midhigh_mix,12000},   // 9.8–14.5k
+                        {R.raw.f2004_in_off_high,       17000},  // 14–18.2k
+                        {R.raw.f2004_in_off_high,       19000}   // 17.8–19.5k
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_FERRARI_F2004() {
+        return new VehicleProfile("Ferrari F2004",
+                4000f,   // Tahmini rölanti devri
+                19000f,  // Tahmini kesici
+                0.6f,
+                0,
+                new float[][]{
+                        {0f, 50f},    // 1. vites
+                        {10f, 80f},  // 2. vites
+                        {15f, 160f},  // 3. vites
+                        {20f, 215f},  // 4. vites
+                        {25f, 255f},  // 5. vites
+                        {30f, 290f},  // 6. vites
+                        {35f, 335f}   // 7. vites
+                },
+                0.25f, 0.15f, 80, 300f,
+                0, 0,
+                // ON katmanı (kokpit içi / iç mekan yükte sesler)
+                // Format: {resId, baseRpm, minRpm, maxRpm}
+                // Amaç: her sample ~1500–2000 rpm genişliğinde, komşularla yumuşak overlap
+                new int[][]{
+                        {R.raw.f2004_in_idle,        4000, 3000, 5200},   // 3.0–5.2k: net rölanti / çok düşük devir
+                        {R.raw.f2004_in_verylow,     5500, 4800, 6800},   // 4.8–6.8k: ilk yüklenme
+                        {R.raw.f2004_in_verylow_2,   7000, 6200, 8200},   // 6.2–8.2k: orta-low bant
+                        {R.raw.f2004_in_on_mid,      9000, 8000,10200},   // 8.0–10.2k: esas orta bant (burada çığlık başlasın)
+                        {R.raw.f2004_in_on_low,     11500,10000,13500},   // 10.0–13.5k: yüksek orta
+                        {R.raw.f2004_in_on_mid2,    14000,12500,15500},   // 12.5–15.5k
+                        {R.raw.f2004_in_on_high_mix,16000,14500,17800},   // 14.5–17.8k
+                        {R.raw.f2004_in_on_veryhigh_mix,18500,17000,19800} // 17.0–19.8k: limiter üstü çığlık
+                },
+                // OFF katmanı (kokpit içi gaz kesme / kompresyon)
+                new int[][]{
+                        {R.raw.f2004_in_idle,            4000, 3000, 5600},   // coast düşük devir kompresyon
+                        {R.raw.f2004_in_off_low,         6000, 4800, 7700},   // 4.8–7.7k (8050 öncesi daha çok low)
+                        {R.raw.f2004_in_offmid_pitchare, 8042, 7700, 9300},   // 7.7–9.3k (daha dar ve kontrollü band)
+                        {R.raw.f2004_in_off_midhigh_mix,12000,9000,14800},   // 9.0–14.8k (mid-high daha erken devreye girsin)
+                        {R.raw.f2004_in_off_high,       17000,13700,18500},  // 13.7–18.5k
+                        {R.raw.f2004_in_off_high,       19000,17500,19800}   // 17.5–19.8k
                 }
         );
     }
@@ -663,7 +764,13 @@ public class EngineSoundManager {
         List<EngineSample> samples = new ArrayList<>();
         if (soundMap != null) {
             for (int[] map : soundMap) {
-                samples.add(new EngineSample(map[1], map[0])); // map[1] = RPM, map[0] = resId
+                // Eski format: {resId, baseRpm}
+                // Yeni FMOD-benzeri format: {resId, baseRpm, minRpm, maxRpm}
+                if (map.length >= 4) {
+                    samples.add(new EngineSample(map[1], map[0], map[2], map[3]));
+                } else {
+                    samples.add(new EngineSample(map[1], map[0]));
+                }
             }
             samples.sort((s1, s2) -> Integer.compare(s1.baseRpm, s2.baseRpm));
         }
@@ -1060,42 +1167,83 @@ public class EngineSoundManager {
             float onWeight = (float) Math.sqrt(mSimulatedThrottle);
             float offWeight = (float) Math.sqrt(Math.max(0f, 1.0f - mSimulatedThrottle));
 
+            // Araç dururken ve gaz verilirken sadece ON katmanı duyulsun (N-revving)
+            if (mCurrentSpeedKmh < 1.0f && mSimulatedThrottle > 0.05f) {
+                onWeight = 1.0f;
+                offWeight = 0.0f;
+            }
+
             // DÜZELTME: Kısılmış masterVol değerini de fonksiyona yolluyoruz
             processLayer(mCurrentSamplesOn, rpm, onWeight * masterVol, masterVol, true);
             processLayer(mCurrentSamplesOff, rpm, offWeight * masterVol, masterVol, false);
 
         } else {
             // SİNGLE LAYER MİKSERİ (Eski hız sıfırsa rölantiye kilitleyen blok TAMAMEN silindi)
-            EngineSample lower = mCurrentSamples[0], upper = mCurrentSamples[1];
-            if (rpm >= mCurrentSamples[mCurrentSamples.length - 1].baseRpm) {
-                lower = mCurrentSamples[mCurrentSamples.length - 1];
-                upper = lower;
-            } else {
-                for (int i = 0; i < mCurrentSamples.length - 1; i++) {
-                    if (rpm >= mCurrentSamples[i].baseRpm && rpm <= mCurrentSamples[i+1].baseRpm) {
-                        lower = mCurrentSamples[i]; upper = mCurrentSamples[i+1]; break;
+            if (mCurrentSamples == null || mCurrentSamples.length == 0) return;
+
+            // 1) Her sample için rpm'e bağlı ham ağırlıkları hesapla
+            float[] weights = new float[mCurrentSamples.length];
+            float weightSum = 0f;
+
+            EngineSample lower = mCurrentSamples[0], upper = mCurrentSamples[mCurrentSamples.length - 1];
+            // Komşu tabanlı blend sadece min/max tanımı olmayanlar için kullanılacak
+            for (int i = 0; i < mCurrentSamples.length; i++) {
+                EngineSample s = mCurrentSamples[i];
+                float raw;
+                if (s.hasWindow()) {
+                    if (rpm <= s.minRpm || rpm >= s.maxRpm) {
+                        raw = 0f;
+                    } else if (rpm <= s.baseRpm) {
+                        raw = (rpm - s.minRpm) / (float) (s.baseRpm - s.minRpm);
+                    } else {
+                        raw = (s.maxRpm - rpm) / (float) (s.maxRpm - s.baseRpm);
                     }
+                    raw = Math.max(0f, Math.min(1f, raw));
+                } else {
+                    // Eski komşu tabanlı crossfade
+                    lower = mCurrentSamples[0];
+                    upper = mCurrentSamples[mCurrentSamples.length - 1];
+                    if (rpm >= upper.baseRpm) {
+                        lower = upper;
+                    } else {
+                        for (int j = 0; j < mCurrentSamples.length - 1; j++) {
+                            if (rpm >= mCurrentSamples[j].baseRpm && rpm <= mCurrentSamples[j+1].baseRpm) {
+                                lower = mCurrentSamples[j];
+                                upper = mCurrentSamples[j+1];
+                                break;
+                            }
+                        }
+                    }
+                    float rpmDiff = upper.baseRpm - lower.baseRpm;
+                    float blend = Math.max(0f, Math.min(1f, (rpmDiff <= 0) ? 0 : (rpm - lower.baseRpm) / rpmDiff));
+                    raw = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
                 }
+                weights[i] = raw;
+                weightSum += raw;
             }
-            float rpmDiff = upper.baseRpm - lower.baseRpm;
-            float blend = Math.max(0f, Math.min(1f, (rpmDiff <= 0) ? 0 : (rpm - lower.baseRpm) / rpmDiff));
+
+            if (weightSum <= 0f) return;
+
+            // 2) Ağırlıkları normalize et (toplam sabit kalsın, rpm sadece karışımı değiştirir)
+            float invSum = 1.0f / weightSum;
+
+            float loadVolumeFactor = 0.5f + (mSimulatedThrottle * 0.5f);
+            float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
+            float modeVolumeBoost = (mDriveModeAggressiveness > 0.5f) ? 1.2f : 1.0f;
 
             for (int i = 0; i < mCurrentSamples.length; i++) {
                 EngineSample s = mCurrentSamples[i];
                 if (s.streamId == -1) continue;
-                float rawVol = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
-                float shapedVol = (float) Math.sqrt(rawVol);
+
+                float mixWeight = weights[i] * invSum; // sadece rpm'e göre dağılım
+                float shapedVol = mixWeight;
                 if (Float.isNaN(shapedVol)) shapedVol = 0f;
-                if (s == mCurrentSamples[0]) shapedVol *= mCurrentIdleVolumeScale;
+                if (i == 0) shapedVol *= mCurrentIdleVolumeScale;
 
-                float loadVolumeFactor = 0.5f + (mSimulatedThrottle * 0.5f);
-                float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
-                float modeVolumeBoost = (mDriveModeAggressiveness > 0.5f) ? 1.2f : 1.0f;
-
+                // Toplam volume neredeyse tamamen gaz karakterinden geliyor
                 float finalVolume = Math.max(0.0f, Math.min(1.0f, shapedVol * masterVol * loadVolumeFactor * modeVolumeBoost));
                 float pitch = Math.max(0.5f, Math.min(2.0f, (rpm / s.baseRpm) * loadPitchFactor));
 
-                // Sadece araç dururken ve hiç gaz vermiyorken kullanıcı rölanti ayarını uygula
                 if (i == 0 && mCurrentSpeedKmh < 1.0f && mSimulatedThrottle < 0.05f) {
                     pitch *= mIdlePitch;
                 }
@@ -1116,35 +1264,58 @@ public class EngineSoundManager {
     private void processLayer(EngineSample[] layer, float rpm, float weightVol, float fadedMasterVol, boolean isOnLayer) {
         if (layer == null || layer.length == 0) return;
 
-        EngineSample lower = layer[0];
-        EngineSample upper = layer.length > 1 ? layer[1] : layer[0];
-
-        if (rpm >= layer[layer.length - 1].baseRpm) {
-            lower = layer[layer.length - 1];
-            upper = lower;
-        } else {
-            for (int i = 0; i < layer.length - 1; i++) {
-                if (rpm >= layer[i].baseRpm && rpm <= layer[i+1].baseRpm) {
-                    lower = layer[i];
-                    upper = layer[i+1];
-                    break;
+        // 1) Ham rpm ağırlıklarını topla
+        float[] weights = new float[layer.length];
+        float weightSum = 0f;
+        for (int i = 0; i < layer.length; i++) {
+            EngineSample s = layer[i];
+            float raw;
+            if (s.hasWindow()) {
+                // FMOD tarzı üçgen pencere: minRpm–baseRpm–maxRpm
+                if (rpm <= s.minRpm || rpm >= s.maxRpm) {
+                    raw = 0f;
+                } else if (rpm <= s.baseRpm) {
+                    raw = (rpm - s.minRpm) / (float) (s.baseRpm - s.minRpm);
+                } else {
+                    raw = (s.maxRpm - rpm) / (float) (s.maxRpm - s.baseRpm);
                 }
+                raw = Math.max(0f, Math.min(1f, raw));
+            } else {
+                EngineSample lower = layer[0];
+                EngineSample upper = layer.length > 1 ? layer[1] : layer[0];
+                if (rpm >= layer[layer.length - 1].baseRpm) {
+                    lower = layer[layer.length - 1];
+                    upper = lower;
+                } else {
+                    for (int j = 0; j < layer.length - 1; j++) {
+                        if (rpm >= layer[j].baseRpm && rpm <= layer[j+1].baseRpm) {
+                            lower = layer[j];
+                            upper = layer[j+1];
+                            break;
+                        }
+                    }
+                }
+                float rpmDiff = upper.baseRpm - lower.baseRpm;
+                float blend = Math.max(0f, Math.min(1f, (rpmDiff <= 0) ? 0 : (rpm - lower.baseRpm) / rpmDiff));
+                raw = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
             }
+            weights[i] = raw;
+            weightSum += raw;
         }
 
-        float rpmDiff = upper.baseRpm - lower.baseRpm;
-        float blend = Math.max(0f, Math.min(1f, (rpmDiff <= 0) ? 0 : (rpm - lower.baseRpm) / rpmDiff));
+        if (weightSum <= 0f) return;
+        float invSum = 1.0f / weightSum;
 
         for (int i = 0; i < layer.length; i++) {
             EngineSample s = layer[i];
             if (s.streamId == -1) continue;
 
-            float rawVol = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
-            float shapedVol = (float) Math.sqrt(rawVol);
+            float mixWeight = weights[i] * invSum;  // rpm sadece karışımı belirler
+            float shapedVol = mixWeight;
             if (Float.isNaN(shapedVol)) shapedVol = 0f;
-            if (s == layer[0]) shapedVol *= mCurrentIdleVolumeScale;
+            if (i == 0) shapedVol *= mCurrentIdleVolumeScale;
 
-            float finalVolume = shapedVol * weightVol;
+            float finalVolume = shapedVol * weightVol; // weightVol zaten throttle + masterVol içeriyor
             float pitch = rpm / s.baseRpm;
 
             if (isOnLayer) pitch *= (0.98f + (mSimulatedThrottle * 0.04f));
