@@ -738,7 +738,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Servisi otomatik başlat
         startForegroundService(new Intent(this, MG4ControlService.class));
-        mTvStatus.setText("✅ " + getString(R.string.status_service_ok));
 
         // Ana layout referansı
         mLayoutMain = findViewById(R.id.layoutMain);
@@ -992,7 +991,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mTvStatus.setText("✅ " + getString(R.string.status_service_ok));
         // Servis tarafında tuş kombinasyonu ile değişmiş olabilecek motor sesi tercihlerini senkronize et
         SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         boolean enabledFromPrefs = prefs.getBoolean(PREF_SOUND_ENABLED, false);

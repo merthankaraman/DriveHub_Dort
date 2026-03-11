@@ -19,7 +19,7 @@
 
     <!-- Ana ekran -->
     <string name="main_title">DriveHub Dort</string>
-    <string name="main_version">EH32 · Android Automotive</string>
+    <string name="main_version"></string>
     <string name="permission_write_settings">WRITE_SETTINGS Izni Ver</string>
     <string name="status_loading">Hazırlanıyor…</string>
     <string name="status_service_ok">Servis çalışıyor. ★ tuşu aktif.</string>
@@ -59,24 +59,6 @@
     <string name="regen_one_pedal">TEK PEDAL</string>
     <string name="regen_active">Aktif: %s</string>
     <string name="one_pedal_active">Aktif: Tek Pedal</string>
-
-    <!-- ESP (Sürüş &amp; Konfor — karlı/buzda kapatılabilir) -->
-    <string name="esp_section_title">ESP</string>
-    <string name="esp_on">Açık</string>
-    <string name="esp_off">Kapalı</string>
-    <string name="esp_status">Okunan: %d (0=Kapalı, 1=Açık, -1=yanıt yok)</string>
-
-    <!-- Uzaklaşma ile kilitleme (anahtar gidince araç kilitlensin) -->
-    <string name="leave_auto_lock_title">Anahtar uzaklaşınca kilitle</string>
-    <string name="leave_auto_lock_status">Okunan: %d (0=Kapalı, 1=Açık, -1=yanıt yok)</string>
-
-    <!-- Yaklaşma ile açma (anahtar gelince kilit açılsın) -->
-    <string name="approach_unlock_title">Yaklaşınca kilidi aç</string>
-    <string name="approach_unlock_status">Okunan: %d (0=Kapalı, 1=Açık, -1=yanıt yok)</string>
-
-    <!-- Yakın alan açma (kapı kolu yakınında) -->
-    <string name="nearfield_unlock_title">Yakın alan kilidi aç</string>
-    <string name="nearfield_unlock_status">Okunan: %d (0=Kapalı, 1=Açık, -1=yanıt yok)</string>
 
     <!-- Pencere / Cam (Sürüş &amp; Konfor) -->
     <string name="window_section_title">PENCERE</string>
@@ -197,7 +179,7 @@
     <string name="motor_state_drive_suffix"> · Sürüş: %s</string>
     <string name="sim_speed_format">Simüle hız: %.0f km/h</string>
     <string name="speed_format">%.2f km/h</string>
-    <string name="version_format">EH32 · Android Automotive · v%s</string>
+    <string name="version_format">v%s</string>
     <string name="gauge_rpm">RPM</string>
     <string name="gauge_gear">VİTES</string>
     <string name="gauge_speed">HIZ (km/h)</string>

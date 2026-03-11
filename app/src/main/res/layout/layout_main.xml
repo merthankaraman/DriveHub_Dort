@@ -46,23 +46,29 @@
             android:layout_marginEnd="20dp"
             android:gravity="center_vertical">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/main_title"
-                android:textSize="20sp"
-                android:textColor="@color/status_value"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp"/>
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
 
-            <TextView
-                android:id="@+id/tvVersion"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/main_version"
-                android:textSize="11sp"
-                android:textColor="@color/status_value"
-                android:layout_marginBottom="12dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_title"
+                    android:textSize="20sp"
+                    android:textColor="@color/status_value"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvVersion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/main_version"
+                    android:textSize="14sp"
+                    android:textColor="@color/status_value" />
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnPermission"
@@ -79,10 +85,11 @@
                 android:id="@+id/tvStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/status_loading"
+                android:text=""
                 android:textSize="13sp"
                 android:textColor="@color/status_value"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="0dp"
+                android:visibility="gone"/>
 
             <TextView
                 android:id="@+id/tvSpeed"

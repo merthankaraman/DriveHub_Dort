@@ -19,7 +19,7 @@
 
     <!-- Main screen -->
     <string name="main_title">DriveHub Dort</string>
-    <string name="main_version">EH32 · Android Automotive</string>
+    <string name="main_version"></string>
     <string name="permission_write_settings">Grant WRITE_SETTINGS</string>
     <string name="status_loading">Loading…</string>
     <string name="status_service_ok">Service running. ★ key active.</string>
@@ -33,24 +33,6 @@
     <!-- Demo screen (ESP, windows, etc.) -->
     <string name="btn_demo">Demo</string>
     <string name="demo_screen_title">Demo</string>
-
-    <!-- ESP (Drive &amp; Comfort — can be turned off on snow/ice) -->
-    <string name="esp_section_title">ESP</string>
-    <string name="esp_on">On</string>
-    <string name="esp_off">Off</string>
-    <string name="esp_status">Read: %d (0=Off, 1=On, -1=no response)</string>
-
-    <!-- Lock when key leaves -->
-    <string name="leave_auto_lock_title">Lock when key leaves</string>
-    <string name="leave_auto_lock_status">Read: %d (0=Off, 1=On, -1=no response)</string>
-
-    <!-- Unlock when key approaches -->
-    <string name="approach_unlock_title">Unlock when approaching</string>
-    <string name="approach_unlock_status">Read: %d (0=Off, 1=On, -1=no response)</string>
-
-    <!-- Near-field unlock (at door handle) -->
-    <string name="nearfield_unlock_title">Near-field unlock</string>
-    <string name="nearfield_unlock_status">Read: %d (0=Off, 1=On, -1=no response)</string>
 
     <!-- Window (Drive &amp; Comfort) -->
     <string name="window_section_title">WINDOW</string>
@@ -197,7 +179,7 @@
     <string name="motor_state_drive_suffix"> · Drive: %s</string>
     <string name="sim_speed_format">Sim speed: %.0f km/h</string>
     <string name="speed_format">%.2f km/h</string>
-    <string name="version_format">EH32 · Android Automotive · v%s</string>
+    <string name="version_format">v%s</string>
     <string name="gauge_rpm">RPM</string>
     <string name="gauge_gear">GEAR</string>
     <string name="gauge_speed">SPEED (km/h)</string>
