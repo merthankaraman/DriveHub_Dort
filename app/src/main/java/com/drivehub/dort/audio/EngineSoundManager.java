@@ -98,6 +98,7 @@ public class EngineSoundManager {
         public final float maxRpm;
         public final float idleVolumeScale;
         public final float[][] gearRanges;
+        /** 0: No turbo, 1: Supercharger 2: Normal Turbo, 3: Turbo GTR */
         public final int hasTurbo;
 
         public final float rpmOnSmooth;
@@ -208,7 +209,8 @@ public class EngineSoundManager {
             "Mazda 3-Rotor",
             "Modern F1 V10",
             "Ferrari F2004",
-            "Ferrari F2004 NORMAL"
+            "Ferrari F2004 NORMAL",
+            "McLaren P1"
     };
 
     public static String[] getProfileLabels() { return PROFILE_LABELS; }
@@ -226,6 +228,7 @@ public class EngineSoundManager {
         else if ("Modern F1 V10".equals(profile)) setVehicleProfile(PROFILE_F1_V10());
         else if ("Ferrari F2004".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004());
         else if ("Ferrari F2004 NORMAL".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004_NORMAL());
+        else if ("McLaren P1".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
 
@@ -245,7 +248,7 @@ public class EngineSoundManager {
     // ==========================================
     public static VehicleProfile PROFILE_LOTUS_EXIGE() {
         return new VehicleProfile("Lotus Exige 240", 800, 9000f, 1,
-                2,
+                1,
                 new float[][]{
                         {0f, 40f},    // 1. Vites (Dururken 0 km/h - Kesicide 40 km/h)
                         {5f, 70f},    // 2. Vites (Rölantide 5 km/h - Kesicide 70 km/h)
@@ -401,7 +404,7 @@ public class EngineSoundManager {
                 880f,
                 7250f,
                 1.0f,
-                1,
+                3,
                 new float[][]{
                         {0f, 85f},
                         {10f, 130f},
@@ -445,7 +448,7 @@ public class EngineSoundManager {
                 1476f,   // Orijinal Rölanti
                 7800f,   // Orijinal Kesici
                 0.7f,
-                1,
+                2,
                 new float[][]{
                         {0f, 85f},
                         {10f, 130f},
@@ -685,9 +688,46 @@ public class EngineSoundManager {
                 }
         );
     }
+    public static VehicleProfile PROFILE_MCLAREN_P1() {
+        return new VehicleProfile("McLaren P1",
+                1000f,   // idle
+                8500f,   // approximate redline
+                0.8f,
+                2,       // turbo
+                new float[][]{
+                        {0f, 80f},
+                        {10f, 130f},
+                        {20f, 190f},
+                        {30f, 250f},
+                        {40f, 310f},
+                        {50f, 360f},
+                        {60f, 400f}
+                },
+                0.18f, 0.08f,120,220f,
+                0, 0,
+                // ON katmanı (iç mekan yükte sesler)
+                new int[][]{
+                        {R.raw.p1_in_idle,          1000},
+                        {R.raw.p1_in_on_verylow2,   2500},
+                        {R.raw.p1_in_on_low2,       4000},
+                        {R.raw.p1_in_on_lowmid_b,   5500},
+                        {R.raw.p1_in_on_mid_c,      7000},
+                        {R.raw.p1_in_on_high_b_2,   8000},
+                        {R.raw.p1_in_on_veryhigh_b, 8500}
+                },
+                // OFF katmanı (iç mekan gaz kesme)
+                new int[][]{
+                        {R.raw.p1_in_idle,          1000},
+                        {R.raw.p1_in_off_verylow,   2500},
+                        {R.raw.p1_in_off_low_2,     4000},
+                        {R.raw.p1_in_off_mid_2,     6000},
+                        {R.raw.p1_in_off_high,      8500}
+                }
+        );
+    }
     public static VehicleProfile PROFILE_GTRR34() {
         return new VehicleProfile("GTR R34", 1000f, 8200, 0.5f,
-                1,
+                3,
                 new float[][]{
                         {0f, 70f},
                         {5f, 115f},
@@ -784,7 +824,7 @@ public class EngineSoundManager {
 
         int baseStreams = mIsDualLayer ? (mCurrentSamplesOn.length + mCurrentSamplesOff.length) : mCurrentSamples.length;
         int extras = 3; // Turbo ve Whine Subwave
-        if (mActiveProfile.hasTurbo == 1) extras++;
+        if (mActiveProfile.hasTurbo >= 2) extras++;
         if (mActiveProfile.startSoundResId != 0) extras++;
         if (mActiveProfile.stopSoundResId != 0) extras++;
 
@@ -843,10 +883,12 @@ public class EngineSoundManager {
         });
 
         // Yardımcı sesleri yükle
-        mTurboSoundId = mSoundPool.load(mContext, (mActiveProfile.hasTurbo == 2) ? R.raw.supercharge : R.raw.turbo, 1);
+        mTurboSoundId = mSoundPool.load(mContext, (mActiveProfile.hasTurbo == 1) ? R.raw.supercharge : R.raw.turbo, 1);
         mGearWhineSoundId = mSoundPool.load(mContext, R.raw.transmission, 1);
         mSubwaveSoundId = mSoundPool.load(mContext, R.raw.dp_in_subwave, 1);
-        if (mActiveProfile.hasTurbo == 1) mFlutterSoundId = mSoundPool.load(mContext, R.raw.blowoff2, 1); else mFlutterSoundId = -1;
+        if (mActiveProfile.hasTurbo == 3) mFlutterSoundId = mSoundPool.load(mContext, R.raw.blowoff2, 1);
+        else if (mActiveProfile.hasTurbo == 2) mFlutterSoundId = mSoundPool.load(mContext, R.raw.blowoff_mclaren, 1);
+        else mFlutterSoundId = -1;
         if (mActiveProfile.startSoundResId != 0) mStartSoundId = mSoundPool.load(mContext, mActiveProfile.startSoundResId, 1); else mStartSoundId = -1;
         if (mActiveProfile.stopSoundResId != 0) mStopSoundId = mSoundPool.load(mContext, mActiveProfile.stopSoundResId, 1); else mStopSoundId = -1;
 
@@ -1105,7 +1147,7 @@ public class EngineSoundManager {
         float rpmRatio = (rpm - mIdleRpm) / (mMaxRpm - mIdleRpm);
         rpmRatio = Math.max(0f, Math.min(1f, rpmRatio));
 
-        if (mFlutterSoundId != -1) {
+        if (mFlutterSoundId != -1 && mActiveProfile.hasTurbo >= 2) {
             if (rpm > 3500f && mLastThrottleForFlutter > 0.6f && mSimulatedThrottle < 0.1f
                     && (currentTime - mLastFlutterTime > 800)) {
 
@@ -1125,14 +1167,14 @@ public class EngineSoundManager {
             if (mActiveProfile == null || (mActiveProfile.hasTurbo == 0)) {
                 mSoundPool.setVolume(mTurboStreamId, 0f, 0f);
             } else if(mActiveProfile.hasTurbo == 1) {
+                float compVol = (0.2f + (mSimulatedThrottle * 0.8f)) * rpmRatio * masterVol * mCompressorMaxVol;
+                mSoundPool.setVolume(mTurboStreamId, compVol, compVol);
+                mSoundPool.setRate(mTurboStreamId, 0.8f + (rpmRatio * 1.7f));
+            } else {
                 float boostFactor = Math.max(0f, Math.min(1f, (rpmRatio > 0.10f) ? (rpmRatio - 0.10f) * 1.12f : 0f));
                 mCurrentTurboBoost = (mCurrentTurboBoost * 0.90f) + ((mSimulatedThrottle * boostFactor) * 0.10f);
                 mSoundPool.setVolume(mTurboStreamId, mCurrentTurboBoost * masterVol * mTurboMaxSound, mCurrentTurboBoost * masterVol * mTurboMaxSound);
                 mSoundPool.setRate(mTurboStreamId, 0.8f + (rpmRatio * 1.2f));
-            } else if(mActiveProfile.hasTurbo == 2) {
-                float compVol = (0.2f + (mSimulatedThrottle * 0.8f)) * rpmRatio * masterVol * mCompressorMaxVol;
-                mSoundPool.setVolume(mTurboStreamId, compVol, compVol);
-                mSoundPool.setRate(mTurboStreamId, 0.8f + (rpmRatio * 1.7f));
             }
         }
         // --- SUBWAVE (ALT BAS / GÖĞÜS TİTRETEN TOKLUK) KONTROLÜ ---
