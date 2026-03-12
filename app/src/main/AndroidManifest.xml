@@ -62,6 +62,19 @@
             android:screenOrientation="landscape"
             android:theme="@style/Theme.DriveHubDort" />
 
+        <!-- Dış uygulamalardan motor sesini tetiklemek için köprü Activity -->
+        <activity
+            android:name=".ui.EngineActionActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.DriveHubDort">
+            <intent-filter>
+                <action android:name="com.drivehub.dort.action.START_ENGINE_SOUND" />
+                <action android:name="com.drivehub.dort.action.STOP_ENGINE_SOUND" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".service.MG4ControlService"
             android:exported="false"
