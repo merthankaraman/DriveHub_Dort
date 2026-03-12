@@ -83,6 +83,9 @@ public class EngineSoundManager {
     private long mLastFlutterTime = 0;
     private float mLastThrottleForFlutter = 0f;
 
+    // Ses karışım modu (daha agresif ON/OFF ve load tepkisi)
+    private boolean mRealisticMixEnabled = false;
+
     // START/STOP MARŞ DEĞİŞKENLERİ
     private int mStartSoundId = -1;
     private int mStopSoundId = -1;
@@ -235,6 +238,8 @@ public class EngineSoundManager {
     public void setDriveModeAggressiveness(float aggressiveness01) { mDriveModeAggressiveness = Math.max(0f, Math.min(1f, aggressiveness01)); }
     public void setSimulatedThrottle(float throttle01) { mSimulatedThrottle = Math.max(0.01f, Math.min(1f, throttle01)); }
     public float getSimulatedThrottle() { return mSimulatedThrottle; }
+    public void setRealisticMixEnabled(boolean enabled) { mRealisticMixEnabled = enabled; }
+    public boolean isRealisticMixEnabled() { return mRealisticMixEnabled; }
     public boolean isRevMatchEnabled() { return mEnableRevMatch; }
     public void setRevMatchEnabled(boolean enabled) { mEnableRevMatch = enabled; }
     public boolean isGearWhineEnabled() { return mGearWhineEnabled; }
@@ -648,43 +653,58 @@ public class EngineSoundManager {
         );
     }
     public static VehicleProfile PROFILE_FERRARI_F2004() {
+        // Ferrari F2004 ana profilini, NORMAL profilinin devir haritasını baz alarak
+        // daha yumuşak ve doğal geçişler için sadeleştiriyoruz.
         return new VehicleProfile("Ferrari F2004",
-                4000f,   // Tahmini rölanti devri
-                19000f,  // Tahmini kesici
-                0.6f,
+                4000f,
+                19000f,
+                0.8f,   // NORMAL ile aynı idle volume
                 0,
                 new float[][]{
-                        {0f, 50f},    // 1. vites
-                        {10f, 80f},  // 2. vites
-                        {15f, 160f},  // 3. vites
-                        {20f, 215f},  // 4. vites
-                        {25f, 255f},  // 5. vites
-                        {30f, 290f},  // 6. vites
-                        {35f, 335f}   // 7. vites
+                        {0f, 76f},
+                        {10f, 110f},
+                        {15f, 160f},
+                        {20f, 215f},
+                        {25f, 255f},
+                        {30f, 290f},
+                        {35f, 335f}
                 },
                 0.25f, 0.15f, 80, 300f,
                 0, 0,
-                // ON katmanı (kokpit içi / iç mekan yükte sesler)
-                // Format: {resId, baseRpm, minRpm, maxRpm}
-                // Amaç: her sample ~1500–2000 rpm genişliğinde, komşularla yumuşak overlap
+                // ON: NORMAL'deki anchor noktalarından türetilmiş min/base/max üçgenleri
+                // {resId, baseRpm, minRpm, maxRpm}
                 new int[][]{
-                        {R.raw.f2004_in_idle,        4000, 3000, 5200},   // 3.0–5.2k: net rölanti / çok düşük devir
-                        {R.raw.f2004_in_verylow,     5500, 4800, 6800},   // 4.8–6.8k: ilk yüklenme
-                        {R.raw.f2004_in_verylow_2,   7000, 6200, 8200},   // 6.2–8.2k: orta-low bant
-                        {R.raw.f2004_in_on_mid,      9000, 8000,10200},   // 8.0–10.2k: esas orta bant (burada çığlık başlasın)
-                        {R.raw.f2004_in_on_low,     11500,10000,13500},   // 10.0–13.5k: yüksek orta
-                        {R.raw.f2004_in_on_mid2,    14000,12500,15500},   // 12.5–15.5k
-                        {R.raw.f2004_in_on_high_mix,16000,14500,17800},   // 14.5–17.8k
-                        {R.raw.f2004_in_on_veryhigh_mix,18500,17000,19800} // 17.0–19.8k: limiter üstü çığlık
+                        // idle ilk sample: alt sınırı biraz aşağı, üstü bir sonraki base'e kadar
+                        {R.raw.f2004_in_idle,        4000, 3500, 5000},
+                        // verylow: idle–verylow_2 arasını doldur
+                        {R.raw.f2004_in_verylow,     5000, 4000, 6500},
+                        // verylow_2: verylow–on_low arası
+                        {R.raw.f2004_in_verylow_2,   6500, 5000, 8000},
+                        // on_low: verylow_2–on_mid arası
+                        {R.raw.f2004_in_on_low,      8000, 6500, 9500},
+                        // on_mid: on_low–on_mid2 arası
+                        {R.raw.f2004_in_on_mid,      9500, 8000,12500},
+                        // on_mid2: on_mid–on_high_mix arası
+                        {R.raw.f2004_in_on_mid2,    12500, 9500,15500},
+                        // on_high_mix: on_mid2–veryhigh arası
+                        {R.raw.f2004_in_on_high_mix,15500,12500,18500},
+                        // veryhigh: üst sınırı biraz yukarı taşı
+                        {R.raw.f2004_in_on_veryhigh_mix,18500,15500,19500}
                 },
-                // OFF katmanı (kokpit içi gaz kesme / kompresyon)
+                // OFF: aynı anchor'lara göre üçgenler
                 new int[][]{
-                        {R.raw.f2004_in_idle,            4000, 3000, 5600},   // coast düşük devir kompresyon
-                        {R.raw.f2004_in_off_low,         6000, 4800, 7700},   // 4.8–7.7k (8050 öncesi daha çok low)
-                        {R.raw.f2004_in_offmid_pitchare, 8042, 7700, 9300},   // 7.7–9.3k (daha dar ve kontrollü band)
-                        {R.raw.f2004_in_off_midhigh_mix,12000,9000,14800},   // 9.0–14.8k (mid-high daha erken devreye girsin)
-                        {R.raw.f2004_in_off_high,       17000,13700,18500},  // 13.7–18.5k
-                        {R.raw.f2004_in_off_high,       19000,17500,19800}   // 17.5–19.8k
+                        // idle–off_low
+                        {R.raw.f2004_in_idle,            4000, 3500, 6000},
+                        // off_low: idle–offmid arası
+                        {R.raw.f2004_in_off_low,         6000, 4000, 8042},
+                        // offmid: off_low–off_midhigh arası
+                        {R.raw.f2004_in_offmid_pitchare, 8042, 6000,12000},
+                        // off_midhigh: offmid–off_high arası
+                        {R.raw.f2004_in_off_midhigh_mix,12000,8042,17000},
+                        // off_high: off_midhigh–son high arası
+                        {R.raw.f2004_in_off_high,       17000,12000,19000},
+                        // son high: üst sınırı biraz yukarı taşı
+                        {R.raw.f2004_in_off_high,       19000,17000,20000}
                 }
         );
     }
@@ -1168,10 +1188,12 @@ public class EngineSoundManager {
                 mSoundPool.setVolume(mTurboStreamId, 0f, 0f);
             } else if(mActiveProfile.hasTurbo == 1) {
                 float compVol = (0.2f + (mSimulatedThrottle * 0.8f)) * rpmRatio * masterVol * mCompressorMaxVol;
+                if (mRealisticMixEnabled) compVol *= 1.2f;
                 mSoundPool.setVolume(mTurboStreamId, compVol, compVol);
                 mSoundPool.setRate(mTurboStreamId, 0.8f + (rpmRatio * 1.7f));
             } else {
                 float boostFactor = Math.max(0f, Math.min(1f, (rpmRatio > 0.10f) ? (rpmRatio - 0.10f) * 1.12f : 0f));
+                if (mRealisticMixEnabled) boostFactor *= 1.2f;
                 mCurrentTurboBoost = (mCurrentTurboBoost * 0.90f) + ((mSimulatedThrottle * boostFactor) * 0.10f);
                 mSoundPool.setVolume(mTurboStreamId, mCurrentTurboBoost * masterVol * mTurboMaxSound, mCurrentTurboBoost * masterVol * mTurboMaxSound);
                 mSoundPool.setRate(mTurboStreamId, 0.8f + (rpmRatio * 1.2f));
@@ -1181,11 +1203,23 @@ public class EngineSoundManager {
         if (mSubwaveStreamId != -1) {
             if (mSubwaveEnabled) {
                 // Şalter AÇIKSA: Motora yük bindikçe bas katmanı belirginleşir
-                float loadFactor = 0.4f + (mSimulatedThrottle * 0.6f);
+                float loadFactor;
+                float subPitchBaseMin;
+                float subPitchBaseMax;
+                if (mRealisticMixEnabled) {
+                    // Daha geniş dinamik: düşük gazda sakin, yüksek gazda güçlü alt bas
+                    loadFactor = 0.2f + (mSimulatedThrottle * 0.9f);
+                    subPitchBaseMin = 0.55f;
+                    subPitchBaseMax = 1.35f;
+                } else {
+                    loadFactor = 0.4f + (mSimulatedThrottle * 0.6f);
+                    subPitchBaseMin = 0.6f;
+                    subPitchBaseMax = 1.3f;
+                }
                 float subVolume = masterVol * loadFactor * 1.5f; // Bas çarpanı
 
-                // Derinliği korumak için pitch çok tizleşmemeli (0.6 - 1.3 arası)
-                float subPitch = 0.6f + (rpmRatio * 0.7f);
+                // Derinliği korumak için pitch çok tizleşmemeli
+                float subPitch = subPitchBaseMin + (rpmRatio * (subPitchBaseMax - subPitchBaseMin));
 
                 // Araç dururken ve gaza basılmıyorken rölanti tokluğu
                 if (mCurrentSpeedKmh < 1.0f && mSimulatedThrottle < 0.05f) {
@@ -1206,8 +1240,21 @@ public class EngineSoundManager {
 
         // --- MİKSER: HİBRİT KARAR MEKANİZMASI ---
         if (mIsDualLayer) {
-            float onWeight = (float) Math.sqrt(mSimulatedThrottle);
-            float offWeight = (float) Math.sqrt(Math.max(0f, 1.0f - mSimulatedThrottle));
+            float onWeight;
+            float offWeight;
+            if (mRealisticMixEnabled) {
+                float t = Math.max(0f, Math.min(1f, mSimulatedThrottle));
+                onWeight = (float) Math.pow(t, 0.5f);                 // dip gazda hızlıca aç
+                offWeight = (float) Math.pow(1f - t, 1.2f);           // gaz artınca OFF hızlıca sön
+                // yüksek devirde OFF'u ekstra kısmak
+                if (rpmRatio > 0.6f) {
+                    float k = Math.min(1f, (rpmRatio - 0.6f) / 0.3f); // 0.6–0.9 arası
+                    offWeight *= (1f - 0.7f * k);                     // %70'e kadar azalt
+                }
+            } else {
+                onWeight = (float) Math.sqrt(mSimulatedThrottle);
+                offWeight = (float) Math.sqrt(Math.max(0f, 1.0f - mSimulatedThrottle));
+            }
 
             // Araç dururken ve gaz verilirken sadece ON katmanı duyulsun (N-revving)
             if (mCurrentSpeedKmh < 1.0f && mSimulatedThrottle > 0.05f) {
@@ -1257,7 +1304,10 @@ public class EngineSoundManager {
                         }
                     }
                     float rpmDiff = upper.baseRpm - lower.baseRpm;
-                    float blend = Math.max(0f, Math.min(1f, (rpmDiff <= 0) ? 0 : (rpm - lower.baseRpm) / rpmDiff));
+                    float t = (rpmDiff <= 0) ? 0f : (rpm - lower.baseRpm) / rpmDiff;
+                    t = Math.max(0f, Math.min(1f, t));
+                    // smoothstep: daha yumuşak crossfade
+                    float blend = t * t * (3f - 2f * t);
                     raw = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
                 }
                 weights[i] = raw;
@@ -1269,7 +1319,9 @@ public class EngineSoundManager {
             // 2) Ağırlıkları normalize et (toplam sabit kalsın, rpm sadece karışımı değiştirir)
             float invSum = 1.0f / weightSum;
 
-            float loadVolumeFactor = 0.5f + (mSimulatedThrottle * 0.5f);
+            float loadVolumeFactor = mRealisticMixEnabled
+                    ? (0.2f + (mSimulatedThrottle * 0.8f))   // daha agresif: gazla hızlı art
+                    : (0.5f + (mSimulatedThrottle * 0.5f));
             float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
             float modeVolumeBoost = (mDriveModeAggressiveness > 0.5f) ? 1.2f : 1.0f;
 
@@ -1338,7 +1390,9 @@ public class EngineSoundManager {
                     }
                 }
                 float rpmDiff = upper.baseRpm - lower.baseRpm;
-                float blend = Math.max(0f, Math.min(1f, (rpmDiff <= 0) ? 0 : (rpm - lower.baseRpm) / rpmDiff));
+                float t = (rpmDiff <= 0) ? 0f : (rpm - lower.baseRpm) / rpmDiff;
+                t = Math.max(0f, Math.min(1f, t));
+                float blend = t * t * (3f - 2f * t); // smoothstep
                 raw = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
             }
             weights[i] = raw;
@@ -1361,9 +1415,24 @@ public class EngineSoundManager {
             float pitch = rpm / s.baseRpm;
 
             if (isOnLayer) pitch *= (0.98f + (mSimulatedThrottle * 0.04f));
+
+            if (mRealisticMixEnabled) {
+                // ON katmanında gaz + devirle hafif ekstra tizleşme ve mikro jitter
+                float rpmRatioLocal = (rpm - mIdleRpm) / (mMaxRpm - mIdleRpm);
+                rpmRatioLocal = Math.max(0f, Math.min(1f, rpmRatioLocal));
+                if (isOnLayer) {
+                    pitch *= 1.0f + 0.03f * mSimulatedThrottle * rpmRatioLocal;
+                    float jitter = (float) ((Math.random() - 0.5) * 0.02); // ±1% civarı
+                    pitch *= 1.0f + jitter * rpmRatioLocal;
+                    // Load'a daha sert tepki: ON katmanını boost et, OFF'u hafif bastır
+                    finalVolume *= (0.8f + 0.4f * mSimulatedThrottle);
+                } else {
+                    finalVolume *= (1.0f - 0.4f * mSimulatedThrottle * rpmRatioLocal);
+                }
+            }
+
             pitch = Math.max(0.6f, Math.min(1.8f, pitch));
 
-            // HATALI KİLİT BURADAN TAMAMEN SİLİNDİ!
             // Sadece araç dururken ve hiç gaz verilmiyorken kullanıcı pitch (frekans) ayarını uygula
             if (i == 0 && mCurrentSpeedKmh < 1.0f && mSimulatedThrottle < 0.05f) {
                 pitch *= mIdlePitch;

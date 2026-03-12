@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_OVERLAY_ENABLED = "overlay_enabled";
     private static final String PREF_SOUND_PROFILE = "sound_profile";
     private static final String PREF_SOUND_MASTER = "sound_master";
+    private static final String PREF_REALISTIC_SOUND = "sound_realistic_mix";
     private static final String PREF_MOTOR_POWER = "motor_power_kw";
     /** Tek pedal atanacak tuş: -1=Kapalı, 17=Sol yıldız, 286=Sağ yıldız (InputReader keyCode, hafızalı) */
     private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
@@ -122,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnRevMatch;
     private Button mBtnGearWhine;
     private Button mBtnSubwave;
+    private Button mBtnRealisticSound;
     private Button mBtnSpeedTest;
     private SeekBar mSeekSoundVolume;
     private TextView mTvAlarmVolumeHint;
@@ -144,6 +146,12 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
+    private void updateRealisticSoundButton(boolean enabled) {
+        if (mBtnRealisticSound == null) return;
+        mBtnRealisticSound.setText(getString(
+                enabled ? R.string.btn_realistic_sound_on : R.string.btn_realistic_sound_off));
+    }
 
     private void applyFullscreen(boolean enabled) {
         View decor = getWindow().getDecorView();
@@ -515,6 +523,7 @@ public class MainActivity extends AppCompatActivity {
         mBtnGearProfile = findViewById(R.id.btnGearProfile);
         mBtnRevMatch = findViewById(R.id.btnRevMatch);
         mBtnGearWhine = findViewById(R.id.btnGearWhine);
+        mBtnRealisticSound = findViewById(R.id.btnRealisticSound);
         mBtnSpeedTest = findViewById(R.id.btnSpeedTest);
         mLayoutSpeedTest = findViewById(R.id.layoutSpeedTest);
         mSeekSoundVolume = findViewById(R.id.seekSoundVolume);
@@ -547,6 +556,8 @@ public class MainActivity extends AppCompatActivity {
         // Son kaydedilen motor sesi / log ayarlarını yükle (kalıcı)
         SharedPreferences prefsSound = prefsApp;
         mSoundEnabled = prefsSound.getBoolean(PREF_SOUND_ENABLED, false);
+        boolean realisticMix = prefsSound.getBoolean(PREF_REALISTIC_SOUND, false);
+        mEngineSound.setRealisticMixEnabled(realisticMix);
         SoundMode savedMode = soundModeFromString(prefsSound.getString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2"));
         // Loglar varsayılan olarak KAPALI olsun
         boolean logsEnabled = prefsSound.getBoolean("logs_enabled", false);
@@ -681,6 +692,17 @@ public class MainActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT).show();
             updateSoundToggleButton();
         });
+
+        if (mBtnRealisticSound != null) {
+            updateRealisticSoundButton(realisticMix);
+            mBtnRealisticSound.setOnClickListener(v -> {
+                boolean current = mEngineSound.isRealisticMixEnabled();
+                boolean next = !current;
+                mEngineSound.setRealisticMixEnabled(next);
+                prefsSound.edit().putBoolean(PREF_REALISTIC_SOUND, next).apply();
+                updateRealisticSoundButton(next);
+            });
+        }
 
         if (mBtnSoundProfile != null) {
             mBtnSoundProfile.setOnClickListener(v -> showSoundProfileDialog());
