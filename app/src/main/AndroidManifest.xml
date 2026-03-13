@@ -62,15 +62,26 @@
             android:screenOrientation="landscape"
             android:theme="@style/Theme.DriveHubDort" />
 
-        <!-- Dış uygulamalardan motor sesini tetiklemek için köprü Activity -->
+        <!-- Dış uygulamalardan motor sesini AÇMA Activity'si -->
         <activity
-            android:name=".ui.EngineActionActivity"
+            android:name=".ui.StartEngineSoundActivity"
             android:exported="true"
             android:excludeFromRecents="true"
             android:theme="@style/Theme.DriveHubDort">
             <intent-filter>
-                <action android:name="com.drivehub.dort.action.START_ENGINE_SOUND" />
-                <action android:name="com.drivehub.dort.action.STOP_ENGINE_SOUND" />
+                <action android:name="com.drivehub.dort.action.START_ENGINE_SOUND_ACTIVITY" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Dış uygulamalardan motor sesini KAPATMA Activity'si -->
+        <activity
+            android:name=".ui.StopEngineSoundActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.DriveHubDort">
+            <intent-filter>
+                <action android:name="com.drivehub.dort.action.STOP_ENGINE_SOUND_ACTIVITY" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
