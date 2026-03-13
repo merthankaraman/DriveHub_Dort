@@ -208,4 +208,29 @@
                 android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
+
+    <!-- Alt sol: Kadran uygulamasına geç -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="bottom|start"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btnOpenGaugeApp"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:backgroundTint="#21262D"
+            android:minWidth="0dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="@string/btn_open_gauge_app"
+            android:textColor="#C9D1D9"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
+    </LinearLayout>
 </LinearLayout>
