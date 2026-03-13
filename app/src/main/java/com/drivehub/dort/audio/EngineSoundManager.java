@@ -24,6 +24,14 @@ public class EngineSoundManager {
 
     private static final String TAG = "EngineSoundV3";
     private static EngineSoundManager sInstance = null;
+
+    // HARİCİ KADRAN / TELEMETRİ UYGULAMALARI İÇİN BASİT BROADCAST TELEMETRİ
+    public static final String ACTION_TELEMETRY = "com.drivehub.dort.TELEMETRY";
+    public static final String EXTRA_RPM = "rpm";
+    public static final String EXTRA_SPEED_KMH = "speedKmh";
+    public static final String EXTRA_GEAR = "gear";
+    public static final String EXTRA_THROTTLE = "throttle01";
+    public static final String EXTRA_DC_POWER_KW = "dcPowerKw";
     private final Context mContext;
     private final Handler mHandler;
 
@@ -68,7 +76,8 @@ public class EngineSoundManager {
     private int mTurboStreamId = -1;
     private float mCurrentTurboBoost = 0f;
     private float mTurboMaxSound = 0.3f;
-    private float mCompressorMaxVol = 0.5f;
+    // Supercharger (kompresör) genel master seviyesi – motor sesine göre baskınlık buradan ayarlanıyor
+    private float mCompressorMaxVol = 0.7f;
 
     private long mLastShiftTime = 0;
     private boolean mEnableRevMatch = true;
@@ -82,6 +91,9 @@ public class EngineSoundManager {
     private float mFlutterSoundmultiplier = 0.4f;
     private long mLastFlutterTime = 0;
     private float mLastThrottleForFlutter = 0f;
+    // Telemetri yayını için hafif throttle (aşırı sık broadcast olmasın)
+    private long mLastTelemetryBroadcastTime = 0L;
+    private static final long TELEMETRY_INTERVAL_MS = 100L; // ~10 Hz
 
     // Ses karışım modu (daha agresif ON/OFF ve load tepkisi)
     private boolean mRealisticMixEnabled = false;
@@ -264,7 +276,7 @@ public class EngineSoundManager {
                         {20f, 320f}   // 7. VİTES (OVERDRIVE): Uzun yol vitesidir. 175'te devri 5000'e, 120'de 3500'e düşürür!
                 },
                 0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
-                0,0,
+                R.raw.elisec_startup,R.raw.key_removed,
                 // ON Katmanı (Gaza Basıldığında)
                 new int[][]{
                         {R.raw.elisesc_idle, 800},
@@ -272,7 +284,7 @@ public class EngineSoundManager {
                         {R.raw.elisesc_on_4750, 4750},
                         {R.raw.elisesc_on_8115, 8115},
                         {R.raw.elisesc_on_9649, 8800},
-                        {R.raw.elisesc_limiter, 9000}
+                        {R.raw.elisesc_on_9649, 9000}
                 },
 
                 // OFF Katmanı (Gaz Çekildiğinde)
@@ -903,7 +915,7 @@ public class EngineSoundManager {
         });
 
         // Yardımcı sesleri yükle
-        mTurboSoundId = mSoundPool.load(mContext, (mActiveProfile.hasTurbo == 1) ? R.raw.supercharge : R.raw.turbo, 1);
+        mTurboSoundId = mSoundPool.load(mContext, (mActiveProfile.hasTurbo == 1) ? R.raw.elisesc_compressor : R.raw.turbo, 1);
         mGearWhineSoundId = mSoundPool.load(mContext, R.raw.transmission, 1);
         mSubwaveSoundId = mSoundPool.load(mContext, R.raw.dp_in_subwave, 1);
         if (mActiveProfile.hasTurbo == 3) mFlutterSoundId = mSoundPool.load(mContext, R.raw.blowoff2, 1);
@@ -988,6 +1000,7 @@ public class EngineSoundManager {
         }
         updateGearAndRpm();
         updateAudioMixer();
+        broadcastTelemetryIfNeeded();
     }
 
     private void updateGearAndRpm() {
@@ -1353,6 +1366,25 @@ public class EngineSoundManager {
             mSoundPool.setRate(mGearWhineStreamId, 0.5f + (speedRatio * 1.5f));
         } else if(!mGearWhineEnabled){
             mSoundPool.setVolume(mGearWhineStreamId, 0, 0);
+        }
+    }
+
+    // Dış dünyaya (ayrı kadran uygulaması vb.) hafif telemetri yayını
+    private void broadcastTelemetryIfNeeded() {
+        long now = System.currentTimeMillis();
+        if (now - mLastTelemetryBroadcastTime < TELEMETRY_INTERVAL_MS) return;
+        mLastTelemetryBroadcastTime = now;
+
+        try {
+            android.content.Intent intent = new android.content.Intent(ACTION_TELEMETRY);
+            intent.putExtra(EXTRA_RPM, mCurrentRpm);
+            intent.putExtra(EXTRA_SPEED_KMH, mCurrentSpeedKmh);
+            intent.putExtra(EXTRA_GEAR, mCurrentGear);
+            intent.putExtra(EXTRA_THROTTLE, mSimulatedThrottle);
+            intent.putExtra(EXTRA_DC_POWER_KW, mCurrentDcPowerKw);
+            mContext.sendBroadcast(intent);
+        } catch (Throwable ignored) {
+            // Telemetri kritik değil; bir şey patlarsa uygulamayı etkilemesin
         }
     }
     private void processLayer(EngineSample[] layer, float rpm, float weightVol, float fadedMasterVol, boolean isOnLayer) {
