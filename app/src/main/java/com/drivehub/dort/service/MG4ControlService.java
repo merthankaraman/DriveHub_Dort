@@ -111,6 +111,10 @@ public class MG4ControlService extends Service {
     public static final String PREF_REMEMBER_REGEN      = "remember_regen_level";
     /** Son seçilen regen seviyesi (RegenLevel.value) */
     public static final String PREF_LAST_REGEN_LEVEL    = "last_regen_level";
+    /** Vol↑+Vol↓ müzik duraklat/devam tuş kombinasyonu aktif mi (kısayollar panelindeki switch) */
+    public static final String PREF_SHORTCUT_MEDIA_COMBO_ENABLED  = "shortcut_media_combo_enabled";
+    /** Vol↓+Ana ekran motor sesi aç/kapa tuş kombinasyonu aktif mi (kısayollar panelindeki switch) */
+    public static final String PREF_SHORTCUT_ENGINE_COMBO_ENABLED = "shortcut_engine_combo_enabled";
 
     private volatile boolean mOnePedalKeyPressed = false;
     private volatile boolean mOnePedalLongTriggered = false;
@@ -992,12 +996,24 @@ public class MG4ControlService extends Service {
             if (!mVolUpPressed && !mVolDownPressed && mVolComboPending) {
                 mVolComboPending = false;
                 if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Vol↑+Vol↓ ikisi bırakıldı → müzik toggle");
-                sendSaicHardkeyMediaPlayPause();
+                SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
+                boolean enabled = prefs.getBoolean(PREF_SHORTCUT_MEDIA_COMBO_ENABLED, true);
+                if (enabled) {
+                    sendSaicHardkeyMediaPlayPause();
+                } else if (MG4Hardware.isLogEnabled()) {
+                    Log.i(TAG, "MEDIA combo devre dışı (PREF_SHORTCUT_MEDIA_COMBO_ENABLED=false)");
+                }
             }
             if (!mVolDownPressed && !mAnaEkranPressed && mVolDownAnaEkranComboPending) {
                 mVolDownAnaEkranComboPending = false;
                 if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Vol↓+Ana ekran ikisi bırakıldı → motor sesi toggle");
-                onMotorSoundToggleFromKey();
+                SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
+                boolean enabled = prefs.getBoolean(PREF_SHORTCUT_ENGINE_COMBO_ENABLED, true);
+                if (enabled) {
+                    onMotorSoundToggleFromKey();
+                } else if (MG4Hardware.isLogEnabled()) {
+                    Log.i(TAG, "Motor sesi combo devre dışı (PREF_SHORTCUT_ENGINE_COMBO_ENABLED=false)");
+                }
             }
         }
     }
@@ -1014,7 +1030,13 @@ public class MG4ControlService extends Service {
             if (!mVolDownPressed && mVolDownAnaEkranComboPending) {
                 mVolDownAnaEkranComboPending = false;
                 if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Vol↓+Ana ekran ikisi bırakıldı → motor sesi toggle");
-                onMotorSoundToggleFromKey();
+                SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
+                boolean enabled = prefs.getBoolean(PREF_SHORTCUT_ENGINE_COMBO_ENABLED, true);
+                if (enabled) {
+                    onMotorSoundToggleFromKey();
+                } else if (MG4Hardware.isLogEnabled()) {
+                    Log.i(TAG, "Motor sesi combo devre dışı (PREF_SHORTCUT_ENGINE_COMBO_ENABLED=false)");
+                }
             }
         }
     }

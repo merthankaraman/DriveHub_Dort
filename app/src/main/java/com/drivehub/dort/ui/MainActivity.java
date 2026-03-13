@@ -958,6 +958,25 @@ public class MainActivity extends AppCompatActivity {
             );
         }
 
+        // Tuş kombinasyonları: müzik duraklat/devam ve motor sesi aç/kapa
+        SwitchCompat swMediaCombo = findViewById(R.id.switchMediaCombo);
+        if (swMediaCombo != null) {
+            boolean enabled = pShortcuts.getBoolean(MG4ControlService.PREF_SHORTCUT_MEDIA_COMBO_ENABLED, true);
+            swMediaCombo.setChecked(enabled);
+            swMediaCombo.setOnCheckedChangeListener((buttonView, isChecked) ->
+                    pShortcuts.edit().putBoolean(MG4ControlService.PREF_SHORTCUT_MEDIA_COMBO_ENABLED, isChecked).apply()
+            );
+        }
+
+        SwitchCompat swEngineCombo = findViewById(R.id.switchEngineCombo);
+        if (swEngineCombo != null) {
+            boolean enabled = pShortcuts.getBoolean(MG4ControlService.PREF_SHORTCUT_ENGINE_COMBO_ENABLED, true);
+            swEngineCombo.setChecked(enabled);
+            swEngineCombo.setOnCheckedChangeListener((buttonView, isChecked) ->
+                    pShortcuts.edit().putBoolean(MG4ControlService.PREF_SHORTCUT_ENGINE_COMBO_ENABLED, isChecked).apply()
+            );
+        }
+
         // ---- Klima paneli ----
         mLayoutClimatePanel = findViewById(R.id.layoutClimatePanel);
         // Direksiyon

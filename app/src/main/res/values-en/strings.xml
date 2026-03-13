@@ -159,6 +159,8 @@
     <string name="camera_360_assign">Assign 360 to button</string>
     <string name="remember_drive_mode_label">Remember drive mode</string>
     <string name="remember_regen_label">Remember regen level</string>
+    <string name="shortcuts_media_combo_label">Vol + and Vol −: Music play/pause key combo</string>
+    <string name="shortcuts_engine_combo_label">Vol − and Home: Engine sound toggle key combo</string>
     <string-array name="one_pedal_key_labels">
         <item>Off</item>
         <item>Left star</item>

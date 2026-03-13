@@ -159,6 +159,8 @@
     <string name="camera_360_assign">360\'ı düğmeye ata</string>
     <string name="remember_drive_mode_label">Sürüş modunu hatırla</string>
     <string name="remember_regen_label">Regen seviyesini hatırla</string>
+    <string name="shortcuts_media_combo_label">Ses + ve Ses −: Müzik duraklat/devam tuş kombosu</string>
+    <string name="shortcuts_engine_combo_label">Ses − ve Ana ekran: Motor sesi aç/kapa tuş kombosu</string>
     <string-array name="one_pedal_key_labels">
         <item>Kapalı</item>
         <item>Sol yıldız</item>
