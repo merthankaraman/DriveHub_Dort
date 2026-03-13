@@ -4,6 +4,14 @@
 # zaten otomatik olarak korur (silmez). Bu dosyada sadece özel durumları
 # tanımlıyoruz.
 
+# Telemetri paketi bütünüyle kalsın (Kadran ContentResolver ile okur)
+-keep class com.drivehub.dort.telemetry.** { *; }
+-dontwarn com.drivehub.dort.telemetry.**
+
+# AndroidX Core: yansıma ile yüklendiği için R8 silebiliyor (CoreComponentFactory)
+-keep class androidx.core.app.** { *; }
+-dontwarn androidx.core.app.**
+
 # Eğer ileride @Keep anotasyonu kullanırsan, bu üyeler olduğu gibi korunur.
 -keepclassmembers class * {
     @androidx.annotation.Keep *;

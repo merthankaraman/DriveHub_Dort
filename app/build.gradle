@@ -15,7 +15,7 @@ android {
         minSdk 28
         targetSdk 36
         versionCode 1
-        versionName "0.8.2.0"
+        versionName "0.8.2.6"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -40,8 +40,9 @@ android {
             // Android Studio Run butonu → debug keystore (hızlı geliştirme)
         }
         release {
-            minifyEnabled true
-            shrinkResources true
+            // R8 bazen ContentProvider/AndroidX sınıflarını siliyor; crash olursa geçici false kullan
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

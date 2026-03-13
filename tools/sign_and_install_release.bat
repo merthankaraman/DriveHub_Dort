@@ -26,7 +26,7 @@ for /f "tokens=2 delims== " %%v in ('findstr /R /C:"versionName" "%PROJECT_DIR%\
 )
 REM Cift tirnaklari temizle: "0.7.2" -> 0.7.2
 set VERSION_NAME=%VERSION_NAME:"=%
-set APK_TOOLS_NAME=DriveHub_%VERSION_NAME%.apk
+set APK_TOOLS_NAME=DriveHub_Dort_%VERSION_NAME%.apk
 set APK_TOOLS_PATH=%SCRIPT_DIR%%APK_TOOLS_NAME%
 
 :: apksigner.jar yolunu otomatik bul (en yüksek build-tools sürümü)

@@ -106,5 +106,11 @@
             </intent-filter>
         </receiver>
 
+        <!-- Kadran (com.drivehub.kadran) telemetriyi bu provider ile okur; broadcast sistem UID uyarısı veriyordu -->
+        <provider
+            android:name=".telemetry.TelemetryProvider"
+            android:authorities="com.drivehub.dort.telemetry"
+            android:exported="true" />
+
     </application>
 </manifest>

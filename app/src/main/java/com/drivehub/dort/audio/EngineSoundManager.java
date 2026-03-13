@@ -25,8 +25,8 @@ public class EngineSoundManager {
     private static final String TAG = "EngineSoundV3";
     private static EngineSoundManager sInstance = null;
 
-    // HARİCİ KADRAN / TELEMETRİ UYGULAMALARI İÇİN BASİT BROADCAST TELEMETRİ
-    public static final String ACTION_TELEMETRY = "com.drivehub.dort.TELEMETRY";
+    // HARİCİ KADRAN: ContentProvider ile telemetri (broadcast sistem UID'de "non-protected" uyarısı veriyor)
+    public static final String ACTION_TELEMETRY = "com.drivehub.dort.TELEMETRY"; // kadran uyumluluk; artık Provider kullan
     public static final String EXTRA_RPM = "rpm";
     public static final String EXTRA_SPEED_KMH = "speedKmh";
     public static final String EXTRA_GEAR = "gear";
@@ -992,14 +992,13 @@ public class EngineSoundManager {
         mCurrentSpeedKmh = (Float.isNaN(speedKmh) || speedKmh < 0f) ? 0f : speedKmh;
         if (!mUseManualThrottle) {
             if (!Float.isNaN(dcPowerKw)) {
-                mCurrentDcPowerKw = dcPowerKw < 5f ? 0f : dcPowerKw;
+                mCurrentDcPowerKw = dcPowerKw;
             } else {
                 float dcVolt = MG4Hardware.getDcVoltGlobal();
                 float dcAmpAct = MG4Hardware.getDcAmpGlobal();
                 mCurrentDcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
-                mCurrentDcPowerKw = mCurrentDcPowerKw < 5f ? 0f : mCurrentDcPowerKw;
             }
-            mSimulatedThrottle = Math.min(1f, Math.max(0f, (mCurrentDcPowerKw / mMotorMaxPower)));
+            mSimulatedThrottle = Math.min(1f, Math.max(0f, (mCurrentDcPowerKw < 5f ? 0f : mCurrentDcPowerKw / mMotorMaxPower)));
         }
         updateGearAndRpm();
         updateAudioMixer();
@@ -1372,24 +1371,25 @@ public class EngineSoundManager {
         }
     }
 
-    // Dış dünyaya (ayrı kadran uygulaması vb.) hafif telemetri yayını
+    // Kadran uygulaması (com.drivehub.kadran): ContentProvider üzerinden okur; broadcast sistem UID uyarısı veriyordu
     private void broadcastTelemetryIfNeeded() {
         long now = System.currentTimeMillis();
         if (now - mLastTelemetryBroadcastTime < TELEMETRY_INTERVAL_MS) return;
         mLastTelemetryBroadcastTime = now;
 
         try {
-            android.content.Intent intent = new android.content.Intent(ACTION_TELEMETRY);
-            intent.putExtra(EXTRA_RPM, mCurrentRpm);
-            intent.putExtra(EXTRA_SPEED_KMH, mCurrentSpeedKmh);
-            intent.putExtra(EXTRA_GEAR, mCurrentGear);
-            intent.putExtra(EXTRA_THROTTLE, mSimulatedThrottle);
-            intent.putExtra(EXTRA_DC_POWER_KW, mCurrentDcPowerKw);
-            intent.putExtra(EXTRA_RPM_MAX, mMaxRpm);
-            intent.putExtra(EXTRA_MOTOR_MAX_POWER_KW, mMotorMaxPower);
-            mContext.sendBroadcast(intent);
+            float lMotorMaxPower = mMotorMaxPower + 20f;
+            com.drivehub.dort.telemetry.TelemetryHolder.update(
+                    mCurrentRpm,
+                    mCurrentSpeedKmh,
+                    mCurrentGear,
+                    mSimulatedThrottle,
+                    mCurrentDcPowerKw,
+                    mMaxRpm,
+                    lMotorMaxPower
+            );
         } catch (Throwable ignored) {
-            // Telemetri kritik değil; bir şey patlarsa uygulamayı etkilemesin
+            // Telemetri kritik değil
         }
     }
     private void processLayer(EngineSample[] layer, float rpm, float weightVol, float fadedMasterVol, boolean isOnLayer) {
