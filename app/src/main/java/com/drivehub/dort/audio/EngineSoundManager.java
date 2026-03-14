@@ -1388,6 +1388,8 @@ public class EngineSoundManager {
                     mMaxRpm,
                     lMotorMaxPower
             );
+            // Kadran uygulaması ContentObserver ile abone; yayın yap ki interrupt alsın (poll gereksin)
+            mContext.getContentResolver().notifyChange(com.drivehub.dort.telemetry.TelemetryProvider.CONTENT_URI, null);
         } catch (Throwable ignored) {
             // Telemetri kritik değil
         }
