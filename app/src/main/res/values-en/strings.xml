@@ -107,7 +107,7 @@
     <string name="consumption_screen">📈 Consumption screen</string>
     <string name="consumption_mode_since_start">Since engine start</string>
     <string name="consumption_mode_current">Current data</string>
-    <string name="consumption_mode_trip">Trip</string>
+    <string name="consumption_mode_trip">From Start</string>
     <string name="status">STATUS</string>
     <string name="status_charging">🔋 Charging &amp; status</string>
     <string name="charging_status_title">CHARGING STATUS</string>
@@ -274,7 +274,7 @@
     <string name="unit_kw_label">kW</string>
     <string name="unit_kwh_label">kWh</string>
     <string name="batarya">Battery</string>
-    <string name="btn_reset_trip">Reset trip</string>
+    <string name="btn_reset_trip">Reset From Start</string>
     <string name="btn_reset_lifetime">Reset lifetime</string>
     <string name="btn_reset_profile_format">Reset %1$s</string>
     <string name="consumption_reset_confirm_title">Confirm reset</string>

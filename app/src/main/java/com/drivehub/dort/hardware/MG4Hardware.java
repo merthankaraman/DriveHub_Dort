@@ -1163,7 +1163,7 @@ public class MG4Hardware {
      */
     public static void run100msTask() {
         float speedKmh_raw = getSpeedKmh();
-        float speedKmh = speedKmh_raw * (speedKmh_raw >= 100 ? 1.004f : 1f);
+        float speedKmh = speedKmh_raw * (speedKmh_raw >= 80 ? 1.004f : 1f);
 
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
 
@@ -1222,22 +1222,23 @@ public class MG4Hardware {
                 if (speedKmh == 0f && dcKw < 0f) drivedKwh = 0f;
                 else drivedKwh = dcKw * dtHours;
             }
-            sTripEnergyKwh += drivedKwh;
-            sLifetimeKwh += drivedKwh;
-            sTripDistanceKm += dKm;
-            sLifetimeKm += dKm;
-            float speedTrim = speedKmh_raw * (speedKmh_raw >= 70 ? 1.004f : 1f);
+            float speedTrim = speedKmh_raw * (speedKmh_raw >= 90 ? 1.004f : 1f);
 
             for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
                 sConsProfileKm[i] += dKm;
                 sConsProfileKwh[i] += drivedKwh;
             }
             sTripDistanceKm_trim += speedTrim * dtHours;
+            sTripDistanceKm += dKm;
+            sTripHours += dtHours;
+            sTripEnergyKwh += drivedKwh;
+
+            sLifetimeHours += dtHours;
+            sLifetimeKwh += drivedKwh;
+            sLifetimeKm += dKm;
 
             if (isVehicleReady()) {
                 if (sLastGear >= 2 && sLastGear <= 4) {
-                    sTripHours += dtHours;
-                    sLifetimeHours += dtHours;
                     for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
                         sConsProfileHours[i] += dtHours;
                     }
