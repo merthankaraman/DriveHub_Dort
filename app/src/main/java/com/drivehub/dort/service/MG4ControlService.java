@@ -172,8 +172,7 @@ public class MG4ControlService extends Service {
             boolean ready = MG4Hardware.isVehicleReady() || MG4Hardware.isSimSpeedActive();
             float dcPowerKw = MG4Hardware.getDcKwGlobal();
 
-            SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-            boolean soundEnabled = prefs.getBoolean("sound_enabled", false);
+            boolean soundEnabled = MG4Hardware.isSoundEnabled();
 
             if (soundEnabled && ready) {
                 if (!mEngineSound.isPlaying()) {
@@ -220,6 +219,13 @@ public class MG4ControlService extends Service {
         @Override
         public void run() {
             MG4Hardware.run100msTask();
+            if (MG4Hardware.isSoundEnabled()) {
+                EngineSoundManager.broadcastTelemetryIfNeeded(MG4ControlService.this);
+            } else {
+                float speed = MG4Hardware.getSpeedForEngine();
+                float dcKw = MG4Hardware.getDcKwGlobal();
+                EngineSoundManager.broadcastTelemetryFromRaw(MG4ControlService.this, Float.isNaN(speed) ? 0f : speed, Float.isNaN(dcKw) ? 0f : dcKw);
+            }
             mConsumptionLoopCount++;
             if (mConsumptionLoopCount >= LIFETIME_PERSIST_EVERY_N) {
                 mConsumptionLoopCount = 0;
@@ -304,6 +310,7 @@ public class MG4ControlService extends Service {
         registerHardkeyReceiver();
 
         SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
+        MG4Hardware.setSoundEnabled(prefs.getBoolean("sound_enabled", false));
         boolean overlayEnabled = prefs.getBoolean("overlay_enabled", false);
         if (overlayEnabled) {
             showOverlay();
@@ -1041,12 +1048,11 @@ public class MG4ControlService extends Service {
         }
     }
 
-    /** Tuş kombo ile tetiklenen motor sesi aç/kapa (SharedPreferences + EngineSoundManager). */
+    /** Tuş kombo ile tetiklenen motor sesi aç/kapa (SharedPreferences + global flag + EngineSoundManager). */
     private void onMotorSoundToggleFromKey() {
-        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-        boolean current = prefs.getBoolean("sound_enabled", false);
-        boolean next = !current;
-        prefs.edit().putBoolean("sound_enabled", next).apply();
+        boolean next = !MG4Hardware.isSoundEnabled();
+        MG4Hardware.setSoundEnabled(next);
+        getSharedPreferences("drivehub_dort", MODE_PRIVATE).edit().putBoolean("sound_enabled", next).apply();
         if (mEngineSound != null) {
             if (next) {
                 if (!mEngineSound.isPlaying()) mEngineSound.start();

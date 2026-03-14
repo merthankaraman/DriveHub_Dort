@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.drivehub.dort.audio.EngineSoundManager;
+import com.drivehub.dort.hardware.MG4Hardware;
 
 /**
  * Basit yardımcı Activity:
@@ -22,6 +23,7 @@ public class StopEngineSoundActivity extends Activity {
 
         // Ses bayrağını kapat ve aktif motor döngüsünü durdur
         prefs.edit().putBoolean("sound_enabled", false).apply();
+        MG4Hardware.setSoundEnabled(false);
         esm.stop();
 
         finish();

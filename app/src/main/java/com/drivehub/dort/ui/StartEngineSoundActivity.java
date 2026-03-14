@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.drivehub.dort.audio.EngineSoundManager;
+import com.drivehub.dort.hardware.MG4Hardware;
 
 /**
  * Basit yardımcı Activity:
@@ -23,6 +24,7 @@ public class StartEngineSoundActivity extends Activity {
 
         // MainActivity'deki ses aç butonuyla aynı: sadece bayrağı aç
         prefs.edit().putBoolean("sound_enabled", true).apply();
+        MG4Hardware.setSoundEnabled(true);
 
         // Uygulama zaten çalışıyorsa profil/ayarları yüklesin
         esm.initFromPreferences(this);

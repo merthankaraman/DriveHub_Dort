@@ -87,6 +87,12 @@ public class MG4Hardware {
     /** Aynı şekilde regen seviyesi — vehicle manager callback'ten cache. */
     private static volatile int sCachedRegenLevel = -1;
 
+    /** Motor sesi açık mı (prefs yerine tek kaynak; tuş/ekran değiştirince güncellenir). */
+    private static volatile boolean sSoundEnabled = false;
+
+    public static void setSoundEnabled(boolean enabled) { sSoundEnabled = enabled; }
+    public static boolean isSoundEnabled() { return sSoundEnabled; }
+
     public static void setHvacListener(HvacListener listener) {
         sHvacListener = listener;
     }

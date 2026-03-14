@@ -1002,7 +1002,6 @@ public class EngineSoundManager {
         }
         updateGearAndRpm();
         updateAudioMixer();
-        broadcastTelemetryIfNeeded();
     }
 
     private void updateGearAndRpm() {
@@ -1371,8 +1370,12 @@ public class EngineSoundManager {
         }
     }
 
-    // Kadran uygulaması (com.drivehub.kadran): ContentProvider üzerinden okur; broadcast sistem UID uyarısı veriyordu
-    private void broadcastTelemetryIfNeeded() {
+    // Kadran uygulaması (com.drivehub.kadran): ContentProvider üzerinden okur. Servisteki 100ms task'tan, sadece ekran açıkken çağrılır.
+    public static void broadcastTelemetryIfNeeded(Context context) {
+        if (context == null) return;
+        getInstance(context).broadcastTelemetryIfNeeded();
+    }
+    public void broadcastTelemetryIfNeeded() {
         long now = System.currentTimeMillis();
         if (now - mLastTelemetryBroadcastTime < TELEMETRY_INTERVAL_MS) return;
         mLastTelemetryBroadcastTime = now;
@@ -1388,12 +1391,30 @@ public class EngineSoundManager {
                     mMaxRpm,
                     lMotorMaxPower
             );
-            // Kadran uygulaması ContentObserver ile abone; yayın yap ki interrupt alsın (poll gereksin)
             mContext.getContentResolver().notifyChange(com.drivehub.dort.telemetry.TelemetryProvider.CONTENT_URI, null);
         } catch (Throwable ignored) {
-            // Telemetri kritik değil
         }
     }
+
+    /** Ses kapalıyken Kadran için sadece hız ve güç gönderilir; RPM = 0. */
+    public static void broadcastTelemetryFromRaw(Context context, float speedKmh, float dcPowerKw) {
+        if (context == null) return;
+        getInstance(context).broadcastTelemetryFromRaw(speedKmh, dcPowerKw);
+    }
+    public void broadcastTelemetryFromRaw(float speedKmh, float dcPowerKw) {
+        long now = System.currentTimeMillis();
+        if (now - mLastTelemetryBroadcastTime < TELEMETRY_INTERVAL_MS) return;
+        mLastTelemetryBroadcastTime = now;
+        try {
+            float lMotorMaxPower = mMotorMaxPower + 20f;
+            com.drivehub.dort.telemetry.TelemetryHolder.update(
+                    -1f, speedKmh, 0, 0f, dcPowerKw, mMaxRpm, lMotorMaxPower
+            );
+            mContext.getContentResolver().notifyChange(com.drivehub.dort.telemetry.TelemetryProvider.CONTENT_URI, null);
+        } catch (Throwable ignored) {
+        }
+    }
+
     private void processLayer(EngineSample[] layer, float rpm, float weightVol, float fadedMasterVol, boolean isOnLayer) {
         if (layer == null || layer.length == 0) return;
 

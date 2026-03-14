@@ -556,6 +556,7 @@ public class MainActivity extends AppCompatActivity {
         // Son kaydedilen motor sesi / log ayarlarını yükle (kalıcı)
         SharedPreferences prefsSound = prefsApp;
         mSoundEnabled = prefsSound.getBoolean(PREF_SOUND_ENABLED, false);
+        MG4Hardware.setSoundEnabled(mSoundEnabled);
         boolean realisticMix = prefsSound.getBoolean(PREF_REALISTIC_SOUND, false);
         mEngineSound.setRealisticMixEnabled(realisticMix);
         SoundMode savedMode = soundModeFromString(prefsSound.getString(PREF_SOUND_MODE, "VIRTUAL_GEAR_V2"));
@@ -685,6 +686,7 @@ public class MainActivity extends AppCompatActivity {
         // Motor sesi aç/kapa butonu (sadece bayrağı ve UI'yı günceller; gerçek ses döngüsü serviste yönetilir)
         mBtnSoundToggle.setOnClickListener(v -> {
             mSoundEnabled = !mSoundEnabled;
+            MG4Hardware.setSoundEnabled(mSoundEnabled);
             getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                     .edit().putBoolean(PREF_SOUND_ENABLED, mSoundEnabled).apply();
             Toast.makeText(this,
