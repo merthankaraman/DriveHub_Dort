@@ -1966,8 +1966,7 @@ public class MainActivity extends AppCompatActivity {
             // Sürüş: trip (Sürüş sıfırla ile sıfırlanan)
             if (mTvConsumptionTripKm != null) {
                 if (tripDistanceKm >= 0) {
-                    double tripDistanceTrim = MG4Hardware.getTripDistanceKm_Trim();
-                    mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km --- %.2f km", tripDistanceKm, tripDistanceTrim));
+                    mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", tripDistanceKm));
                 } else {
                     mTvConsumptionTripKm.setText("--");
                 }

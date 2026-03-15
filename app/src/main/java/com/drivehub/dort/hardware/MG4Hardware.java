@@ -1117,7 +1117,6 @@ public class MG4Hardware {
     // -------------------------------------------------------------------------
     private static volatile double sTripEnergyKwh = 0.0;
     private static volatile double sTripDistanceKm = 0.0;
-    private static volatile double sTripDistanceKm_trim = 0.0;
     private static volatile double sTripHours = 0.0;
     /** Hayat boyu km/kWh — trip gibi integral, periyodik hafızaya yazılır (sıfırlanmaz). */
     private static volatile double sLifetimeKm = 0.0;
@@ -1167,7 +1166,6 @@ public class MG4Hardware {
 
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
 
-        // DC güç (sürüş + şarj): V * A / 1000 → kW (işaretli)
         float dcVolt = getDcVoltage();
         float dcAmpAct = getDcCurrentActual();
         float dcKw;
@@ -1222,13 +1220,13 @@ public class MG4Hardware {
                 if (speedKmh == 0f && dcKw < 0f) drivedKwh = 0f;
                 else drivedKwh = dcKw * dtHours;
             }
-            float speedTrim = speedKmh_raw * (speedKmh_raw >= 90 ? 1.004f : 1f);
-
             for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
                 sConsProfileKm[i] += dKm;
                 sConsProfileKwh[i] += drivedKwh;
             }
-            sTripDistanceKm_trim += speedTrim * dtHours;
+            for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
+                sConsProfileHours[i] += dtHours;
+            }
             sTripDistanceKm += dKm;
             sTripHours += dtHours;
             sTripEnergyKwh += drivedKwh;
@@ -1237,19 +1235,17 @@ public class MG4Hardware {
             sLifetimeKwh += drivedKwh;
             sLifetimeKm += dKm;
 
-            if (isVehicleReady()) {
-                if (sLastGear >= 2 && sLastGear <= 4) {
-                    for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
-                        sConsProfileHours[i] += dtHours;
-                    }
+            //if (isVehicleReady()) {
+            //    if (sLastGear >= 2 && sLastGear <= 4) {
+
                     if (!Float.isNaN(speedKmh)) {
                         sDriveGraphDistanceKm += dKm;
                     }
                     if (!Float.isNaN(dcKw)) {
                         sDriveGraphEnergyKwh += drivedKwh;
                     }
-                }
-            }
+            //    }
+            //}
             if (isCharging()) {
                 if (!Float.isNaN(acKw) && acKw > 0f) {
                     sAcChargeEnergyKwh += acKw * dtHours;
@@ -1285,7 +1281,6 @@ public class MG4Hardware {
         sMileageAtConsumptionStart = getTotalMileage();
         sTripEnergyKwh = 0.0;
         sTripDistanceKm = 0.0;
-        sTripDistanceKm_trim = 0.0;
         sTripHours = 0.0;
         sConsumptionLastRealtimeMs = SystemClock.elapsedRealtime();
     }
@@ -1299,7 +1294,6 @@ public class MG4Hardware {
     }
     public static double getTripEnergyKwh() { return sTripEnergyKwh; }
     public static double getTripDistanceKm() { return sTripDistanceKm; }
-    public static double getTripDistanceKm_Trim() { return sTripDistanceKm_trim; }
     public static double getTripHours() { return sTripHours; }
 
     /** Hayat boyu değerlerini hafızadan yükle (servis başlarken bir kez çağrılmalı). */

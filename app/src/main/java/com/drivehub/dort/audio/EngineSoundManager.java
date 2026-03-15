@@ -270,13 +270,13 @@ public class EngineSoundManager {
         return new VehicleProfile("Lotus Exige 240", 800, 9000f, 1,
                 1,
                 new float[][]{
-                        {0f, 40f},    // 1. Vites (Dururken 0 km/h - Kesicide 40 km/h)
-                        {5f, 70f},    // 2. Vites (Rölantide 5 km/h - Kesicide 70 km/h)
-                        {9f, 100f},   // 3. Vites (Rölantide 9 km/h - Kesicide 100 km/h)
-                        {12f, 130f},  // 4. Vites (Rölantide 12 km/h - Kesicide 130 km/h)
-                        {15f, 155f},  // 5. Vites (Rölantide 15 km/h - Kesicide 155 km/h)
-                        {18f, 180f},   // 6. Vites (Rölantide 18 km/h - Kesicide 180 km/h)
-                        {20f, 320f}   // 7. VİTES (OVERDRIVE): Uzun yol vitesidir. 175'te devri 5000'e, 120'de 3500'e düşürür!
+                        {0f, 60f},    // 1. Vites (Dururken 0 km/h - Kesicide 40 km/h)
+                        {30f, 90f},    // 2. Vites (Rölantide 5 km/h - Kesicide 70 km/h)
+                        {60f, 120f},   // 3. Vites (Rölantide 9 km/h - Kesicide 100 km/h)
+                        {90f, 150f},  // 4. Vites (Rölantide 12 km/h - Kesicide 130 km/h)
+                        {110f, 180f},  // 5. Vites (Rölantide 15 km/h - Kesicide 155 km/h)
+                        {130f, 210f},   // 6. Vites (Rölantide 18 km/h - Kesicide 180 km/h)
+                        {150f, 320f}   // 7. VİTES (OVERDRIVE): Uzun yol vitesidir. 175'te devri 5000'e, 120'de 3500'e düşürür!
                 },
                 0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 R.raw.elisec_startup,R.raw.key_removed,
@@ -1414,7 +1414,7 @@ public class EngineSoundManager {
         } catch (Throwable ignored) {
         }
     }
-
+//TODO gereksiz sesleri kaldır
     private void processLayer(EngineSample[] layer, float rpm, float weightVol, float fadedMasterVol, boolean isOnLayer) {
         if (layer == null || layer.length == 0) return;
 
