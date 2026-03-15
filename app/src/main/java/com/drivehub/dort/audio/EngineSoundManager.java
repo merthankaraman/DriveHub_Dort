@@ -821,8 +821,9 @@ public class EngineSoundManager {
     }
 
     public void stop() {
+        boolean wasPlaying = mIsPlaying;
         mIsPlaying = false;
-//TODO Açılışta istop çalıyor. motor çalışmışsa istop et şeklinde güncelle
+
         if (mSoundPool != null) {
             // 1. Mevcut tüm motor ve yardımcı döngü seslerini anında kapat
             if (mCurrentSamples != null) for (EngineSample s : mCurrentSamples) if(s.streamId != -1) mSoundPool.stop(s.streamId);
@@ -832,8 +833,7 @@ public class EngineSoundManager {
             if (mGearWhineStreamId != -1) mSoundPool.stop(mGearWhineStreamId);
             if (mSubwaveStreamId != -1) mSoundPool.stop(mSubwaveStreamId);
 
-            // 2. İSTOP SESİNİ ÇAL
-            if (mStopSoundId != -1) {
+            if (wasPlaying && mStopSoundId != -1) {
                 mSoundPool.play(mStopSoundId, mMasterVolume, mMasterVolume, 2, 0, 1.0f);
             }
 
