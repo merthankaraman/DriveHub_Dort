@@ -217,7 +217,7 @@ public class MG4ControlService extends Service {
 
     // Telemetri yayını için hafif throttle (aşırı sık broadcast olmasın)
     private long mLastTelemetryBroadcastTime = 0L;
-    private static final long TELEMETRY_INTERVAL_MS = 10L; // ~10 Hz
+    private static final long TELEMETRY_INTERVAL_MS = 30L;
 
     private final Runnable mConsumptionIntegrationRunnable = new Runnable() {
         @Override

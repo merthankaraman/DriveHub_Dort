@@ -263,13 +263,14 @@ public class EngineSoundManager {
         return new VehicleProfile("Lotus Exige 240", 800, 9000f, 1,
                 1,
                 new float[][]{
-                        {0f, 60f},
-                        {30f, 90f},
-                        {60f, 120f},
-                        {90f, 150f},
-                        {110f, 180f},
-                        {130f, 210f},
-                        {150f, 320f}
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
                 },
                 0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 R.raw.elisec_startup,R.raw.key_removed,
@@ -302,13 +303,14 @@ public class EngineSoundManager {
                 0,
 
                 new float[][]{
-                        {0f, 60f},
-                        {30f, 90f},
-                        {60f, 120f},
-                        {90f, 150f},
-                        {110f, 180f},
-                        {130f, 210f},
-                        {150f, 320f}
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
                 },
 
                 0.25f,0.15f,200,180f,
@@ -342,13 +344,14 @@ public class EngineSoundManager {
                 0.6f,
                 0,
                 new float[][]{
-                        {0f, 60f},
-                        {30f, 90f},
-                        {60f, 120f},
-                        {90f, 150f},
-                        {110f, 180f},
-                        {130f, 210f},
-                        {150f, 320f}
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
                 },
                 0.25f, 0.15f,80,380f,
 
@@ -385,13 +388,14 @@ public class EngineSoundManager {
                 0.6f,
                 0,
                 new float[][]{
-                        {0f, 60f},
-                        {30f, 90f},
-                        {60f, 120f},
-                        {90f, 150f},
-                        {110f, 180f},
-                        {130f, 210f},
-                        {150f, 320f}
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
                 },
                 0.25f, 0.15f, 80, 300f,
                 0, 0,
@@ -420,18 +424,18 @@ public class EngineSoundManager {
     }
     public static VehicleProfile PROFILE_MCLAREN_P1() {
         return new VehicleProfile("McLaren P1",
-                1000f,   // idle
-                8500f,   // approximate redline
+                1000f, 8500f,
                 0.8f,
-                2,       // turbo
+                2,
                 new float[][]{
-                        {0f, 60f},
-                        {30f, 90f},
-                        {60f, 120f},
-                        {90f, 150f},
-                        {110f, 180f},
-                        {130f, 210f},
-                        {150f, 320f}
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
                 },
                 0.18f, 0.08f,120,220f,
                 0, 0,
@@ -459,13 +463,14 @@ public class EngineSoundManager {
         return new VehicleProfile("GTR R34", 1000f, 8200, 0.5f,
                 3,
                 new float[][]{
-                        {0f, 60f},
-                        {30f, 90f},
-                        {60f, 120f},
-                        {90f, 150f},
-                        {110f, 180f},
-                        {130f, 210f},
-                        {150f, 320f}
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
                 },
                 0.18f, 0.08f,110,250f,
                 0,0,
@@ -493,13 +498,14 @@ public class EngineSoundManager {
                 800f, 7400f, 1.0f,
                 0,
                 new float[][]{
-                        {0f, 60f},
-                        {30f, 90f},
-                        {60f, 120f},
-                        {90f, 150f},
-                        {110f, 180f},
-                        {130f, 210f},
-                        {150f, 320f}
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
                 },
                 0.15f, 0.08f, 180, 450f,
                 R.raw.rs6_startup, R.raw.igniton_stop,
@@ -531,13 +537,14 @@ public class EngineSoundManager {
                 800f, 7400f, 1.0f,
                 0,
                 new float[][]{
-                        {0f, 60f},
-                        {30f, 90f},
-                        {60f, 120f},
-                        {90f, 150f},
-                        {110f, 180f},
-                        {130f, 210f},
-                        {150f, 320f}
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
                 },
                 0.15f, 0.08f, 180, 450f,
                 R.raw.rs6_startup, R.raw.igniton_stop,
@@ -567,15 +574,16 @@ public class EngineSoundManager {
     public static VehicleProfile PROFILE_BMW_M3_E92() {
         return new VehicleProfile("BMW M3 E92 V8",
                 800f, 8400f, 1.0f,
-                0, // Atmosferik S65 V8
+                0,
                 new float[][]{
-                        {0f, 60f},
-                        {30f, 90f},
-                        {60f, 120f},
-                        {90f, 150f},
-                        {110f, 180f},
-                        {130f, 210f},
-                        {150f, 320f}
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
                 },
                 0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
                 0, 0, // Startup/Stop seslerini genel listeden seçebilirsin
@@ -606,13 +614,14 @@ public class EngineSoundManager {
                 800f, 8400f, 1.0f,
                 0, // Atmosferik S65 V8
                 new float[][]{
-                        {0f, 60f},
-                        {30f, 90f},
-                        {60f, 120f},
-                        {90f, 150f},
-                        {110f, 180f},
-                        {130f, 210f},
-                        {150f, 320f}
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
                 },
                 0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
                 0, 0, // Startup/Stop seslerini genel listeden seçebilirsin
@@ -642,13 +651,14 @@ public class EngineSoundManager {
                 800f, 8400f, 1.0f,
                 0, // Atmosferik S65 V8
                 new float[][]{
-                        {0f, 60f},
-                        {30f, 90f},
-                        {60f, 120f},
-                        {90f, 150f},
-                        {110f, 180f},
-                        {130f, 210f},
-                        {150f, 320f}
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
                 },
                 0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
                 0, 0, // Startup/Stop seslerini genel listeden seçebilirsin
