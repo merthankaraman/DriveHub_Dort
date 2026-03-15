@@ -591,7 +591,7 @@ public class EngineSoundManager {
                         {R.raw.m3e92_on_4198, 4198, 3000, 7200},        // 4198'i tekrar açtım, ara tınıyı doldurur
                         {R.raw.m3e92_on_6000, 6000, 4000, 8400},        // 6k yırtılması 4k'da başlar
                         {R.raw.m3e92_on_8500, 8400, 5500, 9000},        // Zirve sesi 5.5k'dan itibaren gelmeye başlar
-                        {R.raw.limiter, 8400, 8200, 8600}               // Kesici sadece en tepede
+                        {R.raw.m3e92_on_8500, 8400, 8200, 8600}               // Kesici sadece en tepede
                 },
 
                 new int[][]{
@@ -1139,31 +1139,32 @@ public class EngineSoundManager {
             processLayer(mCurrentSamplesOff, rpm, offWeight * masterVol, masterVol, false);
 
         } else {
-            // SİNGLE LAYER MİKSERİ (Eski hız sıfırsa rölantiye kilitleyen blok TAMAMEN silindi)
+            // SİNGLE LAYER MİKSERİ (Dual Layer olmayan profiller için)
             if (mCurrentSamples == null || mCurrentSamples.length == 0) return;
 
-            // 1) Her sample için rpm'e bağlı ham ağırlıkları hesapla
-            float[] weights = new float[mCurrentSamples.length];
-            float weightSum = 0f;
+            float loadVolumeFactor = 0.5f + (mSimulatedThrottle * 0.5f);
+            float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
+            float modeVolumeBoost = (mDriveModeAggressiveness > 0.5f) ? 1.2f : 1.0f;
 
-            EngineSample lower = mCurrentSamples[0], upper = mCurrentSamples[mCurrentSamples.length - 1];
-            // Komşu tabanlı blend sadece min/max tanımı olmayanlar için kullanılacak
             for (int i = 0; i < mCurrentSamples.length; i++) {
                 EngineSample s = mCurrentSamples[i];
-                float raw;
+                if (s.streamId == -1) continue;
+
+                float rawWeight = 0f;
+
+                // FMOD Üçgen Pencere Mantığı
                 if (s.hasWindow()) {
-                    if (rpm <= s.minRpm || rpm >= s.maxRpm) {
-                        raw = 0f;
-                    } else if (rpm <= s.baseRpm) {
-                        raw = (rpm - s.minRpm) / (float) (s.baseRpm - s.minRpm);
-                    } else {
-                        raw = (s.maxRpm - rpm) / (float) (s.maxRpm - s.baseRpm);
+                    if (rpm > s.minRpm && rpm < s.maxRpm) {
+                        if (rpm <= s.baseRpm) {
+                            rawWeight = (rpm - s.minRpm) / (float) (s.baseRpm - s.minRpm);
+                        } else {
+                            rawWeight = (s.maxRpm - rpm) / (float) (s.maxRpm - s.baseRpm);
+                        }
                     }
-                    raw = Math.max(0f, Math.min(1f, raw));
                 } else {
-                    // Eski komşu tabanlı crossfade
-                    lower = mCurrentSamples[0];
-                    upper = mCurrentSamples[mCurrentSamples.length - 1];
+                    // ESKİ KOMŞU TABANLI SİSTEM (Eğer min/max belirtilmemişse geriye dönük uyumluluk)
+                    EngineSample lower = mCurrentSamples[0];
+                    EngineSample upper = mCurrentSamples[mCurrentSamples.length - 1];
                     if (rpm >= upper.baseRpm) {
                         lower = upper;
                     } else {
@@ -1178,33 +1179,17 @@ public class EngineSoundManager {
                     float rpmDiff = upper.baseRpm - lower.baseRpm;
                     float t = (rpmDiff <= 0) ? 0f : (rpm - lower.baseRpm) / rpmDiff;
                     t = Math.max(0f, Math.min(1f, t));
-                    // smoothstep: daha yumuşak crossfade
-                    float blend = t * t * (3f - 2f * t);
-                    raw = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
+                    float blend = t * t * (3f - 2f * t); // smoothstep
+                    rawWeight = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
                 }
-                weights[i] = raw;
-                weightSum += raw;
-            }
 
-            if (weightSum <= 0f) return;
-
-            // 2) Ağırlıkları normalize et (toplam sabit kalsın, rpm sadece karışımı değiştirir)
-            float invSum = 1.0f / weightSum;
-
-            float loadVolumeFactor = 0.5f + (mSimulatedThrottle * 0.5f);
-            float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
-            float modeVolumeBoost = (mDriveModeAggressiveness > 0.5f) ? 1.2f : 1.0f;
-
-            for (int i = 0; i < mCurrentSamples.length; i++) {
-                EngineSample s = mCurrentSamples[i];
-                if (s.streamId == -1) continue;
-
-                float shapedVol = weights[i] * invSum; // sadece rpm'e göre dağılım
-                if (Float.isNaN(shapedVol)) shapedVol = 0f;
+                // Normalizasyon İPTAL! Doğrudan weight kullanıyoruz.
+                float shapedVol = Math.max(0f, Math.min(1f, rawWeight));
                 if (i == 0) shapedVol *= mCurrentIdleVolumeScale;
 
-                // Toplam volume neredeyse tamamen gaz karakterinden geliyor
-                float finalVolume = Math.max(0.0f, Math.min(1.0f, shapedVol * masterVol * loadVolumeFactor * modeVolumeBoost));
+                float finalVolume = shapedVol * masterVol * loadVolumeFactor * modeVolumeBoost;
+                finalVolume = Math.max(0.0f, Math.min(1.0f, finalVolume));
+
                 float pitch = Math.max(0.5f, Math.min(2.0f, (rpm / s.baseRpm) * loadPitchFactor));
 
                 if (i == 0 && mCurrentSpeedKmh < 1.0f && mSimulatedThrottle < 0.05f) {
@@ -1266,23 +1251,23 @@ public class EngineSoundManager {
     private void processLayer(EngineSample[] layer, float rpm, float weightVol, float fadedMasterVol, boolean isOnLayer) {
         if (layer == null || layer.length == 0) return;
 
-        // 1) Ham rpm ağırlıklarını topla
-        float[] weights = new float[layer.length];
-        float weightSum = 0f;
         for (int i = 0; i < layer.length; i++) {
             EngineSample s = layer[i];
-            float raw;
+            if (s.streamId == -1) continue;
+
+            float rawWeight = 0f;
+
             if (s.hasWindow()) {
                 // FMOD tarzı üçgen pencere: minRpm–baseRpm–maxRpm
-                if (rpm <= s.minRpm || rpm >= s.maxRpm) {
-                    raw = 0f;
-                } else if (rpm <= s.baseRpm) {
-                    raw = (rpm - s.minRpm) / (float) (s.baseRpm - s.minRpm);
-                } else {
-                    raw = (s.maxRpm - rpm) / (float) (s.maxRpm - s.baseRpm);
+                if (rpm > s.minRpm && rpm < s.maxRpm) {
+                    if (rpm <= s.baseRpm) {
+                        rawWeight = (rpm - s.minRpm) / (float) (s.baseRpm - s.minRpm);
+                    } else {
+                        rawWeight = (s.maxRpm - rpm) / (float) (s.maxRpm - s.baseRpm);
+                    }
                 }
-                raw = Math.max(0f, Math.min(1f, raw));
             } else {
+                // Eski sistem (Geriye dönük uyumluluk için)
                 EngineSample lower = layer[0];
                 EngineSample upper = layer.length > 1 ? layer[1] : layer[0];
                 if (rpm >= layer[layer.length - 1].baseRpm) {
@@ -1301,24 +1286,17 @@ public class EngineSoundManager {
                 float t = (rpmDiff <= 0) ? 0f : (rpm - lower.baseRpm) / rpmDiff;
                 t = Math.max(0f, Math.min(1f, t));
                 float blend = t * t * (3f - 2f * t); // smoothstep
-                raw = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
+                rawWeight = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
             }
-            weights[i] = raw;
-            weightSum += raw;
-        }
 
-        if (weightSum <= 0f) return;
-        float invSum = 1.0f / weightSum;
+            // --- NORMALİZASYON (invSum) KALDIRILDI ---
+            float shapedVol = Math.max(0f, Math.min(1f, rawWeight));
 
-        for (int i = 0; i < layer.length; i++) {
-            EngineSample s = layer[i];
-            if (s.streamId == -1) continue;
-
-            float shapedVol = weights[i] * invSum;  // rpm sadece karışımı belirler
-            if (Float.isNaN(shapedVol)) shapedVol = 0f;
             if (i == 0) shapedVol *= mCurrentIdleVolumeScale;
 
-            float finalVolume = shapedVol * weightVol; // weightVol zaten throttle + masterVol içeriyor
+            // weightVol zaten throttle ve masterVol değerlerini taşıyor
+            float finalVolume = shapedVol * weightVol;
+
             float pitch = rpm / s.baseRpm;
 
             if (isOnLayer) pitch *= (0.98f + (mSimulatedThrottle * 0.04f));
@@ -1334,7 +1312,6 @@ public class EngineSoundManager {
             mSoundPool.setRate(s.streamId, pitch);
         }
     }
-
     public boolean isPlaying() { return mIsPlaying; }
     // --- OTOMATİK MARŞ SÜRESİ HESAPLAYICI ---
     private long getSoundDurationMs(int rawResId) {
