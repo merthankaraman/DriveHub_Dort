@@ -221,7 +221,12 @@ public class EngineSoundManager {
             "GTR R34",
             "Modern F1 V10",
             "Ferrari F2004",
-            "McLaren P1"
+            "McLaren P1",
+            "Audi RS6 AVANT",
+            "Audi RS6 AVANT MONO",
+            "BMW M3 E92 V8",
+            "BMW M3 E92 V8 2",
+            "BMW M3 E92 V8 MONO"
     };
 
     public static String[] getProfileLabels() { return PROFILE_LABELS; }
@@ -233,6 +238,11 @@ public class EngineSoundManager {
         else if ("Modern F1 V10".equals(profile)) setVehicleProfile(PROFILE_F1_V10());
         else if ("Ferrari F2004".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004());
         else if ("McLaren P1".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1());
+        else if ("Audi RS6 AVANT".equals(profile)) setVehicleProfile(PROFILE_AUDI_RS6_AVANT());
+        else if ("Audi RS6 AVANT MONO".equals(profile)) setVehicleProfile(PROFILE_AUDI_RS6_AVANT_MONO());
+        else if ("BMW M3 E92 V8".equals(profile)) setVehicleProfile(PROFILE_BMW_M3_E92());
+        else if ("BMW M3 E92 V8 MONO".equals(profile)) setVehicleProfile(PROFILE_BMW_M3_E92_MONO());
+        else if ("BMW M3 E92 V8 2".equals(profile)) setVehicleProfile(PROFILE_BMW_M3_E92_2());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
 
@@ -306,7 +316,7 @@ public class EngineSoundManager {
 
                 0.25f,0.15f,200,180f,
                 R.raw.lfa_in_startup,
-                R.raw.lfa_in_stop,
+                R.raw.igniton_stop,
 
                 // ON Katmanı (Gaza Basıldığında V10 Çığlığı)
                 new int[][]{
@@ -478,6 +488,191 @@ public class EngineSoundManager {
                         {R.raw.rb26_ex_5_offverylow, 1500},
                         {R.raw.rb26_ex_5_offlow, 4000},
                         {R.raw.rb26_ex_5_offmid, 6500}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_AUDI_RS6_AVANT() {
+        return new VehicleProfile("Audi RS6 AVANT",
+                800f, 7400f, 1.0f,
+                0,
+                new float[][]{
+                        {0f, 60f},
+                        {30f, 90f},
+                        {60f, 120f},
+                        {90f, 150f},
+                        {110f, 180f},
+                        {130f, 210f},
+                        {150f, 320f}
+                },
+                0.15f, 0.08f, 180, 450f,
+                R.raw.rs6_startup, R.raw.igniton_stop,
+
+                // ON Katmanı (İç Mekan - Rs6_in_1_on)
+                new int[][]{
+                        {R.raw.rs6_4_in_idle_rpm937, 800, 600, 1864},   // Senin uyarınla 800'e çekildi
+                        {R.raw.rs6_in_1_on_rpm1864, 1864, 800, 2800},
+                        {R.raw.rs6_in_1_on_rpm2800, 2800, 1864, 3117},
+                        {R.raw.rs6_in_1_on_rpm3117, 3117, 2800, 3747},
+                        {R.raw.rs6_in_1_on_rpm3747, 3747, 3117, 4917},
+                        {R.raw.rs6_in_1_on_rpm4917, 4917, 3747, 5608},
+                        {R.raw.rs6_in_1_on_rpm5608, 5608, 4917, 5816},
+                        {R.raw.rs6_in_1_on_rpm5816, 5816, 5608, 7400},
+                        {R.raw.rs6_in_1_on_rpm5816, 7400, 5816, 7500}
+                },
+
+                // OFF Katmanı (İç Mekan - Rs6_in_1_off)
+                new int[][]{
+                        {R.raw.rs6_4_in_idle_rpm937, 800, 600, 2882},
+                        {R.raw.rs6_in_1_off_rpm2882, 2882, 800, 4075},
+                        {R.raw.rs6_in_1_off_rpm4075, 4075, 2882, 4991},
+                        {R.raw.rs6_in_1_off_rpm4991, 4991, 4075, 7400}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_AUDI_RS6_AVANT_MONO() {
+        return new VehicleProfile("Audi RS6 AVANT MONO",
+                800f, 7400f, 1.0f,
+                0,
+                new float[][]{
+                        {0f, 60f},
+                        {30f, 90f},
+                        {60f, 120f},
+                        {90f, 150f},
+                        {110f, 180f},
+                        {130f, 210f},
+                        {150f, 320f}
+                },
+                0.15f, 0.08f, 180, 450f,
+                R.raw.rs6_startup, R.raw.igniton_stop,
+
+                // ON Katmanı (İç Mekan - Rs6_in_1_on)
+                new int[][]{
+                        {R.raw.rs6_4_in_idle_rpm937, 800},   // Senin uyarınla 800'e çekildi
+                        {R.raw.rs6_in_1_on_rpm1864, 1864},
+                        {R.raw.rs6_in_1_on_rpm2800, 2800},
+                        {R.raw.rs6_in_1_on_rpm3117, 3117},
+                        {R.raw.rs6_in_1_on_rpm3747, 3747},
+                        {R.raw.rs6_in_1_on_rpm4917, 4917},
+                        {R.raw.rs6_in_1_on_rpm5608, 5608},
+                        {R.raw.rs6_in_1_on_rpm5816, 5816},
+                        {R.raw.rs6_in_1_on_rpm5816, 7400}
+                },
+
+                // OFF Katmanı (İç Mekan - Rs6_in_1_off)
+                new int[][]{
+                        {R.raw.rs6_4_in_idle_rpm937, 800},
+                        {R.raw.rs6_in_1_off_rpm2882, 2882},
+                        {R.raw.rs6_in_1_off_rpm4075, 4075},
+                        {R.raw.rs6_in_1_off_rpm4991, 4991}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_BMW_M3_E92() {
+        return new VehicleProfile("BMW M3 E92 V8",
+                800f, 8400f, 1.0f,
+                0, // Atmosferik S65 V8
+                new float[][]{
+                        {0f, 60f},
+                        {30f, 90f},
+                        {60f, 120f},
+                        {90f, 150f},
+                        {110f, 180f},
+                        {130f, 210f},
+                        {150f, 320f}
+                },
+                0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
+                0, 0, // Startup/Stop seslerini genel listeden seçebilirsin
+
+                // ON Katmanı (Seslerin iç içe geçtiği yoğun doku)
+                new int[][]{
+                        // {resId, baseRpm, minRpm, maxRpm}
+                        {R.raw.m3e92_idle, 800, 600, 3200},             // Rölanti 3200'e kadar alttan destek verir
+                        {R.raw.m3e92_on_3000, 3000, 800, 5500},         // 3k sesi rölantiyle başlar, 5.5k'ya kadar sürer
+                        {R.raw.m3e92_on_4000, 4000, 2500, 6500},        // 4k sesi tam ortada devreye girer
+                        {R.raw.m3e92_on_4198, 4198, 3000, 7200},        // 4198'i tekrar açtım, ara tınıyı doldurur
+                        {R.raw.m3e92_on_6000, 6000, 4000, 8400},        // 6k yırtılması 4k'da başlar
+                        {R.raw.m3e92_on_8500, 8400, 5500, 9000},        // Zirve sesi 5.5k'dan itibaren gelmeye başlar
+                        {R.raw.limiter, 8400, 8200, 8600}               // Kesici sadece en tepede
+                },
+
+// OFF Katmanı (Kompresyonun hissedildiği iç içe yapı)
+                new int[][]{
+                        {R.raw.m3e92_idle, 800, 600, 3500},             // Gaz kesince rölanti homurtusu hemen gelir
+                        {R.raw.m3e92_off_2800, 2800, 800, 6500},        // Orta devir kompresyonu geniş tutuldu
+                        {R.raw.m3e92_off_6000, 6000, 2500, 8500},       // 6k OFF sesi 2.5k'ya kadar süzülür
+                        {R.raw.m3e92_off_8500, 8400, 5000, 9500}        // En üst devir kompresyonu
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_BMW_M3_E92_2() {
+        return new VehicleProfile("BMW M3 E92 V8 2",
+                800f, 8400f, 1.0f,
+                0, // Atmosferik S65 V8
+                new float[][]{
+                        {0f, 60f},
+                        {30f, 90f},
+                        {60f, 120f},
+                        {90f, 150f},
+                        {110f, 180f},
+                        {130f, 210f},
+                        {150f, 320f}
+                },
+                0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
+                0, 0, // Startup/Stop seslerini genel listeden seçebilirsin
+
+                // ON Katmanı (İç Mekan - m3e92_on_...)
+                new int[][]{
+                        {R.raw.m3e92_idle, 800, 600, 3000},
+                        {R.raw.m3e92_on_3000, 3000, 800, 4000},
+                        {R.raw.m3e92_on_4000, 4000, 3000, 6000},
+                        //{R.raw.m3e92_on_4198, 4198, 4000, 6000},
+                        {R.raw.m3e92_on_6000, 6000, 4000, 8500},
+                        {R.raw.m3e92_on_8500, 8400, 6000, 8500}, // 8400 Redline
+                        {R.raw.m3e92_on_8500, 8400, 8300, 8600}
+                },
+
+                // OFF Katmanı (İç Mekan - m3e92_off_...)
+                new int[][]{
+                        {R.raw.m3e92_idle, 800, 600, 2800},
+                        {R.raw.m3e92_off_2800, 2800, 800, 6000},
+                        {R.raw.m3e92_off_6000, 6000, 2800, 8500},
+                        {R.raw.m3e92_off_8500, 8400, 6000, 9000}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_BMW_M3_E92_MONO() {
+        return new VehicleProfile("BMW M3 E92 V8 MONO",
+                800f, 8400f, 1.0f,
+                0, // Atmosferik S65 V8
+                new float[][]{
+                        {0f, 60f},
+                        {30f, 90f},
+                        {60f, 120f},
+                        {90f, 150f},
+                        {110f, 180f},
+                        {130f, 210f},
+                        {150f, 320f}
+                },
+                0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
+                0, 0, // Startup/Stop seslerini genel listeden seçebilirsin
+
+                // ON Katmanı (İç Mekan - m3e92_on_...)
+                new int[][]{
+                        {R.raw.m3e92_idle, 800},
+                        {R.raw.m3e92_on_3000, 3000},
+                        {R.raw.m3e92_on_4000, 4000},
+                        //{R.raw.m3e92_on_4198, 4198},
+                        {R.raw.m3e92_on_6000, 6000},
+                        {R.raw.m3e92_on_8500, 8400}, // 8400 Redline
+                        {R.raw.m3e92_on_8500, 8400}
+                },
+
+                // OFF Katmanı (İç Mekan - m3e92_off_...)
+                new int[][]{
+                        {R.raw.m3e92_idle, 800},
+                        {R.raw.m3e92_off_2800, 2800},
+                        {R.raw.m3e92_off_6000, 6000},
+                        {R.raw.m3e92_off_8500, 84000}
                 }
         );
     }
