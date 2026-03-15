@@ -208,12 +208,12 @@ public class MG4ControlService extends Service {
     /** 100 ms'lik ana görev periyodu (enerji, mesafe, hazır/şarj durumu vb.). */
     private static final int MAIN_100MS_TASK_INTERVAL_MS = 10;
     /** Hayat boyu km/kWh'ı bu kadar integrasyon sonrası bir kez hafızaya yaz (≈30 sn). */
-    private static final int LIFETIME_PERSIST_EVERY_N = 300;
+    private static final int LIFETIME_PERSIST_MS = 30000;
     private final Handler mConsumptionHandler = new Handler(Looper.getMainLooper());
     private static long mDriveStartWallMs = 0L;
     private static volatile boolean sDriveSessionActive = false;
     private static volatile long    sDriveSessionEndWallMs = 0L;
-    private int mConsumptionLoopCount = 0;
+    private long mLastConsumptionLoop = 0;
 
     // Telemetri yayını için hafif throttle (aşırı sık broadcast olmasın)
     private long mLastTelemetryBroadcastTime = 0L;
@@ -225,20 +225,19 @@ public class MG4ControlService extends Service {
             MG4Hardware.run100msTask();
 
             long now = System.currentTimeMillis();
-            if (MG4Hardware.isSoundEnabled()) {
-                if (now - mLastTelemetryBroadcastTime < TELEMETRY_INTERVAL_MS) return;
+            if (now - mLastTelemetryBroadcastTime >= TELEMETRY_INTERVAL_MS) {
+                if (MG4Hardware.isSoundEnabled()) {
+                    EngineSoundManager.broadcastTelemetryIfNeeded(MG4ControlService.this);
+                } else {
+                    float speed = MG4Hardware.getSpeedForEngine();
+                    float dcKw = MG4Hardware.getDcKwGlobal();
+                    EngineSoundManager.broadcastTelemetryFromRaw(MG4ControlService.this, Float.isNaN(speed) ? 0f : speed, Float.isNaN(dcKw) ? 0f : dcKw);
+                }
                 mLastTelemetryBroadcastTime = now;
-                EngineSoundManager.broadcastTelemetryIfNeeded(MG4ControlService.this);
-            } else {
-                if (now - mLastTelemetryBroadcastTime < TELEMETRY_INTERVAL_MS) return;
-                mLastTelemetryBroadcastTime = now;
-                float speed = MG4Hardware.getSpeedForEngine();
-                float dcKw = MG4Hardware.getDcKwGlobal();
-                EngineSoundManager.broadcastTelemetryFromRaw(MG4ControlService.this, Float.isNaN(speed) ? 0f : speed, Float.isNaN(dcKw) ? 0f : dcKw);
             }
-            mConsumptionLoopCount++;
-            if (mConsumptionLoopCount >= LIFETIME_PERSIST_EVERY_N) {
-                mConsumptionLoopCount = 0;
+
+            if (now - mLastConsumptionLoop >= LIFETIME_PERSIST_MS) {
+                mLastConsumptionLoop = now;
                 MG4Hardware.persistLifetimeToPrefs(MG4ControlService.this);
             }
             updateDriveSessionFromReady();
