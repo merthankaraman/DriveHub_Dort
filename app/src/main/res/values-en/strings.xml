@@ -212,9 +212,6 @@
     <string name="btn_subwave_on">Sub bass: On</string>
     <string name="btn_subwave_off">Sub bass: Off</string>
     <string name="btn_idle_settings">Idle settings</string>
-    <string name="btn_realistic_sound_on">Realistic mix: On</string>
-    <string name="btn_realistic_sound_off">Realistic mix: Off</string>
-
     <!-- Idle panel -->
     <string name="idle_panel_title">Idle settings</string>
     <string name="idle_vehicle_format">Vehicle: %s</string>

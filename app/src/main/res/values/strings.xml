@@ -212,9 +212,6 @@
     <string name="btn_subwave_on">Alt bas: Açık</string>
     <string name="btn_subwave_off">Alt bas: Kapalı</string>
     <string name="btn_idle_settings">Rölanti ayarları</string>
-    <string name="btn_realistic_sound_on">Gerçekçi karışım: Açık</string>
-    <string name="btn_realistic_sound_off">Gerçekçi karışım: Kapalı</string>
-
     <!-- Rölanti paneli -->
     <string name="idle_panel_title">Rölanti ayarları</string>
     <string name="idle_vehicle_format">Araç: %s</string>

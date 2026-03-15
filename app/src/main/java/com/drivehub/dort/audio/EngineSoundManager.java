@@ -95,9 +95,6 @@ public class EngineSoundManager {
     private long mLastFlutterTime = 0;
     private float mLastThrottleForFlutter = 0f;
 
-    // Ses karışım modu (daha agresif ON/OFF ve load tepkisi)
-    private boolean mRealisticMixEnabled = false;
-
     // START/STOP MARŞ DEĞİŞKENLERİ
     private int mStartSoundId = -1;
     private int mStopSoundId = -1;
@@ -246,8 +243,6 @@ public class EngineSoundManager {
     public void setDriveModeAggressiveness(float aggressiveness01) { mDriveModeAggressiveness = Math.max(0f, Math.min(1f, aggressiveness01)); }
     public void setSimulatedThrottle(float throttle01) { mSimulatedThrottle = Math.max(0.01f, Math.min(1f, throttle01)); }
     public float getSimulatedThrottle() { return mSimulatedThrottle; }
-    public void setRealisticMixEnabled(boolean enabled) { mRealisticMixEnabled = enabled; }
-    public boolean isRealisticMixEnabled() { return mRealisticMixEnabled; }
     public boolean isRevMatchEnabled() { return mEnableRevMatch; }
     public void setRevMatchEnabled(boolean enabled) { mEnableRevMatch = enabled; }
     public boolean isGearWhineEnabled() { return mGearWhineEnabled; }
@@ -827,7 +822,7 @@ public class EngineSoundManager {
 
     public void stop() {
         mIsPlaying = false;
-
+//TODO Açılışta istop çalıyor. motor çalışmışsa istop et şeklinde güncelle
         if (mSoundPool != null) {
             // 1. Mevcut tüm motor ve yardımcı döngü seslerini anında kapat
             if (mCurrentSamples != null) for (EngineSample s : mCurrentSamples) if(s.streamId != -1) mSoundPool.stop(s.streamId);
@@ -1092,12 +1087,10 @@ public class EngineSoundManager {
                 mSoundPool.setVolume(mTurboStreamId, 0f, 0f);
             } else if(mActiveProfile.hasTurbo == 1) {
                 float compVol = (0.2f + (mSimulatedThrottle * 0.8f)) * rpmRatio * masterVol * mCompressorMaxVol;
-                if (mRealisticMixEnabled) compVol *= 1.2f;
                 mSoundPool.setVolume(mTurboStreamId, compVol, compVol);
                 mSoundPool.setRate(mTurboStreamId, 0.8f + (rpmRatio * 1.7f));
             } else {
                 float boostFactor = Math.max(0f, Math.min(1f, (rpmRatio > 0.10f) ? (rpmRatio - 0.10f) * 1.12f : 0f));
-                if (mRealisticMixEnabled) boostFactor *= 1.2f;
                 mCurrentTurboBoost = (mCurrentTurboBoost * 0.90f) + ((mSimulatedThrottle * boostFactor) * 0.10f);
                 mSoundPool.setVolume(mTurboStreamId, mCurrentTurboBoost * masterVol * mTurboMaxSound, mCurrentTurboBoost * masterVol * mTurboMaxSound);
                 mSoundPool.setRate(mTurboStreamId, 0.8f + (rpmRatio * 1.2f));
@@ -1107,19 +1100,9 @@ public class EngineSoundManager {
         if (mSubwaveStreamId != -1) {
             if (mSubwaveEnabled) {
                 // Şalter AÇIKSA: Motora yük bindikçe bas katmanı belirginleşir
-                float loadFactor;
-                float subPitchBaseMin;
-                float subPitchBaseMax;
-                if (mRealisticMixEnabled) {
-                    // Daha geniş dinamik: düşük gazda sakin, yüksek gazda güçlü alt bas
-                    loadFactor = 0.2f + (mSimulatedThrottle * 0.9f);
-                    subPitchBaseMin = 0.55f;
-                    subPitchBaseMax = 1.35f;
-                } else {
-                    loadFactor = 0.4f + (mSimulatedThrottle * 0.6f);
-                    subPitchBaseMin = 0.6f;
-                    subPitchBaseMax = 1.3f;
-                }
+                float loadFactor = 0.4f + (mSimulatedThrottle * 0.6f);
+                float subPitchBaseMin = 0.6f;
+                float subPitchBaseMax = 1.3f;
                 float subVolume = masterVol * loadFactor * 1.5f; // Bas çarpanı
 
                 // Derinliği korumak için pitch çok tizleşmemeli
@@ -1144,21 +1127,8 @@ public class EngineSoundManager {
 
         // --- MİKSER: HİBRİT KARAR MEKANİZMASI ---
         if (mIsDualLayer) {
-            float onWeight;
-            float offWeight;
-            if (mRealisticMixEnabled) {
-                float t = Math.max(0f, Math.min(1f, mSimulatedThrottle));
-                onWeight = (float) Math.pow(t, 0.5f);                 // dip gazda hızlıca aç
-                offWeight = (float) Math.pow(1f - t, 1.2f);           // gaz artınca OFF hızlıca sön
-                // yüksek devirde OFF'u ekstra kısmak
-                if (rpmRatio > 0.6f) {
-                    float k = Math.min(1f, (rpmRatio - 0.6f) / 0.3f); // 0.6–0.9 arası
-                    offWeight *= (1f - 0.7f * k);                     // %70'e kadar azalt
-                }
-            } else {
-                onWeight = (float) Math.sqrt(mSimulatedThrottle);
-                offWeight = (float) Math.sqrt(Math.max(0f, 1.0f - mSimulatedThrottle));
-            }
+            float onWeight = (float) Math.sqrt(mSimulatedThrottle);
+            float offWeight = (float) Math.sqrt(Math.max(0f, 1.0f - mSimulatedThrottle));
 
             // Araç dururken ve gaz verilirken sadece ON katmanı duyulsun (N-revving)
             if (mCurrentSpeedKmh < 1.0f && mSimulatedThrottle > 0.05f) {
@@ -1223,9 +1193,7 @@ public class EngineSoundManager {
             // 2) Ağırlıkları normalize et (toplam sabit kalsın, rpm sadece karışımı değiştirir)
             float invSum = 1.0f / weightSum;
 
-            float loadVolumeFactor = mRealisticMixEnabled
-                    ? (0.2f + (mSimulatedThrottle * 0.8f))   // daha agresif: gazla hızlı art
-                    : (0.5f + (mSimulatedThrottle * 0.5f));
+            float loadVolumeFactor = 0.5f + (mSimulatedThrottle * 0.5f);
             float loadPitchFactor = 0.98f + (mSimulatedThrottle * 0.04f);
             float modeVolumeBoost = (mDriveModeAggressiveness > 0.5f) ? 1.2f : 1.0f;
 
@@ -1358,21 +1326,6 @@ public class EngineSoundManager {
             float pitch = rpm / s.baseRpm;
 
             if (isOnLayer) pitch *= (0.98f + (mSimulatedThrottle * 0.04f));
-
-            if (mRealisticMixEnabled) {
-                // ON katmanında gaz + devirle hafif ekstra tizleşme ve mikro jitter
-                float rpmRatioLocal = (rpm - mIdleRpm) / (mMaxRpm - mIdleRpm);
-                rpmRatioLocal = Math.max(0f, Math.min(1f, rpmRatioLocal));
-                if (isOnLayer) {
-                    pitch *= 1.0f + 0.03f * mSimulatedThrottle * rpmRatioLocal;
-                    float jitter = (float) ((Math.random() - 0.5) * 0.02); // ±1% civarı
-                    pitch *= 1.0f + jitter * rpmRatioLocal;
-                    // Load'a daha sert tepki: ON katmanını boost et, OFF'u hafif bastır
-                    finalVolume *= (0.8f + 0.4f * mSimulatedThrottle);
-                } else {
-                    finalVolume *= (1.0f - 0.4f * mSimulatedThrottle * rpmRatioLocal);
-                }
-            }
 
             pitch = Math.max(0.6f, Math.min(1.8f, pitch));
 
