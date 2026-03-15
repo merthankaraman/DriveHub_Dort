@@ -268,7 +268,7 @@ public class EngineSoundManager {
                         {140f, 200f}
                 },
                 0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
-                R.raw.elisec_startup,R.raw.key_removed,
+                R.raw.elisec_startup,R.raw.igniton_stop,
                 // ON Katmanı (Gaza Basıldığında)
                 new int[][]{
                         {R.raw.elisesc_idle, 800},
@@ -350,8 +350,7 @@ public class EngineSoundManager {
                 },
                 0.25f, 0.15f,80,380f,
 
-                R.raw.modgpv10_startup,
-                0,
+                R.raw.modgpv10_startup, R.raw.igniton_stop,
 
                 // ON Katmanı (İnanılmaz Yüksek Devir Çığlıkları)
                 new int[][]{
@@ -378,7 +377,7 @@ public class EngineSoundManager {
     }
     public static VehicleProfile PROFILE_FERRARI_F2004() {
         return new VehicleProfile("Ferrari F2004",
-                4000f,   // Tahmini rölanti devri
+                4200f,   // Tahmini rölanti devri
                 19000f,  // Tahmini kesici
                 0.6f,
                 0,
@@ -393,27 +392,27 @@ public class EngineSoundManager {
                         {140f, 200f}
                 },
                 0.25f, 0.15f, 80, 300f,
-                0, 0,
+                R.raw.f2004_startup, R.raw.igniton_stop,
                 // ON katmanı (kokpit içi / iç mekan yükte sesler)
                 // Format: {resId, baseRpm, minRpm, maxRpm}
                 new int[][]{
-                        {R.raw.f2004_in_idle,        4000},   // idle, 3–5.2k
-                        {R.raw.f2004_in_verylow_2,     5500},   // 4.2–6.5k (idle ile overlap)
-                        {R.raw.f2004_in_verylow,   7000},   // 5.5–7.8k
-                        {R.raw.f2004_in_on_mid,      9000},   // 7–9.2k
-                        {R.raw.f2004_in_on_low,      11500},   // 8.7–11k
-                        {R.raw.f2004_in_on_mid2,    14000},   // 10.5–13.8k
-                        {R.raw.f2004_in_on_high_mix,16000},   // 13.5–17.2k
-                        {R.raw.f2004_in_on_veryhigh_mix,18500} // 16.8–19.5k
+                        {R.raw.f2004_in_idle,                   4200},   // idle, 3–5.2k
+                        {R.raw.f2004_in_verylow_2,              5500},   // 4.2–6.5k (idle ile overlap)
+                        {R.raw.f2004_in_verylow,                6000},   // 5.5–7.8k
+                        {R.raw.f2004_in_on_mid,                 9000},   // 7–9.2k
+                        {R.raw.f2004_in_on_low,                 11500},   // 8.7–11k
+                        {R.raw.f2004_in_on_mid2,                14000},   // 10.5–13.8k
+                        {R.raw.f2004_in_on_high_mix,            16000},   // 13.5–17.2k
+                        {R.raw.f2004_in_on_veryhigh_mix,        18500} // 16.8–19.5k
                 },
                 // OFF katmanı (kokpit içi gaz kesme / kompresyon)
                 new int[][]{
-                        {R.raw.f2004_in_idle,            4000},   // coast düşük devir kompresyon
-                        {R.raw.f2004_in_off_low,         6000},   // 4.8–7.2k
-                        {R.raw.f2004_in_offmid_pitchare, 8042},   // 7.2–10.2k (8042 merkez)
-                        {R.raw.f2004_in_off_midhigh_mix,12000},   // 9.8–14.5k
-                        {R.raw.f2004_in_off_high,       17000},  // 14–18.2k
-                        {R.raw.f2004_in_off_high,       19000}   // 17.8–19.5k
+                        {R.raw.f2004_in_idle,                   4200},   // coast düşük devir kompresyon
+                        {R.raw.f2004_in_off_low,                6000},   // 4.8–7.2k
+                        {R.raw.f2004_in_offmid_pitchare,        8042},   // 7.2–10.2k (8042 merkez)
+                        {R.raw.f2004_in_off_high,               12000},   // 9.8–14.5k
+                        {R.raw.f2004_in_off_midhigh_mix,        17000},  // 14–18.2k
+                        {R.raw.f2004_in_off_midhigh_mix,        19000}   // 17.8–19.5k
                 }
         );
     }
@@ -595,7 +594,6 @@ public class EngineSoundManager {
                         {R.raw.limiter, 8400, 8200, 8600}               // Kesici sadece en tepede
                 },
 
-// OFF Katmanı (Kompresyonun hissedildiği iç içe yapı)
                 new int[][]{
                         {R.raw.m3e92_idle, 800, 600, 3500},             // Gaz kesince rölanti homurtusu hemen gelir
                         {R.raw.m3e92_off_2800, 2800, 800, 6500},        // Orta devir kompresyonu geniş tutuldu
@@ -619,7 +617,7 @@ public class EngineSoundManager {
                         {140f, 200f}
                 },
                 0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
-                0, 0, // Startup/Stop seslerini genel listeden seçebilirsin
+                0, 0,
 
                 // ON Katmanı (İç Mekan - m3e92_on_...)
                 new int[][]{
@@ -656,7 +654,7 @@ public class EngineSoundManager {
                         {140f, 200f}
                 },
                 0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
-                0, 0, // Startup/Stop seslerini genel listeden seçebilirsin
+                0, 0,
 
                 // ON Katmanı (İç Mekan - m3e92_on_...)
                 new int[][]{
@@ -1201,8 +1199,7 @@ public class EngineSoundManager {
                 EngineSample s = mCurrentSamples[i];
                 if (s.streamId == -1) continue;
 
-                float mixWeight = weights[i] * invSum; // sadece rpm'e göre dağılım
-                float shapedVol = mixWeight;
+                float shapedVol = weights[i] * invSum; // sadece rpm'e göre dağılım
                 if (Float.isNaN(shapedVol)) shapedVol = 0f;
                 if (i == 0) shapedVol *= mCurrentIdleVolumeScale;
 
@@ -1317,8 +1314,7 @@ public class EngineSoundManager {
             EngineSample s = layer[i];
             if (s.streamId == -1) continue;
 
-            float mixWeight = weights[i] * invSum;  // rpm sadece karışımı belirler
-            float shapedVol = mixWeight;
+            float shapedVol = weights[i] * invSum;  // rpm sadece karışımı belirler
             if (Float.isNaN(shapedVol)) shapedVol = 0f;
             if (i == 0) shapedVol *= mCurrentIdleVolumeScale;
 

@@ -687,7 +687,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (mBtnSoundProfile != null) {
             mBtnSoundProfile.setOnClickListener(v -> showSoundProfileDialog());
-            String savedSoundProfile = prefsSound.getString(PREF_SOUND_PROFILE, "McLaren P1");
+            String savedSoundProfile = prefsSound.getString(PREF_SOUND_PROFILE, "Lotus Exige 240");
             mBtnSoundProfile.setText(getString(R.string.vehicle_sound_format, savedSoundProfile));
             // Tema değişimi (kullanıcı butonu veya Oto'da araç/sistem teması) ile recreate olduysa sese dokunma
             boolean skipSoundBecauseRecreate = sRecreatedDueToThemeChange || (savedInstanceState != null);
