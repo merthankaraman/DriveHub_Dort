@@ -211,16 +211,20 @@ public class EngineSoundManager {
 
     public static final String[] PROFILE_LABELS = {
             "Lotus Exige 240",
+            "Lotus Exige 240 TRI",
             "Lexus LFA",
+            "Lexus LFA TRI",
             "GTR R34",
+            "GTR R34 TRI",
             "Modern F1 V10",
+            "Modern F1 V10 TRI",
             "Ferrari F2004",
             "McLaren P1",
+            "McLaren P1 TRI",
             "Audi RS6 AVANT",
-            "Audi RS6 AVANT MONO",
+            "Audi RS6 AVANT TRI",
             "BMW M3 E92 V8",
-            "BMW M3 E92 V8 2",
-            "BMW M3 E92 V8 MONO"
+            "BMW M3 E92 V8 TRI"
     };
 
     public static String[] getProfileLabels() { return PROFILE_LABELS; }
@@ -233,10 +237,14 @@ public class EngineSoundManager {
         else if ("Ferrari F2004".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004());
         else if ("McLaren P1".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1());
         else if ("Audi RS6 AVANT".equals(profile)) setVehicleProfile(PROFILE_AUDI_RS6_AVANT());
-        else if ("Audi RS6 AVANT MONO".equals(profile)) setVehicleProfile(PROFILE_AUDI_RS6_AVANT_MONO());
         else if ("BMW M3 E92 V8".equals(profile)) setVehicleProfile(PROFILE_BMW_M3_E92());
-        else if ("BMW M3 E92 V8 MONO".equals(profile)) setVehicleProfile(PROFILE_BMW_M3_E92_MONO());
-        else if ("BMW M3 E92 V8 2".equals(profile)) setVehicleProfile(PROFILE_BMW_M3_E92_2());
+        else if ("BMW M3 E92 V8 TRI".equals(profile)) setVehicleProfile(PROFILE_BMW_M3_E92_TRI());
+        else if ("Audi RS6 AVANT TRI".equals(profile)) setVehicleProfile(PROFILE_AUDI_RS6_AVANT_TRI());
+        else if ("McLaren P1 TRI".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1_TRI());
+        else if ("Modern F1 V10 TRI".equals(profile)) setVehicleProfile(PROFILE_F1_V10_TRI());
+        else if ("GTR R34 TRI".equals(profile)) setVehicleProfile(PROFILE_GTRR34_TRI());
+        else if ("Lotus Exige 240 TRI".equals(profile)) setVehicleProfile(PROFILE_LOTUS_EXIGE_TRI());
+        else if ("Lexus LFA TRI".equals(profile)) setVehicleProfile(PROFILE_LEXUS_LFA_TRI());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
 
@@ -290,6 +298,41 @@ public class EngineSoundManager {
                 }
         );
     }
+    public static VehicleProfile PROFILE_LOTUS_EXIGE_TRI() {
+        return new VehicleProfile("Lotus Exige 240 TRI", 800, 9000f, 1,
+                1,
+                new float[][]{
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
+                },
+                0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
+                R.raw.elisec_startup,R.raw.igniton_stop,
+                // ON Katmanı
+                new int[][]{
+                        {R.raw.elisesc_idle, 800, 500, 3000},
+                        {R.raw.elisesc_on_3000, 3000, 800, 4750},
+                        {R.raw.elisesc_on_4750, 4750, 3000, 8115},
+                        {R.raw.elisesc_on_8115, 8115, 4750, 8800},
+                        {R.raw.elisesc_on_9649, 8800, 8115, 9000},
+                        {R.raw.elisesc_on_9649, 9000, 8800, 9500} // Kesici için uzatma
+                },
+                // OFF Katmanı
+                new int[][]{
+                        {R.raw.elisesc_idle, 800, 500, 2500},
+                        {R.raw.elisesc_off_2500, 2500, 800, 3750},
+                        {R.raw.elisesc_off_3750, 3750, 2500, 5000},
+                        {R.raw.elisesc_off_5000, 5000, 3750, 8500},
+                        {R.raw.elisesc_off_8500, 8500, 5000, 9000},
+                        {R.raw.elisesc_off_8500, 9000, 8500, 9500}
+                }
+        );
+    }
     public static VehicleProfile PROFILE_LEXUS_LFA() {
         return new VehicleProfile("Lexus LFA",
                 984f,
@@ -329,6 +372,47 @@ public class EngineSoundManager {
                         {R.raw.lfa_in_offmid, 6500},
                         {R.raw.lfa_in_offhigh, 8500},
                         {R.raw.lfa_in_offhigh, 9550}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_LEXUS_LFA_TRI() {
+        return new VehicleProfile("Lexus LFA TRI",
+                984f,
+                9550f,
+                1f,
+                0,
+
+                new float[][]{
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
+                },
+
+                0.25f,0.15f,200,180f,
+                R.raw.lfa_in_startup,
+                R.raw.igniton_stop,
+                // ON Katmanı
+                new int[][]{
+                        {R.raw.lfa_in_idle, 984, 600, 2500},
+                        {R.raw.lfa_in_onverylow_1, 2500, 984, 4500},
+                        {R.raw.lfa_in_onlow, 4500, 2500, 6500},
+                        {R.raw.lfa_in_onmid, 6500, 4500, 8500},
+                        {R.raw.lfa_in_onhigh, 8500, 6500, 9550},
+                        {R.raw.lfa_in_onhigh, 9550, 8500, 10000}
+                },
+                // OFF Katmanı
+                new int[][]{
+                        {R.raw.lfa_in_idle, 984, 600, 2500},
+                        {R.raw.lfa_in_offverylow_2, 2500, 984, 4500},
+                        {R.raw.lfa_in_offlow, 4500, 2500, 6500},
+                        {R.raw.lfa_in_offmid, 6500, 4500, 8500},
+                        {R.raw.lfa_in_offhigh, 8500, 6500, 9550},
+                        {R.raw.lfa_in_offhigh, 9550, 8500, 10000}
                 }
         );
     }
@@ -372,6 +456,48 @@ public class EngineSoundManager {
                         {R.raw.modgpv10_offlow, 11000},
                         {R.raw.modgpv10_offmid, 15000},
                         {R.raw.modgpv10_offhigh, 20050}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_F1_V10_TRI() {
+        return new VehicleProfile("Modern F1 V10 TRI",
+                4000f,
+                20050f,
+                0.6f,
+                0,
+                new float[][]{
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
+                },
+                0.25f, 0.15f,80,380f,
+
+                R.raw.modgpv10_startup, R.raw.igniton_stop,
+// ON Katmanı
+                new int[][]{
+                        {R.raw.modgpv10_onidle, 4000, 2000, 6500},
+                        {R.raw.modgpv10_onverylow, 6500, 4000, 9000},
+                        {R.raw.modgpv10_onlow, 9000, 6500, 11000},
+                        {R.raw.modgpv10_onlowmid_2_manual_11000, 11000, 9000, 13000},
+                        {R.raw.modgpv10_onmid, 13000, 11000, 14000},
+                        {R.raw.modgpv10_onmidhigh_auto_14000, 14000, 13000, 18000},
+                        {R.raw.modgpv10_onhigh, 18000, 14000, 20050},
+                        {R.raw.modgpv10_onhigh, 20050, 18000, 21000}
+                },
+// OFF Katmanı
+                new int[][]{
+                        {R.raw.modgpv10_idle, 4000, 2000, 6000},
+                        {R.raw.modgpv10_offidle_auto_6000, 6000, 4000, 7000},
+                        {R.raw.modgpv10_offverylow, 7000, 6000, 8000},
+                        {R.raw.modgpv10_offverylow_2_manual_8000, 8000, 7000, 11000},
+                        {R.raw.modgpv10_offlow, 11000, 8000, 15000},
+                        {R.raw.modgpv10_offmid, 15000, 11000, 20050},
+                        {R.raw.modgpv10_offhigh, 20050, 15000, 21000}
                 }
         );
     }
@@ -453,6 +579,43 @@ public class EngineSoundManager {
                 }
         );
     }
+    public static VehicleProfile PROFILE_MCLAREN_P1_TRI() {
+        return new VehicleProfile("McLaren P1 TRI",
+                1000f, 8500f,
+                0.8f,
+                2,
+                new float[][]{
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
+                },
+                0.18f, 0.08f,120,220f,
+                0, 0,
+                // ON Katmanı
+                new int[][]{
+                        {R.raw.p1_in_idle, 1000, 600, 2500},
+                        {R.raw.p1_in_on_verylow2, 2500, 1000, 4000},
+                        {R.raw.p1_in_on_low2, 4000, 2500, 5500},
+                        {R.raw.p1_in_on_lowmid_b, 5500, 4000, 7000},
+                        {R.raw.p1_in_on_mid_c, 7000, 5500, 8000},
+                        {R.raw.p1_in_on_high_b_2, 8000, 7000, 8500},
+                        {R.raw.p1_in_on_veryhigh_b, 8500, 8000, 9000}
+                },
+                // OFF Katmanı
+                new int[][]{
+                        {R.raw.p1_in_idle, 1000, 600, 2500},
+                        {R.raw.p1_in_off_verylow, 2500, 1000, 4000},
+                        {R.raw.p1_in_off_low_2, 4000, 2500, 6000},
+                        {R.raw.p1_in_off_mid_2, 6000, 4000, 8500},
+                        {R.raw.p1_in_off_high, 8500, 6000, 9000}
+                }
+        );
+    }
     public static VehicleProfile PROFILE_GTRR34() {
         return new VehicleProfile("GTR R34", 1000f, 8200, 0.5f,
                 3,
@@ -487,6 +650,79 @@ public class EngineSoundManager {
                 }
         );
     }
+    public static VehicleProfile PROFILE_GTRR34_TRI() {
+        return new VehicleProfile("GTR R34 TRI", 1000f, 8200, 0.5f,
+                3,
+                new float[][]{
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
+                },
+                0.18f, 0.08f,110,250f,
+                0,0,
+                // ON Katmanı
+                new int[][]{
+                        {R.raw.rb26_4_ex_idle, 1000, 600, 1500},
+                        {R.raw.rb26_in_2_onverylow, 1500, 1000, 3500},
+                        {R.raw.rb26_2_in_on_verylow, 3500, 1500, 5000},
+                        {R.raw.rb26_2_in_on_low3, 5000, 3500, 6500},
+                        {R.raw.rb26_2_in_on_mid3, 6500, 5000, 7500},
+                        {R.raw.rb26_in_on_high2, 7500, 6500, 8200},
+                        {R.raw.rb26_in_on_veryhigh, 8200, 7500, 8500}
+                },
+// OFF Katmanı
+                new int[][]{
+                        {R.raw.rb26_4_ex_idle, 1000, 600, 1500},
+                        {R.raw.rb26_ex_5_offverylow, 1500, 1000, 4000},
+                        {R.raw.rb26_ex_5_offlow, 4000, 1500, 6500},
+                        {R.raw.rb26_ex_5_offmid, 6500, 4000, 8200},
+                        {R.raw.rb26_ex_5_offmid, 8200, 6500, 8500}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_AUDI_RS6_AVANT_TRI() {
+        return new VehicleProfile("Audi RS6 AVANT TRI",
+                800f, 7400f, 1.0f,
+                0,
+                new float[][]{
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
+                },
+                0.15f, 0.08f, 180, 450f,
+                R.raw.rs6_startup, R.raw.igniton_stop,
+// ON Katmanı
+                new int[][]{
+                        {R.raw.rs6_4_in_idle_rpm937, 800, 500, 1864},
+                        {R.raw.rs6_in_1_on_rpm1864, 1864, 800, 2800},
+                        {R.raw.rs6_in_1_on_rpm2800, 2800, 1864, 3117},
+                        {R.raw.rs6_in_1_on_rpm3117, 3117, 2800, 3747},
+                        {R.raw.rs6_in_1_on_rpm3747, 3747, 3117, 4917},
+                        {R.raw.rs6_in_1_on_rpm4917, 4917, 3747, 5608},
+                        {R.raw.rs6_in_1_on_rpm5608, 5608, 4917, 5816},
+                        {R.raw.rs6_in_1_on_rpm5816, 5816, 5608, 7400},
+                        {R.raw.rs6_in_1_on_rpm5816, 7400, 5816, 7600}
+                },
+// OFF Katmanı
+                new int[][]{
+                        {R.raw.rs6_4_in_idle_rpm937, 800, 500, 2882},
+                        {R.raw.rs6_in_1_off_rpm2882, 2882, 800, 4075},
+                        {R.raw.rs6_in_1_off_rpm4075, 4075, 2882, 4991},
+                        {R.raw.rs6_in_1_off_rpm4991, 4991, 4075, 7400},
+                        {R.raw.rs6_in_1_off_rpm4991, 7400, 4991, 7600}
+                }
+        );
+    }
     public static VehicleProfile PROFILE_AUDI_RS6_AVANT() {
         return new VehicleProfile("Audi RS6 AVANT",
                 800f, 7400f, 1.0f,
@@ -506,46 +742,7 @@ public class EngineSoundManager {
 
                 // ON Katmanı (İç Mekan - Rs6_in_1_on)
                 new int[][]{
-                        {R.raw.rs6_4_in_idle_rpm937, 800, 600, 1864},   // Senin uyarınla 800'e çekildi
-                        {R.raw.rs6_in_1_on_rpm1864, 1864, 800, 2800},
-                        {R.raw.rs6_in_1_on_rpm2800, 2800, 1864, 3117},
-                        {R.raw.rs6_in_1_on_rpm3117, 3117, 2800, 3747},
-                        {R.raw.rs6_in_1_on_rpm3747, 3747, 3117, 4917},
-                        {R.raw.rs6_in_1_on_rpm4917, 4917, 3747, 5608},
-                        {R.raw.rs6_in_1_on_rpm5608, 5608, 4917, 5816},
-                        {R.raw.rs6_in_1_on_rpm5816, 5816, 5608, 7400},
-                        {R.raw.rs6_in_1_on_rpm5816, 7400, 5816, 7500}
-                },
-
-                // OFF Katmanı (İç Mekan - Rs6_in_1_off)
-                new int[][]{
-                        {R.raw.rs6_4_in_idle_rpm937, 800, 600, 2882},
-                        {R.raw.rs6_in_1_off_rpm2882, 2882, 800, 4075},
-                        {R.raw.rs6_in_1_off_rpm4075, 4075, 2882, 4991},
-                        {R.raw.rs6_in_1_off_rpm4991, 4991, 4075, 7400}
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_AUDI_RS6_AVANT_MONO() {
-        return new VehicleProfile("Audi RS6 AVANT MONO",
-                800f, 7400f, 1.0f,
-                0,
-                new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
-                },
-                0.15f, 0.08f, 180, 450f,
-                R.raw.rs6_startup, R.raw.igniton_stop,
-
-                // ON Katmanı (İç Mekan - Rs6_in_1_on)
-                new int[][]{
-                        {R.raw.rs6_4_in_idle_rpm937, 800},   // Senin uyarınla 800'e çekildi
+                        {R.raw.rs6_4_in_idle_rpm937, 800},
                         {R.raw.rs6_in_1_on_rpm1864, 1864},
                         {R.raw.rs6_in_1_on_rpm2800, 2800},
                         {R.raw.rs6_in_1_on_rpm3117, 3117},
@@ -565,8 +762,8 @@ public class EngineSoundManager {
                 }
         );
     }
-    public static VehicleProfile PROFILE_BMW_M3_E92() {
-        return new VehicleProfile("BMW M3 E92 V8",
+    public static VehicleProfile PROFILE_BMW_M3_E92_TRI() {
+        return new VehicleProfile("BMW M3 E92 V8 TRI",
                 800f, 8400f, 1.0f,
                 0,
                 new float[][]{
@@ -580,67 +777,27 @@ public class EngineSoundManager {
                         {140f, 200f}
                 },
                 0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
-                0, 0, // Startup/Stop seslerini genel listeden seçebilirsin
-
-                // ON Katmanı (Seslerin iç içe geçtiği yoğun doku)
+                R.raw.m3e46, 0, // Startup/Stop seslerini genel listeden seçebilirsin
+// ON Katmanı
                 new int[][]{
-                        // {resId, baseRpm, minRpm, maxRpm}
-                        {R.raw.m3e92_idle, 800, 600, 3200},             // Rölanti 3200'e kadar alttan destek verir
-                        {R.raw.m3e92_on_3000, 3000, 800, 5500},         // 3k sesi rölantiyle başlar, 5.5k'ya kadar sürer
-                        {R.raw.m3e92_on_4000, 4000, 2500, 6500},        // 4k sesi tam ortada devreye girer
-                        {R.raw.m3e92_on_4198, 4198, 3000, 7200},        // 4198'i tekrar açtım, ara tınıyı doldurur
-                        {R.raw.m3e92_on_6000, 6000, 4000, 8400},        // 6k yırtılması 4k'da başlar
-                        {R.raw.m3e92_on_8500, 8400, 5500, 9000},        // Zirve sesi 5.5k'dan itibaren gelmeye başlar
-                        {R.raw.m3e92_on_8500, 8400, 8200, 8600}               // Kesici sadece en tepede
-                },
-
-                new int[][]{
-                        {R.raw.m3e92_idle, 800, 600, 3500},             // Gaz kesince rölanti homurtusu hemen gelir
-                        {R.raw.m3e92_off_2800, 2800, 800, 6500},        // Orta devir kompresyonu geniş tutuldu
-                        {R.raw.m3e92_off_6000, 6000, 2500, 8500},       // 6k OFF sesi 2.5k'ya kadar süzülür
-                        {R.raw.m3e92_off_8500, 8400, 5000, 9500}        // En üst devir kompresyonu
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_BMW_M3_E92_2() {
-        return new VehicleProfile("BMW M3 E92 V8 2",
-                800f, 8400f, 1.0f,
-                0, // Atmosferik S65 V8
-                new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
-                },
-                0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
-                0, 0,
-
-                // ON Katmanı (İç Mekan - m3e92_on_...)
-                new int[][]{
-                        {R.raw.m3e92_idle, 800, 600, 3000},
+                        {R.raw.m3e92_idle, 800, 500, 3000},
                         {R.raw.m3e92_on_3000, 3000, 800, 4000},
                         {R.raw.m3e92_on_4000, 4000, 3000, 6000},
-                        //{R.raw.m3e92_on_4198, 4198, 4000, 6000},
-                        {R.raw.m3e92_on_6000, 6000, 4000, 8500},
-                        {R.raw.m3e92_on_8500, 8400, 6000, 8500}, // 8400 Redline
-                        {R.raw.m3e92_on_8500, 8400, 8300, 8600}
+                        {R.raw.m3e92_on_6000, 6000, 4000, 8400},
+                        {R.raw.m3e92_on_8500, 8400, 6000, 8600},
+                        {R.raw.m3e92_on_8500, 8600, 8400, 9000} // Kesici destek
                 },
-
-                // OFF Katmanı (İç Mekan - m3e92_off_...)
+// OFF Katmanı
                 new int[][]{
-                        {R.raw.m3e92_idle, 800, 600, 2800},
+                        {R.raw.m3e92_idle, 800, 500, 2800},
                         {R.raw.m3e92_off_2800, 2800, 800, 6000},
-                        {R.raw.m3e92_off_6000, 6000, 2800, 8500},
-                        {R.raw.m3e92_off_8500, 8400, 6000, 9000}
+                        {R.raw.m3e92_off_6000, 6000, 2800, 8400},
+                        {R.raw.m3e92_off_8500, 8400, 6000, 9000} // 84000 yazım hatası düzeltildi
                 }
         );
     }
-    public static VehicleProfile PROFILE_BMW_M3_E92_MONO() {
-        return new VehicleProfile("BMW M3 E92 V8 MONO",
+    public static VehicleProfile PROFILE_BMW_M3_E92() {
+        return new VehicleProfile("BMW M3 E92 V8",
                 800f, 8400f, 1.0f,
                 0, // Atmosferik S65 V8
                 new float[][]{
@@ -654,7 +811,7 @@ public class EngineSoundManager {
                         {140f, 200f}
                 },
                 0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
-                0, 0,
+                R.raw.m3e46, 0,
 
                 // ON Katmanı (İç Mekan - m3e92_on_...)
                 new int[][]{
@@ -663,8 +820,8 @@ public class EngineSoundManager {
                         {R.raw.m3e92_on_4000, 4000},
                         //{R.raw.m3e92_on_4198, 4198},
                         {R.raw.m3e92_on_6000, 6000},
-                        {R.raw.m3e92_on_8500, 8400}, // 8400 Redline
-                        {R.raw.m3e92_on_8500, 8400}
+                        {R.raw.m3e92_on_8500, 8400},
+                        {R.raw.m3e92_on_8500, 8500}
                 },
 
                 // OFF Katmanı (İç Mekan - m3e92_off_...)
@@ -672,7 +829,7 @@ public class EngineSoundManager {
                         {R.raw.m3e92_idle, 800},
                         {R.raw.m3e92_off_2800, 2800},
                         {R.raw.m3e92_off_6000, 6000},
-                        {R.raw.m3e92_off_8500, 84000}
+                        {R.raw.m3e92_off_8500, 8400}
                 }
         );
     }
