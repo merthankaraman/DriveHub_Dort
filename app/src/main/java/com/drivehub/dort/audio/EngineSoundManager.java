@@ -94,9 +94,6 @@ public class EngineSoundManager {
     private float mFlutterSoundmultiplier = 0.4f;
     private long mLastFlutterTime = 0;
     private float mLastThrottleForFlutter = 0f;
-    // Telemetri yayını için hafif throttle (aşırı sık broadcast olmasın)
-    private long mLastTelemetryBroadcastTime = 0L;
-    private static final long TELEMETRY_INTERVAL_MS = 100L; // ~10 Hz
 
     // Ses karışım modu (daha agresif ON/OFF ve load tepkisi)
     private boolean mRealisticMixEnabled = false;
@@ -1259,9 +1256,6 @@ public class EngineSoundManager {
         getInstance(context).broadcastTelemetryIfNeeded();
     }
     public void broadcastTelemetryIfNeeded() {
-        long now = System.currentTimeMillis();
-        if (now - mLastTelemetryBroadcastTime < TELEMETRY_INTERVAL_MS) return;
-        mLastTelemetryBroadcastTime = now;
 
         try {
             float lMotorMaxPower = mMotorMaxPower + 20f;
@@ -1285,9 +1279,6 @@ public class EngineSoundManager {
         getInstance(context).broadcastTelemetryFromRaw(speedKmh, dcPowerKw);
     }
     public void broadcastTelemetryFromRaw(float speedKmh, float dcPowerKw) {
-        long now = System.currentTimeMillis();
-        if (now - mLastTelemetryBroadcastTime < TELEMETRY_INTERVAL_MS) return;
-        mLastTelemetryBroadcastTime = now;
         try {
             float lMotorMaxPower = mMotorMaxPower + 20f;
             com.drivehub.dort.telemetry.TelemetryHolder.update(
@@ -1297,7 +1288,6 @@ public class EngineSoundManager {
         } catch (Throwable ignored) {
         }
     }
-//TODO gereksiz sesleri kaldır
     private void processLayer(EngineSample[] layer, float rpm, float weightVol, float fadedMasterVol, boolean isOnLayer) {
         if (layer == null || layer.length == 0) return;
 

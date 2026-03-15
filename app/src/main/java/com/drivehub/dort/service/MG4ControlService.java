@@ -206,7 +206,7 @@ public class MG4ControlService extends Service {
     };
 
     /** 100 ms'lik ana görev periyodu (enerji, mesafe, hazır/şarj durumu vb.). */
-    private static final int MAIN_100MS_TASK_INTERVAL_MS = 100;
+    private static final int MAIN_100MS_TASK_INTERVAL_MS = 10;
     /** Hayat boyu km/kWh'ı bu kadar integrasyon sonrası bir kez hafızaya yaz (≈30 sn). */
     private static final int LIFETIME_PERSIST_EVERY_N = 300;
     private final Handler mConsumptionHandler = new Handler(Looper.getMainLooper());
@@ -215,13 +215,23 @@ public class MG4ControlService extends Service {
     private static volatile long    sDriveSessionEndWallMs = 0L;
     private int mConsumptionLoopCount = 0;
 
+    // Telemetri yayını için hafif throttle (aşırı sık broadcast olmasın)
+    private long mLastTelemetryBroadcastTime = 0L;
+    private static final long TELEMETRY_INTERVAL_MS = 10L; // ~10 Hz
+
     private final Runnable mConsumptionIntegrationRunnable = new Runnable() {
         @Override
         public void run() {
             MG4Hardware.run100msTask();
+
+            long now = System.currentTimeMillis();
             if (MG4Hardware.isSoundEnabled()) {
+                if (now - mLastTelemetryBroadcastTime < TELEMETRY_INTERVAL_MS) return;
+                mLastTelemetryBroadcastTime = now;
                 EngineSoundManager.broadcastTelemetryIfNeeded(MG4ControlService.this);
             } else {
+                if (now - mLastTelemetryBroadcastTime < TELEMETRY_INTERVAL_MS) return;
+                mLastTelemetryBroadcastTime = now;
                 float speed = MG4Hardware.getSpeedForEngine();
                 float dcKw = MG4Hardware.getDcKwGlobal();
                 EngineSoundManager.broadcastTelemetryFromRaw(MG4ControlService.this, Float.isNaN(speed) ? 0f : speed, Float.isNaN(dcKw) ? 0f : dcKw);
