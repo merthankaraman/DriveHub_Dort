@@ -217,17 +217,10 @@ public class EngineSoundManager {
 
     public static final String[] PROFILE_LABELS = {
             "Lotus Exige 240",
-            "Porsche GT3 997",
             "Lexus LFA",
-            "Dodge Hellcat",
-            "Nissan GT-R GT3",
-            "McLaren GT3",
-            "BMW Z4 GT3",
             "GTR R34",
-            "Mazda 3-Rotor",
             "Modern F1 V10",
             "Ferrari F2004",
-            "Ferrari F2004 NORMAL",
             "McLaren P1"
     };
 
@@ -235,17 +228,10 @@ public class EngineSoundManager {
 
     public void applyProfileLabel(String profile) {
         mCurrentProfileLabel = (profile != null && !profile.isEmpty()) ? profile : "Lotus Exige 240";
-        if ("Porsche GT3 997".equals(profile)) setVehicleProfile(PROFILE_PORSCHE_GT3());
-        else if ("Lexus LFA".equals(profile)) setVehicleProfile(PROFILE_LEXUS_LFA());
-        else if ("Dodge Hellcat".equals(profile)) setVehicleProfile(PROFILE_DODGE_HELLCAT());
-        else if ("Nissan GT-R GT3".equals(profile)) setVehicleProfile(PROFILE_NISSAN_GT3());
-        else if ("McLaren GT3".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_GT3());
-        else if ("BMW Z4 GT3".equals(profile)) setVehicleProfile(PROFILE_BMW_Z4_GT3());
+        if ("Lexus LFA".equals(profile)) setVehicleProfile(PROFILE_LEXUS_LFA());
         else if ("GTR R34".equals(profile)) setVehicleProfile(PROFILE_GTRR34());
-        else if ("Mazda 3-Rotor".equals(profile)) setVehicleProfile(PROFILE_MAZDA_ROTOR());
         else if ("Modern F1 V10".equals(profile)) setVehicleProfile(PROFILE_F1_V10());
         else if ("Ferrari F2004".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004());
-        else if ("Ferrari F2004 NORMAL".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004_NORMAL());
         else if ("McLaren P1".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
@@ -270,13 +256,13 @@ public class EngineSoundManager {
         return new VehicleProfile("Lotus Exige 240", 800, 9000f, 1,
                 1,
                 new float[][]{
-                        {0f, 60f},    // 1. Vites (Dururken 0 km/h - Kesicide 40 km/h)
-                        {30f, 90f},    // 2. Vites (Rölantide 5 km/h - Kesicide 70 km/h)
-                        {60f, 120f},   // 3. Vites (Rölantide 9 km/h - Kesicide 100 km/h)
-                        {90f, 150f},  // 4. Vites (Rölantide 12 km/h - Kesicide 130 km/h)
-                        {110f, 180f},  // 5. Vites (Rölantide 15 km/h - Kesicide 155 km/h)
-                        {130f, 210f},   // 6. Vites (Rölantide 18 km/h - Kesicide 180 km/h)
-                        {150f, 320f}   // 7. VİTES (OVERDRIVE): Uzun yol vitesidir. 175'te devri 5000'e, 120'de 3500'e düşürür!
+                        {0f, 60f},
+                        {30f, 90f},
+                        {60f, 120f},
+                        {90f, 150f},
+                        {110f, 180f},
+                        {130f, 210f},
+                        {150f, 320f}
                 },
                 0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 R.raw.elisec_startup,R.raw.key_removed,
@@ -301,38 +287,6 @@ public class EngineSoundManager {
                 }
         );
     }
-    public static VehicleProfile PROFILE_PORSCHE_GT3() {
-        return new VehicleProfile("Porsche GT3 997", 2000f, 9400f, 0.7f,
-                0,
-                new float[][]{
-                        {0f, 75f},    // 1. Vites
-                        {6f, 120f},   // 2. Vites
-                        {10f, 165f},  // 3. Vites
-                        {15f, 210f},  // 4. Vites
-                        {20f, 260f},  // 5. Vites
-                        {25f, 315f},  // 6. Vites (Son Hız)
-                        {30f, 370f}   // 7. VİTES (OVERDRIVE)
-                },
-                0.18f, 0.08f, 110, 250f,
-                R.raw.por911rsr_on_start, R.raw.por911rsr_on_stop,
-                new int[][]{
-                        {R.raw.por911rsr_on_idle, 2000},
-                        {R.raw.por911rsr_on_onverylow, 3500},
-                        {R.raw.por911rsr_on_onlow, 5000},
-                        {R.raw.por911rsr_on_onmid, 6500},
-                        {R.raw.por911rsr_on_onhigh, 8000},
-                        {R.raw.por911rsr_on_limiter, 9400}
-                },
-                new int[][]{
-                        {R.raw.por911rsr_on_offidle, 2000},
-                        {R.raw.por911rsr_on_offverylow, 3500},
-                        {R.raw.por911rsr_on_offlow, 5000},
-                        {R.raw.por911rsr_on_offmid, 6500},
-                        {R.raw.por911rsr_on_offhigh, 8000},
-                        {R.raw.por911rsr_on_offlimiter, 9400}
-                }
-        );
-    }
     public static VehicleProfile PROFILE_LEXUS_LFA() {
         return new VehicleProfile("Lexus LFA",
                 984f,
@@ -341,13 +295,13 @@ public class EngineSoundManager {
                 0,
 
                 new float[][]{
-                        {0f, 80f},    // 1. Vites
-                        {6f, 125f},   // 2. Vites
-                        {10f, 175f},  // 3. Vites
-                        {15f, 225f},  // 4. Vites
-                        {20f, 275f},  // 5. Vites
-                        {25f, 330f},  // 6. Vites (Redline V10 Çığlığı ve Son hız)
-                        {30f, 400f}   // 7. VİTES (OVERDRIVE): Uzun yol fısıltısı.
+                        {0f, 60f},
+                        {30f, 90f},
+                        {60f, 120f},
+                        {90f, 150f},
+                        {110f, 180f},
+                        {130f, 210f},
+                        {150f, 320f}
                 },
 
                 0.25f,0.15f,200,180f,
@@ -370,217 +324,7 @@ public class EngineSoundManager {
                         {R.raw.lfa_in_offlow, 4500},
                         {R.raw.lfa_in_offmid, 6500},
                         {R.raw.lfa_in_offhigh, 8500},
-                        // LFA paketinde 'offlimiter' olmadığı için üst devir kompresyonunu sonuna kadar sündürüyoruz:
                         {R.raw.lfa_in_offhigh, 9550}
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_DODGE_HELLCAT() {
-        return new VehicleProfile("Dodge Hellcat",
-                700f,   // Orijinal Rölanti
-                6100f,  // Orijinal Kesici
-                0.7f,
-                0,
-                new float[][]{
-                        {0f, 65f},    // 1. Vites (Patinaj canavarı)
-                        {5f, 105f},   // 2. Vites
-                        {8f, 145f},   // 3. Vites
-                        {12f, 190f},  // 4. Vites
-                        {16f, 235f},  // 5. Vites
-                        {20f, 280f},  // 6. Vites
-                        {25f, 325f},  // 7. Vites (Son hız)
-                        {30f, 420f}   // 8. VİTES (OVERDRIVE): 160 ile giderken V8 mırıldanarak çalışır.
-                },
-                0.12f,0.05f,110,250f,
-                R.raw.hellcat_ex_startup_1,
-                R.raw.hellcat_ex_stop_1,
-
-                // ON Katmanı (Gaza Basıldığında Gelen V8 Kükremesi)
-                new int[][]{
-                        {R.raw.hellcat_ex_idle_1, 700},
-                        {R.raw.hellcat_in_onload_1000_1600_1, 1600},
-                        {R.raw.hellcat_in_onload_1500_2500_2, 2500},
-                        {R.raw.hellcat_in_onload_2000_3500_1, 3500},
-                        {R.raw.hellcat_in_onload_3000_4400_1, 4400},
-                        {R.raw.hellcat_in_onload_4000_5000_2, 5000},
-                        {R.raw.hellcat_in_onload_4800_5400_1, 5400},
-                        {R.raw.hellcat_limiter, 6100}
-                },
-                // OFF Katmanı (Gaz Çekildiğinde Gelen Tok V8 Kompresyonu)
-                new int[][]{
-                        {R.raw.hellcat_ex_idle_1, 700},
-                        {R.raw.hellcat_ex_offload_2400_1400_1, 1400},
-                        {R.raw.hellcat_ex_offload_2800_2000_1, 2000},
-                        {R.raw.hellcat_in_offload_3500_2500_1, 2500},
-                        {R.raw.hellcat_in_offload_4000_3000_1, 3000},
-                        {R.raw.hellcat_in_offload_4500_3500_1, 3500},
-                        {R.raw.hellcat_in_offload_5400_4700_1, 4700},
-                        {R.raw.hellcat_in_offload_5400_4700_1, 6100} // Kesiciye kadar son off dosyasını sündürüyoruz
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_NISSAN_GT3() {
-        return new VehicleProfile("Nissan GT-R GT3",
-                880f,
-                7250f,
-                1.0f,
-                3,
-                new float[][]{
-                        {0f, 85f},
-                        {10f, 130f},
-                        {15f, 175f},
-                        {20f, 220f},
-                        {25f, 265f},
-                        {30f, 305f}   // 6. Vites Son
-                },
-
-                0.18f, 0.08f,200,250f,
-                R.raw.nisgt3_startup,
-                R.raw.nisgt3_stop,
-
-                // ON Katmanı (Çok Detaylı 9 Katmanlı İvmelenme)
-                new int[][]{
-                        {R.raw.nisgt3_idle, 880},
-                        {R.raw.nisgt3_loop0, 1500},
-                        {R.raw.nisgt3_loop01, 2200},
-                        {R.raw.nisgt3_loop02, 2900},
-                        {R.raw.nisgt3_loop03, 3600},
-                        {R.raw.nisgt3_loop04, 4300},
-                        {R.raw.nisgt3_loop05, 5000},
-                        {R.raw.nisgt3_loop06, 5700},
-                        {R.raw.nisgt3_loop07, 6400},
-                        {R.raw.nisgt3_loop08, 7000},
-                        {R.raw.nisgt3_onlimiter, 7250}
-                },
-                // OFF Katmanı (Gaz Çekildiğinde Gelen Yırtıcı V6 Kompresyonu)
-                new int[][]{
-                        {R.raw.nisgt3_idle, 880},
-                        {R.raw.nisgt3_off_loop01, 2000},
-                        {R.raw.nisgt3_off_loop02, 3500},
-                        {R.raw.nisgt3_off_loop03, 5000},
-                        {R.raw.nisgt3_off_loop04, 6000},
-                        {R.raw.nisgt3_off_loop05, 7250}
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_MCLAREN_GT3() {
-        return new VehicleProfile("McLaren GT3",
-                1476f,   // Orijinal Rölanti
-                7800f,   // Orijinal Kesici
-                0.7f,
-                2,
-                new float[][]{
-                        {0f, 85f},
-                        {10f, 130f},
-                        {15f, 175f},
-                        {20f, 220f},
-                        {25f, 260f},
-                        {30f, 300f}   // 6. Vites Son
-                },
-                0.18f, 0.08f,100,250f,
-                R.raw.mp412c_start,
-                R.raw.mp412c_stop,
-
-                // ON Katmanı (Gaza Basıldığında V8 Kükremesi)
-                new int[][]{
-                        {R.raw.mp412c_idle, 1476},
-                        {R.raw.mp412c_onidle_3, 2500},
-                        {R.raw.mp412c_onlow, 3800},
-                        {R.raw.mp412c_onmid, 5000},
-                        {R.raw.mp412c_onmidhigh, 6200},
-                        {R.raw.mp412c_onhigh, 7400},
-                        {R.raw.mp412c_limiter, 7800}
-                },
-                // OFF Katmanı (Gaz Çekildiğinde Gelen Tok Kompresyon)
-                new int[][]{
-                        {R.raw.mp412c_idle, 1476},
-                        {R.raw.mp412c_offverylow_1, 2500},
-                        {R.raw.mp412c_offlow, 3800},
-                        {R.raw.mp412c_offmid, 5000},
-                        {R.raw.mp412c_offmidhigh, 6200},
-                        {R.raw.mp412c_offhigh, 7800}
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_BMW_Z4_GT3() {
-        return new VehicleProfile("BMW Z4 GT3",
-                2000f,
-                8900f,
-                0.8f,
-                0,
-
-                new float[][]{
-                        {0f, 80f},
-                        {8f, 125f},
-                        {12f, 170f},
-                        {18f, 215f},
-                        {22f, 255f},
-                        {26f, 295f}   // 6. Vites Son
-                },
-                0.18f, 0.08f,200,250f,
-                // Marş ve İstop Sesleri
-                R.raw.bmwz4gt3_startup,
-                R.raw.bmwz4gt3_stop,
-
-                // ON Katmanı (İnanılmaz Detaylı 8 Katmanlı V8 Sesi)
-                new int[][]{
-                        {R.raw.bmwz4gt3_onidle_1, 2000},
-                        {R.raw.bmwz4gt3_onverylow_1, 3000},
-                        {R.raw.bmwz4gt3_onverylow_2, 4000},
-                        {R.raw.bmwz4gt3_onlow, 5000},
-                        {R.raw.bmwz4gt3_onmid, 6000},
-                        {R.raw.bmwz4gt3_onmidhigh, 7000},
-                        {R.raw.bmwz4gt3_onhigh, 8000},
-                        {R.raw.bmwz4gt3_onveryhigh, 8800},
-                        {R.raw.bmwz4gt3_limiter, 8900}
-                },
-                // OFF Katmanı (Gaz Çekildiğinde Gelen Mekanik Kompresyon)
-                new int[][]{
-                        {R.raw.bmwz4gt3_offidle, 2000},
-                        {R.raw.bmwz4gt3_offverylow, 3500},
-                        {R.raw.bmwz4gt3_offlow, 5000},
-                        {R.raw.bmwz4gt3_offmid, 6500},
-                        {R.raw.bmwz4gt3_offhigh, 7800},
-                        {R.raw.bmwz4gt3_offveryhigh, 8900}
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_MAZDA_ROTOR() {
-        return new VehicleProfile("Mazda 3-Rotor",
-                1980f,
-                9550f,
-                0.8f,
-                0,
-
-                new float[][]{
-                        {0f, 75f},
-                        {8f, 125f},
-                        {12f, 175f},
-                        {18f, 225f},
-                        {22f, 275f},
-                        {26f, 320f},
-                        {30f, 390f}   // 7. VİTES (OVERDRIVE)
-                },
-                0.18f, 0.08f,200,180f,
-                R.raw.mazda3rotor_startup,
-                0,
-                new int[][]{
-                        {R.raw.mazda3rotor_idle, 1980},
-                        {R.raw.mazda3rotor_onverylow, 3000},
-                        {R.raw.mazda3rotor_onlow, 4500},
-                        {R.raw.mazda3rotor_onlowmid, 6000},
-                        {R.raw.mazda3rotor_onmid, 7500},
-                        {R.raw.mazda3rotor_onhigh, 9200},
-                        {R.raw.mazda3rotor_limiter, 9550}
-                },
-                // OFF Katmanı (Gaz Çekildiğinde Gelen Egzantrik Kompresyon)
-                new int[][]{
-                        {R.raw.mazda3rotor_idle, 1980},
-                        {R.raw.mazda3rotor_offverylow_1, 3000},
-                        {R.raw.mazda3rotor_offlow, 4500},
-                        {R.raw.mazda3rotor_offlowmid, 6000},
-                        {R.raw.mazda3rotor_offmid, 7500},
-                        {R.raw.mazda3rotor_offhigh, 9550}
                 }
         );
     }
@@ -591,13 +335,13 @@ public class EngineSoundManager {
                 0.6f,
                 0,
                 new float[][]{
-                        {0f, 76f},    // F1 aracı 76'da anında kesiciye girer
-                        {10f, 110f},
-                        {15f, 160f},
-                        {20f, 215f},
-                        {25f, 255f},
-                        {30f, 290f},
-                        {35f, 335f}   // 7. Vites Son Hız (Sürekli Bağırtı)
+                        {0f, 60f},
+                        {30f, 90f},
+                        {60f, 120f},
+                        {90f, 150f},
+                        {110f, 180f},
+                        {130f, 210f},
+                        {150f, 320f}
                 },
                 0.25f, 0.15f,80,380f,
 
@@ -627,20 +371,20 @@ public class EngineSoundManager {
                 }
         );
     }
-    public static VehicleProfile PROFILE_FERRARI_F2004_NORMAL() {
-        return new VehicleProfile("Ferrari F2004 NORMAL",
+    public static VehicleProfile PROFILE_FERRARI_F2004() {
+        return new VehicleProfile("Ferrari F2004",
                 4000f,   // Tahmini rölanti devri
                 19000f,  // Tahmini kesici
                 0.6f,
                 0,
                 new float[][]{
-                        {0f, 50f},    // 1. vites
-                        {10f, 80f},  // 2. vites
-                        {15f, 160f},  // 3. vites
-                        {20f, 215f},  // 4. vites
-                        {25f, 255f},  // 5. vites
-                        {30f, 290f},  // 6. vites
-                        {35f, 335f}   // 7. vites
+                        {0f, 60f},
+                        {30f, 90f},
+                        {60f, 120f},
+                        {90f, 150f},
+                        {110f, 180f},
+                        {130f, 210f},
+                        {150f, 320f}
                 },
                 0.25f, 0.15f, 80, 300f,
                 0, 0,
@@ -667,62 +411,6 @@ public class EngineSoundManager {
                 }
         );
     }
-    public static VehicleProfile PROFILE_FERRARI_F2004() {
-        // Ferrari F2004 ana profilini, NORMAL profilinin devir haritasını baz alarak
-        // daha yumuşak ve doğal geçişler için sadeleştiriyoruz.
-        return new VehicleProfile("Ferrari F2004",
-                4000f,
-                19000f,
-                0.8f,   // NORMAL ile aynı idle volume
-                0,
-                new float[][]{
-                        {0f, 76f},
-                        {10f, 110f},
-                        {15f, 160f},
-                        {20f, 215f},
-                        {25f, 255f},
-                        {30f, 290f},
-                        {35f, 335f}
-                },
-                0.25f, 0.15f, 80, 300f,
-                0, 0,
-                // ON: NORMAL'deki anchor noktalarından türetilmiş min/base/max üçgenleri
-                // {resId, baseRpm, minRpm, maxRpm}
-                new int[][]{
-                        // idle ilk sample: alt sınırı biraz aşağı, üstü bir sonraki base'e kadar
-                        {R.raw.f2004_in_idle,        4000, 3500, 5000},
-                        // verylow: idle–verylow_2 arasını doldur
-                        {R.raw.f2004_in_verylow,     5000, 4000, 6500},
-                        // verylow_2: verylow–on_low arası
-                        {R.raw.f2004_in_verylow_2,   6500, 5000, 8000},
-                        // on_low: verylow_2–on_mid arası
-                        {R.raw.f2004_in_on_low,      8000, 6500, 9500},
-                        // on_mid: on_low–on_mid2 arası
-                        {R.raw.f2004_in_on_mid,      9500, 8000,12500},
-                        // on_mid2: on_mid–on_high_mix arası
-                        {R.raw.f2004_in_on_mid2,    12500, 9500,15500},
-                        // on_high_mix: on_mid2–veryhigh arası
-                        {R.raw.f2004_in_on_high_mix,15500,12500,18500},
-                        // veryhigh: üst sınırı biraz yukarı taşı
-                        {R.raw.f2004_in_on_veryhigh_mix,18500,15500,19500}
-                },
-                // OFF: aynı anchor'lara göre üçgenler
-                new int[][]{
-                        // idle–off_low
-                        {R.raw.f2004_in_idle,            4000, 3500, 6000},
-                        // off_low: idle–offmid arası
-                        {R.raw.f2004_in_off_low,         6000, 4000, 8042},
-                        // offmid: off_low–off_midhigh arası
-                        {R.raw.f2004_in_offmid_pitchare, 8042, 6000,12000},
-                        // off_midhigh: offmid–off_high arası
-                        {R.raw.f2004_in_off_midhigh_mix,12000,8042,17000},
-                        // off_high: off_midhigh–son high arası
-                        {R.raw.f2004_in_off_high,       17000,12000,19000},
-                        // son high: üst sınırı biraz yukarı taşı
-                        {R.raw.f2004_in_off_high,       19000,17000,20000}
-                }
-        );
-    }
     public static VehicleProfile PROFILE_MCLAREN_P1() {
         return new VehicleProfile("McLaren P1",
                 1000f,   // idle
@@ -730,13 +418,13 @@ public class EngineSoundManager {
                 0.8f,
                 2,       // turbo
                 new float[][]{
-                        {0f, 80f},
-                        {10f, 130f},
-                        {20f, 190f},
-                        {30f, 250f},
-                        {40f, 310f},
-                        {50f, 360f},
-                        {60f, 400f}
+                        {0f, 60f},
+                        {30f, 90f},
+                        {60f, 120f},
+                        {90f, 150f},
+                        {110f, 180f},
+                        {130f, 210f},
+                        {150f, 320f}
                 },
                 0.18f, 0.08f,120,220f,
                 0, 0,
@@ -764,13 +452,13 @@ public class EngineSoundManager {
         return new VehicleProfile("GTR R34", 1000f, 8200, 0.5f,
                 3,
                 new float[][]{
-                        {0f, 70f},
-                        {5f, 115f},
-                        {10f, 160f},
-                        {15f, 210f},
-                        {20f, 260f},
-                        {25f, 310f},  // 6. Vites
-                        {30f, 380f}   // 7. VİTES (OVERDRIVE)
+                        {0f, 60f},
+                        {30f, 90f},
+                        {60f, 120f},
+                        {90f, 150f},
+                        {110f, 180f},
+                        {130f, 210f},
+                        {150f, 320f}
                 },
                 0.18f, 0.08f,110,250f,
                 0,0,
