@@ -207,7 +207,13 @@ public class EngineSoundManager {
         float agg = 0.4f;
         if ("ECO".equals(character)) agg = 0.25f;
         else if ("SPORT".equals(character)) agg = 0.7f;
-        setDriveModeAggressiveness(agg);
+
+        // Eğer sürüş modu GERÇEKTEN değiştiyse şanzımanı uyandır!
+        if (mDriveModeAggressiveness != agg) {
+            setDriveModeAggressiveness(agg);
+            mLowThrottleStartTime = 0; // Sakinleşme (Cruising) zamanlayıcısını SIFIRLA!
+            mLastShiftTime = 0;        // Vites bekleme süresini sıfırla (Anında vites atabilsin diye)
+        }
     }
 
     public static final String[] PROFILE_LABELS = {
@@ -305,14 +311,14 @@ public class EngineSoundManager {
         return new VehicleProfile("Lotus Exige 240 TRI", 800, 9000f, 1,
                 1,
                 new float[][]{
-                        {4f, 50f},    // 1. Vites (800 RPM = 4 kmh, 9000 RPM = 50 kmh)
-                        {7f, 75f},    // 2. Vites (Vites atınca 6.300 RPM'de kalır)
-                        {9f, 100f},   // 3. Vites
-                        {12f, 130f},  // 4. Vites
-                        {14f, 160f},  // 5. Vites
-                        {17f, 190f},  // 6. Vites
-                        {20f, 220f},  // 7. Vites
-                        {22f, 250f}   // 8. Vites
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
                 },
                 0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 R.raw.elisec_startup,R.raw.igniton_stop,
@@ -425,8 +431,6 @@ public class EngineSoundManager {
                 20050f,
                 0.6f,
                 0,
-                // GERÇEKÇİ YAKIN ORANLI F1 ŞANZIMANI (Close-Ratio)
-                // Devir asla çakılmaz, üst viteslerde 15-17k bandında asılı kalır.
                 new float[][]{
                         {0f, 45f},
                         {12f, 72f},
@@ -1088,7 +1092,22 @@ public class EngineSoundManager {
         updateGearAndRpm();
         updateAudioMixer();
     }
+    // 1. KUSURSUZ MATEMATİK (Sadece senin Min ve Max değerlerinle oran kurar)
+    private float calculateMechanicalRpm(int gear, float speed) {
+        if (gear < 1 || gear > mActiveProfile.gearRanges.length) return mIdleRpm;
 
+        float minSpeed = mActiveProfile.gearRanges[gear - 1][0];
+        float maxSpeed = mActiveProfile.gearRanges[gear - 1][1];
+
+        if (speed <= minSpeed) return mIdleRpm; // Hız alt limitin altındaysa rölanti
+        if (speed >= maxSpeed) return mMaxRpm;  // Hız üst limitin üstündeyse kesici
+
+        // Hızın o vites aralığındaki yüzdesini bulur
+        float ratio = (speed - minSpeed) / (maxSpeed - minSpeed);
+        return mIdleRpm + (ratio * (mMaxRpm - mIdleRpm));
+    }
+
+    // 2. DÜMDÜZ, BASİT VE HATASIZ ŞANZIMAN
     private void updateGearAndRpm() {
         if (mActiveProfile == null) return;
         float speed = mCurrentSpeedKmh;
@@ -1097,158 +1116,88 @@ public class EngineSoundManager {
 
         if (speed < 1.0f) {
             mCurrentGear = 0;
-            float targetIdleRpm = mIdleRpm + (throttle * (mMaxRpm - mIdleRpm));
-            float currentSmooth = (throttle > 0.05f) ? mActiveProfile.rpmOnSmooth : mActiveProfile.rpmOffSmooth;
-            mCurrentRpm = (mCurrentRpm * (1.0f - currentSmooth)) + (targetIdleRpm * currentSmooth);
+            float targetRpm = mIdleRpm + (throttle * (mMaxRpm - mIdleRpm));
+            mCurrentRpm = (mCurrentRpm * 0.8f) + (targetRpm * 0.2f);
             return;
         }
 
-        long shiftCooldown = Math.max(400L, mActiveProfile.shiftDurationMs);
-        if (currentTime - mLastShiftTime > shiftCooldown) {
-            int targetGear = mCurrentGear > 0 ? mCurrentGear : 1;
-            float rpmRange = mMaxRpm - mIdleRpm;
+        if (mCurrentGear == 0) mCurrentGear = 1;
 
-            // ========================================================
-            // YENİ VE KUSURSUZ ŞANZIMAN BEYNİ (TCU) EĞRİLERİ
-            // ========================================================
-
-            // 1. TEMEL VİTES BÜYÜTME EŞİĞİ (Gaza ve Moda göre logaritmik artış)
-            // ECO modunda (0.25) minimum eşik %26'dan, SPORT'ta %38'den başlar.
-            float minUpshiftFactor = 0.20f + (mDriveModeAggressiveness * 0.25f);
-
-            // Gazın etkisi: Az basarsan hemen fırlamaz, köklersen eşiği %96'ya iter.
-            float throttleFactor = (float) Math.pow(throttle, 0.7);
-            float shiftUpRpmThreshold = mIdleRpm + rpmRange * (minUpshiftFactor + throttleFactor * (0.96f - minUpshiftFactor));
-
-            // 2. TEMEL VİTES KÜÇÜLTME EŞİĞİ
-            float shiftDownRpmThreshold = mIdleRpm + rpmRange * (0.10f + (mDriveModeAggressiveness * 0.15f));
-
-            // 3. KICKDOWN (Dip Gaz Müdahalesi)
-            if (throttle > 0.75f) {
-                // Gazı köklediğinde alt vitese atması için düşürme eşiği sertçe yukarı çekilir
-                shiftDownRpmThreshold = mIdleRpm + rpmRange * (0.50f + (mDriveModeAggressiveness * 0.20f));
-            }
-
-            // 4. GAZ KAPALI (Süzülme / Motor Freni Ayrımı)
-            if (throttle <= 0.05f) {
-                if (mDriveModeAggressiveness > 0.60f) {
-                    // SPORT MOD: Şoför gazı bıraktıysa üst vitese atma, motor freni yapsın (%60 eşiği)
-                    shiftUpRpmThreshold = mIdleRpm + rpmRange * 0.60f;
-                } else {
-                    // ECO MOD: Şoför gazı bıraktıysa HEMEN ÜST VİTESE AT ve motoru sustur (%22 eşiği)
-                    shiftUpRpmThreshold = mIdleRpm + rpmRange * 0.22f;
-                }
-            }
-
-            // 5. SABİT HIZDA SAKİNLEŞME (Cruising)
-            if (throttle > 0.05f && throttle < 0.45f) {
-                if (mLowThrottleStartTime == 0) mLowThrottleStartTime = currentTime;
-                long cruiseTime = currentTime - mLowThrottleStartTime;
-                if (cruiseTime > 2000) {
-                    // 2 saniye boyunca gaza sabit basılıyorsa, araba güç istenmediğini anlar
-                    // Vites büyütme eşiğini %15 daha aşağı çekerek aracı sessizleştirir.
-                    float relax = Math.min(1.0f, (cruiseTime - 2000) / 3000f);
-                    shiftUpRpmThreshold -= (rpmRange * 0.15f * relax);
-                }
+        // ==========================================================
+        // KANUN 1: HIZ KORUMASI (TOLERANS EKLENDİ - Sırf 99.9'a düştü diye vites küçültmez)
+        // ==========================================================
+        while (mCurrentGear > 1) {
+            float currentMinSpeed = mActiveProfile.gearRanges[mCurrentGear - 1][0];
+            // Anında alt vitese atması için hızın sınırın 2 km/h altına inmesini bekler (Buffer)
+            if (speed < (currentMinSpeed - 2.0f)) {
+                mCurrentGear--;
+                mLastShiftTime = currentTime;
             } else {
-                mLowThrottleStartTime = 0;
+                break;
+            }
+        }
+
+        if (currentTime - mLastShiftTime > mActiveProfile.shiftDurationMs) {
+            float rpmRange = mMaxRpm - mIdleRpm;
+            float currentGearRpm = calculateMechanicalRpm(mCurrentGear, speed);
+
+            float upshiftThreshold;
+            float downshiftThreshold;
+
+            if (throttle <= 0.05f) {
+                // SESSİZLİK İÇİN EŞİKLER
+                upshiftThreshold = mIdleRpm + (rpmRange * 0.30f);
+                downshiftThreshold = mIdleRpm + (rpmRange * 0.10f);
+            } else {
+                // İVMELENME İÇİN EŞİKLER
+                upshiftThreshold = mIdleRpm + rpmRange * (0.60f + (throttle * 0.35f));
+                downshiftThreshold = mIdleRpm + rpmRange * 0.25f;
+                if (throttle > 0.8f) downshiftThreshold = mIdleRpm + rpmRange * 0.45f;
             }
 
-            // Güvenlik: Vites düşürürken devrin zıplayabileceği maksimum tavan (Motor patlamasın)
-            float maxDownshiftRpm = mIdleRpm + rpmRange * 0.85f;
+            // ==========================================================
+            // KANUN 2: VİTES BÜYÜTME (İLERİYİ GÖRME VE KARARSIZLIK ÇÖZÜMÜ)
+            // ==========================================================
+            if (currentGearRpm > upshiftThreshold && mCurrentGear < mActiveProfile.gearRanges.length) {
+                float nextMinSpeed = mActiveProfile.gearRanges[mCurrentGear][0];
+                float nextGearRpm = calculateMechanicalRpm(mCurrentGear + 1, speed);
 
-            shiftUpRpmThreshold = Math.max(mIdleRpm, Math.min(shiftUpRpmThreshold, mMaxRpm * 0.98f));
-
-            // Mekanik devir hesaplaması
-            float currentGearRpm = calculateMechanicalRpm(targetGear, speed);
-
-            // --- KARAR MEKANİZMASI ---
-            if (currentGearRpm > shiftUpRpmThreshold && targetGear < mActiveProfile.gearRanges.length) {
-                // İleriyi Görme: Vites büyütürsem devir çok ölüp beni geri alt vitese atar mı?
-                float nextGearRpm = calculateMechanicalRpm(targetGear + 1, speed);
-                if (nextGearRpm > shiftDownRpmThreshold + 200f) {
-                    targetGear++;
+                // 1. Hızımız üst vitesin bariyerini aştı mı?
+                // 2. Üst vitese atarsak devir "Düşürme Eşiğinin" altına inip bizi geri eski vitese atar mı?
+                // İki şart da sağlanıyorsa (Pinpon döngüsü yoksa) vitesi büyüt!
+                if (speed >= nextMinSpeed && nextGearRpm > (downshiftThreshold + 200f)) {
+                    mCurrentGear++;
+                    mLastShiftTime = currentTime;
                 }
             }
-            else if (currentGearRpm < shiftDownRpmThreshold && targetGear > 1) {
-                // Atlayarak Vites Düşürme
-                while (targetGear > 1) {
-                    float prevGearRpm = calculateMechanicalRpm(targetGear - 1, speed);
-                    // SADECE alt vitesin devri 85%'i (maxDownshiftRpm) aşmıyorsa düşür!
-                    if (prevGearRpm < maxDownshiftRpm) {
-                        targetGear--;
-                        currentGearRpm = prevGearRpm;
-                        if (currentGearRpm >= shiftDownRpmThreshold) {
-                            break;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            if (targetGear != mCurrentGear) {
-                if (targetGear < mCurrentGear && mEnableRevMatch) {
-                    float aggressivenessFactor = 0.10f + (mDriveModeAggressiveness * 0.15f);
-                    mRevMatchBoost = mMaxRpm * aggressivenessFactor;
-                } else {
-                    mRevMatchBoost = 0;
-                }
-                mCurrentGear = targetGear;
+            // ==========================================================
+            // KANUN 3: VİTES KÜÇÜLTME
+            // ==========================================================
+            else if (currentGearRpm < downshiftThreshold && mCurrentGear > 1) {
+                mCurrentGear--;
                 mLastShiftTime = currentTime;
             }
         }
 
+        // DEVRİ UYGULA
         if (mCurrentGear > 0) {
-            float rawRpm = calculateMechanicalRpm(mCurrentGear, speed);
-
-            mRevMatchBoost *= 0.90f;
-            if (mRevMatchBoost < 5f) mRevMatchBoost = 0;
-
-            float targetRpmFinal = rawRpm + mRevMatchBoost;
-
+            float targetRpm = calculateMechanicalRpm(mCurrentGear, speed);
             long timeSinceShift = currentTime - mLastShiftTime;
-            long shiftDur = mActiveProfile.shiftDurationMs;
 
-            if (timeSinceShift < shiftDur && mActiveProfile.wobbleMagnitude > 0) {
+            if (timeSinceShift < mActiveProfile.shiftDurationMs && mActiveProfile.wobbleMagnitude > 0) {
                 float timeSec = timeSinceShift / 1000f;
-                float durSec = shiftDur / 1000f;
+                float durSec = mActiveProfile.shiftDurationMs / 1000f;
                 float dampening = Math.max(0f, 1.0f - (timeSec / durSec));
-                float wobbleOffset = (float) Math.sin(timeSec * 15.0f * Math.PI * 2) * mActiveProfile.wobbleMagnitude * dampening;
-                targetRpmFinal += wobbleOffset;
+                targetRpm += (float) Math.sin(timeSec * 15.0f * Math.PI * 2) * mActiveProfile.wobbleMagnitude * dampening;
             }
 
-            float currentSmooth;
+            float smooth = (throttle > 0.05f) ? mActiveProfile.rpmOnSmooth : mActiveProfile.rpmOffSmooth;
+            if (timeSinceShift < mActiveProfile.shiftDurationMs) smooth = 0.3f;
 
-            if (mRevMatchBoost > 50f) {
-                currentSmooth = 0.25f;
-            }
-            else if (timeSinceShift < shiftDur) {
-                currentSmooth = 16f / (float) shiftDur;
-                currentSmooth = Math.max(0.002f, Math.min(0.2f, currentSmooth));
-            }
-            else {
-                currentSmooth = 0.8f;
-            }
-
-            mCurrentRpm = (mCurrentRpm * (1.0f - currentSmooth)) + (targetRpmFinal * currentSmooth);
+            mCurrentRpm = (mCurrentRpm * (1.0f - smooth)) + (targetRpm * smooth);
         }
 
         mCurrentRpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
-    }
-    private float calculateMechanicalRpm(int gear, float speed) {
-        if (gear < 1 || gear > mActiveProfile.gearRanges.length) return mIdleRpm;
-
-        float[] range = mActiveProfile.gearRanges[gear - 1];
-        float minSpeedInGear = range[0]; // Vitesin alt hızı (Listendeki sol değer)
-        float maxSpeedInGear = range[1]; // Vitesin üst hızı (Listendeki sağ değer)
-
-        // Hızın bu vites aralığındaki gerçek yüzdesini bul
-        // Eğer hız minSpeed'den düşükse (örneğin 15. viteste 89 kmh ile gidiyorsan) bu oran EKSİ (-) çıkar!
-        float speedRatio = (speed - minSpeedInGear) / (maxSpeedInGear - minSpeedInGear);
-
-        // Devri hesapla (Burada Math.max ile sınır KOYMUYORUZ ki devir eksiye düşsün ve şanzıman panikleyip vites düşürsün)
-        return mIdleRpm + (speedRatio * (mMaxRpm - mIdleRpm));
     }
     private void updateAudioMixer() {
         if (mSoundPool == null || (!mIsDualLayer && mCurrentSamples == null) || (mIsDualLayer && mCurrentSamplesOn == null)) return;
