@@ -1224,19 +1224,19 @@ public class MG4Hardware {
                 sConsProfileKm[i] += dKm;
                 sConsProfileKwh[i] += drivedKwh;
             }
-            for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
-                sConsProfileHours[i] += dtHours;
-            }
             sTripDistanceKm += dKm;
-            sTripHours += dtHours;
             sTripEnergyKwh += drivedKwh;
 
-            sLifetimeHours += dtHours;
             sLifetimeKwh += drivedKwh;
             sLifetimeKm += dKm;
 
-            //if (isVehicleReady()) {
-            //    if (sLastGear >= 2 && sLastGear <= 4) {
+            if (isVehicleReady()) {
+                sLifetimeHours += dtHours;
+                sTripHours += dtHours;
+                for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
+                    sConsProfileHours[i] += dtHours;
+                }
+                if (sLastGear >= 2 && sLastGear <= 4) {
 
                     if (!Float.isNaN(speedKmh)) {
                         sDriveGraphDistanceKm += dKm;
@@ -1244,8 +1244,8 @@ public class MG4Hardware {
                     if (!Float.isNaN(dcKw)) {
                         sDriveGraphEnergyKwh += drivedKwh;
                     }
-            //    }
-            //}
+                }
+            }
             if (isCharging()) {
                 if (!Float.isNaN(acKw) && acKw > 0f) {
                     sAcChargeEnergyKwh += acKw * dtHours;

@@ -226,12 +226,14 @@ public class MG4ControlService extends Service {
 
             long now = System.currentTimeMillis();
             if (now - mLastTelemetryBroadcastTime >= TELEMETRY_INTERVAL_MS) {
-                if (MG4Hardware.isSoundEnabled()) {
+                if (MG4Hardware.isSoundEnabled() && MG4Hardware.isVehicleReady()) {
                     EngineSoundManager.broadcastTelemetryIfNeeded(MG4ControlService.this);
                 } else {
                     float speed = MG4Hardware.getSpeedForEngine();
                     float dcKw = MG4Hardware.getDcKwGlobal();
-                    EngineSoundManager.broadcastTelemetryFromRaw(MG4ControlService.this, Float.isNaN(speed) ? 0f : speed, Float.isNaN(dcKw) ? 0f : dcKw);
+                    float dcKw_kadran = Float.isNaN(dcKw) ? 0f : (speed == 0 && dcKw < 0f ? 0f : dcKw);
+
+                    EngineSoundManager.broadcastTelemetryFromRaw(MG4ControlService.this, Float.isNaN(speed) ? 0f : speed, dcKw_kadran);
                 }
                 mLastTelemetryBroadcastTime = now;
             }
