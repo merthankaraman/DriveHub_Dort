@@ -100,6 +100,7 @@ public class EngineSoundManager {
     private int mStopSoundId = -1;
     private long mEngineStartTime = 0; // Marşın basıldığı anı tutar
     private long mAutoStartupDelayMs = 0; // Dosyadan otomatik okunan marş süresi
+    private long mLowThrottleStartTime = 0; // Şanzıman sakinleşme zamanlayıcısı
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public static class VehicleProfile {
@@ -304,14 +305,14 @@ public class EngineSoundManager {
         return new VehicleProfile("Lotus Exige 240 TRI", 800, 9000f, 1,
                 1,
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {4f, 50f},    // 1. Vites (800 RPM = 4 kmh, 9000 RPM = 50 kmh)
+                        {7f, 75f},    // 2. Vites (Vites atınca 6.300 RPM'de kalır)
+                        {9f, 100f},   // 3. Vites
+                        {12f, 130f},  // 4. Vites
+                        {14f, 160f},  // 5. Vites
+                        {17f, 190f},  // 6. Vites
+                        {20f, 220f},  // 7. Vites
+                        {22f, 250f}   // 8. Vites
                 },
                 0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 R.raw.elisec_startup,R.raw.igniton_stop,
@@ -1096,8 +1097,6 @@ public class EngineSoundManager {
 
         if (speed < 1.0f) {
             mCurrentGear = 0;
-            // ARAÇ DURURKEN BOŞTA GAZ VERME (N-Revving)
-            // Hız 0 olsa bile boş viteste gaza basınca devir yükselsin
             float targetIdleRpm = mIdleRpm + (throttle * (mMaxRpm - mIdleRpm));
             float currentSmooth = (throttle > 0.05f) ? mActiveProfile.rpmOnSmooth : mActiveProfile.rpmOffSmooth;
             mCurrentRpm = (mCurrentRpm * (1.0f - currentSmooth)) + (targetIdleRpm * currentSmooth);
@@ -1107,59 +1106,89 @@ public class EngineSoundManager {
         long shiftCooldown = Math.max(400L, mActiveProfile.shiftDurationMs);
         if (currentTime - mLastShiftTime > shiftCooldown) {
             int targetGear = mCurrentGear > 0 ? mCurrentGear : 1;
+            float rpmRange = mMaxRpm - mIdleRpm;
 
-            // 1. Vites Büyütme (Up Shift) - Eşikler daha gerçekçi ayarlandı
-            float modeBonus = mDriveModeAggressiveness * 0.20f;
-            float shiftUpRpmThreshold = mIdleRpm + (mMaxRpm - mIdleRpm) * Math.min(0.96f, (0.25f + modeBonus + (throttle * 0.60f)));
+            // ========================================================
+            // YENİ VE KUSURSUZ ŞANZIMAN BEYNİ (TCU) EĞRİLERİ
+            // ========================================================
 
-            // 2. Vites Küçültme (Down Shift) - Eşik ÇOK DÜŞÜRÜLDÜ ki araba hemen vites düşürmesin (Ping-Pong olmasın)
-            float shiftDownRpmThreshold = mIdleRpm + (mMaxRpm - mIdleRpm) * (0.05f + (mDriveModeAggressiveness * 0.15f));
+            // 1. TEMEL VİTES BÜYÜTME EŞİĞİ (Gaza ve Moda göre logaritmik artış)
+            // ECO modunda (0.25) minimum eşik %26'dan, SPORT'ta %38'den başlar.
+            float minUpshiftFactor = 0.20f + (mDriveModeAggressiveness * 0.25f);
 
-            // KICKDOWN: Dip gazda (%80 üstü) vites düşürme eşiğini artır
-            if (throttle > 0.8f) {
-                shiftDownRpmThreshold = mIdleRpm + (mMaxRpm - mIdleRpm) * 0.45f;
+            // Gazın etkisi: Az basarsan hemen fırlamaz, köklersen eşiği %96'ya iter.
+            float throttleFactor = (float) Math.pow(throttle, 0.7);
+            float shiftUpRpmThreshold = mIdleRpm + rpmRange * (minUpshiftFactor + throttleFactor * (0.96f - minUpshiftFactor));
+
+            // 2. TEMEL VİTES KÜÇÜLTME EŞİĞİ
+            float shiftDownRpmThreshold = mIdleRpm + rpmRange * (0.10f + (mDriveModeAggressiveness * 0.15f));
+
+            // 3. KICKDOWN (Dip Gaz Müdahalesi)
+            if (throttle > 0.75f) {
+                // Gazı köklediğinde alt vitese atması için düşürme eşiği sertçe yukarı çekilir
+                shiftDownRpmThreshold = mIdleRpm + rpmRange * (0.50f + (mDriveModeAggressiveness * 0.20f));
             }
 
-            // Mevcut vitesteki mekanik devrimiz nedir?
+            // 4. GAZ KAPALI (Süzülme / Motor Freni Ayrımı)
+            if (throttle <= 0.05f) {
+                if (mDriveModeAggressiveness > 0.60f) {
+                    // SPORT MOD: Şoför gazı bıraktıysa üst vitese atma, motor freni yapsın (%60 eşiği)
+                    shiftUpRpmThreshold = mIdleRpm + rpmRange * 0.60f;
+                } else {
+                    // ECO MOD: Şoför gazı bıraktıysa HEMEN ÜST VİTESE AT ve motoru sustur (%22 eşiği)
+                    shiftUpRpmThreshold = mIdleRpm + rpmRange * 0.22f;
+                }
+            }
+
+            // 5. SABİT HIZDA SAKİNLEŞME (Cruising)
+            if (throttle > 0.05f && throttle < 0.45f) {
+                if (mLowThrottleStartTime == 0) mLowThrottleStartTime = currentTime;
+                long cruiseTime = currentTime - mLowThrottleStartTime;
+                if (cruiseTime > 2000) {
+                    // 2 saniye boyunca gaza sabit basılıyorsa, araba güç istenmediğini anlar
+                    // Vites büyütme eşiğini %15 daha aşağı çekerek aracı sessizleştirir.
+                    float relax = Math.min(1.0f, (cruiseTime - 2000) / 3000f);
+                    shiftUpRpmThreshold -= (rpmRange * 0.15f * relax);
+                }
+            } else {
+                mLowThrottleStartTime = 0;
+            }
+
+            // Güvenlik: Vites düşürürken devrin zıplayabileceği maksimum tavan (Motor patlamasın)
+            float maxDownshiftRpm = mIdleRpm + rpmRange * 0.85f;
+
+            shiftUpRpmThreshold = Math.max(mIdleRpm, Math.min(shiftUpRpmThreshold, mMaxRpm * 0.98f));
+
+            // Mekanik devir hesaplaması
             float currentGearRpm = calculateMechanicalRpm(targetGear, speed);
 
-            // --- VİTES KARARLARI (GELECEĞİ GÖREN PING-PONG KORUMASI VE BLOCK-SHIFT) ---
+            // --- KARAR MEKANİZMASI ---
             if (currentGearRpm > shiftUpRpmThreshold && targetGear < mActiveProfile.gearRanges.length) {
-
-                // İLERİYİ GÖRME: Eğer 2. vitese geçersem devir beni hemen geri 1'e atacak kadar düşük mü olacak?
+                // İleriyi Görme: Vites büyütürsem devir çok ölüp beni geri alt vitese atar mı?
                 float nextGearRpm = calculateMechanicalRpm(targetGear + 1, speed);
-
-                // Eğer yeni vitesin devri, düşürme eşiğinden en az 250 RPM yüksekse (güvendeysek) vites büyüt!
-                if (nextGearRpm > shiftDownRpmThreshold + 250f) {
+                if (nextGearRpm > shiftDownRpmThreshold + 200f) {
                     targetGear++;
                 }
             }
             else if (currentGearRpm < shiftDownRpmThreshold && targetGear > 1) {
-                // BLOCK-SHIFT (Atlayarak Vites Küçültme): Hız aniden 170'ten 89'a düşerse...
-                // Şanzıman doğru vitesi bulana kadar aradaki tüm vitesleri saniyenin binde biri hızında atlar!
+                // Atlayarak Vites Düşürme
                 while (targetGear > 1) {
                     float prevGearRpm = calculateMechanicalRpm(targetGear - 1, speed);
-
-                    // Alt vites motoru patlatmayacaksa (Kesicinin altındaysa) o vitese atla
-                    if (prevGearRpm < mMaxRpm * 0.96f) {
+                    // SADECE alt vitesin devri 85%'i (maxDownshiftRpm) aşmıyorsa düşür!
+                    if (prevGearRpm < maxDownshiftRpm) {
                         targetGear--;
-                        currentGearRpm = prevGearRpm; // Hesaplamayı yeni vitese göre güncelle
-
-                        // Eğer indiğimiz bu yeni vitesin devri artık güç üretmek için yeterliyse döngüyü kır!
+                        currentGearRpm = prevGearRpm;
                         if (currentGearRpm >= shiftDownRpmThreshold) {
                             break;
                         }
                     } else {
-                        // Bir alt vites motoru patlatacaksa, mecburen bulunduğumuz viteste kalıp freni bekleyeceğiz.
                         break;
                     }
                 }
             }
 
-            // Eğer vites değiştiyse aksiyon al
             if (targetGear != mCurrentGear) {
                 if (targetGear < mCurrentGear && mEnableRevMatch) {
-                    // Vites düşürürken o meşhur Ara Gazı (Rev Match) ver
                     float aggressivenessFactor = 0.10f + (mDriveModeAggressiveness * 0.15f);
                     mRevMatchBoost = mMaxRpm * aggressivenessFactor;
                 } else {
@@ -1170,18 +1199,14 @@ public class EngineSoundManager {
             }
         }
 
-        // --- 2. HIZA MEKANİK OLARAK KİLİTLENMİŞ DEVİR HESAPLAMASI ---
         if (mCurrentGear > 0) {
-            // İŞTE ÇÖZÜM: Devir artık sadece HIZ'a ve VİTES'e bağlı! Gazla alakası kalmadı.
             float rawRpm = calculateMechanicalRpm(mCurrentGear, speed);
 
-            // Ara gazı etkisini yavaşça söndür
             mRevMatchBoost *= 0.90f;
             if (mRevMatchBoost < 5f) mRevMatchBoost = 0;
 
             float targetRpmFinal = rawRpm + mRevMatchBoost;
 
-            // --- VİTES SARSINTISI (WOBBLE) ARTIK PROFİLDEKİ SÜREYİ KULLANIYOR ---
             long timeSinceShift = currentTime - mLastShiftTime;
             long shiftDur = mActiveProfile.shiftDurationMs;
 
@@ -1209,12 +1234,8 @@ public class EngineSoundManager {
             mCurrentRpm = (mCurrentRpm * (1.0f - currentSmooth)) + (targetRpmFinal * currentSmooth);
         }
 
-        // Sınırların dışına çıkmasını engelle
         mCurrentRpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
     }
-
-    // YENİ YARDIMCI METOT (Bunu updateGearAndRpm'in hemen altına yapıştır)
-    // YENİ VE KUSURSUZ MEKANİK DEVİR HESAPLAYICI
     private float calculateMechanicalRpm(int gear, float speed) {
         if (gear < 1 || gear > mActiveProfile.gearRanges.length) return mIdleRpm;
 
