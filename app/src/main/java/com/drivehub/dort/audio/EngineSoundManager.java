@@ -232,7 +232,9 @@ public class EngineSoundManager {
             "Audi RS6 AVANT",
             "Audi RS6 AVANT TRI",
             "BMW M3 E92 V8",
-            "BMW M3 E92 V8 TRI"
+            "BMW M3 E92 V8 TRI",
+            "BMW F30 328i",
+            "BMW F30 328i TRI"
     };
 
     public static String[] getProfileLabels() { return PROFILE_LABELS; }
@@ -246,6 +248,7 @@ public class EngineSoundManager {
         else if ("McLaren P1".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1());
         else if ("Audi RS6 AVANT".equals(profile)) setVehicleProfile(PROFILE_AUDI_RS6_AVANT());
         else if ("BMW M3 E92 V8".equals(profile)) setVehicleProfile(PROFILE_BMW_M3_E92());
+        else if ("BMW F30 328i".equals(profile)) setVehicleProfile(PROFILE_BMW_328I());
         else if ("BMW M3 E92 V8 TRI".equals(profile)) setVehicleProfile(PROFILE_BMW_M3_E92_TRI());
         else if ("Audi RS6 AVANT TRI".equals(profile)) setVehicleProfile(PROFILE_AUDI_RS6_AVANT_TRI());
         else if ("McLaren P1 TRI".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1_TRI());
@@ -254,6 +257,7 @@ public class EngineSoundManager {
         else if ("Lotus Exige 240 TRI".equals(profile)) setVehicleProfile(PROFILE_LOTUS_EXIGE_TRI());
         else if ("Lexus LFA TRI".equals(profile)) setVehicleProfile(PROFILE_LEXUS_LFA_TRI());
         else if ("Ferrari F2004 TRI".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004_TRI());
+        else if ("BMW F30 328i TRI".equals(profile)) setVehicleProfile(PROFILE_BMW_328I_TRI());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
 
@@ -442,7 +446,7 @@ public class EngineSoundManager {
                 },
                 0.25f, 0.15f, 50, 380f,
 
-                R.raw.modgpv10_startup, R.raw.igniton_stop,
+                0, R.raw.igniton_stop,
 
                 // ON Katmanı
                 new int[][]{
@@ -485,7 +489,7 @@ public class EngineSoundManager {
                 },
                 0.25f, 0.15f, 50, 380f,
 
-                R.raw.modgpv10_startup, R.raw.igniton_stop,
+                0, R.raw.igniton_stop,
                 // ON Katmanı
                 new int[][]{
                         {R.raw.modgpv10_onidle, 4000, 2000, 6500},
@@ -526,7 +530,7 @@ public class EngineSoundManager {
                         {117f, 180f}
                 },
                 0.25f, 0.15f, 50, 300f,
-                R.raw.f2004_startup, R.raw.igniton_stop,
+                0, R.raw.igniton_stop,
                 // ON katmanı
                 new int[][]{
                         {R.raw.f2004_in_idle,                   4200},
@@ -566,7 +570,7 @@ public class EngineSoundManager {
                         {117f, 180f}
                 },
                 0.25f, 0.15f, 50, 300f,
-                R.raw.f2004_startup, R.raw.igniton_stop,
+                0, R.raw.igniton_stop,
 
                 // ON katmanı
                 new int[][]{
@@ -683,7 +687,7 @@ public class EngineSoundManager {
                 // ON Katmanı
                 new int[][]{
                         {R.raw.rb26_4_ex_idle, 1000},
-                        {R.raw.rb26_in_2_onverylow, 1500},
+                        {R.raw.rb26_2_in_on_verylow2, 1500},
                         {R.raw.rb26_2_in_on_verylow, 3500},
                         {R.raw.rb26_2_in_on_low3, 5000},
                         {R.raw.rb26_2_in_on_mid3, 6500},
@@ -714,17 +718,15 @@ public class EngineSoundManager {
                 },
                 0.18f, 0.08f,110,250f,
                 0,0,
-                // ON Katmanı
                 new int[][]{
                         {R.raw.rb26_4_ex_idle, 1000, 600, 1500},
-                        {R.raw.rb26_in_2_onverylow, 1500, 1000, 3500},
+                        {R.raw.rb26_2_in_on_verylow2, 1500, 1000, 3500},
                         {R.raw.rb26_2_in_on_verylow, 3500, 1500, 5000},
                         {R.raw.rb26_2_in_on_low3, 5000, 3500, 6500},
                         {R.raw.rb26_2_in_on_mid3, 6500, 5000, 7500},
                         {R.raw.rb26_in_on_high2, 7500, 6500, 8200},
                         {R.raw.rb26_in_on_veryhigh, 8200, 7500, 8500}
                 },
-// OFF Katmanı
                 new int[][]{
                         {R.raw.rb26_4_ex_idle, 1000, 600, 1500},
                         {R.raw.rb26_ex_5_offverylow, 1500, 1000, 4000},
@@ -826,8 +828,7 @@ public class EngineSoundManager {
                         {140f, 200f}
                 },
                 0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
-                R.raw.m3e46_startup, 0, // Startup/Stop seslerini genel listeden seçebilirsin
-// ON Katmanı
+                R.raw.m3e46_startup, 0,
                 new int[][]{
                         {R.raw.m3e92_idle, 800, 500, 3000},
                         {R.raw.m3e92_on_3000, 3000, 800, 4000},
@@ -836,7 +837,6 @@ public class EngineSoundManager {
                         {R.raw.m3e92_on_8500, 8400, 6000, 8600},
                         {R.raw.m3e92_on_8500, 8600, 8400, 9000} // Kesici destek
                 },
-// OFF Katmanı
                 new int[][]{
                         {R.raw.m3e92_idle, 800, 500, 2800},
                         {R.raw.m3e92_off_2800, 2800, 800, 6000},
@@ -861,8 +861,6 @@ public class EngineSoundManager {
                 },
                 0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
                 R.raw.m3e46_startup, 0,
-
-                // ON Katmanı (İç Mekan - m3e92_on_...)
                 new int[][]{
                         {R.raw.m3e92_idle, 800},
                         {R.raw.m3e92_on_3000, 3000},
@@ -872,13 +870,91 @@ public class EngineSoundManager {
                         {R.raw.m3e92_on_8500, 8400},
                         {R.raw.m3e92_on_8500, 8500}
                 },
-
-                // OFF Katmanı (İç Mekan - m3e92_off_...)
                 new int[][]{
                         {R.raw.m3e92_idle, 800},
                         {R.raw.m3e92_off_2800, 2800},
                         {R.raw.m3e92_off_6000, 6000},
                         {R.raw.m3e92_off_8500, 8400}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_BMW_328I() {
+        return new VehicleProfile("BMW F30 328i",
+                800, 7200f,
+                0.6f, 2,
+                new float[][]{
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
+                },
+                0.20f, 0.10f, 150, 150f,
+                0, 0,
+
+                // ===========================================
+                // ON KATMANI (Gaza basarken okunacak EngA sesleri)
+                // ===========================================
+                new int[][]{
+                        {R.raw.f30_enga_1290, 1290},
+                        {R.raw.f30_enga_1980, 1980},
+                        {R.raw.f30_enga_2661, 2661},
+                        {R.raw.f30_enga_3951, 3951},
+                        {R.raw.f30_enga_5031, 5031},
+                        {R.raw.f30_enga_6141, 6141},
+                        {R.raw.f30_enga_7200, 7200}
+                },
+
+                // ===========================================
+                // OFF KATMANI (Gazı bırakınca okunacak EngB motor freni sesleri)
+                // ===========================================
+                new int[][]{
+                        {R.raw.f30_engb_1290, 1290},
+                        {R.raw.f30_engb_1980, 1980},
+                        {R.raw.f30_engb_2661, 2661},
+                        {R.raw.f30_engb_3951, 3951},
+                        {R.raw.f30_engb_5031, 5031},
+                        {R.raw.f30_engb_6141, 6141},
+                        {R.raw.f30_engb_7200, 7200}
+                }
+        );
+    }
+    public static VehicleProfile PROFILE_BMW_328I_TRI() {
+        return new VehicleProfile("BMW F30 328i TRI",
+                800, 7200f,
+                0.6f, 2,
+                new float[][]{
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
+                },
+                0.20f, 0.10f, 150, 150f,
+                0, 0,
+                new int[][]{
+                        {R.raw.f30_enga_1290, 1290, 0, 1750},
+                        {R.raw.f30_enga_1980, 1980, 1550, 2450},
+                        {R.raw.f30_enga_2661, 2661, 2250, 3400},
+                        {R.raw.f30_enga_3951, 3951, 3200, 4600},
+                        {R.raw.f30_enga_5031, 5031, 4400, 5700},
+                        {R.raw.f30_enga_6141, 6141, 5500, 6800},
+                        {R.raw.f30_enga_7200, 7200, 6600, 8000}
+                },
+                new int[][]{
+                        {R.raw.f30_engb_1290, 1290, 0, 1750},
+                        {R.raw.f30_engb_1980, 1980, 1550, 2450},
+                        {R.raw.f30_engb_2661, 2661, 2250, 3400},
+                        {R.raw.f30_engb_3951, 3951, 3200, 4600},
+                        {R.raw.f30_engb_5031, 5031, 4400, 5700},
+                        {R.raw.f30_engb_6141, 6141, 5500, 6800},
+                        {R.raw.f30_engb_7200, 7200, 6600, 8000}
                 }
         );
     }
@@ -1429,12 +1505,26 @@ public class EngineSoundManager {
             float rawWeight = 0f;
 
             if (s.hasWindow()) {
-                // FMOD tarzı üçgen pencere: minRpm–baseRpm–maxRpm
-                if (rpm > s.minRpm && rpm < s.maxRpm) {
-                    if (rpm <= s.baseRpm) {
-                        rawWeight = (rpm - s.minRpm) / (float) (s.baseRpm - s.minRpm);
-                    } else {
-                        rawWeight = (s.maxRpm - rpm) / (float) (s.maxRpm - s.baseRpm);
+                // Sesin kendi tanımlı penceresindeysek
+                if (rpm >= s.minRpm && rpm <= s.maxRpm) {
+                    rawWeight = 1.0f; // Varsayılan olarak tam güç
+
+                    // 1. FADE IN: Önceki sesin bitişiyle (maxRpm) senin başlangıcın (minRpm) arası
+                    if (i > 0) {
+                        EngineSample prev = layer[i - 1];
+                        if (rpm < prev.maxRpm) {
+                            // Önceki ses hala çalıyor, o bitene kadar biz sesimizi açıyoruz
+                            rawWeight = (rpm - s.minRpm) / (float)(prev.maxRpm - s.minRpm);
+                        }
+                    }
+
+                    // 2. FADE OUT: Sonraki sesin başlangıcı (minRpm) ile senin bitişin (maxRpm) arası
+                    if (i < layer.length - 1) {
+                        EngineSample next = layer[i + 1];
+                        if (rpm > next.minRpm) {
+                            // Sonraki ses başladı, o tam güce çıkana kadar biz sesimizi kısıyoruz
+                            rawWeight = (s.maxRpm - rpm) / (float)(s.maxRpm - next.minRpm);
+                        }
                     }
                 }
             } else {
@@ -1460,21 +1550,18 @@ public class EngineSoundManager {
                 rawWeight = (s == lower) ? (1f - blend) : ((s == upper) ? blend : 0f);
             }
 
-            // --- NORMALİZASYON (invSum) KALDIRILDI ---
-            float shapedVol = Math.max(0f, Math.min(1f, rawWeight));
+            // FMOD "Constant Power" (Sabit Güç) Geçişi:
+            // Seslerin kesiştiği yerde toplam gücün düşmemesi için karekök alıyoruz.
+            float shapedVol = (float) Math.sqrt(Math.max(0f, Math.min(1f, rawWeight)));
 
-            if (i == 0) shapedVol *= mCurrentIdleVolumeScale;
+            if (i == 0 && rpm < s.baseRpm) shapedVol *= mCurrentIdleVolumeScale;
 
-            // weightVol zaten throttle ve masterVol değerlerini taşıyor
             float finalVolume = shapedVol * weightVol;
-
             float pitch = rpm / s.baseRpm;
 
             if (isOnLayer) pitch *= (0.98f + (mSimulatedThrottle * 0.04f));
-
             pitch = Math.max(0.6f, Math.min(1.8f, pitch));
 
-            // Sadece araç dururken ve hiç gaz verilmiyorken kullanıcı pitch (frekans) ayarını uygula
             if (i == 0 && mCurrentSpeedKmh < 1.0f && mSimulatedThrottle < 0.05f) {
                 pitch *= mIdlePitch;
             }
