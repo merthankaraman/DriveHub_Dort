@@ -84,7 +84,10 @@ public class MG4ControlService extends Service {
     // Vol↓+Ana ekran combo: ikisi bırakılınca motor sesi aç/kapa (müzik toggle gibi)
     private boolean mAnaEkranPressed = false;
     private boolean mVolDownAnaEkranComboPending = false;
-
+    // Yeni sabit:
+    private static final long SHORTCUT_COMBO_TIMEOUT_MS = 1500;
+    private long mVolDownAnaEkranComboStartMs = 0L;
+    private long mVolComboStartMs = 0L;
     // Tek pedal atama (Regen panelinden ayarlanır)
     private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
     private static final String PREF_ONE_PEDAL_PRESS_TYPE = "one_pedal_press_type";
@@ -982,12 +985,6 @@ public class MG4ControlService extends Service {
         }
     }
 
-    // findNextStep ve cycleRegenInternal — regen döngüsü aracın kendi özelliğine bırakıldı
-    // Gerekirse yorum kaldırılabilir
-    //
-    // private int findNextStep(int currentValue) { ... }
-    // private void cycleRegenInternal() { ... }
-
     // -------------------------------------------------------------------------
     // Volume tuşları — iki tuşa dokunulduğunda "toggle bekliyor", ikisi de bırakılınca komut
     // -------------------------------------------------------------------------
@@ -998,16 +995,32 @@ public class MG4ControlService extends Service {
         } else if (keyCode == KEYCODE_VOLUME_DOWN) {
             mVolDownPressed = isDown;
         }
+
+        long now = System.currentTimeMillis();
+
         if (isDown) {
+            // Vol↑+Vol↓ (müzik toggle) — başlangıç zamanını kaydet
             if (mVolUpPressed && mVolDownPressed) {
                 mVolComboPending = true;
+                mVolComboStartMs = now;
                 if (MG4Hardware.isLogEnabled()) Log.d(TAG, "Vol↑+Vol↓ ikisi basılı → toggle bekliyor");
             }
+            // Vol↓+Ana ekran (motor sesi toggle) — sadece bu combo'ya timeout uygulanacak
             if (mVolDownPressed && mAnaEkranPressed) {
                 mVolDownAnaEkranComboPending = true;
+                mVolDownAnaEkranComboStartMs = now;
                 if (MG4Hardware.isLogEnabled()) Log.d(TAG, "Vol↓+Ana ekran ikisi basılı → motor sesi toggle bekliyor");
             }
         } else {
+            // Vol↑+Vol↓ combo'su için süre aşımı: çok geç basılan ikinci tuşla müzik toggle etme
+            boolean volComboTimedOut = (mVolComboPending
+                    && (now - mVolComboStartMs > SHORTCUT_COMBO_TIMEOUT_MS));
+            if (volComboTimedOut) {
+                if (MG4Hardware.isLogEnabled()) Log.d(TAG, "Vol↑+Vol↓ combo süresi aşıldı, temizlendi");
+                mVolComboPending = false;
+            }
+
+            // Müzik combo: sadece iki tuş aynı anda bırakıldığında ve süre aşılmamışsa tetiklenir
             if (!mVolUpPressed && !mVolDownPressed && mVolComboPending) {
                 mVolComboPending = false;
                 if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Vol↑+Vol↓ ikisi bırakıldı → müzik toggle");
@@ -1019,6 +1032,15 @@ public class MG4ControlService extends Service {
                     Log.i(TAG, "MEDIA combo devre dışı (PREF_SHORTCUT_MEDIA_COMBO_ENABLED=false)");
                 }
             }
+
+            // Vol↓+HOME combo'su için süre aşımı: çok geç basılan ikinci tuşla motor sesini kapatma
+            boolean evComboTimedOut = (mVolDownAnaEkranComboPending
+                    && (now - mVolDownAnaEkranComboStartMs > SHORTCUT_COMBO_TIMEOUT_MS));
+            if (evComboTimedOut) {
+                if (MG4Hardware.isLogEnabled()) Log.d(TAG, "Vol↓+Ana ekran combo süresi aşıldı, temizlendi");
+                mVolDownAnaEkranComboPending = false;
+            }
+
             if (!mVolDownPressed && !mAnaEkranPressed && mVolDownAnaEkranComboPending) {
                 mVolDownAnaEkranComboPending = false;
                 if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Vol↓+Ana ekran ikisi bırakıldı → motor sesi toggle");
@@ -1036,12 +1058,22 @@ public class MG4ControlService extends Service {
     /** Ana ekran tuşu (HOME) — Vol↓ ile birlikte basılıp bırakılınca motor sesi aç/kapa. */
     private void onAnaEkranKey(boolean isDown) {
         mAnaEkranPressed = isDown;
+        long now = System.currentTimeMillis();
+
         if (mAnaEkranPressed) {
             if (mVolDownPressed) {
                 mVolDownAnaEkranComboPending = true;
+                mVolDownAnaEkranComboStartMs = now;
                 if (MG4Hardware.isLogEnabled()) Log.d(TAG, "Vol↓+Ana ekran ikisi basılı → motor sesi toggle bekliyor");
             }
         } else {
+            boolean evComboTimedOut = (mVolDownAnaEkranComboPending
+                    && (now - mVolDownAnaEkranComboStartMs > SHORTCUT_COMBO_TIMEOUT_MS));
+            if (evComboTimedOut) {
+                if (MG4Hardware.isLogEnabled()) Log.d(TAG, "Vol↓+Ana ekran combo süresi aşıldı, temizlendi (HOME bırakılırken)");
+                mVolDownAnaEkranComboPending = false;
+            }
+
             if (!mVolDownPressed && mVolDownAnaEkranComboPending) {
                 mVolDownAnaEkranComboPending = false;
                 if (MG4Hardware.isLogEnabled()) Log.i(TAG, "Vol↓+Ana ekran ikisi bırakıldı → motor sesi toggle");
