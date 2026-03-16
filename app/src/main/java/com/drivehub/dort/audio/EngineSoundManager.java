@@ -424,21 +424,22 @@ public class EngineSoundManager {
                 20050f,
                 0.6f,
                 0,
+                // GERÇEKÇİ YAKIN ORANLI F1 ŞANZIMANI (Close-Ratio)
+                // Devir asla çakılmaz, üst viteslerde 15-17k bandında asılı kalır.
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f, 45f},
+                        {12f, 72f},
+                        {33f, 93f},
+                        {54f, 114f},
+                        {75f, 135f},
+                        {96f, 156f},
+                        {117f, 180f}
                 },
-                0.25f, 0.15f,80,380f,
+                0.25f, 0.15f, 50, 380f,
 
                 R.raw.modgpv10_startup, R.raw.igniton_stop,
 
-                // ON Katmanı (İnanılmaz Yüksek Devir Çığlıkları)
+                // ON Katmanı
                 new int[][]{
                         {R.raw.modgpv10_onidle, 4000},
                         {R.raw.modgpv10_onverylow, 6500},
@@ -449,7 +450,7 @@ public class EngineSoundManager {
                         {R.raw.modgpv10_onhigh, 18000},
                         {R.raw.modgpv10_onhigh, 20050}
                 },
-                // OFF Katmanı (Gaz Çekildiğindeki Yırtıcı V10 Kompresyonu)
+                // OFF Katmanı
                 new int[][]{
                         {R.raw.modgpv10_idle, 4000},
                         {R.raw.modgpv10_offidle_auto_6000, 6000},
@@ -461,6 +462,7 @@ public class EngineSoundManager {
                 }
         );
     }
+
     public static VehicleProfile PROFILE_F1_V10_TRI() {
         return new VehicleProfile("Modern F1 V10 TRI",
                 4000f,
@@ -468,19 +470,18 @@ public class EngineSoundManager {
                 0.6f,
                 0,
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f, 45f},
+                        {12f, 72f},
+                        {33f, 93f},
+                        {54f, 114f},
+                        {75f, 135f},
+                        {96f, 156f},
+                        {117f, 180f}
                 },
-                0.25f, 0.15f,80,380f,
+                0.25f, 0.15f, 50, 380f,
 
                 R.raw.modgpv10_startup, R.raw.igniton_stop,
-// ON Katmanı
+                // ON Katmanı
                 new int[][]{
                         {R.raw.modgpv10_onidle, 4000, 2000, 6500},
                         {R.raw.modgpv10_onverylow, 6500, 4000, 9000},
@@ -491,7 +492,7 @@ public class EngineSoundManager {
                         {R.raw.modgpv10_onhigh, 18000, 14000, 20050},
                         {R.raw.modgpv10_onhigh, 20050, 18000, 21000}
                 },
-// OFF Katmanı
+                // OFF Katmanı
                 new int[][]{
                         {R.raw.modgpv10_idle, 4000, 2000, 6000},
                         {R.raw.modgpv10_offidle_auto_6000, 6000, 4000, 7000},
@@ -503,86 +504,85 @@ public class EngineSoundManager {
                 }
         );
     }
+
     public static VehicleProfile PROFILE_FERRARI_F2004() {
         return new VehicleProfile("Ferrari F2004",
-                4200f,   // Tahmini rölanti devri
-                19000f,  // Tahmini kesici
+                4200f,
+                19000f,
                 0.6f,
                 0,
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f, 45f},
+                        {12f, 72f},
+                        {33f, 93f},
+                        {54f, 114f},
+                        {75f, 135f},
+                        {96f, 156f},
+                        {117f, 180f}
                 },
-                0.25f, 0.15f, 80, 300f,
+                0.25f, 0.15f, 50, 300f,
                 R.raw.f2004_startup, R.raw.igniton_stop,
-                // ON katmanı (kokpit içi / iç mekan yükte sesler)
-                // Format: {resId, baseRpm, minRpm, maxRpm}
+                // ON katmanı
                 new int[][]{
-                        {R.raw.f2004_in_idle,                   4200},   // idle, 3–5.2k
-                        {R.raw.f2004_in_verylow_2,              5500},   // 4.2–6.5k (idle ile overlap)
-                        {R.raw.f2004_in_verylow,                6000},   // 5.5–7.8k
-                        {R.raw.f2004_in_on_mid,                 9000},   // 7–9.2k
-                        {R.raw.f2004_in_on_low,                 11500},   // 8.7–11k
-                        {R.raw.f2004_in_on_mid2,                14000},   // 10.5–13.8k
-                        {R.raw.f2004_in_on_high_mix,            16000},   // 13.5–17.2k
-                        {R.raw.f2004_in_on_veryhigh_mix,        18500} // 16.8–19.5k
+                        {R.raw.f2004_in_idle,                   4200},
+                        {R.raw.f2004_in_verylow_2,              5500},
+                        {R.raw.f2004_in_verylow,                6000},
+                        {R.raw.f2004_in_on_mid,                 9000},
+                        {R.raw.f2004_in_on_low,                 11500},
+                        {R.raw.f2004_in_on_mid2,                14000},
+                        {R.raw.f2004_in_on_high_mix,            16000},
+                        {R.raw.f2004_in_on_veryhigh_mix,        18500}
                 },
-                // OFF katmanı (kokpit içi gaz kesme / kompresyon)
+                // OFF katmanı
                 new int[][]{
-                        {R.raw.f2004_in_idle,                   4200},   // coast düşük devir kompresyon
-                        {R.raw.f2004_in_off_low,                6000},   // 4.8–7.2k
-                        {R.raw.f2004_in_offmid_pitchare,        8042},   // 7.2–10.2k (8042 merkez)
-                        {R.raw.f2004_in_off_high,               12000},   // 9.8–14.5k
-                        {R.raw.f2004_in_off_midhigh_mix,        17000},  // 14–18.2k
-                        {R.raw.f2004_in_off_midhigh_mix,        19000}   // 17.8–19.5k
+                        {R.raw.f2004_in_idle,                   4200},
+                        {R.raw.f2004_in_off_low,                6000},
+                        {R.raw.f2004_in_offmid_pitchare,        8042},
+                        {R.raw.f2004_in_off_high,               12000},
+                        {R.raw.f2004_in_off_midhigh_mix,        17000},
+                        {R.raw.f2004_in_off_midhigh_mix,        19000}
                 }
         );
     }
+
     public static VehicleProfile PROFILE_FERRARI_F2004_TRI() {
         return new VehicleProfile("Ferrari F2004 TRI",
-                4200f,   // Rölanti devri
-                19000f,  // Kesici
+                4200f,
+                19000f,
                 0.6f,
                 0,
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f, 45f},
+                        {12f, 72f},
+                        {33f, 93f},
+                        {54f, 114f},
+                        {75f, 135f},
+                        {96f, 156f},
+                        {117f, 180f}
                 },
-                0.25f, 0.15f, 80, 300f,
+                0.25f, 0.15f, 50, 300f,
                 R.raw.f2004_startup, R.raw.igniton_stop,
 
-                // ON katmanı (Üçgen Pencere FMOD Formatı)
+                // ON katmanı
                 new int[][]{
                         {R.raw.f2004_in_idle,            4200, 2000, 5500},
                         {R.raw.f2004_in_verylow_2,       5500, 4200, 7000},
-                        {R.raw.f2004_in_verylow,         7000, 5500, 9500},  // 6000'deki yığılma 7000'e yayıldı
-                        {R.raw.f2004_in_on_low,          9500, 7000, 11500}, // Mantık Düzeltildi (Low)
-                        {R.raw.f2004_in_on_mid,         11500, 9500, 14000}, // Mantık Düzeltildi (Mid)
+                        {R.raw.f2004_in_verylow,         7000, 5500, 9500},
+                        {R.raw.f2004_in_on_low,          9500, 7000, 11500},
+                        {R.raw.f2004_in_on_mid,         11500, 9500, 14000},
                         {R.raw.f2004_in_on_mid2,        14000, 11500, 16000},
                         {R.raw.f2004_in_on_high_mix,    16000, 14000, 18500},
-                        {R.raw.f2004_in_on_veryhigh_mix,18500, 16000, 19500} // Kesiciye giden zirve
+                        {R.raw.f2004_in_on_veryhigh_mix,18500, 16000, 19500}
                 },
 
-                // OFF katmanı (Üçgen Pencere FMOD Formatı)
+                // OFF katmanı
                 new int[][]{
                         {R.raw.f2004_in_idle,            4200, 2000, 6000},
                         {R.raw.f2004_in_off_low,         6000, 4200, 8042},
                         {R.raw.f2004_in_offmid_pitchare, 8042, 6000, 12000},
-                        {R.raw.f2004_in_off_midhigh_mix,12000, 8042, 17000}, // MidHigh araya alındı
-                        {R.raw.f2004_in_off_high,       17000, 12000, 19000},// High sona alındı
-                        {R.raw.f2004_in_off_high,       19000, 17000, 20000} // Kesici destek sündürmesi
+                        {R.raw.f2004_in_off_midhigh_mix,12000, 8042, 17000},
+                        {R.raw.f2004_in_off_high,       17000, 12000, 19000},
+                        {R.raw.f2004_in_off_high,       19000, 17000, 20000}
                 }
         );
     }
