@@ -752,7 +752,6 @@ public class EngineSoundManager {
                 },
                 0.15f, 0.08f, 180, 450f,
                 R.raw.rs6_startup, R.raw.igniton_stop,
-// ON Katmanı
                 new int[][]{
                         {R.raw.rs6_4_in_idle_rpm937, 800, 500, 1864},
                         {R.raw.rs6_in_1_on_rpm1864, 1864, 800, 2800},
@@ -764,7 +763,6 @@ public class EngineSoundManager {
                         {R.raw.rs6_in_1_on_rpm5816, 5816, 5608, 7400},
                         {R.raw.rs6_in_1_on_rpm5816, 7400, 5816, 7600}
                 },
-// OFF Katmanı
                 new int[][]{
                         {R.raw.rs6_4_in_idle_rpm937, 800, 500, 2882},
                         {R.raw.rs6_in_1_off_rpm2882, 2882, 800, 4075},
@@ -790,8 +788,6 @@ public class EngineSoundManager {
                 },
                 0.15f, 0.08f, 180, 450f,
                 R.raw.rs6_startup, R.raw.igniton_stop,
-
-                // ON Katmanı (İç Mekan - Rs6_in_1_on)
                 new int[][]{
                         {R.raw.rs6_4_in_idle_rpm937, 800},
                         {R.raw.rs6_in_1_on_rpm1864, 1864},
@@ -894,10 +890,6 @@ public class EngineSoundManager {
                 },
                 0.20f, 0.10f, 150, 150f,
                 0, 0,
-
-                // ===========================================
-                // ON KATMANI (Gaza basarken okunacak EngA sesleri)
-                // ===========================================
                 new int[][]{
                         {R.raw.f30_enga_1290, 1290},
                         {R.raw.f30_enga_1980, 1980},
@@ -907,10 +899,6 @@ public class EngineSoundManager {
                         {R.raw.f30_enga_6141, 6141},
                         {R.raw.f30_enga_7200, 7200}
                 },
-
-                // ===========================================
-                // OFF KATMANI (Gazı bırakınca okunacak EngB motor freni sesleri)
-                // ===========================================
                 new int[][]{
                         {R.raw.f30_engb_1290, 1290},
                         {R.raw.f30_engb_1980, 1980},
@@ -939,7 +927,7 @@ public class EngineSoundManager {
                 0.20f, 0.10f, 150, 150f,
                 0, 0,
                 new int[][]{
-                        {R.raw.f30_enga_1290, 1290, 0, 1750},
+                        {R.raw.f30_enga_1290, 1290, 700, 1750},
                         {R.raw.f30_enga_1980, 1980, 1550, 2450},
                         {R.raw.f30_enga_2661, 2661, 2250, 3400},
                         {R.raw.f30_enga_3951, 3951, 3200, 4600},
@@ -948,7 +936,7 @@ public class EngineSoundManager {
                         {R.raw.f30_enga_7200, 7200, 6600, 8000}
                 },
                 new int[][]{
-                        {R.raw.f30_engb_1290, 1290, 0, 1750},
+                        {R.raw.f30_engb_1290, 1290, 700, 1750},
                         {R.raw.f30_engb_1980, 1980, 1550, 2450},
                         {R.raw.f30_engb_2661, 2661, 2250, 3400},
                         {R.raw.f30_engb_3951, 3951, 3200, 4600},

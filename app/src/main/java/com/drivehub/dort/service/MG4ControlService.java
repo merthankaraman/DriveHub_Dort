@@ -158,37 +158,6 @@ public class MG4ControlService extends Service {
 
     // Yapay motor sesi (sanal ses) – servis tarafında da yönet
     private EngineSoundManager mEngineSound;
-    private final Handler mSoundHandler = new Handler(Looper.getMainLooper());
-    private final Runnable mSoundRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (mEngineSound == null) {
-                mSoundHandler.postDelayed(this, 1000);
-                return;
-            }
-
-            // Hız tek kaynak: sim açıksa sim, değilse hattan tek okuma (getSpeedForEngine)
-            float speed = MG4Hardware.getSpeedForEngine();
-            boolean ready = MG4Hardware.isVehicleReady() || MG4Hardware.isSimSpeedActive();
-            float dcPowerKw = MG4Hardware.getDcKwGlobal();
-
-            boolean soundEnabled = MG4Hardware.isSoundEnabled();
-
-            if (soundEnabled && ready) {
-                if (!mEngineSound.isPlaying()) {
-                    mEngineSound.start();
-                }
-                mEngineSound.onSpeedChanged(speed, dcPowerKw);
-            } else {
-                if (mEngineSound.isPlaying()) {
-                    mEngineSound.stop();
-                }
-            }
-
-            // ~10 Hz güncelle (MainActivity ile uyumlu)
-            mSoundHandler.postDelayed(this, 100);
-        }
-    };
 
     /** Şarj bittiğinde oturumu hafızaya kaydet; uygulama kapalı veya başka ekrandayken de çalışır. */
     private static final long CHARGING_CHECK_INTERVAL_MS = 10_000L;
@@ -207,6 +176,8 @@ public class MG4ControlService extends Service {
 
     /** 100 ms'lik ana görev periyodu (enerji, mesafe, hazır/şarj durumu vb.). */
     private static final int MAIN_100MS_TASK_INTERVAL_MS = 10;
+    private static final int SOUND_TASK_MS = 30;
+    private static final long TELEMETRY_INTERVAL_MS = 30L;
     /** Hayat boyu km/kWh'ı bu kadar integrasyon sonrası bir kez hafızaya yaz (≈30 sn). */
     private static final int LIFETIME_PERSIST_MS = 30000;
     private final Handler mConsumptionHandler = new Handler(Looper.getMainLooper());
@@ -214,10 +185,7 @@ public class MG4ControlService extends Service {
     private static volatile boolean sDriveSessionActive = false;
     private static volatile long    sDriveSessionEndWallMs = 0L;
     private long mLastConsumptionLoop = 0;
-
-    // Telemetri yayını için hafif throttle (aşırı sık broadcast olmasın)
     private long mLastTelemetryBroadcastTime = 0L;
-    private static final long TELEMETRY_INTERVAL_MS = 30L;
 
     private final Runnable mConsumptionIntegrationRunnable = new Runnable() {
         @Override
@@ -244,6 +212,35 @@ public class MG4ControlService extends Service {
             }
             updateDriveSessionFromReady();
             mConsumptionHandler.postDelayed(this, MAIN_100MS_TASK_INTERVAL_MS);
+        }
+    };
+    private final Handler mSoundHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mSoundRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mEngineSound == null) {
+                mSoundHandler.postDelayed(this, 1000);
+                return;
+            }
+
+            // Hız tek kaynak: sim açıksa sim, değilse hattan tek okuma (getSpeedForEngine)
+            float speed = MG4Hardware.getSpeedForEngine();
+            boolean ready = MG4Hardware.isVehicleReady() || MG4Hardware.isSimSpeedActive();
+            float dcPowerKw = MG4Hardware.getDcKwGlobal();
+
+            boolean soundEnabled = MG4Hardware.isSoundEnabled();
+
+            if (soundEnabled && ready) {
+                if (!mEngineSound.isPlaying()) {
+                    mEngineSound.start();
+                }
+                mEngineSound.onSpeedChanged(speed, dcPowerKw);
+            } else {
+                if (mEngineSound.isPlaying()) {
+                    mEngineSound.stop();
+                }
+            }
+            mSoundHandler.postDelayed(this, SOUND_TASK_MS);
         }
     };
 

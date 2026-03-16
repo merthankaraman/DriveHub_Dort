@@ -921,7 +921,6 @@ public class MainActivity extends AppCompatActivity {
         mBtnRegenAdaptive.setOnClickListener(v -> selectRegen(RegenLevel.ADAPTIVE));
         mBtnRegenOnePedal.setOnClickListener(v -> {
             sendCommand("PEDAL_ON");
-            Toast.makeText(this, getString(R.string.toast_one_pedal_on), Toast.LENGTH_SHORT).show();
             highlightRegenButton(mBtnRegenOnePedal);
             mTvRegenCurrent.setText(getString(R.string.one_pedal_active));
         });
@@ -1754,9 +1753,6 @@ public class MainActivity extends AppCompatActivity {
                 MG4Hardware.resetConsumptionProfile(this, mActiveConsumptionProfile);
             }
             Toast.makeText(this, getString(R.string.consumption_trip_reset_toast), Toast.LENGTH_SHORT).show();
-        } else if (mConsumptionDisplayMode == CONSUMPTION_MODE_SINCE_START) {
-            // Motor çalıştıktan itibaren sayaçları kullanıcı sıfırlayamaz; bu mod sadece READY durumuna göre baştan başlar.
-            // Burada hiçbir şey yapmıyoruz (gerekirse ayrı bir toast eklenebilir).
         }
         refreshConsumptionPanel();
     }
@@ -2091,7 +2087,6 @@ public class MainActivity extends AppCompatActivity {
             mEngineSound.loadIdleSettingsForProfile(this, currentProfile);
         }
         setupIdlePanelFromPrefs();
-        Toast.makeText(this, getString(R.string.toast_idle_reset), Toast.LENGTH_SHORT).show();
     }
 
     /** Motor sesi STREAM_NOTIFICATION kullanır; araç bildirim sesi kısıksa ses de kısık çıkar. */
@@ -2179,8 +2174,6 @@ public class MainActivity extends AppCompatActivity {
     private void selectSteerHeat(int level) {
         sendHeatSteer(level);
         highlightSteerButton(steerButton(level));
-        String label = level == 0 ? getString(R.string.toast_heating_steering, getString(R.string.heating_steering_off)) : getString(R.string.toast_heating_steering, getString(R.string.heating_steering_on));
-        Toast.makeText(this, label, Toast.LENGTH_SHORT).show();
     }
 
     private void highlightSteerButton(Button selected) {
@@ -2201,8 +2194,6 @@ public class MainActivity extends AppCompatActivity {
     private void selectSeatLeft(int level) {
         sendHeatSeatLeft(level);
         highlightSeatLButton(seatLButton(level));
-        String label = level == 0 ? getString(R.string.seat_left_off) : getString(R.string.seat_left_sev, level);
-        Toast.makeText(this, label, Toast.LENGTH_SHORT).show();
     }
 
     private void highlightSeatLButton(Button selected) {
@@ -2228,8 +2219,6 @@ public class MainActivity extends AppCompatActivity {
     private void selectSeatRight(int level) {
         sendHeatSeatRight(level);
         highlightSeatRButton(seatRButton(level));
-        String label = level == 0 ? getString(R.string.seat_right_off) : getString(R.string.seat_right_sev, level);
-        Toast.makeText(this, label, Toast.LENGTH_SHORT).show();
     }
 
     private void highlightSeatRButton(Button selected) {
@@ -2301,7 +2290,6 @@ public class MainActivity extends AppCompatActivity {
         prefs.edit().putString("sound_character", next).apply();
         applySoundCharacter(next);
         updateSoundCharacterButtonText(next);
-        Toast.makeText(this, "Şanzıman: " + next, Toast.LENGTH_SHORT).show();
     }
 
     private void updateSoundCharacterButtonText(String character) {
@@ -2413,7 +2401,6 @@ public class MainActivity extends AppCompatActivity {
         i.setAction("DRIVE_SET");
         i.putExtra("driveValue", mode.value);
         startService(i);
-        Toast.makeText(this, "Mod: " + mode.label, Toast.LENGTH_SHORT).show();
     }
 
     private void sendRegenLevel(RegenLevel level) {
@@ -2421,7 +2408,6 @@ public class MainActivity extends AppCompatActivity {
         i.setAction("REGEN_SET");
         i.putExtra("regenValue", level.value);
         startService(i);
-        Toast.makeText(this, "Regen: " + level.label, Toast.LENGTH_SHORT).show();
     }
 
     private void sendHeatSteer(int level) {
