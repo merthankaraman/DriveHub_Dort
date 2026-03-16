@@ -219,6 +219,7 @@ public class EngineSoundManager {
             "Modern F1 V10",
             "Modern F1 V10 TRI",
             "Ferrari F2004",
+            "Ferrari F2004 TRI",
             "McLaren P1",
             "McLaren P1 TRI",
             "Audi RS6 AVANT",
@@ -245,6 +246,7 @@ public class EngineSoundManager {
         else if ("GTR R34 TRI".equals(profile)) setVehicleProfile(PROFILE_GTRR34_TRI());
         else if ("Lotus Exige 240 TRI".equals(profile)) setVehicleProfile(PROFILE_LOTUS_EXIGE_TRI());
         else if ("Lexus LFA TRI".equals(profile)) setVehicleProfile(PROFILE_LEXUS_LFA_TRI());
+        else if ("Ferrari F2004 TRI".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004_TRI());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
 
@@ -542,6 +544,48 @@ public class EngineSoundManager {
                 }
         );
     }
+    public static VehicleProfile PROFILE_FERRARI_F2004_TRI() {
+        return new VehicleProfile("Ferrari F2004 TRI",
+                4200f,   // Rölanti devri
+                19000f,  // Kesici
+                0.6f,
+                0,
+                new float[][]{
+                        {0f, 35f},
+                        {15f, 58f},
+                        {30f, 82f},
+                        {50f, 108f},
+                        {75f, 132f},
+                        {100f, 155f},
+                        {130f, 172f},
+                        {140f, 200f}
+                },
+                0.25f, 0.15f, 80, 300f,
+                R.raw.f2004_startup, R.raw.igniton_stop,
+
+                // ON katmanı (Üçgen Pencere FMOD Formatı)
+                new int[][]{
+                        {R.raw.f2004_in_idle,            4200, 2000, 5500},
+                        {R.raw.f2004_in_verylow_2,       5500, 4200, 7000},
+                        {R.raw.f2004_in_verylow,         7000, 5500, 9500},  // 6000'deki yığılma 7000'e yayıldı
+                        {R.raw.f2004_in_on_low,          9500, 7000, 11500}, // Mantık Düzeltildi (Low)
+                        {R.raw.f2004_in_on_mid,         11500, 9500, 14000}, // Mantık Düzeltildi (Mid)
+                        {R.raw.f2004_in_on_mid2,        14000, 11500, 16000},
+                        {R.raw.f2004_in_on_high_mix,    16000, 14000, 18500},
+                        {R.raw.f2004_in_on_veryhigh_mix,18500, 16000, 19500} // Kesiciye giden zirve
+                },
+
+                // OFF katmanı (Üçgen Pencere FMOD Formatı)
+                new int[][]{
+                        {R.raw.f2004_in_idle,            4200, 2000, 6000},
+                        {R.raw.f2004_in_off_low,         6000, 4200, 8042},
+                        {R.raw.f2004_in_offmid_pitchare, 8042, 6000, 12000},
+                        {R.raw.f2004_in_off_midhigh_mix,12000, 8042, 17000}, // MidHigh araya alındı
+                        {R.raw.f2004_in_off_high,       17000, 12000, 19000},// High sona alındı
+                        {R.raw.f2004_in_off_high,       19000, 17000, 20000} // Kesici destek sündürmesi
+                }
+        );
+    }
     public static VehicleProfile PROFILE_MCLAREN_P1() {
         return new VehicleProfile("McLaren P1",
                 1000f, 8500f,
@@ -777,7 +821,7 @@ public class EngineSoundManager {
                         {140f, 200f}
                 },
                 0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
-                R.raw.m3e46, 0, // Startup/Stop seslerini genel listeden seçebilirsin
+                R.raw.m3e46_startup, 0, // Startup/Stop seslerini genel listeden seçebilirsin
 // ON Katmanı
                 new int[][]{
                         {R.raw.m3e92_idle, 800, 500, 3000},
@@ -811,7 +855,7 @@ public class EngineSoundManager {
                         {140f, 200f}
                 },
                 0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
-                R.raw.m3e46, 0,
+                R.raw.m3e46_startup, 0,
 
                 // ON Katmanı (İç Mekan - m3e92_on_...)
                 new int[][]{
