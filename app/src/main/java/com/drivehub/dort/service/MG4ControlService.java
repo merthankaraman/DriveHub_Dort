@@ -818,12 +818,12 @@ public class MG4ControlService extends Service {
                         if (System.currentTimeMillis() - start >= ONE_PEDAL_LONG_PRESS_MS) {
                             mOnePedalLongTriggered = true;
                             if ("long".equals(pressTypeOn) && MG4Hardware.getOnePedal() != 1) {
-                                MG4Hardware.setOnePedal(true);
-                                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> MG4Hardware.setOnePedal(true), 250);
+                                MG4Hardware.setRegenLevel(RegenLevel.ONE_PEDAL);
+                                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> MG4Hardware.setRegenLevel(RegenLevel.ONE_PEDAL), 250);
                                 updateNotification("Tek Pedal: Açık");
                             }
                             if ("long".equals(pressTypeOff) && MG4Hardware.getOnePedal() == 1) {
-                                MG4Hardware.setOnePedal(false);
+                                MG4Hardware.setRegenLevel(RegenLevel.HIGH);
                                 updateNotification("Tek Pedal: Kapalı");
                             }
                             mOnePedalKeyPressed = false;
@@ -843,20 +843,20 @@ public class MG4ControlService extends Service {
                     mOnePedalLastTapTime = 0;
                     mOnePedalLastTapKeyCode = -1;
                     if ("double".equals(pressTypeOn) && MG4Hardware.getOnePedal() != 1) {
-                        MG4Hardware.setOnePedal(true);
+                        MG4Hardware.setRegenLevel(RegenLevel.ONE_PEDAL);
                         updateNotification("Tek Pedal: Açık");
                     } else if ("double".equals(pressTypeOff) && MG4Hardware.getOnePedal() == 1) {
-                        MG4Hardware.setOnePedal(false);
+                        MG4Hardware.setRegenLevel(RegenLevel.HIGH);
                         updateNotification("Tek Pedal: Kapalı");
                     }
                 } else {
                     mOnePedalLastTapTime = now;
                     mOnePedalLastTapKeyCode = keyCode;
                     if ("single".equals(pressTypeOn) && MG4Hardware.getOnePedal() != 1) {
-                        MG4Hardware.setOnePedal(true);
+                        MG4Hardware.setRegenLevel(RegenLevel.ONE_PEDAL);
                         updateNotification("Tek Pedal: Açık");
                     } else if ("single".equals(pressTypeOff) && MG4Hardware.getOnePedal() == 1) {
-                        MG4Hardware.setOnePedal(false);
+                        MG4Hardware.setRegenLevel(RegenLevel.HIGH);
                         updateNotification("Tek Pedal: Kapalı");
                     }
                 }
@@ -1314,11 +1314,11 @@ public class MG4ControlService extends Service {
                         .edit().putInt(PREF_LAST_REGEN_LEVEL, rl.value).apply();
                 break;
             case "PEDAL_ON":
-                MG4Hardware.setOnePedal(true);
+                MG4Hardware.setRegenLevel(RegenLevel.ONE_PEDAL);
                 updateNotification("OPD: Açık");
                 break;
             case "PEDAL_OFF":
-                MG4Hardware.setOnePedal(false);
+                MG4Hardware.setRegenLevel(RegenLevel.HIGH);
                 updateNotification("OPD: Kapalı");
                 break;
             case "HEAT_ON":
