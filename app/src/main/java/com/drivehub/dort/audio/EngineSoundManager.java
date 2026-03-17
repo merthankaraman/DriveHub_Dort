@@ -429,7 +429,6 @@ public class EngineSoundManager {
                 new int[][]{
                         {R.raw.f2004_in_idle,                   4200},
                         {R.raw.f2004_in_verylow_2,              5500},
-                        {R.raw.f2004_in_verylow,                6000},
                         {R.raw.f2004_in_on_mid,                 9000},
                         {R.raw.f2004_in_on_low,                 11500},
                         {R.raw.f2004_in_on_mid2,                14000},
@@ -469,10 +468,9 @@ public class EngineSoundManager {
                 // ON katmanı
                 new int[][]{
                         {R.raw.f2004_in_idle,            4200, 0, 7000},     // 4200-7000 arası yavaşça söner
-                        {R.raw.f2004_in_verylow_2,       5500, 3500, 9000},  // 3500'de sızmaya başlar
-                        {R.raw.f2004_in_verylow,         7000, 5000, 11500},
-                        {R.raw.f2004_in_on_low,          9500, 7000, 14000},
-                        {R.raw.f2004_in_on_mid,         11500, 9000, 16000},
+                        {R.raw.f2004_in_verylow_2,       5500, 3500, 11500},  // 3500'de sızmaya başlar
+                        {R.raw.f2004_in_on_mid,          9500, 5000, 14000},
+                        {R.raw.f2004_in_on_low,         11500, 9000, 16000},
                         {R.raw.f2004_in_on_mid2,        14000, 11000, 18000},
                         {R.raw.f2004_in_on_high_mix,    16000, 13000, 19500},
                         {R.raw.f2004_in_on_veryhigh_mix,18500, 15500, 21000}
