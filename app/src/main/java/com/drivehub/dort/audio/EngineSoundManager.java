@@ -223,16 +223,10 @@ public class EngineSoundManager {
             "Lexus LFA TRI",
             "GTR R34",
             "GTR R34 TRI",
-            "Modern F1 V10",
-            "Modern F1 V10 TRI",
             "Ferrari F2004",
             "Ferrari F2004 TRI",
             "McLaren P1",
             "McLaren P1 TRI",
-            "Audi RS6 AVANT",
-            "Audi RS6 AVANT TRI",
-            "BMW M3 E92 V8",
-            "BMW M3 E92 V8 TRI",
             "BMW F30 328i",
             "BMW F30 328i TRI"
     };
@@ -243,16 +237,10 @@ public class EngineSoundManager {
         mCurrentProfileLabel = (profile != null && !profile.isEmpty()) ? profile : "Lotus Exige 240";
         if ("Lexus LFA".equals(profile)) setVehicleProfile(PROFILE_LEXUS_LFA());
         else if ("GTR R34".equals(profile)) setVehicleProfile(PROFILE_GTRR34());
-        else if ("Modern F1 V10".equals(profile)) setVehicleProfile(PROFILE_F1_V10());
         else if ("Ferrari F2004".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004());
         else if ("McLaren P1".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1());
-        else if ("Audi RS6 AVANT".equals(profile)) setVehicleProfile(PROFILE_AUDI_RS6_AVANT());
-        else if ("BMW M3 E92 V8".equals(profile)) setVehicleProfile(PROFILE_BMW_M3_E92());
         else if ("BMW F30 328i".equals(profile)) setVehicleProfile(PROFILE_BMW_328I());
-        else if ("BMW M3 E92 V8 TRI".equals(profile)) setVehicleProfile(PROFILE_BMW_M3_E92_TRI());
-        else if ("Audi RS6 AVANT TRI".equals(profile)) setVehicleProfile(PROFILE_AUDI_RS6_AVANT_TRI());
         else if ("McLaren P1 TRI".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1_TRI());
-        else if ("Modern F1 V10 TRI".equals(profile)) setVehicleProfile(PROFILE_F1_V10_TRI());
         else if ("GTR R34 TRI".equals(profile)) setVehicleProfile(PROFILE_GTRR34_TRI());
         else if ("Lotus Exige 240 TRI".equals(profile)) setVehicleProfile(PROFILE_LOTUS_EXIGE_TRI());
         else if ("Lexus LFA TRI".equals(profile)) setVehicleProfile(PROFILE_LEXUS_LFA_TRI());
@@ -279,14 +267,14 @@ public class EngineSoundManager {
         return new VehicleProfile("Lotus Exige 240", 800, 9000f, 1,
                 1,
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f,   50f},   // 1. Vites
+                        {26f,  85f},   // 2. Vites
+                        {45f,  120f},  // 3. Vites
+                        {65f,  155f},  // 4. Vites
+                        {85f,  195f},  // 5. Vites
+                        {105f, 235f},  // 6. Vites
+                        {122f, 280f},  // 7. Vites
+                        {138f, 360f}   // 8. Vites
                 },
                 0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 R.raw.elisec_startup,R.raw.igniton_stop,
@@ -315,14 +303,14 @@ public class EngineSoundManager {
         return new VehicleProfile("Lotus Exige 240 TRI", 800, 9000f, 1,
                 1,
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f,   50f},   // 1. Vites
+                        {26f,  85f},   // 2. Vites
+                        {45f,  120f},  // 3. Vites
+                        {65f,  155f},  // 4. Vites
+                        {85f,  195f},  // 5. Vites
+                        {105f, 235f},  // 6. Vites
+                        {122f, 280f},  // 7. Vites
+                        {138f, 360f}   // 8. Vites
                 },
                 0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
                 R.raw.elisec_startup,R.raw.igniton_stop,
@@ -354,14 +342,14 @@ public class EngineSoundManager {
                 0,
 
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f,   50f},   // 1. Vites
+                        {26f,  85f},   // 2. Vites
+                        {45f,  120f},  // 3. Vites
+                        {65f,  155f},  // 4. Vites
+                        {85f,  195f},  // 5. Vites
+                        {105f, 235f},  // 6. Vites
+                        {122f, 280f},  // 7. Vites
+                        {138f, 360f}   // 8. Vites
                 },
 
                 0.25f,0.15f,200,180f,
@@ -396,14 +384,14 @@ public class EngineSoundManager {
                 0,
 
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f,   50f},   // 1. Vites
+                        {26f,  85f},   // 2. Vites
+                        {45f,  120f},  // 3. Vites
+                        {65f,  155f},  // 4. Vites
+                        {85f,  195f},  // 5. Vites
+                        {105f, 235f},  // 6. Vites
+                        {122f, 280f},  // 7. Vites
+                        {138f, 360f}   // 8. Vites
                 },
 
                 0.25f,0.15f,200,180f,
@@ -429,91 +417,6 @@ public class EngineSoundManager {
                 }
         );
     }
-    public static VehicleProfile PROFILE_F1_V10() {
-        return new VehicleProfile("Modern F1 V10",
-                4000f,
-                20050f,
-                0.6f,
-                0,
-                new float[][]{
-                        {0f, 45f},
-                        {12f, 72f},
-                        {33f, 93f},
-                        {54f, 114f},
-                        {75f, 135f},
-                        {96f, 156f},
-                        {117f, 180f}
-                },
-                0.25f, 0.15f, 50, 380f,
-
-                0, R.raw.igniton_stop,
-
-                // ON Katmanı
-                new int[][]{
-                        {R.raw.modgpv10_onidle, 4000},
-                        {R.raw.modgpv10_onverylow, 6500},
-                        {R.raw.modgpv10_onlow, 9000},
-                        {R.raw.modgpv10_onlowmid_2_manual_11000, 11000},
-                        {R.raw.modgpv10_onmid, 13000},
-                        {R.raw.modgpv10_onmidhigh_auto_14000, 14000},
-                        {R.raw.modgpv10_onhigh, 18000},
-                        {R.raw.modgpv10_onhigh, 20050}
-                },
-                // OFF Katmanı
-                new int[][]{
-                        {R.raw.modgpv10_idle, 4000},
-                        {R.raw.modgpv10_offidle_auto_6000, 6000},
-                        {R.raw.modgpv10_offverylow, 7000},
-                        {R.raw.modgpv10_offverylow_2_manual_8000, 8000},
-                        {R.raw.modgpv10_offlow, 11000},
-                        {R.raw.modgpv10_offmid, 15000},
-                        {R.raw.modgpv10_offhigh, 20050}
-                }
-        );
-    }
-
-    public static VehicleProfile PROFILE_F1_V10_TRI() {
-        return new VehicleProfile("Modern F1 V10 TRI",
-                4000f,
-                20050f,
-                0.6f,
-                0,
-                new float[][]{
-                        {0f, 45f},
-                        {12f, 72f},
-                        {33f, 93f},
-                        {54f, 114f},
-                        {75f, 135f},
-                        {96f, 156f},
-                        {117f, 180f}
-                },
-                0.25f, 0.15f, 50, 380f,
-
-                0, R.raw.igniton_stop,
-                // ON Katmanı
-                new int[][]{
-                        {R.raw.modgpv10_onidle, 4000, 2000, 6500},
-                        {R.raw.modgpv10_onverylow, 6500, 4000, 9000},
-                        {R.raw.modgpv10_onlow, 9000, 6500, 11000},
-                        {R.raw.modgpv10_onlowmid_2_manual_11000, 11000, 9000, 13000},
-                        {R.raw.modgpv10_onmid, 13000, 11000, 14000},
-                        {R.raw.modgpv10_onmidhigh_auto_14000, 14000, 13000, 18000},
-                        {R.raw.modgpv10_onhigh, 18000, 14000, 20050},
-                        {R.raw.modgpv10_onhigh, 20050, 18000, 21000}
-                },
-                // OFF Katmanı
-                new int[][]{
-                        {R.raw.modgpv10_idle, 4000, 2000, 6000},
-                        {R.raw.modgpv10_offidle_auto_6000, 6000, 4000, 7000},
-                        {R.raw.modgpv10_offverylow, 7000, 6000, 8000},
-                        {R.raw.modgpv10_offverylow_2_manual_8000, 8000, 7000, 11000},
-                        {R.raw.modgpv10_offlow, 11000, 8000, 15000},
-                        {R.raw.modgpv10_offmid, 15000, 11000, 20050},
-                        {R.raw.modgpv10_offhigh, 20050, 15000, 21000}
-                }
-        );
-    }
-
     public static VehicleProfile PROFILE_FERRARI_F2004() {
         return new VehicleProfile("Ferrari F2004",
                 4200f,
@@ -601,14 +504,14 @@ public class EngineSoundManager {
                 0.8f,
                 2,
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f,   50f},   // 1. Vites
+                        {26f,  85f},   // 2. Vites
+                        {45f,  120f},  // 3. Vites
+                        {65f,  155f},  // 4. Vites
+                        {85f,  195f},  // 5. Vites
+                        {105f, 235f},  // 6. Vites
+                        {122f, 280f},  // 7. Vites
+                        {138f, 360f}   // 8. Vites
                 },
                 0.18f, 0.08f,120,220f,
                 0, 0,
@@ -638,14 +541,14 @@ public class EngineSoundManager {
                 0.8f,
                 2,
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f,   50f},   // 1. Vites
+                        {26f,  85f},   // 2. Vites
+                        {45f,  120f},  // 3. Vites
+                        {65f,  155f},  // 4. Vites
+                        {85f,  195f},  // 5. Vites
+                        {105f, 235f},  // 6. Vites
+                        {122f, 280f},  // 7. Vites
+                        {138f, 360f}   // 8. Vites
                 },
                 0.18f, 0.08f,120,220f,
                 0, 0,
@@ -673,14 +576,14 @@ public class EngineSoundManager {
         return new VehicleProfile("GTR R34", 1000f, 8200, 0.5f,
                 3,
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f,   50f},   // 1. Vites
+                        {26f,  85f},   // 2. Vites
+                        {45f,  120f},  // 3. Vites
+                        {65f,  155f},  // 4. Vites
+                        {85f,  195f},  // 5. Vites
+                        {105f, 235f},  // 6. Vites
+                        {122f, 280f},  // 7. Vites
+                        {138f, 360f}   // 8. Vites
                 },
                 0.18f, 0.08f,110,250f,
                 0,0,
@@ -707,14 +610,14 @@ public class EngineSoundManager {
         return new VehicleProfile("GTR R34 TRI", 1000f, 8200, 0.5f,
                 3,
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f,   50f},   // 1. Vites
+                        {26f,  85f},   // 2. Vites
+                        {45f,  120f},  // 3. Vites
+                        {65f,  155f},  // 4. Vites
+                        {85f,  195f},  // 5. Vites
+                        {105f, 235f},  // 6. Vites
+                        {122f, 280f},  // 7. Vites
+                        {138f, 360f}   // 8. Vites
                 },
                 0.18f, 0.08f,110,250f,
                 0,0,
@@ -736,157 +639,19 @@ public class EngineSoundManager {
                 }
         );
     }
-    public static VehicleProfile PROFILE_AUDI_RS6_AVANT_TRI() {
-        return new VehicleProfile("Audi RS6 AVANT TRI",
-                800f, 7400f, 1.0f,
-                0,
-                new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
-                },
-                0.15f, 0.08f, 180, 450f,
-                R.raw.rs6_startup, R.raw.igniton_stop,
-                new int[][]{
-                        {R.raw.rs6_4_in_idle_rpm937, 800, 500, 1864},
-                        {R.raw.rs6_in_1_on_rpm1864, 1864, 800, 2800},
-                        {R.raw.rs6_in_1_on_rpm2800, 2800, 1864, 3117},
-                        {R.raw.rs6_in_1_on_rpm3117, 3117, 2800, 3747},
-                        {R.raw.rs6_in_1_on_rpm3747, 3747, 3117, 4917},
-                        {R.raw.rs6_in_1_on_rpm4917, 4917, 3747, 5608},
-                        {R.raw.rs6_in_1_on_rpm5608, 5608, 4917, 5816},
-                        {R.raw.rs6_in_1_on_rpm5816, 5816, 5608, 7400},
-                        {R.raw.rs6_in_1_on_rpm5816, 7400, 5816, 7600}
-                },
-                new int[][]{
-                        {R.raw.rs6_4_in_idle_rpm937, 800, 500, 2882},
-                        {R.raw.rs6_in_1_off_rpm2882, 2882, 800, 4075},
-                        {R.raw.rs6_in_1_off_rpm4075, 4075, 2882, 4991},
-                        {R.raw.rs6_in_1_off_rpm4991, 4991, 4075, 7400},
-                        {R.raw.rs6_in_1_off_rpm4991, 7400, 4991, 7600}
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_AUDI_RS6_AVANT() {
-        return new VehicleProfile("Audi RS6 AVANT",
-                800f, 7400f, 1.0f,
-                0,
-                new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
-                },
-                0.15f, 0.08f, 180, 450f,
-                R.raw.rs6_startup, R.raw.igniton_stop,
-                new int[][]{
-                        {R.raw.rs6_4_in_idle_rpm937, 800},
-                        {R.raw.rs6_in_1_on_rpm1864, 1864},
-                        {R.raw.rs6_in_1_on_rpm2800, 2800},
-                        {R.raw.rs6_in_1_on_rpm3117, 3117},
-                        {R.raw.rs6_in_1_on_rpm3747, 3747},
-                        {R.raw.rs6_in_1_on_rpm4917, 4917},
-                        {R.raw.rs6_in_1_on_rpm5608, 5608},
-                        {R.raw.rs6_in_1_on_rpm5816, 5816},
-                        {R.raw.rs6_in_1_on_rpm5816, 7400}
-                },
-
-                // OFF Katmanı (İç Mekan - Rs6_in_1_off)
-                new int[][]{
-                        {R.raw.rs6_4_in_idle_rpm937, 800},
-                        {R.raw.rs6_in_1_off_rpm2882, 2882},
-                        {R.raw.rs6_in_1_off_rpm4075, 4075},
-                        {R.raw.rs6_in_1_off_rpm4991, 4991}
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_BMW_M3_E92_TRI() {
-        return new VehicleProfile("BMW M3 E92 V8 TRI",
-                800f, 8400f, 1.0f,
-                0,
-                new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
-                },
-                0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
-                R.raw.m3e46_startup, 0,
-                new int[][]{
-                        {R.raw.m3e92_idle, 800, 500, 3000},
-                        {R.raw.m3e92_on_3000, 3000, 800, 4000},
-                        {R.raw.m3e92_on_4000, 4000, 3000, 6000},
-                        {R.raw.m3e92_on_6000, 6000, 4000, 8400},
-                        {R.raw.m3e92_on_8500, 8400, 6000, 8600},
-                        {R.raw.m3e92_on_8500, 8600, 8400, 9000} // Kesici destek
-                },
-                new int[][]{
-                        {R.raw.m3e92_idle, 800, 500, 2800},
-                        {R.raw.m3e92_off_2800, 2800, 800, 6000},
-                        {R.raw.m3e92_off_6000, 6000, 2800, 8400},
-                        {R.raw.m3e92_off_8500, 8400, 6000, 9000} // 84000 yazım hatası düzeltildi
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_BMW_M3_E92() {
-        return new VehicleProfile("BMW M3 E92 V8",
-                800f, 8400f, 1.0f,
-                0, // Atmosferik S65 V8
-                new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
-                },
-                0.18f, 0.08f, 120, 300f, // Seri vites geçişleri
-                R.raw.m3e46_startup, 0,
-                new int[][]{
-                        {R.raw.m3e92_idle, 800},
-                        {R.raw.m3e92_on_3000, 3000},
-                        {R.raw.m3e92_on_4000, 4000},
-                        //{R.raw.m3e92_on_4198, 4198},
-                        {R.raw.m3e92_on_6000, 6000},
-                        {R.raw.m3e92_on_8500, 8400},
-                        {R.raw.m3e92_on_8500, 8500}
-                },
-                new int[][]{
-                        {R.raw.m3e92_idle, 800},
-                        {R.raw.m3e92_off_2800, 2800},
-                        {R.raw.m3e92_off_6000, 6000},
-                        {R.raw.m3e92_off_8500, 8400}
-                }
-        );
-    }
     public static VehicleProfile PROFILE_BMW_328I() {
         return new VehicleProfile("BMW F30 328i",
                 800, 7200f,
                 0.6f, 2,
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f,   50f},   // 1. Vites
+                        {26f,  85f},   // 2. Vites
+                        {45f,  120f},  // 3. Vites
+                        {65f,  155f},  // 4. Vites
+                        {85f,  195f},  // 5. Vites
+                        {105f, 235f},  // 6. Vites
+                        {122f, 280f},  // 7. Vites
+                        {138f, 360f}   // 8. Vites
                 },
                 0.20f, 0.10f, 150, 150f,
                 0, 0,
@@ -915,17 +680,17 @@ public class EngineSoundManager {
                 800, 7200f,
                 0.6f, 2,
                 new float[][]{
-                        {0f, 35f},
-                        {15f, 58f},
-                        {30f, 82f},
-                        {50f, 108f},
-                        {75f, 132f},
-                        {100f, 155f},
-                        {130f, 172f},
-                        {140f, 200f}
+                        {0f,   50f},   // 1. Vites
+                        {26f,  85f},   // 2. Vites
+                        {45f,  120f},  // 3. Vites
+                        {65f,  155f},  // 4. Vites
+                        {85f,  195f},  // 5. Vites
+                        {105f, 235f},  // 6. Vites
+                        {122f, 280f},  // 7. Vites
+                        {138f, 360f}   // 8. Vites
                 },
                 0.20f, 0.10f, 150, 150f,
-                0, 0,
+                R.raw.m3e46_startup, 0,
                 new int[][]{
                         {R.raw.f30_enga_1290, 1290, 700, 1750},
                         {R.raw.f30_enga_1980, 1980, 1550, 2450},
@@ -1058,7 +823,8 @@ public class EngineSoundManager {
                 // Marş: sadece vites 1 veya sim aktifken ve araç READY/sim ile (boot’ta READY olmadan çalmasın)
                 boolean mayPlayStart = mStartSoundId != -1
                         && (MG4Hardware.getLastGear() == 1 || MG4Hardware.isSimSpeedActive())
-                        && (MG4Hardware.isVehicleReady() || MG4Hardware.isSimSpeedActive());
+                        && (MG4Hardware.isVehicleReady() || MG4Hardware.isSimSpeedActive())
+                        && mCurrentSpeedKmh == 0f;
                 if (mayPlayStart) {
                     mSoundPool.play(mStartSoundId, mMasterVolume, mMasterVolume, 2, 0, 1.0f);
                     mEngineStartTime = System.currentTimeMillis(); // Marş süresince rölantiyi beklet (Fade-in)
@@ -1101,7 +867,7 @@ public class EngineSoundManager {
             if (mGearWhineStreamId != -1) mSoundPool.stop(mGearWhineStreamId);
             if (mSubwaveStreamId != -1) mSoundPool.stop(mSubwaveStreamId);
 
-            if (wasPlaying && mStopSoundId != -1) {
+            if (wasPlaying && mStopSoundId != -1 && mCurrentSpeedKmh == 0f) {
                 mSoundPool.play(mStopSoundId, mMasterVolume, mMasterVolume, 2, 0, 1.0f);
             }
 
@@ -1208,9 +974,8 @@ public class EngineSoundManager {
             float downshiftThreshold;
 
             if (throttle <= 0.05f) {
-                // Pedal 0: Avlanmayı önlemek için upshift eşiği %50'ye çekildi
-                upshiftThreshold = mIdleRpm + (rpmRange * 0.50f);
-                downshiftThreshold = mIdleRpm + (rpmRange * 0.08f);
+                upshiftThreshold = mIdleRpm + (rpmRange * 0.30f);
+                downshiftThreshold = mIdleRpm + (rpmRange * 0.1f);
             } else {
                 upshiftThreshold = mIdleRpm + rpmRange * (0.60f + (throttle * 0.35f));
                 downshiftThreshold = mIdleRpm + rpmRange * 0.25f;
