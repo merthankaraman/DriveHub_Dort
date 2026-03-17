@@ -301,7 +301,8 @@ public class MainActivity extends AppCompatActivity {
             b.setTag(profileIndex);
             String name = MG4Hardware.getConsumptionProfileName(profileIndex);
             if (name == null || name.isEmpty()) {
-                name = getString(R.string.consumption_profile_default_format, profileIndex + 1);
+                char suffix = (char) ('A' + profileIndex);
+                name = getString(R.string.consumption_profile_default_format, suffix);
             }
             b.setText(name);
             b.setOnClickListener(v -> {
@@ -322,7 +323,8 @@ public class MainActivity extends AppCompatActivity {
                 input.setSingleLine();
                 String current = MG4Hardware.getConsumptionProfileName(index);
                 if (current == null || current.isEmpty()) {
-                    current = getString(R.string.consumption_profile_default_format, index + 1);
+                    char suffix = (char) ('A' + index);
+                    current = getString(R.string.consumption_profile_default_format, suffix);
                 }
                 input.setText(current);
                 new androidx.appcompat.app.AlertDialog.Builder(ctx)
@@ -1725,7 +1727,8 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 String profileName = MG4Hardware.getConsumptionProfileName(mActiveConsumptionProfile);
                 if (profileName == null || profileName.isEmpty()) {
-                    profileName = getString(R.string.consumption_profile_default_format, mActiveConsumptionProfile + 1);
+                    char suffix = (char) ('A' + mActiveConsumptionProfile);
+                    profileName = getString(R.string.consumption_profile_default_format, suffix);
                 }
                 targetLabel = profileName;
             }
@@ -1813,7 +1816,8 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         String profileName = MG4Hardware.getConsumptionProfileName(mActiveConsumptionProfile);
                         if (profileName == null || profileName.isEmpty()) {
-                            profileName = getString(R.string.consumption_profile_default_format, mActiveConsumptionProfile + 1);
+                            char suffix = (char) ('A' + mActiveConsumptionProfile);
+                            profileName = getString(R.string.consumption_profile_default_format, suffix);
                         }
                         targetLabel = profileName;
                         btnReset.setText(getString(R.string.btn_reset_profile_format, targetLabel));

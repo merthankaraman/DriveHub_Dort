@@ -274,6 +274,8 @@
     <string name="btn_reset_trip">Reset From Start</string>
     <string name="btn_reset_lifetime">Reset lifetime</string>
     <string name="btn_reset_profile_format">Reset %1$s</string>
+    <string name="btn_open_gauge_app">Open Gauge</string>
+
     <string name="consumption_reset_confirm_title">Confirm reset</string>
     <string name="consumption_reset_confirm_message">Are you sure you want to reset these values?</string>
     <string name="consumption_time_avg_speed">Time / Avg speed</string>
@@ -283,7 +285,8 @@
     <string name="consumption_energy">Energy </string>
     <string name="consumption_avg">Avg. consumption </string>
     <string name="consumption_lifetime">Lifetime</string>
-    <string name="consumption_profile_default_format">Profile %1$d</string>
+    <!-- Default consumption profile label: Trip A, Trip B, ... -->
+    <string name="consumption_profile_default_format">Trip %1$c</string>
     <string name="consumption_trip_reset_toast">Trip reset.</string>
 
     <!-- Demo: door lock -->
