@@ -466,6 +466,8 @@ public class MainActivity extends AppCompatActivity {
 
     // Kısayollar paneli
     private View   mLayoutShortcutsPanel;
+    // Kısayollar paneli açıldığında hangi ekrandan gelindiğini hatırla (ayarlar/ana ekran)
+    private boolean mShortcutsOpenedFromSettings = false;
     // Klima paneli
     private View   mLayoutClimatePanel;
     // Direksiyon
@@ -1664,6 +1666,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openShortcutsPanel() {
+        // Kısayollar paneline geçerken, o anda ayarlar panelindeysek geri dönüşte oraya dönelim
+        mShortcutsOpenedFromSettings = (mCurrentPanel == PANEL_SETTINGS);
+
         mCurrentPanel = PANEL_SHORTCUTS;
         updateShortcutsPanelVisibility();
         mLayoutMain.setVisibility(View.GONE);
@@ -1675,8 +1680,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void closeShortcutsPanel() {
         mLayoutShortcutsPanel.setVisibility(View.GONE);
-        mLayoutMain.setVisibility(View.VISIBLE);
-        mCurrentPanel = PANEL_MAIN;
+        if (mShortcutsOpenedFromSettings && mLayoutSettingsPanel != null) {
+            // Bu kısayollar oturumu ayarlar ekranından açılmıştı; geri oraya dön
+            mLayoutSettingsPanel.setVisibility(View.VISIBLE);
+            mLayoutMain.setVisibility(View.GONE);
+            mCurrentPanel = PANEL_SETTINGS;
+        } else {
+            // Varsayılan: ana ekrana geri dön
+            mLayoutMain.setVisibility(View.VISIBLE);
+            mCurrentPanel = PANEL_MAIN;
+        }
+        mShortcutsOpenedFromSettings = false;
     }
 
     // -------------------------------------------------------------------------
