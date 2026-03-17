@@ -228,7 +228,7 @@ public class EngineSoundManager {
             "McLaren P1",
             "McLaren P1 TRI",
             "BMW F30 328i",
-            "BMW F30 328i TRI"
+            "BMW F30 328i V2"
     };
 
     public static String[] getProfileLabels() { return PROFILE_LABELS; }
@@ -245,7 +245,7 @@ public class EngineSoundManager {
         else if ("Lotus Exige 240 TRI".equals(profile)) setVehicleProfile(PROFILE_LOTUS_EXIGE_TRI());
         else if ("Lexus LFA TRI".equals(profile)) setVehicleProfile(PROFILE_LEXUS_LFA_TRI());
         else if ("Ferrari F2004 TRI".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004_TRI());
-        else if ("BMW F30 328i TRI".equals(profile)) setVehicleProfile(PROFILE_BMW_328I_TRI());
+        else if ("BMW F30 328i V2".equals(profile)) setVehicleProfile(PROFILE_BMW_328I_V2());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
 
@@ -312,25 +312,24 @@ public class EngineSoundManager {
                         {122f, 280f},  // 7. Vites
                         {138f, 360f}   // 8. Vites
                 },
-                0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
-                R.raw.elisec_startup,R.raw.igniton_stop,
+                0.18f, 0.08f, 150, 150f,
+                R.raw.elisec_startup, R.raw.igniton_stop,
                 // ON Katmanı
                 new int[][]{
-                        {R.raw.elisesc_idle, 800, 500, 3000},
-                        {R.raw.elisesc_on_3000, 3000, 800, 4750},
-                        {R.raw.elisesc_on_4750, 4750, 3000, 8115},
-                        {R.raw.elisesc_on_8115, 8115, 4750, 8800},
-                        {R.raw.elisesc_on_9649, 8800, 8115, 9000},
-                        {R.raw.elisesc_on_9649, 9000, 8800, 9500} // Kesici için uzatma
+                        {R.raw.elisesc_idle, 800, 0, 3500},           // 3500'e kadar sönerek devam eder
+                        {R.raw.elisesc_on_3000, 3000, 1500, 5500},    // 1500'de başlar, 3000'de tam güç, 5500'de biter
+                        {R.raw.elisesc_on_4750, 4750, 3500, 8500},    // 3500-5500 arası idle ve 3000 ile karışır
+                        {R.raw.elisesc_on_8115, 8115, 6000, 9000},    // 6000'de başlar, çok daha erken sızar
+                        {R.raw.elisesc_on_9649, 8800, 8000, 9200},
+                        {R.raw.elisesc_on_9649, 9000, 8500, 9500}
                 },
                 // OFF Katmanı
                 new int[][]{
-                        {R.raw.elisesc_idle, 800, 500, 2500},
-                        {R.raw.elisesc_off_2500, 2500, 800, 3750},
-                        {R.raw.elisesc_off_3750, 3750, 2500, 5000},
-                        {R.raw.elisesc_off_5000, 5000, 3750, 8500},
-                        {R.raw.elisesc_off_8500, 8500, 5000, 9000},
-                        {R.raw.elisesc_off_8500, 9000, 8500, 9500}
+                        {R.raw.elisesc_idle, 800, 0, 3500},
+                        {R.raw.elisesc_off_2500, 2500, 1200, 4500},
+                        {R.raw.elisesc_off_3750, 3750, 2800, 6000},
+                        {R.raw.elisesc_off_5000, 5000, 4000, 8800},
+                        {R.raw.elisesc_off_8500, 8500, 7500, 9500}
                 }
         );
     }
@@ -377,12 +376,7 @@ public class EngineSoundManager {
         );
     }
     public static VehicleProfile PROFILE_LEXUS_LFA_TRI() {
-        return new VehicleProfile("Lexus LFA TRI",
-                984f,
-                9550f,
-                1f,
-                0,
-
+        return new VehicleProfile("Lexus LFA TRI", 984f, 9550f, 1f, 0,
                 new float[][]{
                         {0f,   55f},   // 1. Vites
                         {20f,  85f},   // 2. Vites
@@ -393,27 +387,24 @@ public class EngineSoundManager {
                         {122f, 280f},  // 7. Vites
                         {138f, 360f}   // 8. Vites
                 },
-
-                0.25f,0.15f,200,180f,
-                R.raw.lfa_in_startup,
-                R.raw.igniton_stop,
+                0.25f, 0.15f, 200, 180f,
+                R.raw.lfa_in_startup, R.raw.igniton_stop,
                 // ON Katmanı
                 new int[][]{
-                        {R.raw.lfa_in_idle, 984, 600, 2500},
-                        {R.raw.lfa_in_onverylow_1, 2500, 984, 4500},
-                        {R.raw.lfa_in_onlow, 4500, 2500, 6500},
-                        {R.raw.lfa_in_onmid, 6500, 4500, 8500},
-                        {R.raw.lfa_in_onhigh, 8500, 6500, 9550},
-                        {R.raw.lfa_in_onhigh, 9550, 8500, 10000}
+                        {R.raw.lfa_in_idle, 984, 0, 4000},            // Idle sesi 4000'e kadar alttan duyulmaya devam eder
+                        {R.raw.lfa_in_onverylow_1, 2500, 1500, 6000}, // 1500-4000 arası yumuşak geçiş başlar
+                        {R.raw.lfa_in_onlow, 4500, 3000, 8000},       // Low sesi 3000'de sızmaya başlar
+                        {R.raw.lfa_in_onmid, 6500, 5000, 9000},
+                        {R.raw.lfa_in_onhigh, 8500, 7000, 9550},
+                        {R.raw.lfa_in_onhigh, 9550, 8000, 10500}
                 },
                 // OFF Katmanı
                 new int[][]{
-                        {R.raw.lfa_in_idle, 984, 600, 2500},
-                        {R.raw.lfa_in_offverylow_2, 2500, 984, 4500},
-                        {R.raw.lfa_in_offlow, 4500, 2500, 6500},
-                        {R.raw.lfa_in_offmid, 6500, 4500, 8500},
-                        {R.raw.lfa_in_offhigh, 8500, 6500, 9550},
-                        {R.raw.lfa_in_offhigh, 9550, 8500, 10000}
+                        {R.raw.lfa_in_idle, 984, 0, 4000},
+                        {R.raw.lfa_in_offverylow_2, 2500, 1500, 6000},
+                        {R.raw.lfa_in_offlow, 4500, 3000, 8000},
+                        {R.raw.lfa_in_offmid, 6500, 5000, 9000},
+                        {R.raw.lfa_in_offhigh, 8500, 7000, 9550}
                 }
         );
     }
@@ -477,24 +468,21 @@ public class EngineSoundManager {
 
                 // ON katmanı
                 new int[][]{
-                        {R.raw.f2004_in_idle,            4200, 2000, 5500},
-                        {R.raw.f2004_in_verylow_2,       5500, 4200, 7000},
-                        {R.raw.f2004_in_verylow,         7000, 5500, 9500},
-                        {R.raw.f2004_in_on_low,          9500, 7000, 11500},
-                        {R.raw.f2004_in_on_mid,         11500, 9500, 14000},
-                        {R.raw.f2004_in_on_mid2,        14000, 11500, 16000},
-                        {R.raw.f2004_in_on_high_mix,    16000, 14000, 18500},
-                        {R.raw.f2004_in_on_veryhigh_mix,18500, 16000, 19500}
+                        {R.raw.f2004_in_idle,            4200, 0, 7000},     // 4200-7000 arası yavaşça söner
+                        {R.raw.f2004_in_verylow_2,       5500, 3500, 9000},  // 3500'de sızmaya başlar
+                        {R.raw.f2004_in_verylow,         7000, 5000, 11500},
+                        {R.raw.f2004_in_on_low,          9500, 7000, 14000},
+                        {R.raw.f2004_in_on_mid,         11500, 9000, 16000},
+                        {R.raw.f2004_in_on_mid2,        14000, 11000, 18000},
+                        {R.raw.f2004_in_on_high_mix,    16000, 13000, 19500},
+                        {R.raw.f2004_in_on_veryhigh_mix,18500, 15500, 21000}
                 },
-
-                // OFF katmanı
                 new int[][]{
-                        {R.raw.f2004_in_idle,            4200, 2000, 6000},
-                        {R.raw.f2004_in_off_low,         6000, 4200, 8042},
-                        {R.raw.f2004_in_offmid_pitchare, 8042, 6000, 12000},
-                        {R.raw.f2004_in_off_midhigh_mix,12000, 8042, 17000},
-                        {R.raw.f2004_in_off_high,       17000, 12000, 19000},
-                        {R.raw.f2004_in_off_high,       19000, 17000, 20000}
+                        {R.raw.f2004_in_idle,            4200, 0, 8000},
+                        {R.raw.f2004_in_off_low,         6000, 3500, 11000},
+                        {R.raw.f2004_in_offmid_pitchare, 8042, 5500, 14000},
+                        {R.raw.f2004_in_off_midhigh_mix,12000, 8500, 18000},
+                        {R.raw.f2004_in_off_high,       17000, 13000, 20000}
                 }
         );
     }
@@ -554,21 +542,20 @@ public class EngineSoundManager {
                 0, 0,
                 // ON Katmanı
                 new int[][]{
-                        {R.raw.p1_in_idle, 1000, 600, 2500},
-                        {R.raw.p1_in_on_verylow2, 2500, 1000, 4000},
-                        {R.raw.p1_in_on_low2, 4000, 2500, 5500},
-                        {R.raw.p1_in_on_lowmid_b, 5500, 4000, 7000},
-                        {R.raw.p1_in_on_mid_c, 7000, 5500, 8000},
-                        {R.raw.p1_in_on_high_b_2, 8000, 7000, 8500},
-                        {R.raw.p1_in_on_veryhigh_b, 8500, 8000, 9000}
+                        {R.raw.p1_in_idle,          1000, 0, 3500},
+                        {R.raw.p1_in_on_verylow2,   2500, 1000, 5500},
+                        {R.raw.p1_in_on_low2,       4000, 2000, 7000},
+                        {R.raw.p1_in_on_lowmid_b,   5500, 3500, 8500},
+                        {R.raw.p1_in_on_mid_c,      7000, 5000, 9000},
+                        {R.raw.p1_in_on_high_b_2,   8000, 6500, 9500},
+                        {R.raw.p1_in_on_veryhigh_b, 8500, 7500, 10000}
                 },
-                // OFF Katmanı
                 new int[][]{
-                        {R.raw.p1_in_idle, 1000, 600, 2500},
-                        {R.raw.p1_in_off_verylow, 2500, 1000, 4000},
-                        {R.raw.p1_in_off_low_2, 4000, 2500, 6000},
-                        {R.raw.p1_in_off_mid_2, 6000, 4000, 8500},
-                        {R.raw.p1_in_off_high, 8500, 6000, 9000}
+                        {R.raw.p1_in_idle,          1000, 0, 3500},
+                        {R.raw.p1_in_off_verylow,   2500, 1000, 5500},
+                        {R.raw.p1_in_off_low_2,     4000, 2000, 7500},
+                        {R.raw.p1_in_off_mid_2,     6000, 4000, 9000},
+                        {R.raw.p1_in_off_high,      8500, 6000, 10000}
                 }
         );
     }
@@ -622,25 +609,52 @@ public class EngineSoundManager {
                 0.18f, 0.08f,110,250f,
                 0,0,
                 new int[][]{
-                        {R.raw.rb26_4_ex_idle, 1000, 600, 1500},
-                        {R.raw.rb26_2_in_on_verylow2, 1500, 1000, 3500},
-                        {R.raw.rb26_2_in_on_verylow, 3500, 1500, 5000},
-                        {R.raw.rb26_2_in_on_low3, 5000, 3500, 6500},
-                        {R.raw.rb26_2_in_on_mid3, 6500, 5000, 7500},
-                        {R.raw.rb26_in_on_high2, 7500, 6500, 8200},
-                        {R.raw.rb26_in_on_veryhigh, 8200, 7500, 8500}
+                        {R.raw.rb26_4_ex_idle,       1000, 0, 3000},
+                        {R.raw.rb26_2_in_on_verylow2, 1500, 800, 5000},
+                        {R.raw.rb26_2_in_on_verylow,  3500, 1500, 6500},
+                        {R.raw.rb26_2_in_on_low3,     5000, 3000, 7500},
+                        {R.raw.rb26_2_in_on_mid3,     6500, 4500, 8500},
+                        {R.raw.rb26_in_on_high2,     7500, 5500, 9000},
+                        {R.raw.rb26_in_on_veryhigh,  8200, 6500, 9500}
                 },
                 new int[][]{
-                        {R.raw.rb26_4_ex_idle, 1000, 600, 1500},
-                        {R.raw.rb26_ex_5_offverylow, 1500, 1000, 4000},
-                        {R.raw.rb26_ex_5_offlow, 4000, 1500, 6500},
-                        {R.raw.rb26_ex_5_offmid, 6500, 4000, 8200},
-                        {R.raw.rb26_ex_5_offmid, 8200, 6500, 8500}
+                        {R.raw.rb26_4_ex_idle,       1000, 0, 3000},
+                        {R.raw.rb26_ex_5_offverylow, 1500, 800, 5500},
+                        {R.raw.rb26_ex_5_offlow,     4000, 2000, 7500},
+                        {R.raw.rb26_ex_5_offmid,     6500, 4000, 9000}
                 }
         );
     }
     public static VehicleProfile PROFILE_BMW_328I() {
         return new VehicleProfile("BMW F30 328i",
+                800, 7200f,
+                1f, 2,
+                new float[][]{
+                        {0f,   55f},   // 1. Vites
+                        {20f,  85f},   // 2. Vites
+                        {45f,  120f},  // 3. Vites
+                        {65f,  155f},  // 4. Vites
+                        {85f,  195f},  // 5. Vites
+                        {105f, 235f},  // 6. Vites
+                        {122f, 280f},  // 7. Vites
+                        {138f, 360f}   // 8. Vites
+                },
+                0.20f, 0.10f, 150, 150f,
+                0, 0,
+                new int[][]{
+                        {R.raw.f30_enga_1290, 1290},
+                        {R.raw.f30_enga_1980, 1980},
+                        {R.raw.f30_enga_2661, 2661},
+                        {R.raw.f30_enga_3951, 3951},
+                        {R.raw.f30_enga_5031, 5031},
+                        {R.raw.f30_enga_6141, 6141},
+                        {R.raw.f30_enga_7200, 7200}
+                },
+                null
+        );
+    }
+    public static VehicleProfile PROFILE_BMW_328I_V2() {
+        return new VehicleProfile("BMW F30 328i V2",
                 800, 7200f,
                 1f, 2,
                 new float[][]{
@@ -667,38 +681,6 @@ public class EngineSoundManager {
                         {R.raw.f30_enga_5031, 5031},
                         {R.raw.f30_enga_6141, 6141},
                         {R.raw.f30_enga_7200, 7200}
-                },
-                null
-        );
-    }
-    public static VehicleProfile PROFILE_BMW_328I_TRI() {
-        return new VehicleProfile("BMW F30 328i TRI",
-                800, 7200f,
-                1, 2,
-                new float[][]{
-                        {0f,   55f},   // 1. Vites
-                        {20f,  85f},   // 2. Vites
-                        {45f,  120f},  // 3. Vites
-                        {65f,  155f},  // 4. Vites
-                        {85f,  195f},  // 5. Vites
-                        {105f, 235f},  // 6. Vites
-                        {122f, 280f},  // 7. Vites
-                        {138f, 360f}   // 8. Vites
-                },
-                0.20f, 0.10f, 150, 150f,
-                R.raw.m3e46_startup, 0,
-                new int[][]{
-                        {R.raw.f30_enga_1290, 1000, 750, 1300},
-                        {R.raw.f30_enga_1740, 1740, 1250, 1800},
-                        {R.raw.f30_enga_1980, 1980, 1750, 2250},
-                        {R.raw.f30_enga_2280, 2280, 2250, 2450},
-                        {R.raw.f30_enga_2556, 2556, 2250, 2650},
-                        {R.raw.f30_enga_2661, 2661, 2650, 3200},
-                        {R.raw.f30_enga_3321, 3321, 3200, 3500},
-                        {R.raw.f30_enga_3951, 3951, 3500, 4600},
-                        {R.raw.f30_enga_5031, 5031, 4400, 5700},
-                        {R.raw.f30_enga_6141, 6141, 5500, 6800},
-                        {R.raw.f30_enga_7200, 7200, 6600, 8000}
                 },
                 null
         );

@@ -727,7 +727,7 @@ public class MainActivity extends AppCompatActivity {
 
         mBtnSubwave = findViewById(R.id.btnSubwave);
         if (mBtnSubwave != null) {
-            boolean subOn = prefsApp.getBoolean("subwave_enabled", false);
+            boolean subOn = prefsApp.getBoolean("subwave_enabled", true);
             mEngineSound.setSubwaveEnabled(subOn);
             updateSubwaveButtonText(subOn);
             mBtnSubwave.setOnClickListener(v -> {
