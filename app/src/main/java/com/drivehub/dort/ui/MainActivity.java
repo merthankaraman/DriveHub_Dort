@@ -678,9 +678,9 @@ public class MainActivity extends AppCompatActivity {
             MG4Hardware.setSoundEnabled(mSoundEnabled);
             getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                     .edit().putBoolean(PREF_SOUND_ENABLED, mSoundEnabled).apply();
-            Toast.makeText(this,
-                    getString(mSoundEnabled ? R.string.toast_motor_sound_on : R.string.toast_motor_sound_off),
-                    Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this,
+            //        getString(mSoundEnabled ? R.string.toast_motor_sound_on : R.string.toast_motor_sound_off),
+            //        Toast.LENGTH_SHORT).show();
             updateSoundToggleButton();
         });
 
@@ -1744,7 +1744,6 @@ public class MainActivity extends AppCompatActivity {
         // - CONSUMPTION_MODE_SINCE_START → Motor çalıştıktan itibaren sayaçlar (otomatik; sıfırlanmaz)
         if (mConsumptionDisplayMode == CONSUMPTION_MODE_CURRENT) {
             MG4Hardware.resetConsumptionTrip();
-            Toast.makeText(this, getString(R.string.consumption_trip_reset_toast), Toast.LENGTH_SHORT).show();
         } else if (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME) {
             // Lifetime seçiliyse global sayaçları, profil seçiliyse sadece o profili sıfırla.
             if (mActiveConsumptionProfile < 0) {
@@ -1752,7 +1751,6 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 MG4Hardware.resetConsumptionProfile(this, mActiveConsumptionProfile);
             }
-            Toast.makeText(this, getString(R.string.consumption_trip_reset_toast), Toast.LENGTH_SHORT).show();
         }
         refreshConsumptionPanel();
     }
