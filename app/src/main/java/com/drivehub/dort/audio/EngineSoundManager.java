@@ -1178,6 +1178,7 @@ public class EngineSoundManager {
         float throttle = mSimulatedThrottle;
         long currentTime = System.currentTimeMillis();
 
+        // 1. BOŞTA GAZ VERME
         if (speed < 1.0f) {
             mCurrentGear = 0;
             float targetRpm = mIdleRpm + (throttle * (mMaxRpm - mIdleRpm));
@@ -1187,12 +1188,9 @@ public class EngineSoundManager {
 
         if (mCurrentGear == 0) mCurrentGear = 1;
 
-        // ==========================================================
-        // KANUN 1: HIZ KORUMASI (TOLERANS EKLENDİ - Sırf 99.9'a düştü diye vites küçültmez)
-        // ==========================================================
+        // --- KANUN 1: SERT HIZ KORUMASI (2km/h TOLERANSLI) ---
         while (mCurrentGear > 1) {
             float currentMinSpeed = mActiveProfile.gearRanges[mCurrentGear - 1][0];
-            // Anında alt vitese atması için hızın sınırın 2 km/h altına inmesini bekler (Buffer)
             if (speed < (currentMinSpeed - 2.0f)) {
                 mCurrentGear--;
                 mLastShiftTime = currentTime;
@@ -1201,6 +1199,7 @@ public class EngineSoundManager {
             }
         }
 
+        // --- KANUN 2: VİTES KARAR MEKANİZMASI ---
         if (currentTime - mLastShiftTime > mActiveProfile.shiftDurationMs) {
             float rpmRange = mMaxRpm - mIdleRpm;
             float currentGearRpm = calculateMechanicalRpm(mCurrentGear, speed);
@@ -1209,41 +1208,33 @@ public class EngineSoundManager {
             float downshiftThreshold;
 
             if (throttle <= 0.05f) {
-                // SESSİZLİK İÇİN EŞİKLER
-                upshiftThreshold = mIdleRpm + (rpmRange * 0.30f);
-                downshiftThreshold = mIdleRpm + (rpmRange * 0.10f);
+                // Pedal 0: Avlanmayı önlemek için upshift eşiği %50'ye çekildi
+                upshiftThreshold = mIdleRpm + (rpmRange * 0.50f);
+                downshiftThreshold = mIdleRpm + (rpmRange * 0.08f);
             } else {
-                // İVMELENME İÇİN EŞİKLER
                 upshiftThreshold = mIdleRpm + rpmRange * (0.60f + (throttle * 0.35f));
                 downshiftThreshold = mIdleRpm + rpmRange * 0.25f;
                 if (throttle > 0.8f) downshiftThreshold = mIdleRpm + rpmRange * 0.45f;
             }
 
-            // ==========================================================
-            // KANUN 2: VİTES BÜYÜTME (İLERİYİ GÖRME VE KARARSIZLIK ÇÖZÜMÜ)
-            // ==========================================================
+            // VİTES BÜYÜTME (İleriyi Görme + 600 RPM Tamponu)
             if (currentGearRpm > upshiftThreshold && mCurrentGear < mActiveProfile.gearRanges.length) {
                 float nextMinSpeed = mActiveProfile.gearRanges[mCurrentGear][0];
                 float nextGearRpm = calculateMechanicalRpm(mCurrentGear + 1, speed);
 
-                // 1. Hızımız üst vitesin bariyerini aştı mı?
-                // 2. Üst vitese atarsak devir "Düşürme Eşiğinin" altına inip bizi geri eski vitese atar mı?
-                // İki şart da sağlanıyorsa (Pinpon döngüsü yoksa) vitesi büyüt!
-                if (speed >= nextMinSpeed && nextGearRpm > (downshiftThreshold + 200f)) {
+                if (speed >= nextMinSpeed && nextGearRpm > (downshiftThreshold + 600f)) {
                     mCurrentGear++;
                     mLastShiftTime = currentTime;
                 }
             }
-            // ==========================================================
-            // KANUN 3: VİTES KÜÇÜLTME
-            // ==========================================================
+            // VİTES KÜÇÜLTME
             else if (currentGearRpm < downshiftThreshold && mCurrentGear > 1) {
                 mCurrentGear--;
                 mLastShiftTime = currentTime;
             }
         }
 
-        // DEVRİ UYGULA
+        // --- KANUN 3: DEVRİ HESAPLA VE WOBBLE UYGULA ---
         if (mCurrentGear > 0) {
             float targetRpm = calculateMechanicalRpm(mCurrentGear, speed);
             long timeSinceShift = currentTime - mLastShiftTime;
