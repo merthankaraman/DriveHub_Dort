@@ -267,8 +267,8 @@ public class EngineSoundManager {
         return new VehicleProfile("Lotus Exige 240", 800, 9000f, 1,
                 1,
                 new float[][]{
-                        {0f,   50f},   // 1. Vites
-                        {26f,  85f},   // 2. Vites
+                        {0f,   55f},   // 1. Vites
+                        {20f,  85f},   // 2. Vites
                         {45f,  120f},  // 3. Vites
                         {65f,  155f},  // 4. Vites
                         {85f,  195f},  // 5. Vites
@@ -303,8 +303,8 @@ public class EngineSoundManager {
         return new VehicleProfile("Lotus Exige 240 TRI", 800, 9000f, 1,
                 1,
                 new float[][]{
-                        {0f,   50f},   // 1. Vites
-                        {26f,  85f},   // 2. Vites
+                        {0f,   55f},   // 1. Vites
+                        {20f,  85f},   // 2. Vites
                         {45f,  120f},  // 3. Vites
                         {65f,  155f},  // 4. Vites
                         {85f,  195f},  // 5. Vites
@@ -342,8 +342,8 @@ public class EngineSoundManager {
                 0,
 
                 new float[][]{
-                        {0f,   50f},   // 1. Vites
-                        {26f,  85f},   // 2. Vites
+                        {0f,   55f},   // 1. Vites
+                        {20f,  85f},   // 2. Vites
                         {45f,  120f},  // 3. Vites
                         {65f,  155f},  // 4. Vites
                         {85f,  195f},  // 5. Vites
@@ -384,8 +384,8 @@ public class EngineSoundManager {
                 0,
 
                 new float[][]{
-                        {0f,   50f},   // 1. Vites
-                        {26f,  85f},   // 2. Vites
+                        {0f,   55f},   // 1. Vites
+                        {20f,  85f},   // 2. Vites
                         {45f,  120f},  // 3. Vites
                         {65f,  155f},  // 4. Vites
                         {85f,  195f},  // 5. Vites
@@ -504,8 +504,8 @@ public class EngineSoundManager {
                 0.8f,
                 2,
                 new float[][]{
-                        {0f,   50f},   // 1. Vites
-                        {26f,  85f},   // 2. Vites
+                        {0f,   55f},   // 1. Vites
+                        {20f,  85f},   // 2. Vites
                         {45f,  120f},  // 3. Vites
                         {65f,  155f},  // 4. Vites
                         {85f,  195f},  // 5. Vites
@@ -541,8 +541,8 @@ public class EngineSoundManager {
                 0.8f,
                 2,
                 new float[][]{
-                        {0f,   50f},   // 1. Vites
-                        {26f,  85f},   // 2. Vites
+                        {0f,   55f},   // 1. Vites
+                        {20f,  85f},   // 2. Vites
                         {45f,  120f},  // 3. Vites
                         {65f,  155f},  // 4. Vites
                         {85f,  195f},  // 5. Vites
@@ -576,8 +576,8 @@ public class EngineSoundManager {
         return new VehicleProfile("GTR R34", 1000f, 8200, 0.5f,
                 3,
                 new float[][]{
-                        {0f,   50f},   // 1. Vites
-                        {26f,  85f},   // 2. Vites
+                        {0f,   55f},   // 1. Vites
+                        {20f,  85f},   // 2. Vites
                         {45f,  120f},  // 3. Vites
                         {65f,  155f},  // 4. Vites
                         {85f,  195f},  // 5. Vites
@@ -610,8 +610,8 @@ public class EngineSoundManager {
         return new VehicleProfile("GTR R34 TRI", 1000f, 8200, 0.5f,
                 3,
                 new float[][]{
-                        {0f,   50f},   // 1. Vites
-                        {26f,  85f},   // 2. Vites
+                        {0f,   55f},   // 1. Vites
+                        {20f,  85f},   // 2. Vites
                         {45f,  120f},  // 3. Vites
                         {65f,  155f},  // 4. Vites
                         {85f,  195f},  // 5. Vites
@@ -642,10 +642,10 @@ public class EngineSoundManager {
     public static VehicleProfile PROFILE_BMW_328I() {
         return new VehicleProfile("BMW F30 328i",
                 800, 7200f,
-                0.6f, 2,
+                1f, 2,
                 new float[][]{
-                        {0f,   50f},   // 1. Vites
-                        {26f,  85f},   // 2. Vites
+                        {0f,   55f},   // 1. Vites
+                        {20f,  85f},   // 2. Vites
                         {45f,  120f},  // 3. Vites
                         {65f,  155f},  // 4. Vites
                         {85f,  195f},  // 5. Vites
@@ -657,31 +657,27 @@ public class EngineSoundManager {
                 0, 0,
                 new int[][]{
                         {R.raw.f30_enga_1290, 1290},
+                        {R.raw.f30_enga_1740, 1740},
                         {R.raw.f30_enga_1980, 1980},
+                        {R.raw.f30_enga_2280, 2280},
+                        {R.raw.f30_enga_2556, 2556},
                         {R.raw.f30_enga_2661, 2661},
+                        {R.raw.f30_enga_3321, 3321},
                         {R.raw.f30_enga_3951, 3951},
                         {R.raw.f30_enga_5031, 5031},
                         {R.raw.f30_enga_6141, 6141},
                         {R.raw.f30_enga_7200, 7200}
                 },
-                new int[][]{
-                        {R.raw.f30_engb_1290, 1290},
-                        {R.raw.f30_engb_1980, 1980},
-                        {R.raw.f30_engb_2661, 2661},
-                        {R.raw.f30_engb_3951, 3951},
-                        {R.raw.f30_engb_5031, 5031},
-                        {R.raw.f30_engb_6141, 6141},
-                        {R.raw.f30_engb_7200, 7200}
-                }
+                null
         );
     }
     public static VehicleProfile PROFILE_BMW_328I_TRI() {
         return new VehicleProfile("BMW F30 328i TRI",
                 800, 7200f,
-                0.6f, 2,
+                1, 2,
                 new float[][]{
-                        {0f,   50f},   // 1. Vites
-                        {26f,  85f},   // 2. Vites
+                        {0f,   55f},   // 1. Vites
+                        {20f,  85f},   // 2. Vites
                         {45f,  120f},  // 3. Vites
                         {65f,  155f},  // 4. Vites
                         {85f,  195f},  // 5. Vites
@@ -692,23 +688,19 @@ public class EngineSoundManager {
                 0.20f, 0.10f, 150, 150f,
                 R.raw.m3e46_startup, 0,
                 new int[][]{
-                        {R.raw.f30_enga_1290, 1290, 700, 1750},
-                        {R.raw.f30_enga_1980, 1980, 1550, 2450},
-                        {R.raw.f30_enga_2661, 2661, 2250, 3400},
-                        {R.raw.f30_enga_3951, 3951, 3200, 4600},
+                        {R.raw.f30_enga_1290, 1000, 750, 1300},
+                        {R.raw.f30_enga_1740, 1740, 1250, 1800},
+                        {R.raw.f30_enga_1980, 1980, 1750, 2250},
+                        {R.raw.f30_enga_2280, 2280, 2250, 2450},
+                        {R.raw.f30_enga_2556, 2556, 2250, 2650},
+                        {R.raw.f30_enga_2661, 2661, 2650, 3200},
+                        {R.raw.f30_enga_3321, 3321, 3200, 3500},
+                        {R.raw.f30_enga_3951, 3951, 3500, 4600},
                         {R.raw.f30_enga_5031, 5031, 4400, 5700},
                         {R.raw.f30_enga_6141, 6141, 5500, 6800},
                         {R.raw.f30_enga_7200, 7200, 6600, 8000}
                 },
-                new int[][]{
-                        {R.raw.f30_engb_1290, 1290, 700, 1750},
-                        {R.raw.f30_engb_1980, 1980, 1550, 2450},
-                        {R.raw.f30_engb_2661, 2661, 2250, 3400},
-                        {R.raw.f30_engb_3951, 3951, 3200, 4600},
-                        {R.raw.f30_engb_5031, 5031, 4400, 5700},
-                        {R.raw.f30_engb_6141, 6141, 5500, 6800},
-                        {R.raw.f30_engb_7200, 7200, 6600, 8000}
-                }
+                null
         );
     }
 
