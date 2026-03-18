@@ -151,6 +151,9 @@ public class MG4ControlService extends Service {
     private int            mSeatRLevel = 0;
 
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
+
+    // Kontak (ignition) düşüp tekrar RUN olursa profilleri yeniden uygula
+    private int mLastIgnitionStateForRemember = -1;
     private boolean mDriveRegenRememberInitialized = false;
     /** Boot sonrası sürüş modu / regen uygulaması için gecikme (ms). Debug için biraz kısaltıldı. */
     private static final long REMEMBER_APPLY_START_UP_DELAY_MS = 5_000L;
@@ -381,25 +384,32 @@ public class MG4ControlService extends Service {
         // Profil remember:
         //  - İlk deneme: servis başladıktan 5 sn sonra
         //  - Kontak KAPALIYSA: her 1 sn'de bir tekrar dene
-        //  - Kontak AÇIKKEN (ignition >= 2): sürüş/regen profillerini BİR KEZ uygula
+        //  - Kontak AÇIKKEN (ignition >= 2): sürüş/regen profillerini uygula
+        //  - Ignition düşüp tekrar RUN olursa yeniden uygula (ekran kapanmasa bile)
         mMainHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 int ign = MG4Hardware.getVehicleIgnition();
-                if (ign < 2) {
-                    mMainHandler.postDelayed(this, REMEMBER_APPLY_LOOP_DELAY_MS);
-                    return;
+                boolean isRun = ign >= 2;
+                boolean wasRun = mLastIgnitionStateForRemember >= 2;
+
+                // İlk durum veya ignition değişimi için state'i güncelle
+                mLastIgnitionStateForRemember = ign;
+
+                // RUN'a yeni geçişte (OFF/ACC -> RUN) yeniden uygula
+                if (isRun && !wasRun) {
+                    applyRememberedDriveModeIfNeeded();
+                    applyRememberedRegenIfNeeded();
+
+                    // Profil uygulandıktan kısa süre sonra kaydetme flag'ini aç
+                    mMainHandler.postDelayed(
+                            () -> mDriveRegenRememberInitialized = true,
+                            REMEMBER_APPLY_START_UP_DELAY_MS
+                    );
                 }
 
-                // Kontak açıkken bir kere uygula
-                applyRememberedDriveModeIfNeeded();
-                applyRememberedRegenIfNeeded();
-
-                // Profil uygulandıktan kısa süre sonra kaydetme flag'ini aç
-                mMainHandler.postDelayed(
-                        () -> mDriveRegenRememberInitialized = true,
-                        REMEMBER_APPLY_START_UP_DELAY_MS
-                );
+                // Sürekli izlemeye devam et (ignition düşüp tekrar RUN olursa tekrar uygulasın)
+                mMainHandler.postDelayed(this, REMEMBER_APPLY_LOOP_DELAY_MS);
             }
         }, REMEMBER_APPLY_START_UP_DELAY_MS);
 

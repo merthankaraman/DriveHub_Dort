@@ -879,9 +879,17 @@ public class MG4Hardware {
     // -------------------------------------------------------------------------
 
     public static boolean setDriveMode(DriveMode mode) {
+        boolean ret_val = false;
         if (sLogEnabled) Log.i(TAG, "setDriveMode → " + mode.label + " (" + mode.value + ")");
-        if (setIntPropertyCPM(PROP_DRIVE_MODE, AREA_GLOBAL, mode.value)) return true;
-        return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_DRIVE_MODE, mode.value);
+        if (setIntPropertyCPM(PROP_DRIVE_MODE, AREA_GLOBAL, mode.value)) ret_val = true;
+        if (!ret_val) ret_val = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_DRIVE_MODE, mode.value);
+        if (sAppContext != null) {
+            sAppContext.getSharedPreferences("drivehub_dort", Context.MODE_PRIVATE)
+                    .edit()
+                    .putInt(com.drivehub.dort.service.MG4ControlService.PREF_LAST_DRIVE_MODE, mode.value)
+                    .apply();
+        }
+        return ret_val;
     }
     public static boolean setOnePedal(boolean enabled) {
         if (sLogEnabled) Log.i(TAG, "setOnePedal → " + (enabled ? "Açık" : "Kapalı"));
@@ -902,9 +910,16 @@ public class MG4Hardware {
             if (!ok) ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
             if (!ok) ok = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_LEVEL, level.value);
         }
-        sCachedRegenLevel = level.value;
 
         if (sLogEnabled) Log.i(TAG, "setRegenLevel: seviye=" + level.value + " CPM=" + ok);
+
+        // En son seçilen regen seviyesini her durumda (OK olsa da olmasa da) hatırla
+        /*if (sAppContext != null) {
+            sAppContext.getSharedPreferences("drivehub_dort", Context.MODE_PRIVATE)
+                    .edit()
+                    .putInt(com.drivehub.dort.service.MG4ControlService.PREF_LAST_REGEN_LEVEL, level.value)
+                    .apply();
+        }*/
         return ok;
     }
     public static boolean setSteeringHeat(boolean targetOn) {
@@ -1014,9 +1029,16 @@ public class MG4Hardware {
     }
     /** Regen seviyesi: önce vehicle/CPM callback cache; yoksa getProperty dene (sürüş modu gibi). */
     public static int getRegenLevel() {
+        int v;
         if (sCachedRegenLevel >= 0) return sCachedRegenLevel;
-        int v = getIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL);
-        if (v >= 0) sCachedRegenLevel = v;
+        if (getOnePedal() == 1) {
+            sCachedRegenLevel = 6;
+            v = sCachedRegenLevel;
+        }
+        else {
+            v = getIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL);
+            if (v >= 0) sCachedRegenLevel = v;
+        }
         return v;
     }
     public static int getOnePedal()   { return getIntPropertyCPM(PROP_ONE_PEDAL,   AREA_GLOBAL); }
