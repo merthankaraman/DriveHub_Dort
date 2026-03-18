@@ -893,16 +893,16 @@ public class MG4Hardware {
         boolean ok;
         if (sLogEnabled) Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
         if (level != RegenLevel.ONE_PEDAL){
-            //setOnePedal(false);
+            setOnePedal(false);
             ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
             if (!ok) ok = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_LEVEL, level.value);
         }
         else{
-            //ok = setOnePedal(true);
-            ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
+            ok = setOnePedal(true);
+            if (!ok) ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
             if (!ok) ok = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_LEVEL, level.value);
         }
-        //sCachedRegenLevel = level.value;
+        sCachedRegenLevel = level.value;
 
         if (sLogEnabled) Log.i(TAG, "setRegenLevel: seviye=" + level.value + " CPM=" + ok);
         return ok;

@@ -439,7 +439,7 @@ public class EngineSoundManager {
                 new int[][]{
                         {R.raw.f2004_in_idle,                   4200},
                         {R.raw.f2004_in_off_low,                6000},
-                        {R.raw.f2004_in_offmid_pitchare,        8042},
+                        //{R.raw.f2004_in_offmid_pitchare,        8042},
                         {R.raw.f2004_in_off_high,               12000},
                         {R.raw.f2004_in_off_midhigh_mix,        17000},
                         {R.raw.f2004_in_off_midhigh_mix,        19000}
@@ -475,13 +475,7 @@ public class EngineSoundManager {
                         {R.raw.f2004_in_on_high_mix,    16000, 13000, 19500},
                         {R.raw.f2004_in_on_veryhigh_mix,18500, 15500, 21000}
                 },
-                new int[][]{
-                        {R.raw.f2004_in_idle,            4200, 0, 8000},
-                        {R.raw.f2004_in_off_low,         6000, 3500, 11000},
-                        {R.raw.f2004_in_offmid_pitchare, 8042, 5500, 14000},
-                        {R.raw.f2004_in_off_midhigh_mix,12000, 8500, 18000},
-                        {R.raw.f2004_in_off_high,       17000, 13000, 20000}
-                }
+                null
         );
     }
     public static VehicleProfile PROFILE_MCLAREN_P1() {

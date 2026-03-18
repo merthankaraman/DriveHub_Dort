@@ -178,7 +178,7 @@ public class MG4ControlService extends Service {
     };
 
     /** 100 ms'lik ana görev periyodu (enerji, mesafe, hazır/şarj durumu vb.). */
-    private static final int MAIN_100MS_TASK_INTERVAL_MS = 10;
+    private static final int MAIN_100MS_TASK_INTERVAL_MS = 30;
     private static final int SOUND_TASK_MS = 30;
     private static final long TELEMETRY_INTERVAL_MS = 30L;
     /** Hayat boyu km/kWh'ı bu kadar integrasyon sonrası bir kez hafızaya yaz (≈30 sn). */
