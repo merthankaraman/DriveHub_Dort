@@ -114,6 +114,7 @@ public class DemoActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_demo);
+        FullscreenHelper.applyFromPrefs(this);
 
         findViewById(R.id.btnDemoBack).setOnClickListener(v -> finish());
 
@@ -228,6 +229,14 @@ public class DemoActivity extends AppCompatActivity {
         updateDoorLockStatus();
         mHandler.post(mPollRunnable);
         startBluetoothLockMonitoring();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            FullscreenHelper.applyFromPrefs(this);
+        }
     }
 
     @Override

@@ -85,6 +85,21 @@ public class DrivingHistoryActivity extends AppCompatActivity {
         });
 
         refreshTable();
+        FullscreenHelper.applyFromPrefs(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        FullscreenHelper.applyFromPrefs(this);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            FullscreenHelper.applyFromPrefs(this);
+        }
     }
 
     private void refreshTable() {

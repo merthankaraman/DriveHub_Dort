@@ -22,16 +22,11 @@
 
         <Button
             android:id="@+id/btnRegenBack"
+            style="@style/Widget.DriveHub.Button.PanelBack"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_marginEnd="20dp"
-            android:backgroundTint="#21262D"
-            android:minWidth="0dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:text="@string/back"
-            android:textColor="#C9D1D9"
-            android:textSize="18sp" />
+            android:text="@string/back" />
 
         <TextView
             android:layout_width="0dp"

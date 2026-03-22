@@ -22,16 +22,13 @@
 
             <Button
                 android:id="@+id/btnShortcutsBack"
+                style="@style/Widget.DriveHub.Button.PanelBack"
                 android:layout_width="wrap_content"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:layout_marginEnd="20dp"
                 android:backgroundTint="@color/panel_button_bg"
-                android:minWidth="0dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
                 android:text="@string/back"
-                android:textColor="@color/status_value"
-                android:textSize="18sp" />
+                android:textColor="@color/status_value" />
 
             <TextView
                 android:layout_width="0dp"

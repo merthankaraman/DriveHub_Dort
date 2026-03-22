@@ -63,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
     /** Dil: \"tr\", \"en\" veya \"\" (sistem) */
     private static final String PREF_LANGUAGE = "app_language";
     private static final String PREF_SOUND_ENABLED = "sound_enabled";
-    private static final String PREF_FULLSCREEN     = "fullscreen_mode";
     private static final String PREF_SOUND_MODE = "sound_mode";
     private static final String PREF_OVERLAY_ENABLED = "overlay_enabled";
     private static final String PREF_SOUND_PROFILE = "sound_profile";
@@ -146,15 +145,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void applyFullscreen(boolean enabled) {
-        View decor = getWindow().getDecorView();
-        if (enabled) {
-            int flags = View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-            decor.setSystemUiVisibility(flags);
-        } else {
-            decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-        }
+        FullscreenHelper.apply(this, enabled);
     }
 
     // Ana ekran
@@ -561,7 +552,7 @@ public class MainActivity extends AppCompatActivity {
         updateSoundToggleButton();
 
         // Tam ekran tercihini uygula
-        boolean fullscreen = prefsSound.getBoolean(PREF_FULLSCREEN, false);
+        boolean fullscreen = prefsSound.getBoolean(FullscreenHelper.KEY_FULLSCREEN, false);
         applyFullscreen(fullscreen);
 
         // Geri tuşu davranışı: jest uyumlu OnBackPressedDispatcher
@@ -781,7 +772,7 @@ public class MainActivity extends AppCompatActivity {
             swFullscreen.setChecked(fullscreen);
             swFullscreen.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 getSharedPreferences("drivehub_dort", MODE_PRIVATE)
-                        .edit().putBoolean(PREF_FULLSCREEN, isChecked).apply();
+                        .edit().putBoolean(FullscreenHelper.KEY_FULLSCREEN, isChecked).apply();
                 applyFullscreen(isChecked);
             });
         }
@@ -1115,6 +1106,16 @@ public class MainActivity extends AppCompatActivity {
         if (getIntent().getBooleanExtra(EXTRA_OPEN_CLIMATE, false)) {
             getIntent().removeExtra(EXTRA_OPEN_CLIMATE);
             openClimatePanel();
+        }
+        // Dialog / sistem UI sonrası immersive modun geri gelmesi
+        FullscreenHelper.applyFromPrefs(this);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            FullscreenHelper.applyFromPrefs(this);
         }
     }
 

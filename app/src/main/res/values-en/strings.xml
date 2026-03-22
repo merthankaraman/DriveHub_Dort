@@ -120,7 +120,6 @@
     <string name="not_charging">Not charging</string>
 
     <!-- Charging history screen -->
-    <string name="charging_history_back">← Back</string>
     <string name="charging_history_title">CHARGING HISTORY</string>
     <string name="charging_history_table_start">Start</string>
     <string name="charging_history_table_end">End</string>

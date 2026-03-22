@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="panel_back_button_min_height">64dp</dimen>
+    <dimen name="panel_back_button_min_width">132dp</dimen>
+    <dimen name="panel_back_button_padding_h">28dp</dimen>
+    <dimen name="panel_back_button_text_size">22sp</dimen>
+</resources>

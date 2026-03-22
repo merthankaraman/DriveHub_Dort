@@ -120,7 +120,6 @@
     <string name="not_charging">Şarjda değil</string>
 
     <!-- Şarj geçmişi ekranı -->
-    <string name="charging_history_back">← Geri</string>
     <string name="charging_history_title">ŞARJ GEÇMİŞİ</string>
     <string name="charging_history_table_start">Başlangıç</string>
     <string name="charging_history_table_end">Bitiş</string>
