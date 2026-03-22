@@ -15,7 +15,7 @@ android {
         minSdk 28
         targetSdk 36
         versionCode 1
-        versionName "0.8.8.6"
+        versionName "0.8.8.7"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -53,6 +53,9 @@ android {
 }
 
 dependencies {
+    // Açık bağımlılık: AppCompat üzerinden gelen transitive bazen eksik görünebiliyor;
+    // CoreComponentFactory (androidx.core.app) sınıfları APK'da kesin dursun.
+    implementation "androidx.core:core:1.13.1"
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity

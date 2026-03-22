@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,8 +14,13 @@ import androidx.annotation.Nullable;
  * Kadran uygulaması (com.drivehub.kadran) için telemetri sağlar.
  * content://com.drivehub.dort.telemetry/latest ile query atılır; broadcast yerine
  * kullanıldığı için sistem UID'den "non-protected broadcast" uyarısı oluşmaz.
+ * <p>
+ * Açılışta process ölmesin diye tüm yüzeyler try/catch ile korunur; hata olursa
+ * boş/geçerli bir Cursor döner (Kadran tarafı null/0 satırı tolere etmeli).
  */
 public class TelemetryProvider extends ContentProvider {
+
+    private static final String TAG = "MG4_TEL_PROVIDER";
 
     public static final String AUTHORITY = "com.drivehub.dort.telemetry";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/latest");
@@ -34,33 +40,59 @@ public class TelemetryProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        return true;
+        try {
+            return true;
+        } catch (Throwable t) {
+            Log.e(TAG, "onCreate: " + t.getMessage(), t);
+            return true;
+        }
     }
 
     @Nullable
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection,
                        @Nullable String[] selectionArgs, @Nullable String sortOrder) {
-        if (!"latest".equals(uri.getLastPathSegment())) {
-            return null;
+        try {
+            if (!"latest".equals(uri.getLastPathSegment())) {
+                return null;
+            }
+            MatrixCursor c = new MatrixCursor(COLUMNS, 1);
+            c.addRow(new Object[]{
+                    TelemetryHolder.getRpm(),
+                    TelemetryHolder.getSpeedKmh(),
+                    TelemetryHolder.getGear(),
+                    TelemetryHolder.getThrottle01(),
+                    TelemetryHolder.getDcPowerKw(),
+                    TelemetryHolder.getRpmMax(),
+                    TelemetryHolder.getMotorMaxPowerKw()
+            });
+            return c;
+        } catch (Throwable t) {
+            Log.e(TAG, "query failed: " + t.getMessage(), t);
+            return emptyLatestCursor();
         }
-        MatrixCursor c = new MatrixCursor(COLUMNS, 1);
-        c.addRow(new Object[]{
-                TelemetryHolder.getRpm(),
-                TelemetryHolder.getSpeedKmh(),
-                TelemetryHolder.getGear(),
-                TelemetryHolder.getThrottle01(),
-                TelemetryHolder.getDcPowerKw(),
-                TelemetryHolder.getRpmMax(),
-                TelemetryHolder.getMotorMaxPowerKw()
-        });
-        return c;
+    }
+
+    /** Hata durumunda bile şema uyumlu boş satır (veya sütun) döndürür. */
+    private static MatrixCursor emptyLatestCursor() {
+        try {
+            MatrixCursor c = new MatrixCursor(COLUMNS, 1);
+            c.addRow(new Object[]{0f, 0f, 0, 0f, 0f, 0f, 0f});
+            return c;
+        } catch (Throwable t) {
+            return new MatrixCursor(COLUMNS);
+        }
     }
 
     @Nullable
     @Override
     public String getType(@NonNull Uri uri) {
-        return "vnd.android.cursor.item/vnd.drivehub.dort.telemetry";
+        try {
+            return "vnd.android.cursor.item/vnd.drivehub.dort.telemetry";
+        } catch (Throwable t) {
+            Log.e(TAG, "getType failed: " + t.getMessage(), t);
+            return null;
+        }
     }
 
     @Nullable

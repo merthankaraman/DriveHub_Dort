@@ -110,7 +110,8 @@
         <provider
             android:name=".telemetry.TelemetryProvider"
             android:authorities="com.drivehub.dort.telemetry"
-            android:exported="true" />
+            android:exported="true"
+            android:directBootAware="false" />
 
     </application>
 </manifest>

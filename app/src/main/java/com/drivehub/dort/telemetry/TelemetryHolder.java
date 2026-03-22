@@ -16,13 +16,17 @@ public final class TelemetryHolder {
 
     public static void update(float rpm, float speedKmh, int gear, float throttle01,
                               float dcPowerKw, float rpmMax, float motorMaxPowerKw) {
-        sRpm = rpm;
-        sSpeedKmh = speedKmh;
-        sGear = gear;
-        sThrottle01 = throttle01;
-        sDcPowerKw = dcPowerKw;
-        sRpmMax = rpmMax;
-        sMotorMaxPowerKw = motorMaxPowerKw;
+        try {
+            sRpm = rpm;
+            sSpeedKmh = speedKmh;
+            sGear = gear;
+            sThrottle01 = throttle01;
+            sDcPowerKw = dcPowerKw;
+            sRpmMax = rpmMax;
+            sMotorMaxPowerKw = motorMaxPowerKw;
+        } catch (Throwable ignored) {
+            // Asla üst katmana sıçramasın (servis / ses döngüsü çökmez)
+        }
     }
 
     public static float getRpm() { return sRpm; }
