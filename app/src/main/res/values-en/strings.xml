@@ -277,7 +277,8 @@
 
     <string name="consumption_reset_confirm_title">Confirm reset</string>
     <string name="consumption_reset_confirm_message">Are you sure you want to reset these values?</string>
-    <string name="consumption_time_avg_speed">Time / Avg speed</string>
+    <string name="consumption_elapsed_time_label">Elapsed time</string>
+    <string name="consumption_avg_speed_only">Average speed</string>
     <string name="consumption_speed">Speed</string>
     <string name="consumption_power">Power</string>
     <string name="consumption_trip">Trip Km</string>

@@ -29,6 +29,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.os.LocaleListCompat;
 
 import com.drivehub.dort.R;
@@ -88,6 +89,12 @@ public class MainActivity extends AppCompatActivity {
     private static final int    DEFAULT_CAMERA_360_KEY = -1;
     private static final int COLOR_ACTIVE   = 0xFF1F6FEB; // mavi — seçili
     private static final int COLOR_INACTIVE = 0xFF21262D; // koyu gri — seçilmemiş
+    /** Tüketim gücü (kW): negatif = rejenerasyon */
+    private static final int COLOR_CONSUMPTION_POWER_REGEN = 0xFF22C55E;
+    /** Pozitif güç, motorun %50 üzeri */
+    private static final int COLOR_CONSUMPTION_POWER_WARN = 0xFFF97316;
+    /** Pozitif güç, motorun %80 üzeri */
+    private static final int COLOR_CONSUMPTION_POWER_CRIT = 0xFFEF4444;
 
     /** Tüketim ekranı: 0 = motor çalıştıktan itibaren (trip), 1 = şu anki veriler (anlık) */
     private static final String PREF_CONSUMPTION_DISPLAY_MODE = "consumption_display_mode";
@@ -233,6 +240,8 @@ public class MainActivity extends AppCompatActivity {
     // Tüketim paneli
     private View mLayoutConsumptionPanel;
     private TextView mTvConsumptionTimeAvg;
+    private TextView mTvConsumptionTimeAvgLabel;
+    private TextView mTvConsumptionElapsedTime;
     private TextView mTvConsumptionSpeed;
     private TextView mTvConsumptionPower;
     private TextView mTvConsumptionTripKm;
@@ -390,8 +399,8 @@ public class MainActivity extends AppCompatActivity {
                     mTvGaugeSpeed.setText(getString(R.string.speed_placeholder));
                 }
 
-                float dcPowerKw = MG4Hardware.getDcKwGlobal();
-                if (Float.isNaN(dcPowerKw)) dcPowerKw = 0f;
+                float rawPowerKw = MG4Hardware.getDcKwGlobal();
+                float dcPowerKw = Float.isNaN(rawPowerKw) ? 0f : rawPowerKw;
 
                 if (mTvGaugeRpm != null) {
                     float rpm = mEngineSound.getCurrentRpm();
@@ -422,6 +431,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 if (mTvGaugePower != null) {
                     mTvGaugePower.setText(String.format("%.2f", dcPowerKw));
+                    applyPowerKwTextColor(rawPowerKw, mTvGaugePower);
                 }
                 if (mTvGaugeThrottle != null) {
                     float throttle = mEngineSound.getSimulatedThrottle();
@@ -877,6 +887,8 @@ public class MainActivity extends AppCompatActivity {
         // ---- Tüketim paneli ----
         mLayoutConsumptionPanel   = findViewById(R.id.layoutConsumptionPanel);
         mTvConsumptionTimeAvg     = findViewById(R.id.tvConsumptionTimeAvg);
+        mTvConsumptionTimeAvgLabel  = findViewById(R.id.tvConsumptionTimeAvgLabel);
+        mTvConsumptionElapsedTime = findViewById(R.id.tvConsumptionElapsedTime);
         mTvConsumptionSpeed       = findViewById(R.id.tvConsumptionSpeed);
         mTvConsumptionPower       = findViewById(R.id.tvConsumptionPower);
         mTvConsumptionTripKm      = findViewById(R.id.tvConsumptionTripKm);
@@ -1827,9 +1839,37 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Kayıtlı profiller satırının görünürlüğü: sadece Hayat boyu modunda göster.
+        // Hayat boyu: sağda profil düğmeleri; diğer modlarda gizli (sol geçen süre her modda görünür)
         if (mLayoutConsumptionProfiles != null) {
-            mLayoutConsumptionProfiles.setVisibility(lifetimeActive ? View.VISIBLE : View.INVISIBLE);
+            mLayoutConsumptionProfiles.setVisibility(lifetimeActive ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    /**
+     * DC güç (kW) göstergesi rengi: negatif yeşil; pozitifte kayıtlı motor gücüne göre turuncu/kırmızı.
+     * Tüketim ve ses panelindeki kW TextView'ları için ortak.
+     */
+    private void applyPowerKwTextColor(float powerKw, TextView target) {
+        if (target == null) return;
+        if (Float.isNaN(powerKw)) {
+            target.setTextColor(ContextCompat.getColor(this, R.color.status_value));
+            return;
+        }
+        if (powerKw < 0f) {
+            target.setTextColor(COLOR_CONSUMPTION_POWER_REGEN);
+            return;
+        }
+        SharedPreferences p = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
+        float motorKw = p.getFloat(PREF_MOTOR_POWER, 150f);
+        if (motorKw < 50f || motorKw > 200f) {
+            motorKw = 150f;
+        }
+        if (powerKw > motorKw * 0.8f) {
+            target.setTextColor(COLOR_CONSUMPTION_POWER_CRIT);
+        } else if (powerKw > motorKw * 0.5f) {
+            target.setTextColor(COLOR_CONSUMPTION_POWER_WARN);
+        } else {
+            target.setTextColor(ContextCompat.getColor(this, R.color.status_value));
         }
     }
 
@@ -1846,12 +1886,12 @@ public class MainActivity extends AppCompatActivity {
         boolean lifetimeMode = (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME);
 
         if (mTvConsumptionTimeAvg != null) {
-            // Tüm modlar için ortak: önce saat ve km kaynağını seç, sonra formatla
+            // Tüm modlar: geçen süre üst satırda solda; burada yalnız ortalama hız
             double hours;
             double km;
+            boolean tripOrSinceEarlyExit = false;
 
             if (lifetimeMode) {
-                // Lifetime modu: -1 ise global lifetime, >=0 ise seçili profil
                 if (mActiveConsumptionProfile < 0) {
                     hours = MG4Hardware.getLifetimeHours();
                     km    = MG4Hardware.getLifetimeKm();
@@ -1860,13 +1900,19 @@ public class MainActivity extends AppCompatActivity {
                     km    = MG4Hardware.getConsumptionProfileKm(mActiveConsumptionProfile);
                 }
             } else if (!sinceStart) {
-                // Trip modu
                 hours = MG4Hardware.getTripHours();
                 km    = MG4Hardware.getTripDistanceKm();
             } else {
                 long durMs = MG4ControlService.getDriveSessionDurationMs();
                 if (durMs <= 0) {
-                    mTvConsumptionTimeAvg.setText("--:-- / --.- km/h");
+                    if (mTvConsumptionElapsedTime != null) {
+                        mTvConsumptionElapsedTime.setText("--:--");
+                    }
+                    if (mTvConsumptionTimeAvgLabel != null) {
+                        mTvConsumptionTimeAvgLabel.setText(R.string.consumption_avg_speed_only);
+                    }
+                    mTvConsumptionTimeAvg.setText("--.- km/h");
+                    tripOrSinceEarlyExit = true;
                     hours = 0.0;
                     km = 0.0;
                 } else {
@@ -1875,26 +1921,30 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            if (hours <= 0.0) {
-                mTvConsumptionTimeAvg.setText("--:-- / --.- km/h");
-            } else {
-                long totalSec = (long) (hours * 3600.0);
-                long h = totalSec / 3600L;
-                long m = (totalSec % 3600L) / 60L;
-                long s = totalSec % 60L;
-                String timePart;
-                if (h > 0) {
-                    timePart = String.format(Locale.US, "%02d:%02d:%02d", h, m, s);
-                } else {
-                    timePart = String.format(Locale.US, "%02d:%02d", m, s);
+            if (!tripOrSinceEarlyExit) {
+                String timePart = null;
+                if (hours > 0.0) {
+                    long totalSec = (long) (hours * 3600.0);
+                    long h = totalSec / 3600L;
+                    long m = (totalSec % 3600L) / 60L;
+                    long s = totalSec % 60L;
+                    if (h > 0) {
+                        timePart = String.format(Locale.US, "%02d:%02d:%02d", h, m, s);
+                    } else {
+                        timePart = String.format(Locale.US, "%02d:%02d", m, s);
+                    }
+                }
+                if (mTvConsumptionElapsedTime != null) {
+                    mTvConsumptionElapsedTime.setText(timePart != null ? timePart : "--:--");
+                }
+                if (mTvConsumptionTimeAvgLabel != null) {
+                    mTvConsumptionTimeAvgLabel.setText(R.string.consumption_avg_speed_only);
                 }
                 if (km > 0.01 && hours > 0.0) {
                     double avgSpeed = km / hours;
-                    mTvConsumptionTimeAvg.setText(
-                            String.format(Locale.US, "%s / %.1f km/h", timePart, avgSpeed));
+                    mTvConsumptionTimeAvg.setText(String.format(Locale.US, "%.1f km/h", avgSpeed));
                 } else {
-                    mTvConsumptionTimeAvg.setText(
-                            String.format(Locale.US, "%s / --.- km/h", timePart));
+                    mTvConsumptionTimeAvg.setText("--.- km/h");
                 }
             }
         }
@@ -1908,8 +1958,10 @@ public class MainActivity extends AppCompatActivity {
         if (mTvConsumptionPower != null) {
             if (Float.isNaN(powerKw)) {
                 mTvConsumptionPower.setText("--");
+                mTvConsumptionPower.setTextColor(ContextCompat.getColor(this, R.color.status_value));
             } else {
                 mTvConsumptionPower.setText(String.format(Locale.US, "%.2f kW", powerKw));
+                applyPowerKwTextColor(powerKw, mTvConsumptionPower);
             }
         }
 
