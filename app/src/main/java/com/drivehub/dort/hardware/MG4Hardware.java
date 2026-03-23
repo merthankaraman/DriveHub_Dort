@@ -1250,7 +1250,7 @@ public class MG4Hardware {
         sConsumptionLastRealtimeMs = nowRealtimeMs;
         if (dtHours > 0) {
             double drivedKwh = 0;
-            double dKm = speedKmh * dtHours;
+            double dKm = Math.abs(speedKmh * dtHours);
             if (!Float.isNaN(dcKw)){
                 if (speedKmh == 0f && dcKw < 0f) drivedKwh = 0f;
                 else drivedKwh = dcKw * dtHours;
