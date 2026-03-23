@@ -1106,8 +1106,17 @@ public class MG4Hardware {
         return sVehicleIgnition;
     }
 
-    /** SOC — % (0.0–100.0). CPM'den oku, yoksa BMS cache'e bak. */
+    /** SOC — % (0.0–100.0). 100ms task'ta güncellenen cache değerini döner. */
     public static float getSoc() {
+        if (Float.isNaN(sLastSoc)) {
+            // İlk çağrıda (task henüz çalışmadıysa) tek seferlik ham okuma yap.
+            sLastSoc = readSocRaw();
+        }
+        return sLastSoc;
+    }
+
+    /** SOC — CPM'den oku, yoksa BMS cache'e bak (ham okuma). */
+    private static float readSocRaw() {
         float v = getFloatPropertyCPM(PROP_SOC, AREA_GLOBAL);
         if (Float.isNaN(v)) v = bmsFloat(PROP_SOC);
         return v;
@@ -1168,6 +1177,8 @@ public class MG4Hardware {
     /** Son integrasyon anı (monotonik; SystemClock.elapsedRealtime()). Saat geri alınsa bile dt negatif olmaz. */
     private static volatile long sConsumptionLastRealtimeMs = 0;
     private static volatile float sLastSpeedKmh = Float.NaN;
+    /** SOC cache: 100ms task içinde güncellenir. */
+    private static volatile float sLastSoc = Float.NaN;
     /** 1:P  2:R  3:N  4:D */
     private static volatile int sLastGear = -1;
     private static volatile int elseifcounter = 0;
@@ -1186,6 +1197,9 @@ public class MG4Hardware {
         float speedKmh = speedKmh_raw * (speedKmh_raw >= 80 ? 1.004f : 1f);
 
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
+
+        // SOC'yi 100ms task içinde cache'le (UI paneli bu değişkenden okusun).
+        sLastSoc = readSocRaw();
 
         float dcVolt = getDcVoltage();
         float dcAmpAct = getDcCurrentActual();

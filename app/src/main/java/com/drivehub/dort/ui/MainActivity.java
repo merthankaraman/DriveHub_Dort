@@ -244,6 +244,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvConsumptionElapsedTime;
     private TextView mTvConsumptionSpeed;
     private TextView mTvConsumptionPower;
+    private TextView mTvConsumptionSoc;
     private TextView mTvConsumptionTripKm;
     private TextView mTvConsumptionEnergy;
     private TextView mTvConsumptionAvgKwhPer100km;
@@ -891,6 +892,7 @@ public class MainActivity extends AppCompatActivity {
         mTvConsumptionElapsedTime = findViewById(R.id.tvConsumptionElapsedTime);
         mTvConsumptionSpeed       = findViewById(R.id.tvConsumptionSpeed);
         mTvConsumptionPower       = findViewById(R.id.tvConsumptionPower);
+        mTvConsumptionSoc         = findViewById(R.id.tvConsumptionSoc);
         mTvConsumptionTripKm      = findViewById(R.id.tvConsumptionTripKm);
         mTvConsumptionEnergy      = findViewById(R.id.tvConsumptionEnergy);
         mTvConsumptionAvgKwhPer100km      = findViewById(R.id.tvConsumptionAvgKwhPer100km);
@@ -1953,6 +1955,15 @@ public class MainActivity extends AppCompatActivity {
                 mTvConsumptionSpeed.setText("--");
             } else {
                 mTvConsumptionSpeed.setText(String.format(Locale.US, "%.2f km/h", speedKmh));
+            }
+        }
+        if (mTvConsumptionSoc != null) {
+            // SOC artık MG4Hardware'ın 100ms cache'inden gelir.
+            float soc = MG4Hardware.getSoc();
+            if (Float.isNaN(soc)) {
+                mTvConsumptionSoc.setText(getString(R.string.consumption_soc_placeholder));
+            } else {
+                mTvConsumptionSoc.setText(getString(R.string.consumption_soc_format, soc));
             }
         }
         if (mTvConsumptionPower != null) {

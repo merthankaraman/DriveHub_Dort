@@ -278,12 +278,14 @@
     <string name="consumption_reset_confirm_title">Confirm reset</string>
     <string name="consumption_reset_confirm_message">Are you sure you want to reset these values?</string>
     <string name="consumption_elapsed_time_label">Elapsed time</string>
+    <string name="consumption_soc_placeholder">Battery: --%</string>
+    <string name="consumption_soc_format">Battery: %.3f%%</string>
     <string name="consumption_avg_speed_only">Average speed</string>
     <string name="consumption_speed">Speed</string>
     <string name="consumption_power">Power</string>
     <string name="consumption_trip">Trip Km</string>
-    <string name="consumption_energy">Energy </string>
-    <string name="consumption_avg">Avg. consumption </string>
+    <string name="consumption_energy">Consumed Energy </string>
+    <string name="consumption_avg">Average consumption </string>
     <string name="consumption_lifetime">Lifetime</string>
     <!-- Default consumption profile label: Trip A, Trip B, ... -->
     <string name="consumption_profile_default_format">Trip %1$c</string>

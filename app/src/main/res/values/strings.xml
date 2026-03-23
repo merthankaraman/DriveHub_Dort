@@ -279,12 +279,14 @@
     <string name="consumption_reset_confirm_title">Sıfırlama onayı</string>
     <string name="consumption_reset_confirm_message">Bu verileri sıfırlamak istediğinden emin misin?</string>
     <string name="consumption_elapsed_time_label">Geçen süre</string>
+    <string name="consumption_soc_placeholder">Şarj: --%</string>
+    <string name="consumption_soc_format">Şarj: %.3f%%</string>
     <string name="consumption_avg_speed_only">Ortalama hız</string>
     <string name="consumption_speed">Hız</string>
     <string name="consumption_power">Güç</string>
     <string name="consumption_trip">Yol Km</string>
-    <string name="consumption_energy">Enerji </string>
-    <string name="consumption_avg">Ort. tüketim </string>
+    <string name="consumption_energy">Tüketilen Enerji </string>
+    <string name="consumption_avg">Ortalama tüketim </string>
     <string name="consumption_lifetime">Hayat boyu</string>
     <!-- Varsayılan tüketim profili etiketi: Sürüş A, Sürüş B, ... -->
     <string name="consumption_profile_default_format">Sürüş %1$c</string>
