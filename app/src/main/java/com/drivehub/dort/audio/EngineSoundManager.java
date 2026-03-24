@@ -940,8 +940,17 @@ public class EngineSoundManager {
             float downshiftThreshold;
 
             if (throttle <= 0.05f) {
-                upshiftThreshold = mIdleRpm + (rpmRange * 0.30f);
-                downshiftThreshold = mIdleRpm + (rpmRange * 0.1f);
+                // AYAK GAZDAN ÇEKİLDİĞİNDE (0 Pedal)
+                if (mDriveModeAggressiveness > 0.5f) {
+                    // SPORT MOD: Vites yükseltmeyi engelle (Eşiği %85'e çek)
+                    // ve motor freni için daha yüksek devirde vites düşür (%40)
+                    upshiftThreshold = mIdleRpm + (rpmRange * 0.85f);
+                    downshiftThreshold = mIdleRpm + (rpmRange * 0.40f);
+                } else {
+                    // ECO/NORMAL: Klasik sakin vites büyütme
+                    upshiftThreshold = mIdleRpm + (rpmRange * 0.30f);
+                    downshiftThreshold = mIdleRpm + (rpmRange * 0.1f);
+                }
             } else {
                 upshiftThreshold = mIdleRpm + rpmRange * (0.60f + (throttle * 0.35f));
                 downshiftThreshold = mIdleRpm + rpmRange * 0.25f;
