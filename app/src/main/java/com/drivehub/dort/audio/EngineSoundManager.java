@@ -24,17 +24,6 @@ public class EngineSoundManager {
 
     private static final String TAG = "EngineSoundV3";
     private static EngineSoundManager sInstance = null;
-
-    // HARİCİ KADRAN: ContentProvider ile telemetri (broadcast sistem UID'de "non-protected" uyarısı veriyor)
-    public static final String ACTION_TELEMETRY = "com.drivehub.dort.TELEMETRY"; // kadran uyumluluk; artık Provider kullan
-    public static final String EXTRA_RPM = "rpm";
-    public static final String EXTRA_SPEED_KMH = "speedKmh";
-    public static final String EXTRA_GEAR = "gear";
-    public static final String EXTRA_THROTTLE = "throttle01";
-    public static final String EXTRA_DC_POWER_KW = "dcPowerKw";
-    // Maksimum değerler (profil + kullanıcı ayarlarından etkilenenler)
-    public static final String EXTRA_RPM_MAX = "rpmMax";
-    public static final String EXTRA_MOTOR_MAX_POWER_KW = "motorMaxPowerKw";
     private final Context mContext;
     private final Handler mHandler;
 
@@ -84,7 +73,6 @@ public class EngineSoundManager {
 
     private long mLastShiftTime = 0;
     private boolean mEnableRevMatch = true;
-    private float mRevMatchBoost = 0f;
     private boolean mGearWhineEnabled = true;
     // SUBWAVE (DERİN BAS) DEĞİŞKENLERİ
     private int mSubwaveSoundId = -1;
@@ -100,7 +88,6 @@ public class EngineSoundManager {
     private int mStopSoundId = -1;
     private long mEngineStartTime = 0; // Marşın basıldığı anı tutar
     private long mAutoStartupDelayMs = 0; // Dosyadan otomatik okunan marş süresi
-    private long mLowThrottleStartTime = 0; // Şanzıman sakinleşme zamanlayıcısı
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public static class VehicleProfile {
@@ -199,9 +186,7 @@ public class EngineSoundManager {
         mUserIdleVolumeScale = Math.max(0f, Math.min(1f, scale01));
         if (mActiveProfile != null) mCurrentIdleVolumeScale = mActiveProfile.idleVolumeScale * mUserIdleVolumeScale;
     }
-    public float getUserIdleVolumeScale() { return mUserIdleVolumeScale; }
     public void setIdlePitch(float pitch) { mIdlePitch = Math.max(0.5f, Math.min(2f, pitch)); }
-    public float getIdlePitch() { return mIdlePitch; }
 
     public void applySoundCharacterFromString(String character) {
         float agg = 0.4f;
@@ -211,7 +196,6 @@ public class EngineSoundManager {
         // Eğer sürüş modu GERÇEKTEN değiştiyse şanzımanı uyandır!
         if (mDriveModeAggressiveness != agg) {
             setDriveModeAggressiveness(agg);
-            mLowThrottleStartTime = 0; // Sakinleşme (Cruising) zamanlayıcısını SIFIRLA!
             mLastShiftTime = 0;        // Vites bekleme süresini sıfırla (Anında vites atabilsin diye)
         }
     }
