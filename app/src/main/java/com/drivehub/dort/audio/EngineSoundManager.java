@@ -218,15 +218,10 @@ public class EngineSoundManager {
 
     public static final String[] PROFILE_LABELS = {
             "Lotus Exige 240",
-            "Lotus Exige 240 TRI",
             "Lexus LFA",
-            "Lexus LFA TRI",
             "GTR R34",
-            "GTR R34 TRI",
             "Ferrari F2004",
-            "Ferrari F2004 TRI",
             "McLaren P1",
-            "McLaren P1 TRI",
             "BMW F30 328i",
             "BMW F30 328i V2"
     };
@@ -240,11 +235,6 @@ public class EngineSoundManager {
         else if ("Ferrari F2004".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004());
         else if ("McLaren P1".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1());
         else if ("BMW F30 328i".equals(profile)) setVehicleProfile(PROFILE_BMW_328I());
-        else if ("McLaren P1 TRI".equals(profile)) setVehicleProfile(PROFILE_MCLAREN_P1_TRI());
-        else if ("GTR R34 TRI".equals(profile)) setVehicleProfile(PROFILE_GTRR34_TRI());
-        else if ("Lotus Exige 240 TRI".equals(profile)) setVehicleProfile(PROFILE_LOTUS_EXIGE_TRI());
-        else if ("Lexus LFA TRI".equals(profile)) setVehicleProfile(PROFILE_LEXUS_LFA_TRI());
-        else if ("Ferrari F2004 TRI".equals(profile)) setVehicleProfile(PROFILE_FERRARI_F2004_TRI());
         else if ("BMW F30 328i V2".equals(profile)) setVehicleProfile(PROFILE_BMW_328I_V2());
         else setVehicleProfile(PROFILE_LOTUS_EXIGE());
     }
@@ -265,42 +255,6 @@ public class EngineSoundManager {
     // ==========================================
     public static VehicleProfile PROFILE_LOTUS_EXIGE() {
         return new VehicleProfile("Lotus Exige 240", 800, 9000f, 1,
-                1,
-                new float[][]{
-                        {0f,   55f},   // 1. Vites
-                        {20f,  85f},   // 2. Vites
-                        {45f,  120f},  // 3. Vites
-                        {65f,  155f},  // 4. Vites
-                        {85f,  195f},  // 5. Vites
-                        {105f, 235f},  // 6. Vites
-                        {122f, 280f},  // 7. Vites
-                        {138f, 360f}   // 8. Vites
-                },
-                0.18f, 0.08f, 150, 150f, // Hafif ve atik (Moderate Wobble)
-                R.raw.elisec_startup,R.raw.igniton_stop,
-                // ON Katmanı (Gaza Basıldığında)
-                new int[][]{
-                        {R.raw.elisesc_idle, 800},
-                        {R.raw.elisesc_on_3000, 3000},
-                        {R.raw.elisesc_on_4750, 4750},
-                        {R.raw.elisesc_on_8115, 8115},
-                        {R.raw.elisesc_on_9649, 8800},
-                        {R.raw.elisesc_on_9649, 9000}
-                },
-
-                // OFF Katmanı (Gaz Çekildiğinde)
-                new int[][]{
-                        {R.raw.elisesc_idle, 800},
-                        {R.raw.elisesc_off_2500, 2500},
-                        {R.raw.elisesc_off_3750, 3750},
-                        {R.raw.elisesc_off_5000, 5000},
-                        {R.raw.elisesc_off_8500, 8500},
-                        {R.raw.elisesc_off_8500, 9000}
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_LOTUS_EXIGE_TRI() {
-        return new VehicleProfile("Lotus Exige 240 TRI", 800, 9000f, 1,
                 1,
                 new float[][]{
                         {0f,   55f},   // 1. Vites
@@ -334,49 +288,7 @@ public class EngineSoundManager {
         );
     }
     public static VehicleProfile PROFILE_LEXUS_LFA() {
-        return new VehicleProfile("Lexus LFA",
-                984f,
-                9550f,
-                1f,
-                0,
-
-                new float[][]{
-                        {0f,   55f},   // 1. Vites
-                        {20f,  85f},   // 2. Vites
-                        {45f,  120f},  // 3. Vites
-                        {65f,  155f},  // 4. Vites
-                        {85f,  195f},  // 5. Vites
-                        {105f, 235f},  // 6. Vites
-                        {122f, 280f},  // 7. Vites
-                        {138f, 360f}   // 8. Vites
-                },
-
-                0.25f,0.15f,200,180f,
-                R.raw.lfa_in_startup,
-                R.raw.igniton_stop,
-
-                // ON Katmanı (Gaza Basıldığında V10 Çığlığı)
-                new int[][]{
-                        {R.raw.lfa_in_idle, 984},
-                        {R.raw.lfa_in_onverylow_1, 2500},
-                        {R.raw.lfa_in_onlow, 4500},
-                        {R.raw.lfa_in_onmid, 6500},
-                        {R.raw.lfa_in_onhigh, 8500},
-                        {R.raw.lfa_in_onhigh, 9550}
-                },
-                // OFF Katmanı (Gaz Çekildiğinde Gelen Yırtıcı Kompresyon)
-                new int[][]{
-                        {R.raw.lfa_in_idle, 984},
-                        {R.raw.lfa_in_offverylow_2, 2500},
-                        {R.raw.lfa_in_offlow, 4500},
-                        {R.raw.lfa_in_offmid, 6500},
-                        {R.raw.lfa_in_offhigh, 8500},
-                        {R.raw.lfa_in_offhigh, 9550}
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_LEXUS_LFA_TRI() {
-        return new VehicleProfile("Lexus LFA TRI", 984f, 9550f, 1f, 0,
+        return new VehicleProfile("Lexus LFA", 984f, 9550f, 1f, 0,
                 new float[][]{
                         {0f,   55f},   // 1. Vites
                         {20f,  85f},   // 2. Vites
@@ -425,45 +337,6 @@ public class EngineSoundManager {
                 },
                 0.25f, 0.15f, 50, 300f,
                 0, R.raw.igniton_stop,
-                // ON katmanı
-                new int[][]{
-                        {R.raw.f2004_in_idle,                   4200},
-                        {R.raw.f2004_in_verylow_2,              5500},
-                        {R.raw.f2004_in_on_mid,                 9000},
-                        {R.raw.f2004_in_on_low,                 11500},
-                        {R.raw.f2004_in_on_mid2,                14000},
-                        {R.raw.f2004_in_on_high_mix,            16000},
-                        {R.raw.f2004_in_on_veryhigh_mix,        18500}
-                },
-                // OFF katmanı
-                new int[][]{
-                        {R.raw.f2004_in_idle,                   4200},
-                        {R.raw.f2004_in_off_low,                6000},
-                        //{R.raw.f2004_in_offmid_pitchare,        8042},
-                        {R.raw.f2004_in_off_high,               12000},
-                        {R.raw.f2004_in_off_midhigh_mix,        17000},
-                        {R.raw.f2004_in_off_midhigh_mix,        19000}
-                }
-        );
-    }
-
-    public static VehicleProfile PROFILE_FERRARI_F2004_TRI() {
-        return new VehicleProfile("Ferrari F2004 TRI",
-                4200f,
-                19000f,
-                0.6f,
-                0,
-                new float[][]{
-                        {0f, 45f},
-                        {12f, 72f},
-                        {33f, 93f},
-                        {54f, 114f},
-                        {75f, 135f},
-                        {96f, 156f},
-                        {117f, 180f}
-                },
-                0.25f, 0.15f, 50, 300f,
-                0, R.raw.igniton_stop,
 
                 // ON katmanı
                 new int[][]{
@@ -480,43 +353,6 @@ public class EngineSoundManager {
     }
     public static VehicleProfile PROFILE_MCLAREN_P1() {
         return new VehicleProfile("McLaren P1",
-                1000f, 8500f,
-                0.8f,
-                2,
-                new float[][]{
-                        {0f,   55f},   // 1. Vites
-                        {20f,  85f},   // 2. Vites
-                        {45f,  120f},  // 3. Vites
-                        {65f,  155f},  // 4. Vites
-                        {85f,  195f},  // 5. Vites
-                        {105f, 235f},  // 6. Vites
-                        {122f, 280f},  // 7. Vites
-                        {138f, 360f}   // 8. Vites
-                },
-                0.18f, 0.08f,120,220f,
-                0, 0,
-                // ON katmanı (iç mekan yükte sesler)
-                new int[][]{
-                        {R.raw.p1_in_idle,          1000},
-                        {R.raw.p1_in_on_verylow2,   2500},
-                        {R.raw.p1_in_on_low2,       4000},
-                        {R.raw.p1_in_on_lowmid_b,   5500},
-                        {R.raw.p1_in_on_mid_c,      7000},
-                        {R.raw.p1_in_on_high_b_2,   8000},
-                        {R.raw.p1_in_on_veryhigh_b, 8500}
-                },
-                // OFF katmanı (iç mekan gaz kesme)
-                new int[][]{
-                        {R.raw.p1_in_idle,          1000},
-                        {R.raw.p1_in_off_verylow,   2500},
-                        {R.raw.p1_in_off_low_2,     4000},
-                        {R.raw.p1_in_off_mid_2,     6000},
-                        {R.raw.p1_in_off_high,      8500}
-                }
-        );
-    }
-    public static VehicleProfile PROFILE_MCLAREN_P1_TRI() {
-        return new VehicleProfile("McLaren P1 TRI",
                 1000f, 8500f,
                 0.8f,
                 2,
@@ -585,41 +421,9 @@ public class EngineSoundManager {
                 }
         );
     }
-    public static VehicleProfile PROFILE_GTRR34_TRI() {
-        return new VehicleProfile("GTR R34 TRI", 1000f, 8200, 0.5f,
-                3,
-                new float[][]{
-                        {0f,   55f},   // 1. Vites
-                        {20f,  85f},   // 2. Vites
-                        {45f,  120f},  // 3. Vites
-                        {65f,  155f},  // 4. Vites
-                        {85f,  195f},  // 5. Vites
-                        {105f, 235f},  // 6. Vites
-                        {122f, 280f},  // 7. Vites
-                        {138f, 360f}   // 8. Vites
-                },
-                0.18f, 0.08f,110,250f,
-                0,0,
-                new int[][]{
-                        {R.raw.rb26_4_ex_idle,       1000, 0, 3000},
-                        {R.raw.rb26_2_in_on_verylow2, 1500, 800, 5000},
-                        {R.raw.rb26_2_in_on_verylow,  3500, 1500, 6500},
-                        {R.raw.rb26_2_in_on_low3,     5000, 3000, 7500},
-                        {R.raw.rb26_2_in_on_mid3,     6500, 4500, 8500},
-                        {R.raw.rb26_in_on_high2,     7500, 5500, 9000},
-                        {R.raw.rb26_in_on_veryhigh,  8200, 6500, 9500}
-                },
-                new int[][]{
-                        {R.raw.rb26_4_ex_idle,       1000, 0, 3000},
-                        {R.raw.rb26_ex_5_offverylow, 1500, 800, 5500},
-                        {R.raw.rb26_ex_5_offlow,     4000, 2000, 7500},
-                        {R.raw.rb26_ex_5_offmid,     6500, 4000, 9000}
-                }
-        );
-    }
     public static VehicleProfile PROFILE_BMW_328I() {
         return new VehicleProfile("BMW F30 328i",
-                800, 7200f,
+                800, 7500f,
                 1f, 2,
                 new float[][]{
                         {0f,   55f},   // 1. Vites
@@ -647,7 +451,7 @@ public class EngineSoundManager {
     }
     public static VehicleProfile PROFILE_BMW_328I_V2() {
         return new VehicleProfile("BMW F30 328i V2",
-                800, 7200f,
+                800, 7500f,
                 1f, 2,
                 new float[][]{
                         {0f,   55f},   // 1. Vites
@@ -1062,29 +866,37 @@ public class EngineSoundManager {
         }
         // --- SUBWAVE (ALT BAS / GÖĞÜS TİTRETEN TOKLUK) KONTROLÜ ---
         if (mSubwaveStreamId != -1) {
-            if (mSubwaveEnabled) {
-                // Şalter AÇIKSA: Motora yük bindikçe bas katmanı belirginleşir
-                float loadFactor = 0.4f + (mSimulatedThrottle * 0.6f);
-                float subPitchBaseMin = 0.6f;
-                float subPitchBaseMax = 1.3f;
-                float subVolume = masterVol * loadFactor * 1.5f; // Bas çarpanı
+            if (mSubwaveEnabled && mCurrentGear > 0) {
 
-                // Derinliği korumak için pitch çok tizleşmemeli
-                float subPitch = subPitchBaseMin + (rpmRatio * (subPitchBaseMax - subPitchBaseMin));
+                // 1. YÜK EĞRİSİ: Lineer değil, karesel (Exponential) artış.
+                // Gaza az basarken fısıldar, %70'den sonra "göğsü titretir".
+                float subLoadFactor = (float) Math.pow(mSimulatedThrottle, 1.5f);
 
-                // Araç dururken ve gaza basılmıyorken rölanti tokluğu
-                if (mCurrentSpeedKmh < 1.0f && mSimulatedThrottle < 0.05f) {
-                    subVolume = masterVol * mCurrentIdleVolumeScale * 0.6f;
-                    subPitch = mIdlePitch * 0.6f;
+                // 2. RPM PENCERESİ: Bas her devirde aynı olmaz.
+                // Alt-orta devirlerde (torkun geldiği yer) pik yapar.
+                float rpmBellCurve = 1.0f - (Math.abs(rpmRatio - 0.35f) * 0.7f);
+                rpmBellCurve = Math.max(0.4f, rpmBellCurve); // Hiçbir zaman tamamen kaybolmasın
+
+                float subVolume = masterVol * subLoadFactor * 1.8f * rpmBellCurve;
+
+                // 3. PİTCH (RESONANCE): Devir arttıkça çok tizleşmemeli.
+                // Alt frekansı korumak için rpmRatio etkisini %40'a indirdik.
+                float subPitch = 0.55f + (rpmRatio * 0.45f);
+
+                // Boşta gaz verme (N-Rev) durumu için özel ayar
+                if (mCurrentSpeedKmh < 1.0f && mSimulatedThrottle > 0.05f) {
+                    subVolume = masterVol * 0.8f;
+                    subPitch = 0.5f + (rpmRatio * 0.3f);
                 }
 
-                // Patlamaları önlemek için güvenlik limiti
-                subVolume = Math.max(0f, Math.min(1.0f, subVolume));
-
-                mSoundPool.setVolume(mSubwaveStreamId, subVolume, subVolume);
+                mSoundPool.setVolume(mSubwaveStreamId, Math.min(1.0f, subVolume), Math.min(1.0f, subVolume));
                 mSoundPool.setRate(mSubwaveStreamId, subPitch);
+            } else if (mSubwaveEnabled && mCurrentSpeedKmh < 1.0f) {
+                // RÖLANTİ TOKLUĞU
+                float idleSub = masterVol * mCurrentIdleVolumeScale * 0.7f;
+                mSoundPool.setVolume(mSubwaveStreamId, idleSub, idleSub);
+                mSoundPool.setRate(mSubwaveStreamId, mIdlePitch * 0.55f);
             } else {
-                // Şalter KAPALIYSA: Derin bası tamamen sustur
                 mSoundPool.setVolume(mSubwaveStreamId, 0f, 0f);
             }
         }

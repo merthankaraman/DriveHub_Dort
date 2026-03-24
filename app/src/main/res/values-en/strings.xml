@@ -279,7 +279,7 @@
     <string name="consumption_reset_confirm_message">Are you sure you want to reset these values?</string>
     <string name="consumption_elapsed_time_label">Elapsed time</string>
     <string name="consumption_soc_placeholder">Battery: --%</string>
-    <string name="consumption_soc_format">Battery: %.3f%%</string>
+    <string name="consumption_soc_format">Battery: %.1f%%</string>
     <string name="consumption_avg_speed_only">Average speed</string>
     <string name="consumption_speed">Speed</string>
     <string name="consumption_power">Power</string>
