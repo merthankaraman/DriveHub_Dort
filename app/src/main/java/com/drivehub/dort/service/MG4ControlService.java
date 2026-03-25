@@ -339,10 +339,18 @@ public class MG4ControlService extends Service {
             mCurrentDriveMode = DriveMode.fromValue(modeValue);
             updateNotification("Sürüş: " + mCurrentDriveMode.label);
 
+            // Ses "Araç(AUTO)" modundayken, sürüş modu Eco ise Eco, değilse sürekli Sport'e kilitle.
+            SharedPreferences sp = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
+            String soundChar = sp.getString("sound_character", "ECO");
+            if ("AUTO".equals(soundChar) && mEngineSound != null) {
+                mEngineSound.applySoundCharacterFromString(
+                        (mCurrentDriveMode == DriveMode.ECO) ? "ECO" : "SPORT"
+                );
+            }
+
             // Son modu sadece araç READY iken hafızaya yaz. Araç kapanırken son anda Normal/regen 3'e
             // çektiği değerleri yazmayalım (hatırlama yanlış değerle üzerine yazılmasın).
             if (mDriveRegenRememberInitialized && (MG4Hardware.getVehicleIgnition() >= 2)) {
-                SharedPreferences sp = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
                 sp.edit().putInt(PREF_LAST_DRIVE_MODE, modeValue).apply();
 
                 int regenVal = MG4Hardware.getRegenLevel();

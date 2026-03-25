@@ -165,7 +165,7 @@ public class EngineSoundManager {
         String profile = prefs.getString("sound_profile", "Lotus Exige 240");
         applyProfileLabel(profile);
         loadIdleSettingsForProfile(context, profile);
-        applySoundCharacterFromString(prefs.getString("sound_character", "NORMAL"));
+        applySoundCharacterFromString(prefs.getString("sound_character", "SPORT"));
         setMasterVolume(Math.max(0, Math.min(100, prefs.getInt("sound_master", 60))) / 100f);
     }
 
@@ -189,9 +189,20 @@ public class EngineSoundManager {
     public void setIdlePitch(float pitch) { mIdlePitch = Math.max(0.5f, Math.min(2f, pitch)); }
 
     public void applySoundCharacterFromString(String character) {
-        float agg = 0.4f;
-        if ("ECO".equals(character)) agg = 0.25f;
-        else if ("SPORT".equals(character)) agg = 0.7f;
+        float agg = 0.7f;
+        if ("ECO".equals(character)) {
+            agg = 0.25f;
+        } else if ("SPORT".equals(character)) {
+            agg = 0.7f;
+        } else if ("NORMAL".equals(character)) {
+            // NORMAL opsiyonu kaldırıldı; geriye dönük uyumluluk için SPORT'a eşliyoruz.
+            agg = 0.7f;
+        } else if ("AUTO".equals(character)) {
+            // AUTO'da sürüş moduna göre: Eco -> Eco, Eco değil -> Sport
+            int dm = com.drivehub.dort.hardware.MG4Hardware.getDriveMode();
+            com.drivehub.dort.model.DriveMode mode = com.drivehub.dort.model.DriveMode.fromValue(dm);
+            agg = (mode == com.drivehub.dort.model.DriveMode.ECO) ? 0.25f : 0.7f;
+        }
 
         // Eğer sürüş modu GERÇEKTEN değiştiyse şanzımanı uyandır!
         if (mDriveModeAggressiveness != agg) {

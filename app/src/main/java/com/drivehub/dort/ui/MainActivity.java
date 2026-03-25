@@ -541,8 +541,11 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences prefsApp = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
 
-        // Şanzıman karakteri: Eco / Normal / Sport (döngüsel)
-        String savedChar = prefsApp.getString("sound_character", "NORMAL");
+        // Şanzıman karakteri: Eco / Sport / Araç(AUTO) (döngüsel)
+        String savedChar = prefsApp.getString("sound_character", SOUND_CHAR_SPORT);
+        // Eski sürümden kalma "NORMAL" değeri varsa SPORT'a eşitle.
+        if ("NORMAL".equals(savedChar)) savedChar = SOUND_CHAR_SPORT;
+
         applySoundCharacter(savedChar);
         updateSoundCharacterButtonText(savedChar);
         mBtnGearProfile.setOnClickListener(v -> cycleSoundCharacter());
@@ -2330,11 +2333,10 @@ public class MainActivity extends AppCompatActivity {
         return SoundMode.VIRTUAL_GEAR_V2;
     }
     private static final String SOUND_CHAR_ECO    = "ECO";
-    private static final String SOUND_CHAR_NORMAL = "NORMAL";
     private static final String SOUND_CHAR_SPORT  = "SPORT";
-    private static final String SOUND_CHAR_AUTO   = "AUTO"; // Araç modunu takip et
+    private static final String SOUND_CHAR_AUTO   = "AUTO"; // Araç modunu takip et (Eco ise Eco, değilse Sport)
     private static final String[] SOUND_CHAR_CYCLE = {
-            SOUND_CHAR_ECO, SOUND_CHAR_NORMAL, SOUND_CHAR_SPORT, SOUND_CHAR_AUTO
+            SOUND_CHAR_ECO, SOUND_CHAR_SPORT, SOUND_CHAR_AUTO
     };
 
     private void applySoundCharacter(String character) {
@@ -2361,7 +2363,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void cycleSoundCharacter() {
         SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-        String current = prefs.getString("sound_character", SOUND_CHAR_NORMAL);
+        String current = prefs.getString("sound_character", SOUND_CHAR_SPORT);
+        // Eski versiyondan kalma "NORMAL" kaydı varsa, otomatik olarak SPORT'a eşitle.
+        if ("NORMAL".equals(current)) current = SOUND_CHAR_SPORT;
         int idx = 0;
         for (int i = 0; i < SOUND_CHAR_CYCLE.length; i++) {
             if (SOUND_CHAR_CYCLE[i].equals(current)) { idx = (i + 1) % SOUND_CHAR_CYCLE.length; break; }
@@ -2376,9 +2380,9 @@ public class MainActivity extends AppCompatActivity {
         if (mBtnGearProfile == null) return;
         switch (character) {
             case SOUND_CHAR_ECO:    mBtnGearProfile.setText(getString(R.string.gearbox_eco)); break;
-            case SOUND_CHAR_SPORT:  mBtnGearProfile.setText(getString(R.string.gearbox_sport)); break;
+            //case SOUND_CHAR_SPORT:  mBtnGearProfile.setText(getString(R.string.gearbox_sport)); break;
             case SOUND_CHAR_AUTO:   mBtnGearProfile.setText(getString(R.string.gearbox_vehicle)); break;
-            default:                mBtnGearProfile.setText(getString(R.string.gearbox_normal)); break;
+            default:                mBtnGearProfile.setText(getString(R.string.gearbox_sport)); break;
         }
     }
 
