@@ -739,10 +739,19 @@ public class EngineSoundManager {
                     upshiftThreshold = mIdleRpm + (rpmRange * 0.30f);
                     downshiftThreshold = mIdleRpm + (rpmRange * 0.1f);
                 }
-            } else {
-                upshiftThreshold = mIdleRpm + rpmRange * (0.60f + (throttle * 0.35f));
-                downshiftThreshold = mIdleRpm + rpmRange * 0.25f;
-                if (throttle > 0.8f) downshiftThreshold = mIdleRpm + rpmRange * 0.45f;
+            }else {
+                // PEDALA BASILDIĞINDA
+                if (mDriveModeAggressiveness > 0.5f) {
+                    // SPORT MOD: Pedala az basılsa bile devri öldürme (Baseline %80)
+                    // %80 (az pedal) ile %98 (tam pedal) arasında vites büyütür.
+                    upshiftThreshold = mIdleRpm + rpmRange * (0.80f + (throttle * 0.18f));
+                    downshiftThreshold = mIdleRpm + rpmRange * 0.45f; // Sport'ta küçültme hep agresif
+                } else {
+                    // NORMAL/ECO MOD
+                    upshiftThreshold = mIdleRpm + rpmRange * (0.60f + (throttle * 0.35f));
+                    downshiftThreshold = mIdleRpm + rpmRange * 0.25f;
+                    if (throttle > 0.8f) downshiftThreshold = mIdleRpm + rpmRange * 0.45f;
+                }
             }
 
             // VİTES BÜYÜTME (İleriyi Görme + 600 RPM Tamponu)
@@ -875,11 +884,6 @@ public class EngineSoundManager {
 
                 mSoundPool.setVolume(mSubwaveStreamId, Math.min(1.0f, subVolume), Math.min(1.0f, subVolume));
                 mSoundPool.setRate(mSubwaveStreamId, subPitch);
-            } else if (mSubwaveEnabled && mCurrentSpeedKmh < 1.0f) {
-                // RÖLANTİ TOKLUĞU
-                float idleSub = masterVol * mCurrentIdleVolumeScale * 0.7f;
-                mSoundPool.setVolume(mSubwaveStreamId, idleSub, idleSub);
-                mSoundPool.setRate(mSubwaveStreamId, mIdlePitch * 0.55f);
             } else {
                 mSoundPool.setVolume(mSubwaveStreamId, 0f, 0f);
             }
