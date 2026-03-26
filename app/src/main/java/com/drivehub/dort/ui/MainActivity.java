@@ -127,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnGearProfile;
     private Button mBtnRevMatch;
     private Button mBtnGearWhine;
+    private Button mBtnExhaustPop;
     private Button mBtnSubwave;
     private Button mBtnSpeedTest;
     private SeekBar mSeekSoundVolume;
@@ -521,6 +522,7 @@ public class MainActivity extends AppCompatActivity {
         mBtnGearProfile = findViewById(R.id.btnGearProfile);
         mBtnRevMatch = findViewById(R.id.btnRevMatch);
         mBtnGearWhine = findViewById(R.id.btnGearWhine);
+        mBtnExhaustPop = findViewById(R.id.btnExhaustPop);
         mBtnSpeedTest = findViewById(R.id.btnSpeedTest);
         mLayoutSpeedTest = findViewById(R.id.layoutSpeedTest);
         mSeekSoundVolume = findViewById(R.id.seekSoundVolume);
@@ -731,6 +733,20 @@ public class MainActivity extends AppCompatActivity {
                 mEngineSound.setGearWhineEnabled(next);
                 prefsApp.edit().putBoolean("gear_whine_enabled", next).apply();
                 updateGearWhineButtonText(next);
+            });
+        }
+
+        // Exhaust-pop toggle (hafızalı)
+        if (mBtnExhaustPop != null) {
+            boolean popEnabled = prefsApp.getBoolean("exhaust_pop_enabled", true);
+            mEngineSound.setExhaustPopEnabled(popEnabled);
+            updateExhaustPopButtonText(popEnabled);
+            mBtnExhaustPop.setOnClickListener(v -> {
+                boolean current = mEngineSound.isExhaustPopEnabled();
+                boolean next = !current;
+                mEngineSound.setExhaustPopEnabled(next);
+                prefsApp.edit().putBoolean("exhaust_pop_enabled", next).apply();
+                updateExhaustPopButtonText(next);
             });
         }
 
@@ -2354,6 +2370,11 @@ public class MainActivity extends AppCompatActivity {
     private void updateGearWhineButtonText(boolean enabled) {
         if (mBtnGearWhine == null) return;
         mBtnGearWhine.setText(enabled ? getString(R.string.gear_whine_on) : getString(R.string.gear_whine_off));
+    }
+
+    private void updateExhaustPopButtonText(boolean enabled) {
+        if (mBtnExhaustPop == null) return;
+        mBtnExhaustPop.setText(enabled ? getString(R.string.exhaust_pop_on) : getString(R.string.exhaust_pop_off));
     }
 
     private void updateSubwaveButtonText(boolean enabled) {

@@ -208,6 +208,9 @@
     <string name="gear_whine">Enable gear whine</string>
     <string name="gear_whine_on">Gear whine: On</string>
     <string name="gear_whine_off">Gear whine: Off</string>
+    <string name="exhaust_pop">Exhaust pop</string>
+    <string name="exhaust_pop_on">Exhaust pop: On</string>
+    <string name="exhaust_pop_off">Exhaust pop: Off</string>
     <string name="btn_subwave_on">Sub bass: On</string>
     <string name="btn_subwave_off">Sub bass: Off</string>
     <string name="btn_idle_settings">Idle settings</string>

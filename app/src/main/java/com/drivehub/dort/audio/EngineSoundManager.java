@@ -246,6 +246,18 @@ public class EngineSoundManager {
     public void setRevMatchEnabled(boolean enabled) { mEnableRevMatch = enabled; }
     public boolean isGearWhineEnabled() { return mGearWhineEnabled; }
     public void setGearWhineEnabled(boolean enabled) { mGearWhineEnabled = enabled; }
+
+    public boolean isExhaustPopEnabled() { return mExhaustPopEnabled; }
+
+    public void setExhaustPopEnabled(boolean enabled) {
+        mExhaustPopEnabled = enabled;
+        if (!enabled) {
+            // Kapalıyken anlık olarak burble/patlama tetiklerini sıfırla ki gecikmeli ses kalmasın.
+            mPopsRemaining = 0;
+            mNextPopTime = 0;
+            mLastThrottleForPop = 0f;
+        }
+    }
     public void setUseManualThrottle(boolean use) { mUseManualThrottle = use; }
     public float getCurrentRpm() { return mCurrentRpm; }
     public int getCurrentGear() { return mCurrentGear; }
@@ -909,30 +921,44 @@ public class EngineSoundManager {
                 mSoundPool.setVolume(mSubwaveStreamId, 0f, 0f);
             }
         }
+        // updateAudioMixer içinde, Pop & Bang kısmını bu "akıllı" versiyonla değiştirebilirsin:
         if (mExhaustPopEnabled && mDriveModeAggressiveness > 0.5f) {
 
-            // 1. TETİKLEME: Gazdan ayağı "tokat gibi" çekme (Lift-off)
-            // Yüksek devirde (3500+) gaz %60'tan %10'un altına inerse...
-            if (mLastThrottleForPop > 0.6f && mSimulatedThrottle < 0.1f && mCurrentRpm > 3500f) {
-                mPopsRemaining = 2 + (int)(Math.random() * 4); // 2 ile 5 arası patlama ver
+            // --- DOKUNUŞ 1: VİTES ATMA PATLAMASI (Upshift Crack) ---
+            // Vites büyüdüğü an (ilk 50ms içinde) ve devir yüksekse (4000+)
+            if (currentTime - mLastShiftTime < 50 && mCurrentGear > 1 && rpm > 4000f) {
+                // En sert sesi (backfire_11) seç ve vites atma hatırına sesi %30 artır
+                mSoundPool.play(mGlobalPopIds[2], masterVol * 1.3f, masterVol * 1.3f, 5, 0, 0.95f);
+                mLastShiftTime -= 50; // Tekrar tetiklenmesin diye zamanı kaydır
+            }
+
+            // --- DOKUNUŞ 2: GAZ BIRAKMA (Lift-off Burble) ---
+            if (mLastThrottleForPop > 0.6f && mSimulatedThrottle < 0.1f && rpm > 3500f) {
+                mPopsRemaining = 3 + (int)(Math.random() * 5); // 3-8 arası patlama
                 mNextPopTime = currentTime;
             }
             mLastThrottleForPop = mSimulatedThrottle;
 
-            // 2. OYNATMA (Burble akışı)
             if (mPopsRemaining > 0 && currentTime >= mNextPopTime && mSimulatedThrottle < 0.2f) {
-                int randomPopId = mGlobalPopIds[(int)(Math.random() * mGlobalPopIds.length)];
 
-                // Devir ne kadar yüksekse patlama o kadar güçlü olsun
-                float rpmFactor = (mCurrentRpm / mMaxRpm);
-                float popVol = (0.3f + (float)Math.random() * 0.4f) * masterVol * (0.8f + rpmFactor);
+                // --- DOKUNUŞ 3: RPM'E GÖRE SES SEÇİMİ ---
+                int popId;
+                if (rpm > 6500f) popId = mGlobalPopIds[2];      // Sert (Backfire_11)
+                else if (rpm > 4500f) popId = mGlobalPopIds[1]; // Orta (Backfire_9)
+                else popId = mGlobalPopIds[0];                  // Hafif (Backfire_5)
+
+                float popVol = (0.3f + (float)Math.random() * 0.4f) * masterVol;
                 float popPitch = 0.85f + (float)Math.random() * 0.3f;
 
-                mSoundPool.play(randomPopId, Math.min(1f, popVol), Math.min(1f, popVol), 2, 0, popPitch);
+                mSoundPool.play(popId, popVol, popVol, 2, 0, popPitch);
 
                 mPopsRemaining--;
-                // Patlamalar arası süre (Sport hissi için 80-180ms arası idealdir)
-                mNextPopTime = currentTime + 80 + (int)(Math.random() * 100);
+
+                // DİNAMİK GECİKME: Patlama azaldıkça aradaki süre uzasın (Sönümlenme hissi)
+                // İlk patlamalar 80ms, sonrakiler 250ms'ye kadar uzar.
+                int delayBase = 80 + (int)(Math.random() * 70);
+                int coolingFactor = (8 - mPopsRemaining) * 25; // Her patlamada +25ms ekle
+                mNextPopTime = currentTime + delayBase + coolingFactor;
             }
         }
 
