@@ -924,41 +924,43 @@ public class EngineSoundManager {
         // updateAudioMixer içinde, Pop & Bang kısmını bu "akıllı" versiyonla değiştirebilirsin:
         if (mExhaustPopEnabled && mDriveModeAggressiveness > 0.5f) {
 
-            // --- DOKUNUŞ 1: VİTES ATMA PATLAMASI (Upshift Crack) ---
-            // Vites büyüdüğü an (ilk 50ms içinde) ve devir yüksekse (4000+)
-            if (currentTime - mLastShiftTime < 50 && mCurrentGear > 1 && rpm > 4000f) {
-                // En sert sesi (backfire_11) seç ve vites atma hatırına sesi %30 artır
-                mSoundPool.play(mGlobalPopIds[2], masterVol * 1.3f, masterVol * 1.3f, 5, 0, 0.95f);
-                mLastShiftTime -= 50; // Tekrar tetiklenmesin diye zamanı kaydır
+            // --- 1. VİTES ATMA PATLAMASI (Upshift & Downshift) ---
+            // Vites değiştikten sonraki ilk 50ms içindeysen tetiklenir
+            if (currentTime - mLastShiftTime < 50 && mCurrentGear > 1) {
+
+                // DURUM A: Dip gaz vites büyütme (Upshift Crack)
+                if (mSimulatedThrottle > 0.7f && rpm > 4000f) {
+                    mSoundPool.play(mGlobalPopIds[2], masterVol * 1.3f, masterVol * 1.3f, 5, 0, 0.95f);
+                    mLastShiftTime -= 50; // Tekrar çalmaması için zamanı kaydırıyoruz
+                }
+                // DURUM B: Fren yaparken vites küçültme (Downshift Pop)
+                else if (mSimulatedThrottle < 0.1f && rpm > 3000f) {
+                    mSoundPool.play(mGlobalPopIds[1], masterVol * 0.8f, masterVol * 0.8f, 4, 0, 1.1f);
+                    mLastShiftTime -= 50;
+                }
             }
 
-            // --- DOKUNUŞ 2: GAZ BIRAKMA (Lift-off Burble) ---
+            // --- 2. GAZ KESME PATLAMASI (Lift-off Burble) ---
+            // Gazı aniden bırakınca (0 pedal) tetiklenir
             if (mLastThrottleForPop > 0.6f && mSimulatedThrottle < 0.1f && rpm > 3500f) {
-                mPopsRemaining = 3 + (int)(Math.random() * 5); // 3-8 arası patlama
+                mPopsRemaining = 3 + (int)(Math.random() * 5); // 3-8 arası patlama sayısı
                 mNextPopTime = currentTime;
             }
             mLastThrottleForPop = mSimulatedThrottle;
 
+            // Patlama dizisi devam ediyorsa...
             if (mPopsRemaining > 0 && currentTime >= mNextPopTime && mSimulatedThrottle < 0.2f) {
+                int popId = (rpm > 6000f) ? mGlobalPopIds[2] : (rpm > 4000f ? mGlobalPopIds[1] : mGlobalPopIds[0]);
 
-                // --- DOKUNUŞ 3: RPM'E GÖRE SES SEÇİMİ ---
-                int popId;
-                if (rpm > 6500f) popId = mGlobalPopIds[2];      // Sert (Backfire_11)
-                else if (rpm > 4500f) popId = mGlobalPopIds[1]; // Orta (Backfire_9)
-                else popId = mGlobalPopIds[0];                  // Hafif (Backfire_5)
-
-                float popVol = (0.3f + (float)Math.random() * 0.4f) * masterVol;
+                float popVol = (0.2f + (float)Math.random() * 0.4f) * masterVol;
                 float popPitch = 0.85f + (float)Math.random() * 0.3f;
 
                 mSoundPool.play(popId, popVol, popVol, 2, 0, popPitch);
 
                 mPopsRemaining--;
-
-                // DİNAMİK GECİKME: Patlama azaldıkça aradaki süre uzasın (Sönümlenme hissi)
-                // İlk patlamalar 80ms, sonrakiler 250ms'ye kadar uzar.
-                int delayBase = 80 + (int)(Math.random() * 70);
-                int coolingFactor = (8 - mPopsRemaining) * 25; // Her patlamada +25ms ekle
-                mNextPopTime = currentTime + delayBase + coolingFactor;
+                // Dinamik gecikme: Patlamalar azaldıkça araları açılır
+                int coolingDelay = (8 - mPopsRemaining) * 20;
+                mNextPopTime = currentTime + 80 + (int)(Math.random() * 100) + coolingDelay;
             }
         }
 
