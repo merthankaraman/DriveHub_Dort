@@ -88,6 +88,11 @@ public class EngineSoundManager {
     private int mStopSoundId = -1;
     private long mEngineStartTime = 0; // Marşın basıldığı anı tutar
     private long mAutoStartupDelayMs = 0; // Dosyadan otomatik okunan marş süresi
+    private boolean mExhaustPopEnabled = true; // Arayüzden buna bağlanacak
+    private int[] mGlobalPopIds = new int[3];
+    private int mPopsRemaining = 0;
+    private long mNextPopTime = 0;
+    private float mLastThrottleForPop = 0f;
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public static class VehicleProfile {
@@ -542,6 +547,7 @@ public class EngineSoundManager {
 
         int baseStreams = mIsDualLayer ? (mCurrentSamplesOn.length + mCurrentSamplesOff.length) : mCurrentSamples.length;
         int extras = 3; // Turbo ve Whine Subwave
+        extras += 3;    //Pop sounds
         if (mActiveProfile.hasTurbo >= 2) extras++;
         if (mActiveProfile.startSoundResId != 0) extras++;
         if (mActiveProfile.stopSoundResId != 0) extras++;
@@ -610,6 +616,10 @@ public class EngineSoundManager {
         else mFlutterSoundId = -1;
         if (mActiveProfile.startSoundResId != 0) mStartSoundId = mSoundPool.load(mContext, mActiveProfile.startSoundResId, 1); else mStartSoundId = -1;
         if (mActiveProfile.stopSoundResId != 0) mStopSoundId = mSoundPool.load(mContext, mActiveProfile.stopSoundResId, 1); else mStopSoundId = -1;
+
+        mGlobalPopIds[0] = mSoundPool.load(mContext, R.raw.backfire_5, 1);  // Hafif çatırtı
+        mGlobalPopIds[1] = mSoundPool.load(mContext, R.raw.backfire_9, 1);  // Orta patlama
+        mGlobalPopIds[2] = mSoundPool.load(mContext, R.raw.backfire_11, 1); // Sert gümleme
 
         if (mIsDualLayer) {
             for (EngineSample sample : mCurrentSamplesOn) sample.soundId = mSoundPool.load(mContext, sample.resourceId, 1);
@@ -897,6 +907,32 @@ public class EngineSoundManager {
                 mSoundPool.setRate(mSubwaveStreamId, subPitch);
             } else {
                 mSoundPool.setVolume(mSubwaveStreamId, 0f, 0f);
+            }
+        }
+        if (mExhaustPopEnabled && mDriveModeAggressiveness > 0.5f) {
+
+            // 1. TETİKLEME: Gazdan ayağı "tokat gibi" çekme (Lift-off)
+            // Yüksek devirde (3500+) gaz %60'tan %10'un altına inerse...
+            if (mLastThrottleForPop > 0.6f && mSimulatedThrottle < 0.1f && mCurrentRpm > 3500f) {
+                mPopsRemaining = 2 + (int)(Math.random() * 4); // 2 ile 5 arası patlama ver
+                mNextPopTime = currentTime;
+            }
+            mLastThrottleForPop = mSimulatedThrottle;
+
+            // 2. OYNATMA (Burble akışı)
+            if (mPopsRemaining > 0 && currentTime >= mNextPopTime && mSimulatedThrottle < 0.2f) {
+                int randomPopId = mGlobalPopIds[(int)(Math.random() * mGlobalPopIds.length)];
+
+                // Devir ne kadar yüksekse patlama o kadar güçlü olsun
+                float rpmFactor = (mCurrentRpm / mMaxRpm);
+                float popVol = (0.3f + (float)Math.random() * 0.4f) * masterVol * (0.8f + rpmFactor);
+                float popPitch = 0.85f + (float)Math.random() * 0.3f;
+
+                mSoundPool.play(randomPopId, Math.min(1f, popVol), Math.min(1f, popVol), 2, 0, popPitch);
+
+                mPopsRemaining--;
+                // Patlamalar arası süre (Sport hissi için 80-180ms arası idealdir)
+                mNextPopTime = currentTime + 80 + (int)(Math.random() * 100);
             }
         }
 
