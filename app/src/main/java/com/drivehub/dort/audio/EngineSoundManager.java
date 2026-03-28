@@ -86,9 +86,10 @@ public class EngineSoundManager {
     // START/STOP MARŞ DEĞİŞKENLERİ
     private int mStartSoundId = -1;
     private int mStopSoundId = -1;
-    private long mEngineStartTime = 0; // Marşın basıldığı anı tutar
-    private long mAutoStartupDelayMs = 0; // Dosyadan otomatik okunan marş süresi
-    private boolean mExhaustPopEnabled = true; // Arayüzden buna bağlanacak
+    private long mEngineStartTime = 0;
+    private long mAutoStartupDelayMs = 0;
+    private boolean mExhaustPopEnabled = true;
+    private float mExhaustPopMasterMultiplier = 1.9f;
     private int[] mGlobalPopIds = new int[6];
     private int mPopsRemaining = 0;
     private long mNextPopTime = 0;
@@ -936,7 +937,8 @@ public class EngineSoundManager {
                 // DURUM A: Dip gaz vites büyütme (Upshift Crack)
                 if (mSimulatedThrottle > 0.7f && rpm > 4000f) {
                     int upPopId = (Math.random() > 0.5) ? mGlobalPopIds[4] : mGlobalPopIds[5];
-                    mSoundPool.play(upPopId, masterVol * 1.3f, masterVol * 1.3f, 5, 0, 0.92f);
+                    float vol = Math.min(1.0f, masterVol * 1.3f * mExhaustPopMasterMultiplier);
+                    mSoundPool.play(upPopId, vol, vol, 5, 0, 0.92f);
                     mLastShiftTime -= 50;
                 }
 
@@ -944,7 +946,8 @@ public class EngineSoundManager {
                 // Orta-sert sesler (5 veya 7) arasından rastgele seçer
                 else if (mSimulatedThrottle < 0.1f && rpm > 3000f) {
                     int downPopId = (Math.random() > 0.5) ? mGlobalPopIds[2] : mGlobalPopIds[3];
-                    mSoundPool.play(downPopId, masterVol * 0.9f, masterVol * 0.9f, 4, 0, 1.05f);
+                    float vol = Math.min(1.0f, masterVol * 0.9f * mExhaustPopMasterMultiplier);
+                    mSoundPool.play(downPopId, vol, vol, 4, 0, 1.05f);
                     mLastShiftTime -= 50;
                 }
             }
@@ -969,8 +972,9 @@ public class EngineSoundManager {
                     popId = mGlobalPopIds[(int) (Math.random() * 2)]; // 1 veya 3'ten biri
                 }
 
-                float popVol = (0.3f + (float)Math.random() * 0.4f) * masterVol;
+                float basePopVol = 0.3f + (float)Math.random() * 0.4f;
                 float popPitch = 0.85f + (float)Math.random() * 0.3f;
+                float popVol = Math.min(1.0f, basePopVol * masterVol * mExhaustPopMasterMultiplier);
 
                 mSoundPool.play(popId, popVol, popVol, 2, 0, popPitch);
 

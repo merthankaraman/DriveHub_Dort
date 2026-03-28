@@ -158,6 +158,10 @@ public class MG4ControlService extends Service {
     /** Boot sonrası sürüş modu / regen uygulaması için gecikme (ms). Debug için biraz kısaltıldı. */
     private static final long REMEMBER_APPLY_START_UP_DELAY_MS = 5_000L;
     private static final long REMEMBER_APPLY_LOOP_DELAY_MS = 1_000L;
+    /** One-pedal geri yükleme için ek deneme ayarları (uzaktan uyandırma senaryosunda geç hazır olabiliyor). */
+    private static final int ONE_PEDAL_RESTORE_MAX_RETRIES = 8;
+    private static final long ONE_PEDAL_RESTORE_RETRY_DELAY_MS = 1_200L;
+    private int mOnePedalRestoreRetryCount = 0;
 
     // Sistem medya sesini kontrol etmek için
     private AudioManager mAudioManager;
@@ -221,6 +225,13 @@ public class MG4ControlService extends Service {
         }
     };
     private final Handler mSoundHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mOnePedalRestoreRetryRunnable = new Runnable() {
+        @Override
+        public void run() {
+            attemptRememberedOnePedalRestore("retry");
+        }
+    };
+
     private final Runnable mSoundRunnable = new Runnable() {
         @Override
         public void run() {
@@ -443,6 +454,7 @@ public class MG4ControlService extends Service {
         removeOverlay();
         MG4Hardware.destroy();
         mSoundHandler.removeCallbacks(mSoundRunnable);
+        mMainHandler.removeCallbacks(mOnePedalRestoreRetryRunnable);
         mChargingCheckHandler.removeCallbacks(mChargingCheckRunnable);
         mConsumptionHandler.removeCallbacks(mConsumptionIntegrationRunnable);
     }
@@ -472,10 +484,14 @@ public class MG4ControlService extends Service {
 
     /** Boot sonrası regen seviyesini otomatik geri yükle (kullanıcı \"Regen seviyesini hatırla\" switch'ini açtıysa). */
     private void applyRememberedRegenIfNeeded() {
+        // Eski retry kuyruğu varsa temizle (yeni ignition geçişinde temiz başlangıç).
+        mMainHandler.removeCallbacks(mOnePedalRestoreRetryRunnable);
+        mOnePedalRestoreRetryCount = 0;
+
         SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         if (!prefs.getBoolean(PREF_REMEMBER_REGEN, false)) return;
 
-        int lastValue = prefs.getInt(PREF_LAST_REGEN_LEVEL, RegenLevel.LOW.value);
+        int lastValue = prefs.getInt(PREF_LAST_REGEN_LEVEL, RegenLevel.HIGH.value);
         RegenLevel rl = RegenLevel.fromValue(lastValue);
         if (rl == null) {
             return;
@@ -487,11 +503,80 @@ public class MG4ControlService extends Service {
             if (MG4Hardware.isLogEnabled()) {
                 Log.i(TAG, "RememberRegen: uygulandı → " + rl + " (" + rl.value + ")");
             }
+
+            // Uzaktan uyandırma sonrası OPD komutu bazen ilk anda boşa düşüyor.
+            // Tek pedal kayıtlıysa, kısa gecikmeli doğrulama + retry zinciri başlat.
+            if (rl == RegenLevel.ONE_PEDAL) {
+                mOnePedalRestoreRetryCount = 0;
+                mMainHandler.postDelayed(
+                        mOnePedalRestoreRetryRunnable,
+                        ONE_PEDAL_RESTORE_RETRY_DELAY_MS
+                );
+            }
         } else {
             if (MG4Hardware.isLogEnabled()) {
                 Log.w(TAG, "RememberRegen: setRegenLevel(" + rl + ") başarısız");
             }
+
+            if (rl == RegenLevel.ONE_PEDAL) {
+                mOnePedalRestoreRetryCount = 0;
+                mMainHandler.postDelayed(
+                        mOnePedalRestoreRetryRunnable,
+                        ONE_PEDAL_RESTORE_RETRY_DELAY_MS
+                );
+            }
         }
+    }
+
+    /** Tek pedal restore denemesi: doğrula, gerekiyorsa sınırlı sayıda yeniden gönder. */
+    private void attemptRememberedOnePedalRestore(String reason) {
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
+        if (!prefs.getBoolean(PREF_REMEMBER_REGEN, false)) return;
+
+        int lastValue = prefs.getInt(PREF_LAST_REGEN_LEVEL, RegenLevel.HIGH.value);
+        if (lastValue != RegenLevel.ONE_PEDAL.value) return;
+
+        // Kontak RUN değilken zorlamayalım; bir sonraki loop'ta ignition geçişi tekrar tetikler.
+        if (MG4Hardware.getVehicleIgnition() < 2) return;
+
+        int onePedalState = MG4Hardware.getOnePedal(); // 1=açık, 0=kapalı, -1=okunamadı
+        if (onePedalState == 1) {
+            Toast.makeText(
+                    getApplicationContext(),
+                    "OPD restore: başarılı (retry=" + mOnePedalRestoreRetryCount + ")",
+                    Toast.LENGTH_SHORT
+            ).show();
+            if (MG4Hardware.isLogEnabled()) {
+                Log.i(TAG, "RememberRegen(OPD): doğrulandı (reason=" + reason + ")");
+            }
+            mOnePedalRestoreRetryCount = 0;
+            mMainHandler.removeCallbacks(mOnePedalRestoreRetryRunnable);
+            return;
+        }
+
+        if (mOnePedalRestoreRetryCount >= ONE_PEDAL_RESTORE_MAX_RETRIES) {
+            Toast.makeText(
+                    getApplicationContext(),
+                    "OPD restore: başarısız (max retry), state=" + onePedalState,
+                    Toast.LENGTH_SHORT
+            ).show();
+            if (MG4Hardware.isLogEnabled()) {
+                Log.w(TAG, "RememberRegen(OPD): max retry aşıldı, state=" + onePedalState);
+            }
+            return;
+        }
+
+        mOnePedalRestoreRetryCount++;
+        boolean ok = MG4Hardware.setRegenLevel(RegenLevel.ONE_PEDAL);
+        if (MG4Hardware.isLogEnabled()) {
+            Log.i(TAG, "RememberRegen(OPD) retry#" + mOnePedalRestoreRetryCount
+                    + " reason=" + reason + " state=" + onePedalState + " ok=" + ok);
+        }
+
+        mMainHandler.postDelayed(
+                mOnePedalRestoreRetryRunnable,
+                ONE_PEDAL_RESTORE_RETRY_DELAY_MS
+        );
     }
 
     @Override

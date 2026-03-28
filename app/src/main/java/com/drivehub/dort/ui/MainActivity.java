@@ -2007,7 +2007,7 @@ public class MainActivity extends AppCompatActivity {
                 lifetimeKwh = MG4Hardware.getConsumptionProfileKwh(mActiveConsumptionProfile);
             }
             if (mTvConsumptionTripKm != null) {
-                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", lifetimeKm));
+                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.3f km", lifetimeKm));
             }
             if (mTvConsumptionEnergy != null) {
                 mTvConsumptionEnergy.setText(String.format(Locale.US, "%.3f kWh", lifetimeKwh));
@@ -2023,7 +2023,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (sinceStart) {
             // Motor çalıştıktan itibaren: sDriveGraphDistanceKm, sDriveGraphEnergyKwh
             if (mTvConsumptionTripKm != null) {
-                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", driveGraphDistanceKm));
+                mTvConsumptionTripKm.setText(String.format(Locale.US, "%.3f km", driveGraphDistanceKm));
             }
             if (mTvConsumptionEnergy != null) {
                 mTvConsumptionEnergy.setText(String.format(Locale.US, "%.3f kWh", driveGraphEnergyKwh));
@@ -2040,7 +2040,7 @@ public class MainActivity extends AppCompatActivity {
             // Sürüş: trip (Sürüş sıfırla ile sıfırlanan)
             if (mTvConsumptionTripKm != null) {
                 if (tripDistanceKm >= 0) {
-                    mTvConsumptionTripKm.setText(String.format(Locale.US, "%.2f km", tripDistanceKm));
+                    mTvConsumptionTripKm.setText(String.format(Locale.US, "%.3f km", tripDistanceKm));
                 } else {
                     mTvConsumptionTripKm.setText("--");
                 }

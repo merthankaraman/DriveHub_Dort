@@ -2,6 +2,7 @@ package com.drivehub.dort.hardware;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Parcel;
@@ -61,6 +62,7 @@ public class MG4Hardware {
     // Tüketim ekranı (VehicleConditionBinder / BMS — MG4_BINDER_REFERENCE.md)
     private static final int PROP_TOTAL_MILEAGE = 557873939;   // getTotalMileage() — toplam km (VendorInstrumentCluster)
     private static final int PROP_GEAR         = 557847918;    // getCarGear() — vites konumu
+    private static volatile float sTripDistanceIntegrationScale = 1f;
 
     // Katman 2 — Binder (yedek, uid.system gerektirir)
     private static final String DESCRIPTOR_VEHICLE =
@@ -1194,7 +1196,9 @@ public class MG4Hardware {
      */
     public static void run100msTask() {
         float speedKmh_raw = getSpeedKmh();
-        float speedKmh = speedKmh_raw * (speedKmh_raw >= 80 ? 1.004f : 1f);
+        float speedKmh = speedKmh_raw;// * (speedKmh_raw >= 80 ? 1.003f : 1f);
+        //if (speedKmh < 1.0f) speedKmh = 0f;
+
 
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
 
@@ -1250,10 +1254,22 @@ public class MG4Hardware {
         sConsumptionLastRealtimeMs = nowRealtimeMs;
         if (dtHours > 0) {
             double drivedKwh = 0;
-            double dKm = Math.abs(speedKmh * dtHours);
-            if (!Float.isNaN(dcKw)){
-                if (speedKmh == 0f && dcKw < 0f) drivedKwh = 0f;
-                else drivedKwh = dcKw * dtHours;
+            float vEffKmh;
+            if (Float.isNaN(sLastSpeedKmh)) {
+                vEffKmh = Math.abs(speedKmh);
+            } else {
+                vEffKmh = (Math.abs(sLastSpeedKmh) + Math.abs(speedKmh)) * 0.5f;
+            }
+            double dKm = vEffKmh * dtHours * sTripDistanceIntegrationScale;
+            // DC güç (kWh): trapez — önceki tick sDcKw + şimdiki dcKw ortalaması × dt
+            if (!Float.isNaN(dcKw)) {
+                if (speedKmh == 0f && dcKw < 0f) {
+                    drivedKwh = 0;
+                } else {
+                    float pPrev = sDcKw;
+                    double pEffKw = Float.isNaN(pPrev) ? dcKw : (pPrev + dcKw) * 0.5;
+                    drivedKwh = pEffKw * dtHours;
+                }
             }
             for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
                 sConsProfileKm[i] += dKm;
@@ -1283,10 +1299,20 @@ public class MG4Hardware {
             //}
             if (isCharging()) {
                 if (!Float.isNaN(acKw) && acKw > 0f) {
-                    sAcChargeEnergyKwh += acKw * dtHours;
+                    float aPrev = sAcKw;
+                    double aEffKw = (Float.isNaN(aPrev) || aPrev <= 0f)
+                            ? acKw
+                            : (aPrev + acKw) * 0.5;
+                    if (aEffKw > 0) {
+                        sAcChargeEnergyKwh += aEffKw * dtHours;
+                    }
                 }
-                if (!Float.isNaN(sDcKw) && sDcKw < 0f) {
-                    sDcChargeEnergyKwh += Math.abs(sDcKw * dtHours);
+                if (!Float.isNaN(dcKw)) {
+                    float pPrev = sDcKw;
+                    double pEffKw = Float.isNaN(pPrev) ? dcKw : (pPrev + dcKw) * 0.5;
+                    if (pEffKw < 0f) {
+                        sDcChargeEnergyKwh += Math.abs(pEffKw * dtHours);
+                    }
                 }
             }
         } else {
