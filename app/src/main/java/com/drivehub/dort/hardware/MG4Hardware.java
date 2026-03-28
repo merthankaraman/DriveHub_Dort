@@ -1197,7 +1197,7 @@ public class MG4Hardware {
     public static void run100msTask() {
         float speedKmh_raw = getSpeedKmh();
         float speedKmh = speedKmh_raw;// * (speedKmh_raw >= 80 ? 1.003f : 1f);
-        //if (speedKmh < 1.0f) speedKmh = 0f;
+        if (speedKmh < 1.0f) speedKmh = 0f;
 
 
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;

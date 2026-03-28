@@ -689,9 +689,6 @@ public class MainActivity extends AppCompatActivity {
             MG4Hardware.setSoundEnabled(mSoundEnabled);
             getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                     .edit().putBoolean(PREF_SOUND_ENABLED, mSoundEnabled).apply();
-            //Toast.makeText(this,
-            //        getString(mSoundEnabled ? R.string.toast_motor_sound_on : R.string.toast_motor_sound_off),
-            //        Toast.LENGTH_SHORT).show();
             updateSoundToggleButton();
         });
 
