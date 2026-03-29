@@ -34,7 +34,7 @@
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:text="@string/charging_graph_title"
-                android:textColor="@android:color/white"
+                android:textColor="@color/status_value"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 

@@ -116,12 +116,15 @@ public class MG4Hardware {
     // Enerji birikimi — UI kapalı olsa bile servisin 100ms polling'inde güncellenir
     private static volatile float sAcChargeEnergyKwh       = 0f;
     private static volatile float sDcChargeEnergyKwh       = 0f;
+    /** DC istasyon: U_dc × I_beklenen (getDcCurrentExpected) trapez entegrali — kWh */
+    private static volatile float sStationDcChargeEnergyKwh = 0f;
     private static volatile long  sLastBmsEventMs    = 0L;
 
     // 100ms polling ile güncellenen global ölçümler
     private static volatile float sDcVolt            = Float.NaN;
     private static volatile float sDcAmp             = Float.NaN;
     private static volatile float sDcKw              = Float.NaN;
+    private static volatile float sDcStationKw       = Float.NaN;
     private static volatile float sAcVolt            = Float.NaN;
     private static volatile float sAcAmp             = Float.NaN;
     private static volatile float sAcKw              = Float.NaN;
@@ -200,6 +203,7 @@ public class MG4Hardware {
         sBmsCache.clear();
         sAcChargeEnergyKwh         = 0f;
         sDcChargeEnergyKwh         = 0f;
+        sStationDcChargeEnergyKwh  = 0f;
         sLastBmsEventMs      = 0L;
         sChargingStartWallMs = 0L;
         sAppContext          = null;
@@ -1214,6 +1218,12 @@ public class MG4Hardware {
             dcKw = Float.NaN;
             elsecounter += 1;
         }
+        float dcAmpExp = getDcCurrentExpected();
+        float stationDcKw = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp))
+                ? (dcVolt * dcAmpExp) / 1000f : Float.NaN;
+        if (!Float.isNaN(stationDcKw) && Math.abs(stationDcKw) > 300f) {
+            stationDcKw = Float.NaN;
+        }
 
         // Güç için güvenlik sınırı: abs(dcKw) mantıksız derecede büyükse integrale sokma
         if (!Float.isNaN(dcKw) && Math.abs(dcKw) > 300f) {
@@ -1299,19 +1309,25 @@ public class MG4Hardware {
             //}
             if (isCharging()) {
                 if (!Float.isNaN(acKw) && acKw > 0f) {
-                    float aPrev = sAcKw;
-                    double aEffKw = (Float.isNaN(aPrev) || aPrev <= 0f)
+                    double aEffKw = (Float.isNaN(sAcKw) || sAcKw <= 0f)
                             ? acKw
-                            : (aPrev + acKw) * 0.5;
+                            : (sAcKw + acKw) * 0.5;
                     if (aEffKw > 0) {
                         sAcChargeEnergyKwh += aEffKw * dtHours;
                     }
                 }
                 if (!Float.isNaN(dcKw)) {
-                    float pPrev = sDcKw;
-                    double pEffKw = Float.isNaN(pPrev) ? dcKw : (pPrev + dcKw) * 0.5;
+                    double pEffKw = Float.isNaN(sDcKw) ? dcKw : (sDcKw + dcKw) * 0.5;
                     if (pEffKw < 0f) {
                         sDcChargeEnergyKwh += Math.abs(pEffKw * dtHours);
+                    }
+                }
+                if (!Float.isNaN(stationDcKw)) {
+                    double sEffKw = Float.isNaN(sDcStationKw) ? stationDcKw : (sDcStationKw + stationDcKw) * 0.5;
+                    if (sEffKw < 0f) {
+                        sStationDcChargeEnergyKwh += Math.abs(sEffKw * dtHours);
+                    } else if (sEffKw > 0f) {
+                        sStationDcChargeEnergyKwh += sEffKw * dtHours;
                     }
                 }
             }
@@ -1322,6 +1338,7 @@ public class MG4Hardware {
         sDcVolt = dcVolt;
         sDcAmp  = dcAmpAct;
         sDcKw   = dcKw;
+        sDcStationKw = stationDcKw;
         sAcVolt = acVolt;
         sAcAmp  = acAmp;
         sAcKw   = acKw;
@@ -1545,6 +1562,9 @@ public class MG4Hardware {
     /** Bataryanın aldığı toplam enerji — kWh (şarj boyunca birikir) */
     public static float getDcChargeEnergyKwh() { return sDcChargeEnergyKwh; }
 
+    /** İstasyon DC teklifi: U × I_beklenen entegrali — kWh (şarj oturumu boyunca) */
+    public static float getStationDcChargeEnergyKwh() { return sStationDcChargeEnergyKwh; }
+
     /**
      * Şarj süresi — ms.
      * Başlangıç: (1) BMS callback şarjı ilk gördüğünde set + persist, (2) yoksa persist'ten geri yükle,
@@ -1577,6 +1597,7 @@ public class MG4Hardware {
         sChargingStartWallMs = 0L;
         sAcChargeEnergyKwh         = 0f;
         sDcChargeEnergyKwh         = 0f;
+        sStationDcChargeEnergyKwh  = 0f;
         sLastBmsEventMs      = 0L;
         if (sAppContext != null) com.drivehub.dort.util.ChargingHistory.clearChargingStart(sAppContext);
     }
@@ -1585,6 +1606,7 @@ public class MG4Hardware {
     public static void resetEnergy() {
         sAcChargeEnergyKwh         = 0f;
         sDcChargeEnergyKwh         = 0f;
+        sStationDcChargeEnergyKwh  = 0f;
         sLastBmsEventMs      = 0L;
         sChargingStartWallMs = 0L;
         if (sLogEnabled) Log.i(TAG, "resetEnergy() çağrıldı");

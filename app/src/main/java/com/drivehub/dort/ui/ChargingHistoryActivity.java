@@ -182,6 +182,7 @@ public class ChargingHistoryActivity extends AppCompatActivity {
                     row.setPadding(0, dp4, dp12, dp4);
                     addCell(row, 1.2f, SDF_ROW.format(new Date(r.startMs)));
                     addCell(row, 1.2f, SDF_ROW.format(new Date(r.endMs)));
+                    addCell(row, 0.45f, formatChargeTypeLabel(r.chargeType));
                     addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.acKwh));
                     addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.dcKwh));
                     addCell(row, 0.5f, formatDuration(r));
@@ -247,6 +248,16 @@ public class ChargingHistoryActivity extends AppCompatActivity {
         if (mPrefs != null && mPrefsListener != null) {
             mPrefs.unregisterOnSharedPreferenceChangeListener(mPrefsListener);
         }
+    }
+
+    private String formatChargeTypeLabel(String code) {
+        if (ChargingRecord.CHARGE_TYPE_AC.equals(code)) {
+            return getString(R.string.charging_type_ac);
+        }
+        if (ChargingRecord.CHARGE_TYPE_DC.equals(code)) {
+            return getString(R.string.charging_type_dc);
+        }
+        return code != null ? code : "—";
     }
 
     private String formatDuration(ChargingRecord r) {

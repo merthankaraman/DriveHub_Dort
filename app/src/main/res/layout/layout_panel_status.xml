@@ -71,18 +71,6 @@
             android:textColor="#C9D1D9"
             android:textSize="12sp" />
 
-        <!-- Beklenen Şarj Gücü -->
-        <TextView
-            android:id="@+id/tvExpectedPower"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:fontFamily="monospace"
-            android:text="@string/expected_charge_power"
-            android:textColor="#FFA657"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
         <!-- Ä°ki sÃ¼tun: AC | Batarya (%40 kÄ±saltÄ±ldÄ±, grafik alanÄ± bÃ¼yÃ¼tÃ¼ldÃ¼) -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -101,11 +89,12 @@
                 android:padding="24dp">
 
                 <TextView
+                    android:id="@+id/tvLeftColumnTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
                     android:letterSpacing="0.12"
-                    android:text="@string/unit_ac"
+                    android:text="@string/expected_charge_power"
                     android:textColor="#6E7681"
                     android:textSize="13sp" />
 
@@ -190,8 +179,9 @@
 
                 </LinearLayout>
 
-                <!-- kWh (toplam enerji) -->
+                <!-- kWh (toplam enerji) — şarj yokken satırın tamamı gizlenir -->
                 <LinearLayout
+                    android:id="@+id/rowAcEnergy"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
@@ -317,8 +307,9 @@
 
                 </LinearLayout>
 
-                <!-- kWh (toplam enerji) -->
+                <!-- kWh (toplam enerji) — şarj yokken satırın tamamı gizlenir -->
                 <LinearLayout
+                    android:id="@+id/rowDcEnergy"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"

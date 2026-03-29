@@ -114,8 +114,7 @@
     <string name="charging_status_label">Şarj durumu: --</string>
     <string name="charging_duration_placeholder">--:--:--</string>
     <string name="btn_charging_history">Şarj Geçmişini Göster</string>
-    <string name="expected_charge_power">Beklenen Şarj Gücü:  -- kW</string>
-    <string name="expected_charge_power_format">Beklenen Şarj Gücü:  %.2f kW</string>
+    <string name="expected_charge_power">Beklenen Şarj Gücü</string>
     <string name="charging">Şarjda</string>
     <string name="not_charging">Şarjda değil</string>
 
@@ -123,8 +122,11 @@
     <string name="charging_history_title">ŞARJ GEÇMİŞİ</string>
     <string name="charging_history_table_start">Başlangıç</string>
     <string name="charging_history_table_end">Bitiş</string>
-    <string name="charging_history_table_ac_kwh">AC kWh</string>
-    <string name="charging_history_table_dc_kwh">DC kWh</string>
+    <string name="charging_history_table_type">Şarj tipi</string>
+    <string name="charging_type_ac">AC</string>
+    <string name="charging_type_dc">DC</string>
+    <string name="charging_history_table_ac_kwh">İstasyondan Alınan kWh</string>
+    <string name="charging_history_table_dc_kwh">Pile Şarj edilen kWh</string>
     <string name="charging_history_table_duration">Süre</string>
     <string name="charging_history_btn_export">CSV Dışa Aktar</string>
     <string name="charging_history_btn_clear">Geçmişi Sil</string>
@@ -140,6 +142,7 @@
     <!-- CSV dışa aktarma başlıkları (dile göre) -->
     <string name="csv_header_start">Başlangıç</string>
     <string name="csv_header_end">Bitiş</string>
+    <string name="csv_header_charge_type">Sarj_tipi</string>
     <string name="csv_header_ac_kwh">AC_kWh</string>
     <string name="csv_header_dc_kwh">DC_kWh</string>
     <string name="csv_header_hours">Saat</string>
@@ -270,6 +273,8 @@
     <string name="unit_v">V</string>
     <string name="unit_a">A</string>
     <string name="unit_ac">AC</string>
+    <string name="charging_column_ac_station">AC (İSTASYON)</string>
+    <string name="charging_column_dc_station">DC (İSTASYON)</string>
     <string name="unit_kw_label">kW</string>
     <string name="unit_kwh_label">kWh</string>
     <string name="batarya">Batarya</string>

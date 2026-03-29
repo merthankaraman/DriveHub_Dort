@@ -36,9 +36,16 @@ public final class ChargingHistory {
         if (MG4Hardware.isChargingNow()) return false;
 
         long endMs = System.currentTimeMillis();
-        float acKwh = MG4Hardware.getAcChargeEnergyKwh();
+        float acKwhRaw = MG4Hardware.getAcChargeEnergyKwh();
         float dcKwh = MG4Hardware.getDcChargeEnergyKwh();
-        ChargingRecord record = new ChargingRecord(startMs, endMs, acKwh, dcKwh);
+        float stationDcKwh = MG4Hardware.getStationDcChargeEnergyKwh();
+        float acKwh = (acKwhRaw >= 0.01f)
+                ? acKwhRaw
+                : (stationDcKwh);
+        String chargeType = (acKwhRaw >= 0.01f)
+                ? ChargingRecord.CHARGE_TYPE_AC
+                : ChargingRecord.CHARGE_TYPE_DC;
+        ChargingRecord record = new ChargingRecord(startMs, endMs, acKwh, dcKwh, chargeType);
         List<ChargingRecord> list = load(context);
         list.add(0, record); // en yeni başta
         save(context, list);
@@ -54,12 +61,19 @@ public final class ChargingHistory {
             JSONArray arr = new JSONArray(json);
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject o = arr.getJSONObject(i);
+                float chargestationkwh = (float) o.getDouble("acKwh");
+                String chargeType = o.optString("chargeType", "");
+                if (chargeType.isEmpty()) {
+                    chargeType = (chargestationkwh >= 0.01f)
+                            ? ChargingRecord.CHARGE_TYPE_DC
+                            : ChargingRecord.CHARGE_TYPE_AC;
+                }
                 out.add(new ChargingRecord(
-                    o.getLong("startMs"),
-                    o.getLong("endMs"),
-                    (float) o.getDouble("acKwh"),
-                    (float) o.getDouble("dcKwh")
-                ));
+                        o.getLong("startMs"),
+                        o.getLong("endMs"),
+                        chargestationkwh,
+                        (float) o.getDouble("dcKwh"),
+                        chargeType));
             }
         } catch (JSONException e) {
             // boş veya bozuk → boş liste
@@ -76,6 +90,7 @@ public final class ChargingHistory {
                 o.put("endMs", r.endMs);
                 o.put("acKwh", r.acKwh);
                 o.put("dcKwh", r.dcKwh);
+                o.put("chargeType", r.chargeType);
                 arr.put(o);
             } catch (JSONException ignored) {}
         }
@@ -124,6 +139,7 @@ public final class ChargingHistory {
         try (FileWriter fw = new FileWriter(out, false)) {
             String header = context.getString(R.string.csv_header_start) + ","
                     + context.getString(R.string.csv_header_end) + ","
+                    + context.getString(R.string.csv_header_charge_type) + ","
                     + context.getString(R.string.csv_header_ac_kwh) + ","
                     + context.getString(R.string.csv_header_dc_kwh) + ","
                     + context.getString(R.string.csv_header_hours) + "\n";
@@ -132,8 +148,8 @@ public final class ChargingHistory {
                 String start = sdf.format(new java.util.Date(r.startMs));
                 String end = sdf.format(new java.util.Date(r.endMs));
                 String line = String.format(java.util.Locale.US,
-                        "\"%s\",\"%s\",%.3f,%.3f,%.3f\n",
-                        start, end, r.acKwh, r.dcKwh, r.getDurationHours());
+                        "\"%s\",\"%s\",\"%s\",%.3f,%.3f,%.3f\n",
+                        start, end, r.chargeType, r.acKwh, r.dcKwh, r.getDurationHours());
                 fw.write(line);
             }
             fw.flush();

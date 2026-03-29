@@ -114,17 +114,21 @@
     <string name="charging_status_label">Charging status: --</string>
     <string name="charging_duration_placeholder">--:--:--</string>
     <string name="btn_charging_history">Show charging history</string>
-    <string name="expected_charge_power">Expected charge power:  -- kW</string>
-    <string name="expected_charge_power_format">Expected charge power:  %.2f kW</string>
+    <string name="expected_charge_power">Expected charge power</string>
     <string name="charging">Charging</string>
     <string name="not_charging">Not charging</string>
+    <string name="charging_column_ac_station">AC (STATION)</string>
+    <string name="charging_column_dc_station">DC (STATION)</string>
 
     <!-- Charging history screen -->
     <string name="charging_history_title">CHARGING HISTORY</string>
     <string name="charging_history_table_start">Start</string>
     <string name="charging_history_table_end">End</string>
-    <string name="charging_history_table_ac_kwh">AC kWh</string>
-    <string name="charging_history_table_dc_kwh">DC kWh</string>
+    <string name="charging_history_table_type">Charge type</string>
+    <string name="charging_type_ac">AC</string>
+    <string name="charging_type_dc">DC</string>
+    <string name="charging_history_table_ac_kwh">Station Consumed kWh</string>
+    <string name="charging_history_table_dc_kwh">Car Charged kWh</string>
     <string name="charging_history_table_duration">Duration</string>
     <string name="charging_history_btn_export">Export CSV</string>
     <string name="charging_history_btn_clear">Clear history</string>
@@ -140,6 +144,7 @@
     <!-- CSV export headers (locale-aware) -->
     <string name="csv_header_start">Start</string>
     <string name="csv_header_end">End</string>
+    <string name="csv_header_charge_type">Charge_type</string>
     <string name="csv_header_ac_kwh">AC_kWh</string>
     <string name="csv_header_dc_kwh">DC_kWh</string>
     <string name="csv_header_hours">Hours</string>

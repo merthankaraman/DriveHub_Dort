@@ -203,15 +203,17 @@ public class MainActivity extends AppCompatActivity {
     };
     private TextView mTvChargingDuration;
     private TextView mTvChargingStatus;
-    private TextView mTvExpectedPower;
+    private TextView mTvLeftColumnTitle;
     private TextView mTvAcVolt;
     private TextView mTvAcAmp;
     private TextView mTvAcKw;
     private TextView mTvAcEnergy;
+    private View     mRowAcEnergy;
     private TextView mTvDcVolt;
     private TextView mTvDcAmpAct;
     private TextView mTvDcKwAct;
     private TextView mTvDcEnergy;
+    private View     mRowDcEnergy;
     private LineChart mChartChargingPower;
     private final ArrayList<Entry> mChartEntriesMaxDc = new ArrayList<>();
     private final ArrayList<Entry> mChartEntriesAc = new ArrayList<>();
@@ -881,15 +883,17 @@ public class MainActivity extends AppCompatActivity {
         mLayoutChargingGraphPanel = findViewById(R.id.layoutChargingGraphPanel);
         mTvChargingDuration = findViewById(R.id.tvChargingDuration);
         mTvChargingStatus   = findViewById(R.id.tvChargingStatus);
-        mTvExpectedPower    = findViewById(R.id.tvExpectedPower);
+        mTvLeftColumnTitle = findViewById(R.id.tvLeftColumnTitle);
         mTvAcVolt          = findViewById(R.id.tvAcVolt);
         mTvAcAmp           = findViewById(R.id.tvAcAmp);
         mTvAcKw            = findViewById(R.id.tvAcKw);
         mTvAcEnergy        = findViewById(R.id.tvAcEnergy);
+        mRowAcEnergy       = findViewById(R.id.rowAcEnergy);
         mTvDcVolt          = findViewById(R.id.tvDcVolt);
         mTvDcAmpAct        = findViewById(R.id.tvDcAmpAct);
         mTvDcKwAct         = findViewById(R.id.tvDcKwAct);
         mTvDcEnergy        = findViewById(R.id.tvDcEnergy);
+        mRowDcEnergy       = findViewById(R.id.rowDcEnergy);
         mChartChargingPower = findViewById(R.id.chartChargingPower);
         setupChargingCharts();
 
@@ -1455,6 +1459,19 @@ public class MainActivity extends AppCompatActivity {
         mCurrentPanel = PANEL_MAIN;
     }
 
+    /**
+     * Şarj yokken sol sütun başlığı AC kalır (ev tipi veriler).
+     * Şarjdayken AC gerilim/akım anlamlıysa (~50 V üstü, 0,5 A üstü) sol sütun AC gücü;
+     * aksi halde DC istasyon (batarya gerilimi × {@link MG4Hardware#getDcCurrentExpected}).
+     */
+    private static boolean shouldShowAcLeftColumn(float acVolt, float acAmp, boolean charging) {
+        if (!charging) {
+            return false;
+        }
+        return !Float.isNaN(acVolt) && acVolt > 50f
+                && !Float.isNaN(acAmp) && acAmp > 0.5f;
+    }
+
     private void openChargingGraphPanel() {
         mCurrentPanel = PANEL_CHARGING_GRAPH;
         mLayoutMain.setVisibility(View.GONE);
@@ -1489,21 +1506,43 @@ public class MainActivity extends AppCompatActivity {
             Log.i(TAG, "StatusPanel: dcV=" + dcVolt + " acV=" + acVolt + " dcAact=" + dcAmpAct + " acA=" + acAmp);
         }
 
-        // Beklenen Şarj Gücü (üstteki metin)
-        if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) {
-            float expKw = (dcVolt * dcAmpExp) / 1000f;
-            mTvExpectedPower.setText(getString(R.string.expected_charge_power_format, expKw));
-        } else {
-            mTvExpectedPower.setText(getString(R.string.expected_charge_power));
+        boolean charging = MG4Hardware.isChargingNow();
+        boolean leftColumnIsAc = shouldShowAcLeftColumn(acVolt, acAmp, charging);
+        if (mTvLeftColumnTitle != null) {
+            if (charging) {
+                mTvLeftColumnTitle.setText(leftColumnIsAc
+                        ? getString(R.string.charging_column_ac_station)
+                        : getString(R.string.charging_column_dc_station));
+            } else {
+                mTvLeftColumnTitle.setText(getString(R.string.expected_charge_power));
+            }
+        }
+        int energyRowVis = charging ? View.VISIBLE : View.GONE;
+        if (mRowAcEnergy != null) {
+            mRowAcEnergy.setVisibility(energyRowVis);
+        }
+        if (mRowDcEnergy != null) {
+            mRowDcEnergy.setVisibility(energyRowVis);
         }
 
-        // AC sütunu (acVolt, acAmp yukarıda alındı)
-        mTvAcVolt.setText(Float.isNaN(acVolt) ? "--" : String.format("%.0f V", acVolt));
-        mTvAcAmp.setText(Float.isNaN(acAmp)   ? "--" : String.format("%.1f A", acAmp));
-        if (!Float.isNaN(acVolt) && !Float.isNaN(acAmp)) {
-            mTvAcKw.setText(String.format("%.3f kW", (acVolt * acAmp) / 1000f));
+        // Sol sütun: AC şarjda AC V/A/kW/kWh; DC şarjda istasyon DC (U, beklenen A, beklenen kW, DC kWh)
+        if (leftColumnIsAc) {
+            mTvAcVolt.setText(Float.isNaN(acVolt) ? "--" : String.format("%.0f V", acVolt));
+            mTvAcAmp.setText(Float.isNaN(acAmp) ? "--" : String.format("%.1f A", acAmp));
+            if (!Float.isNaN(acVolt) && !Float.isNaN(acAmp)) {
+                mTvAcKw.setText(String.format("%.3f kW", (acVolt * acAmp) / 1000f));
+            } else {
+                mTvAcKw.setText("--");
+            }
         } else {
-            mTvAcKw.setText("--");
+            mTvAcVolt.setText(Float.isNaN(dcVolt) ? "--" : String.format("%.0f V", dcVolt));
+            mTvAcAmp.setText(Float.isNaN(dcAmpExp) ? "--" : String.format("%.1f A", dcAmpExp));
+            if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) {
+                float expKwLeft = (dcVolt * dcAmpExp) / 1000f;
+                mTvAcKw.setText(String.format("%.3f kW", expKwLeft));
+            } else {
+                mTvAcKw.setText("--");
+            }
         }
 
         // Batarya sütunu
@@ -1518,11 +1557,15 @@ public class MainActivity extends AppCompatActivity {
         // Enerji satırları (şarj boyunca biriken)
         float acChargeEnergy = MG4Hardware.getAcChargeEnergyKwh();
         float dcChargeEnergy = MG4Hardware.getDcChargeEnergyKwh();
-        mTvAcEnergy.setText(acChargeEnergy > 0f ? String.format("%.3f kWh", acChargeEnergy) : "--");
+        float stationDcKwh = MG4Hardware.getStationDcChargeEnergyKwh();
+        if (leftColumnIsAc) {
+            mTvAcEnergy.setText(acChargeEnergy > 0f ? String.format("%.3f kWh", acChargeEnergy) : "--");
+        } else {
+            mTvAcEnergy.setText(stationDcKwh > 0f ? String.format("%.3f kWh", stationDcKwh) : "--");
+        }
         mTvDcEnergy.setText(dcChargeEnergy > 0f ? String.format("%.3f kWh", dcChargeEnergy) : "--");
 
         // Şarj durumu (çıkarım: AC/DC akım veya PROP_CHG_STATUS)
-        boolean charging = MG4Hardware.isChargingNow();
         mTvChargingStatus.setText(charging ? getString(R.string.charging) : getString(R.string.not_charging));
         mTvChargingStatus.setTextColor(charging ? 0xFF7EE787 : 0xFF8B949E);
         if (mChartChargingPower != null) {
