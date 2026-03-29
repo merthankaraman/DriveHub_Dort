@@ -89,7 +89,7 @@ public class EngineSoundManager {
     private long mEngineStartTime = 0;
     private long mAutoStartupDelayMs = 0;
     private boolean mExhaustPopEnabled = true;
-    private float mExhaustPopMasterMultiplier = 3f;
+    private float mExhaustPopMasterMultiplier = 0.5f;
     private int[] mGlobalPopIds = new int[6];
     private int mPopsRemaining = 0;
     private long mNextPopTime = 0;
@@ -927,7 +927,7 @@ public class EngineSoundManager {
             }
         }
         if (mExhaustPopEnabled && mDriveModeAggressiveness > 0.5f) {
-            if (currentTime - mLastShiftTime < 300 && mCurrentGear > 1) {
+            if (currentTime - mLastShiftTime < 300 && mCurrentGear > 0) {
 
                 // UPSHIFT: Gaz hala basılıysa (Vites atarken gaz kesmiyorsan)
                 if (mSimulatedThrottle > 0.5f && rpm > 4000f) {
