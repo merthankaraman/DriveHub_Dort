@@ -89,11 +89,11 @@ public class EngineSoundManager {
     private long mEngineStartTime = 0;
     private long mAutoStartupDelayMs = 0;
     private boolean mExhaustPopEnabled = true;
-    private float mExhaustPopMasterMultiplier = 1.9f;
+    private float mExhaustPopMasterMultiplier = 3f;
     private int[] mGlobalPopIds = new int[6];
     private int mPopsRemaining = 0;
     private long mNextPopTime = 0;
-    private float mLastThrottleForPop = 0f;
+    private boolean mWasHighLoad = false; // Yüksek yüke çıkıp çıkmadığını tutar
 
     public enum SoundMode { VIRTUAL_GEAR_V2 }
     public static class VehicleProfile {
@@ -256,7 +256,6 @@ public class EngineSoundManager {
             // Kapalıyken anlık olarak burble/patlama tetiklerini sıfırla ki gecikmeli ses kalmasın.
             mPopsRemaining = 0;
             mNextPopTime = 0;
-            mLastThrottleForPop = 0f;
         }
     }
     public void setUseManualThrottle(boolean use) { mUseManualThrottle = use; }
@@ -927,60 +926,56 @@ public class EngineSoundManager {
                 mSoundPool.setVolume(mSubwaveStreamId, 0f, 0f);
             }
         }
-        // updateAudioMixer içinde, Pop & Bang kısmını bu "akıllı" versiyonla değiştirebilirsin:
         if (mExhaustPopEnabled && mDriveModeAggressiveness > 0.5f) {
+            if (currentTime - mLastShiftTime < 300 && mCurrentGear > 1) {
 
-            // --- 1. VİTES ATMA (Upshift Crack) ---
-            // Sadece en sert iki sesten (9 ve 11) birini rastgele seçer
-            if (currentTime - mLastShiftTime < 50 && mCurrentGear > 1) {
-
-                // DURUM A: Dip gaz vites büyütme (Upshift Crack)
-                if (mSimulatedThrottle > 0.7f && rpm > 4000f) {
+                // UPSHIFT: Gaz hala basılıysa (Vites atarken gaz kesmiyorsan)
+                if (mSimulatedThrottle > 0.5f && rpm > 4000f) {
                     int upPopId = (Math.random() > 0.5) ? mGlobalPopIds[4] : mGlobalPopIds[5];
-                    float vol = Math.min(1.0f, masterVol * 1.3f * mExhaustPopMasterMultiplier);
+                    float vol = Math.min(1.0f, masterVol * 1.5f * mExhaustPopMasterMultiplier);
                     mSoundPool.play(upPopId, vol, vol, 5, 0, 0.92f);
-                    mLastShiftTime -= 50;
+                    mLastShiftTime = 0; // Bir kez çaldıktan sonra kilitle
                 }
-
-                // DURUM B: Ayak gazda değilken vites küçültme (Downshift Pop) - EKLEDİĞİMİZ KISIM
-                // Orta-sert sesler (5 veya 7) arasından rastgele seçer
-                else if (mSimulatedThrottle < 0.1f && rpm > 3000f) {
+                // DOWNSHIFT: Vites düşerken gaz %30'un altındaysa (Regen freni dahil)
+                else if (mSimulatedThrottle < 0.3f && rpm > 2500f) {
                     int downPopId = (Math.random() > 0.5) ? mGlobalPopIds[2] : mGlobalPopIds[3];
-                    float vol = Math.min(1.0f, masterVol * 0.9f * mExhaustPopMasterMultiplier);
+                    float vol = Math.min(1.0f, masterVol * 1.2f * mExhaustPopMasterMultiplier);
                     mSoundPool.play(downPopId, vol, vol, 4, 0, 1.05f);
-                    mLastShiftTime -= 50;
+                    mLastShiftTime = 0;
                 }
             }
-
-            // --- 2. GAZ KESME (Lift-off Burble) ---
-            if (mLastThrottleForPop > 0.5f && mSimulatedThrottle < 0.1f && rpm > 3200f) {
+            if (mSimulatedThrottle > 0.5f) {
+                mWasHighLoad = true;
+            }
+            if (mWasHighLoad && mSimulatedThrottle < 0.15f && rpm > 2600f) {
                 if (mPopsRemaining == 0) {
-                    mPopsRemaining = 3 + (int)(Math.random() * 5); // 3-8 arası patlama
+                    mPopsRemaining = 4 + (int)(Math.random() * 5);
                     mNextPopTime = currentTime;
                 }
+                mWasHighLoad = false;
             }
-            mLastThrottleForPop = mSimulatedThrottle;
+            if (mSimulatedThrottle > 0.4f) {
+                mPopsRemaining = 0;
+            }
 
-            if (mPopsRemaining > 0 && currentTime >= mNextPopTime && mSimulatedThrottle < 0.2f) {
+            // --- 3. PATLAMA AKIŞI ---
+            if (mPopsRemaining > 0 && currentTime >= mNextPopTime && mSimulatedThrottle < 0.35f) {
                 int popId;
-                // RPM'e göre "Havuz" seçimi (Beyin bunu ezberleyemez!)
                 if (rpm > 6500f) {
-                    popId = mGlobalPopIds[3 + (int)(Math.random() * 3)]; // 7, 9 veya 11'den biri
+                    popId = mGlobalPopIds[3 + (int)(Math.random() * 3)];
                 } else if (rpm > 4000f) {
-                    popId = mGlobalPopIds[1 + (int)(Math.random() * 3)]; // 3, 5 veya 7'den biri
+                    popId = mGlobalPopIds[1 + (int)(Math.random() * 3)];
                 } else {
-                    popId = mGlobalPopIds[(int) (Math.random() * 2)]; // 1 veya 3'ten biri
+                    popId = mGlobalPopIds[(int) (Math.random() * 2)];
                 }
 
-                float basePopVol = 0.3f + (float)Math.random() * 0.4f;
-                float popPitch = 0.85f + (float)Math.random() * 0.3f;
-                float popVol = Math.min(1.0f, basePopVol * masterVol * mExhaustPopMasterMultiplier);
-
-                mSoundPool.play(popId, popVol, popVol, 2, 0, popPitch);
+                // Ses şiddetini daha kararlı yapıyoruz
+                float popVol = Math.min(1.0f, (0.5f + (float)Math.random() * 0.4f) * masterVol * mExhaustPopMasterMultiplier);
+                mSoundPool.play(popId, popVol, popVol, 2, 0, 0.85f + (float)Math.random() * 0.3f);
 
                 mPopsRemaining--;
-                // Patlamalar arası gecikmeyi biraz daha "düzensiz" yapalım (Daha doğal)
-                mNextPopTime = currentTime + 100 + (int)(Math.random() * 150);
+                // Patlama aralığını biraz daralttık (Daha seri duyulsun diye)
+                mNextPopTime = currentTime + 80 + (int)(Math.random() * 100);
             }
         }
 
