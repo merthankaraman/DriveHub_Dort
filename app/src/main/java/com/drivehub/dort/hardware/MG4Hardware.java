@@ -29,47 +29,69 @@ public class MG4Hardware {
 
     private static final String TAG = "MG4_HW";
 
-    // Sürüş kontrol property'leri (logdan doğrulandı)
-    private static final int PROP_DRIVE_MODE         = 0x2140a17c; //557883772
-    private static final int PROP_REGEN_LEVEL        = 0x2140a191; //557883793
-    private static final int PROP_ONE_PEDAL          = 0x2140a193; //557883795
+    // Sürüş kontrol — CarAdvancedAssistedDrivingManager.setGlobalProperty (vehiclesetting binder ile aynı ID uzayı)
+    private static final int PROP_DRIVE_MODE         = 0x2140a17c; //557883772 — Sürüş modu (Eco/Normal/Sport/Kar…)
+    private static final int PROP_REGEN_LEVEL        = 0x2140a191; //557883793 — Rejeneratif fren seviyesi
+    private static final int PROP_ONE_PEDAL          = 0x2140a193; //557883795 — One-pedal / tek pedal sürüş
 
     private static final int AREA_GLOBAL        = 0x01000000;
 
-    // HVAC property'leri (CarHvacManager logdan doğrulandı)
+    // HVAC — CarHvacManager (area 0x75); araç ayarları servisi ile aynı property'ler
     // Service'in callback'inde kullanabilmesi için public
-    public  static final int PROP_STEERING_HEAT_PUB = 0x1540253a; // 356525370
-    public  static final int PROP_SEAT_HEAT_L_PUB   = 0x15402513; // 356525331 — sol koltuk
-    public  static final int PROP_SEAT_HEAT_R_PUB   = 0x15402514; // 356525332 — sağ koltuk
+    public  static final int PROP_STEERING_HEAT_PUB = 0x1540253a; // 356525370 — Direksiyon ısıtması seviyesi
+    public  static final int PROP_SEAT_HEAT_L_PUB   = 0x15402513; // 356525331 — Sol ön koltuk ısıtması
+    public  static final int PROP_SEAT_HEAT_R_PUB   = 0x15402514; // 356525332 — Sağ ön koltuk ısıtması
     private static final int PROP_STEERING_HEAT = PROP_STEERING_HEAT_PUB;
     private static final int PROP_SEAT_HEAT_L   = PROP_SEAT_HEAT_L_PUB;
     private static final int PROP_SEAT_HEAT_R   = PROP_SEAT_HEAT_R_PUB;
     private static final int AREA_HVAC          = 0x75;       // 117
 
-    // Araç durum / BMS property'leri (VehicleConditionBinder + VehicleChargingBinder)
-    // CarPropertyValue.getPropertyId() ile callback'te DÖNEN değerler (log 2302261219: 0x2160f406 vb.)
-    private static final int PROP_SPEED          = 0x11600207; // 291504647 — float km/h (CarSensorManager)
-    private static final int PROP_VEHICLE_IGNITION = 289412477; // getVehicleIgnition(): 0=kapalı, 2=çalışıyor
-    private static final int PROP_ENGINE_STATE     = 557847932; // getEngineState(): 0=kapalı, >0=EV sistemi aktif
-    private static final int PROP_SOC            = 560002052;   // float % (CarBMSManager)
-    private static final int PROP_RANGE          = 0x214099DC; // 557904924 — int km (CarBMSManager)
-    private static final int PROP_BATT_VOLT      = 0x2160f406;  // 560039942 — float V DC (callback'te gelen)
-    private static final int PROP_CHR_AMP_ACT   = 0x2160f407;  // 560039943 — float A gerçek (callback'te gelen)
-    private static final int PROP_CHR_AMP_EXP   = 0x2160f40A;  // 560039946 — float A beklenen (pattern; logda görünmezse NaN kalır)
-    private static final int PROP_AC_AMP        = 0x2160f43c;  // 560039996 — float A AC giriş (callback'te gelen)
-    private static final int PROP_AC_VOLT      = 0x2160f43d;  // 560039997 — float V AC giriş (callback'te gelen)
-    private static final int PROP_CHG_STATUS    = 557904905;   // şarj durumu (0=şarjda değil)
-    // Tüketim ekranı (VehicleConditionBinder / BMS — MG4_BINDER_REFERENCE.md)
-    private static final int PROP_TOTAL_MILEAGE = 557873939;   // getTotalMileage() — toplam km (VendorInstrumentCluster)
-    private static final int PROP_GEAR         = 557847918;    // getCarGear() — vites konumu
+    /**
+     * Track Mode telemetrisi — {@code CarSensorManager.registerListener(..., sensorConfigId, rate)} ile kullanılan
+     * sensör config ID'leri (CarPropertyManager ile aynı sayısal ID olabilir; katman: sensör).
+     * Kaynak: saic_saicmaintenance trackmodesdk + MG4_BINDER_REFERENCE.md bölüm 14.
+     * OEM ekranda ör. yanal ivme, güç yüzdesi, hız; {@code DRIVE_EFFICIENCY} Track DB'de power kolonuna yazılır, anlık motor kW değildir.
+     */
+    public static final int TRACK_SENSOR_LATERAL_ACCEL              = 0x216015A5; // 559945125 — Yanal ivme (g/9.8 ölçek); OEM: 侧向加速度
+    public static final int TRACK_SENSOR_LATERAL_ACCEL_VALID        = 0x2140159F; // 557847967 — Yanal ivme geçerlilik biti
+    public static final int TRACK_SENSOR_ACCEL_PORTRAIT           = 0x21601561; // 559945057 — Boyuna ivme (portrait eksen); OEM: 纵向加速度
+    public static final int TRACK_SENSOR_ACCEL_PORTRAIT_VALID     = 0x214015A1; // 557847969 — Boyuna ivme geçerlilik
+    public static final int TRACK_SENSOR_DRIVE_EFFICIENCY         = 0x2140159C; // 557847964 — Sürüş verimliliği / güç yüzdesi (0–100); OEM: 功率百分比; motor kW değil
+    public static final int TRACK_SENSOR_DRIVE_EFFICIENCY_VALID   = 0x2140159E; // 557847966 — Verimlilik sinyali geçerlilik
+    public static final int TRACK_SENSOR_FAST_ACCEL_DECEL         = 0x21601564; // 559945060 — Hızlı ivme-fren göstergesi; Track throttle_open; OEM: 油门开度 benzeri
+    public static final int TRACK_SENSOR_FAST_ACCEL_DECEL_VALID     = 0x214015A2; // 557847970 — Hızlı ivme-fren geçerlilik
+    public static final int TRACK_SENSOR_BRAKE_PEDAL_PRESSURE       = 0x2140159D; // 557847965 — Fren pedal basıncı (int); OEM: 制动开度
+    public static final int TRACK_SENSOR_BRAKE_PEDAL_PRESSURE_VALID = 0x214015A3; // 557847971 — Fren basıncı geçerlilik
+    public static final int TRACK_SENSOR_DISTANCE_ROLLING           = 0x216015A6; // 559945126 — Yuvarlanan mesafe sayacı (tur/mesafe takibi)
+    public static final int TRACK_SENSOR_DISTANCE_ROLLING_RESET     = 0x214015A4; // 557847972 — Mesafe sayacı sıfırlandı mı
+    public static final int TRACK_SENSOR_CAR_SPEED                  = 0x11600207; // 291504647 — Araç hızı (float, km/h); OEM: 车速; SENSOR_TYPE_CAR_SPEED
+    public static final int TRACK_SENSOR_CAR_SPEED_VALID          = 0x214015A0; // 557847968 — Hız geçerlilik
+    public static final int TRACK_SENSOR_WHEEL_ANGLE                = 0x21601563; // 559945059 — Direksiyon tekerlek açısı; Track DB'de steering_speed kolonuna map; OEM: 转向角度
+
+    // Araç durum / BMS — CarPropertyManager callback; ID'ler VehicleConditionBinder / VehicleChargingBinder ile uyumlu
+    // CarPropertyValue.getPropertyId() ile callback'te dönen değerler (ör. log: 0x2160f406)
+    private static final int PROP_SPEED          = TRACK_SENSOR_CAR_SPEED; // float km/h — üstteki TRACK_SENSOR_CAR_SPEED ile aynı
+    private static final int PROP_VEHICLE_IGNITION = 289412477; // Ateşleme/kontak: 0=kapalı, 2=çalışıyor (CarInfoManager)
+    private static final int PROP_ENGINE_STATE     = 557847932; // EV güç modu: 0=kapalı, >0=sistem aktif (getEngineState)
+    private static final int PROP_SOC            = 560002052;   // Batarya SOC (float %); CarBMSManager ID_BMS_PACK_SOC_DSP
+    private static final int PROP_RANGE          = 0x214099DC; // 557904924 — Kalan menzil (int km); BMS
+    private static final int PROP_BATT_VOLT      = 0x2160f406;  // 560039942 — Paket gerilimi DC (float V); BMS şarj ekranı
+    private static final int PROP_CHR_AMP_ACT   = 0x2160f407;  // 560039943 — DC şarj akımı (float A), gerçek
+    private static final int PROP_CHR_AMP_EXP   = 0x2160f40A;  // 560039946 — DC akım beklenen (istasyon; yoksa NaN)
+    private static final int PROP_AC_AMP        = 0x2160f43c;  // 560039996 — AC şarj giriş akımı (float A)
+    private static final int PROP_AC_VOLT      = 0x2160f43d;  // 560039997 — AC şarj giriş voltajı (float V)
+    private static final int PROP_CHG_STATUS    = 557904905;   // Şarj oturumu durumu (0 = aktif şarj yok)
+    // Tüketim / gösterge — MG4_BINDER_REFERENCE.md
+    private static final int PROP_TOTAL_MILEAGE = 557873939;   // Toplam km (odometer); VendorInstrumentCluster
+    private static final int PROP_GEAR         = 557847918;    // Vites konumu (int); getCarGear
     private static volatile float sTripDistanceIntegrationScale = 1f;
 
-    // Katman 2 — Binder (yedek, uid.system gerektirir)
+    // Katman 2 — Parcel ile doğrudan IVehicleSettingService (UID kısıtı olabilir); üstteki PROP_* ile aynı işlevler
     private static final String DESCRIPTOR_VEHICLE =
             "com.saicmotor.sdk.vehiclesettings.IVehicleSettingService";
-    private static final int TX_SET_DRIVE_MODE         = 130;
-    private static final int TX_SET_REGEN_LEVEL        = 161;
-    private static final int TX_SET_ONE_PEDAL          = 164;
+    private static final int TX_SET_DRIVE_MODE         = 130; // transact kodu: sürüş modu yaz
+    private static final int TX_SET_REGEN_LEVEL        = 161; // rejeneratif seviye yaz
+    private static final int TX_SET_ONE_PEDAL          = 164; // one-pedal yaz
     private static final int COUNT = 1;
 
     /** HVAC property değişikliğini dinlemek isteyen servis buraya register olur. */

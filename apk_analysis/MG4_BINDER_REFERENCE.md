@@ -1,6 +1,7 @@
 # MG4 EH32 — Binder / Property ID Referansı
 > Kaynak: JADX ile decompile edilmiş binder dosyaları analizi
 > Dosyalar: VehicleSettingBinder, VehicleControlBinder, VehicleConditionBinder, VehicleChargingBinder, VehicleScreenBinder, AirConditionBinder
+> Ek: `saic_saicmaintenance` Track Mode SDK — `CarSensorManager` sensör config ID’leri (smali)
 > Tarih: 2026-02-19
 > Durum: VehicleSettingBinder ✅ | AirConditionBinder ✅ | VehicleControlBinder ✅ | Diğerleri ⏳
 
@@ -404,3 +405,53 @@ Bu broadcast'i dinleyerek uygulamadan ekran durumunu takip edebiliriz.
 10. Menzil okuma (557904924) — kalan km
 11. Hız okuma (291504647) — m/s
 12. BMS erişilebilirlik (557847941)
+
+---
+
+## 14. Track Mode Telemetrisi — `CarSensorManager` (saic_saicmaintenance)
+
+Kaynak: `com.saicmotor.hmi.trackmodesdk` — `VehicleDataManager` (`e/c.smali`) kayıtlı sensör listesi + `onSensorChanged` (`e/c$d.smali`) eşlemesi.  
+API: `Car.createCar(...)` → `getCarManager("sensor")` → `CarSensorManager.registerListener(..., sensorConfigId, rate)` — **config ID aşağıdaki hex/decimal ile aynıdır.**
+
+### 14.1 Kayıtlı 15 sensör config ID (Track Mode dizisi)
+
+| `CarSensorManager` sabiti (stub) | Decimal | Hex | Not |
+|---|---|---|---|
+| `ID_VEHICLE_LATERAL_ACCELERATION` | 559945125 | 0x216015A5 | Yanal ivme (g/9.8 ölçek) |
+| `ID_VEHICLE_LATERAL_ACCELERATION_VALID` | 557847967 | 0x2140159F | Geçerlilik flag’i |
+| `ID_ACCELERATION_PORTRAIT` | 559945057 | 0x21601561 | Boyuna ivme (portrait) |
+| `ID_ACCELERATION_PORTRAIT_VALID` | 557847969 | 0x214015A1 | Geçerlilik |
+| `ID_DRIVE_EFFICIENCY_INDICATION` | 557847964 | 0x2140159C | Sürüş verimliliği göstergesi (0–100) |
+| `ID_DRIVE_EFFICIENCY_INDICATION_VALID` | 557847966 | 0x2140159E | Geçerlilik |
+| `ID_FAST_ACCELERATION_DECELERATION` | 559945060 | 0x21601564 | Hızlı ivme/fren → `throttle_open` benzeri (0–100 clamp) |
+| `ID_FAST_ACCELERATION_DECELERATION_VALID` | 557847970 | 0x214015A2 | Geçerlilik |
+| `ID_BRAKE_PEDAL_DRIVER_APPLIED_PRESSURE` | 557847965 | 0x2140159D | Fren pedal basıncı → `intValues[0]` |
+| `ID_BRAKE_PEDAL_DRIVER_APPLIED_PRESSURE_VALID` | 557847971 | 0x214015A3 | Geçerlilik |
+| `ID_DISTANCE_ROLLING_COUNT_AVERAGE_DRIVEN` | 559945126 | 0x216015A6 | Yuvarlanan mesafe sayacı (tur/mesafe) |
+| `ID_DISTANCE_ROLLING_COUNT_AVERAGE_DRIVEN_RESET_OCCURRED` | 557847972 | 0x214015A4 | Reset oldu mu |
+| `SENSOR_TYPE_CAR_SPEED` | 291504647 | 0x11600207 | Araç hızı (Track Mode içinde `floatValues[0]` → km/h benzeri int) |
+| `SENSOR_TYPE_CAR_SPEED_VALID` | 557847968 | 0x214015A0 | Hız geçerlilik |
+| `ID_WHEEL_ANGLE` | 559945059 | 0x21601563 | Direksiyon açısı → `steering_speed` kolonuna yazılıyor |
+
+### 14.2 `onSensorChanged` içinde işlenen ID’ler (sparse-switch)
+
+Bu ID’ler için listener içinde `floatValues[0]` veya `intValues[0]` okunur (indeks **0**).
+
+| Property ID (decimal) | Hex | Track DB / iç alan | Kısa açıklama |
+|---|---|---|---|
+| 559945126 | 0x216015A6 | `distance` (mesafe hesabı) | Rolling distance |
+| 559945125 | 0x216015A5 | `lateral_a` | Yanal ivme (max abs takibi) |
+| 559945057 | 0x21601561 | `longitudinal_a` | Boyuna ivme |
+| 557847964 | 0x2140159C | **`power`** | **Motor kW değil** — `ID_DRIVE_EFFICIENCY_INDICATION` (0–100); state `h` → DB `power` |
+| 557847965 | 0x2140159D | `breake` | Fren pedal basıncı (int) |
+| 559945060 | 0x21601564 | `throttle_open` | Hızlı ivme/fren sinyali (0–100) |
+| 291504647 | 0x11600207 | `speed` | Hız |
+| 559945059 | 0x21601563 | `steering_speed` | Direksiyon açısı (int’e cast) |
+
+> `*_VALID` satırları (0x2140159F, 0x214015A1, …) dizide **aynı şekilde register** edilir; bu APK’daki `sparse-switch` içinde **ayrı case yok** — validasyon için kendi kodunda dinleyebilirsin.
+
+### 14.3 DriveHub / kadran için kullanım
+
+- Aynı **hex ID**’leri `CarSensorManager.registerListener(OnSensorChangedListener, configId, SENSOR_RATE_FAST)` ile kullan.
+- Binder `CarBMSManager` property ID’leriyle karıştırma: bunlar **sensor config** katmanı; sayısal değerler yine aynı ID uzayında olabilir, `CarPropertyManager` ile de doğrulanabilir.
+- `power` kolonu Track Mode’da **verimlilik göstergesi** sinyalinden geliyor; gerçek **motor gücü (kW)** için ayrı property gerekir (ör. başka `CarBMSManager` / `CarInfoManager` sinyali).
