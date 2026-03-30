@@ -65,8 +65,8 @@ public final class ChargingHistory {
                 String chargeType = o.optString("chargeType", "");
                 if (chargeType.isEmpty()) {
                     chargeType = (chargestationkwh >= 0.01f)
-                            ? ChargingRecord.CHARGE_TYPE_DC
-                            : ChargingRecord.CHARGE_TYPE_AC;
+                            ? ChargingRecord.CHARGE_TYPE_AC
+                            : ChargingRecord.CHARGE_TYPE_DC;
                 }
                 out.add(new ChargingRecord(
                         o.getLong("startMs"),
