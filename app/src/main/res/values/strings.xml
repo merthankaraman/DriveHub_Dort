@@ -33,6 +33,7 @@
     <!-- Demo ekranı (ESP, cam, vb.) -->
     <string name="btn_demo">Demo</string>
     <string name="demo_screen_title">Demo</string>
+    <string name="demo_track_sensors_title">Track sensörleri (CPM)</string>
 
     <!-- Sürüş modu + Regen ekranı -->
     <string name="drive_regen_screen_title">Sürüş &amp; Konfor</string>

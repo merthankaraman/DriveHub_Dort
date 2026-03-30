@@ -68,6 +68,28 @@ public class MG4Hardware {
     public static final int TRACK_SENSOR_CAR_SPEED_VALID          = 0x214015A0; // 557847968 — Hız geçerlilik
     public static final int TRACK_SENSOR_WHEEL_ANGLE                = 0x21601563; // 559945059 — Direksiyon tekerlek açısı; Track DB'de steering_speed kolonuna map; OEM: 转向角度
 
+    /**
+     * Lastik sıcaklıkları — {@code YFVehicleProperty} / CarSensorManager (SaicAdapterService stub); MG4_BINDER_REFERENCE.md bölüm 15.
+     * {@code CarSensorManager.registerListener(..., sensorConfigId)} veya CPM ile aynı sayısal ID; Track Mode 15’li dizisinde yok.
+     */
+    public static final int SENSOR_TIRE_TEMP_FL = 0x2140155B; // 557847899 — ön sol (°C veya OEM birimi; araçta doğrula)
+    public static final int SENSOR_TIRE_TEMP_FR = 0x2140155C; // 557847900 — ön sağ
+    public static final int SENSOR_TIRE_TEMP_RL = 0x2140155D; // 557847901 — arka sol
+    public static final int SENSOR_TIRE_TEMP_RR = 0x2140155E; // 557847902 — arka sağ
+    public static final int PROP_TIRE_TEMP_FL = 0x2140155B; // 557847899 — ön sol (°C veya OEM birimi; araçta doğrula)
+    public static final int PROP_TIRE_TEMP_FR = 0x2140155C; // 557847900 — ön sağ
+    public static final int PROP_TIRE_TEMP_RL = 0x2140155D; // 557847901 — arka sol
+    public static final int PROP_TIRE_TEMP_RR = 0x2140155E; // 557847902 — arka sağ
+    /** Demo: CPM {@code getProperty(Float)} — global area. NaN = okunamadı. */
+    public static float readTrackSensorFloat(int propId) {
+        return getFloatPropertyCPM(propId, AREA_GLOBAL);
+    }
+
+    /** Demo: CPM {@code getProperty(Integer)} — global area. -1 = okunamadı. */
+    public static int readTrackSensorInt(int propId) {
+        return getIntPropertyCPM(propId, AREA_GLOBAL);
+    }
+
     // Araç durum / BMS — CarPropertyManager callback; ID'ler VehicleConditionBinder / VehicleChargingBinder ile uyumlu
     // CarPropertyValue.getPropertyId() ile callback'te dönen değerler (ör. log: 0x2160f406)
     private static final int PROP_SPEED          = TRACK_SENSOR_CAR_SPEED; // float km/h — üstteki TRACK_SENSOR_CAR_SPEED ile aynı

@@ -28,8 +28,8 @@ import java.util.Locale;
  * Demo ekranı: ESP, cam kontrolleri, kilit otomasyonu (uzaklaşma/yaklaşma/yakın alan), cam yüzdeleri.
  * Ana ekrandaki "Demo" düğmesiyle açılır.
  * Get'ler (getEspSwitch, getLeaveAutoLockMode, getApproachUnlockMode, getNearfieldUnlockMode vb.)
- * sadece şu anlarda çağrılır: ekran açılırken (onCreate) ve ekran tekrar öne gelince (onResume).
- * Arka planda veya periyodik yenileme yok; sadece kullanıcı Demo'ya girip çıktığında güncellenir.
+ * ekran açılışında ve öne gelince çağrılır. Pencere yüzdeleri, hava kalitesi, kapı kilidi ve
+ * Track sensörleri (MG4Hardware TRACK_SENSOR_*) ayrıca 2 sn aralıkla güncellenir.
  */
 public class DemoActivity extends AppCompatActivity {
 
@@ -227,6 +227,7 @@ public class DemoActivity extends AppCompatActivity {
         refreshWindowPercentages();
         refreshAirQuality();
         updateDoorLockStatus();
+        refreshTrackSensors();
         mHandler.post(mPollRunnable);
         startBluetoothLockMonitoring();
     }
@@ -277,6 +278,52 @@ public class DemoActivity extends AppCompatActivity {
         refreshWindowPercentages();
         refreshAirQuality();
         updateDoorLockStatus();
+        refreshTrackSensors();
+    }
+
+    /** MG4Hardware TRACK_SENSOR_* — CarPropertyManager global area (Demo). */
+    private void refreshTrackSensors() {
+        TextView tv = findViewById(R.id.tvTrackSensors);
+        if (tv == null) return;
+        StringBuilder sb = new StringBuilder(900);
+        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_LATERAL_ACCEL, "Yanal ivme");
+        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_LATERAL_ACCEL_VALID, "Yanal geçerli");
+        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_ACCEL_PORTRAIT, "Boyuna ivme");
+        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_ACCEL_PORTRAIT_VALID, "Boyuna geçerli");
+        appendTrackEfficiency(sb);
+        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_DRIVE_EFFICIENCY_VALID, "Güç % geçerli");
+        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_FAST_ACCEL_DECEL, "Gaz/fren göst.");
+        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_FAST_ACCEL_DECEL_VALID, "Gaz/fren geçerli");
+        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_BRAKE_PEDAL_PRESSURE, "Fren basıncı");
+        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_BRAKE_PEDAL_PRESSURE_VALID, "Fren geçerli");
+        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_DISTANCE_ROLLING, "Mesafe sayacı");
+        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_WHEEL_ANGLE, "Direksiyon °");
+        tv.setText(sb.toString());
+    }
+
+    private static void appendTrackFloat(StringBuilder sb, int propId, String label) {
+        float f = MG4Hardware.readTrackSensorFloat(propId);
+        String v = Float.isNaN(f) ? "--" : String.format(Locale.US, "%.4f", f);
+        sb.append(String.format(Locale.US, "%s: %s%n", label, v));
+    }
+
+    private static void appendTrackInt(StringBuilder sb, int propId, String label) {
+        int i = MG4Hardware.readTrackSensorInt(propId);
+        String v = (i < 0) ? "--" : String.valueOf(i);
+        sb.append(String.format(Locale.US, "%s: %s%n", label, v));
+    }
+
+    /** Güç % — önce float, yoksa int (0–100). */
+    private static void appendTrackEfficiency(StringBuilder sb) {
+        int pid = MG4Hardware.TRACK_SENSOR_DRIVE_EFFICIENCY;
+        float f = MG4Hardware.readTrackSensorFloat(pid);
+        if (!Float.isNaN(f)) {
+            sb.append(String.format(Locale.US, "%s: %.2f%n", "Güç %", f));
+            return;
+        }
+        int i = MG4Hardware.readTrackSensorInt(pid);
+        String v = (i < 0) ? "--" : String.valueOf(i);
+        sb.append(String.format(Locale.US, "%s: %s%n", "Güç %", v));
     }
 
     private void updateDoorLockStatus() {

@@ -33,6 +33,7 @@
     <!-- Demo screen (ESP, windows, etc.) -->
     <string name="btn_demo">Demo</string>
     <string name="demo_screen_title">Demo</string>
+    <string name="demo_track_sensors_title">Track sensors (CPM)</string>
 
     <!-- Window (Drive &amp; Comfort) -->
     <string name="window_section_title">WINDOW</string>
