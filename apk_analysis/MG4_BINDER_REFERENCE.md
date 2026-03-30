@@ -1,7 +1,7 @@
 # MG4 EH32 — Binder / Property ID Referansı
 > Kaynak: JADX ile decompile edilmiş binder dosyaları analizi
 > Dosyalar: VehicleSettingBinder, VehicleControlBinder, VehicleConditionBinder, VehicleChargingBinder, VehicleScreenBinder, AirConditionBinder
-> Ek: `saic_saicmaintenance` Track Mode SDK — `CarSensorManager` sensör config ID’leri (smali)
+> Ek: `saic_saicmaintenance` Track Mode SDK — `CarSensorManager` sensör config ID’leri (smali); lastik sıcaklığı + teşhis tork indeksleri
 > Tarih: 2026-02-19
 > Durum: VehicleSettingBinder ✅ | AirConditionBinder ✅ | VehicleControlBinder ✅ | Diğerleri ⏳
 
@@ -455,3 +455,49 @@ Bu ID’ler için listener içinde `floatValues[0]` veya `intValues[0]` okunur (
 - Aynı **hex ID**’leri `CarSensorManager.registerListener(OnSensorChangedListener, configId, SENSOR_RATE_FAST)` ile kullan.
 - Binder `CarBMSManager` property ID’leriyle karıştırma: bunlar **sensor config** katmanı; sayısal değerler yine aynı ID uzayında olabilir, `CarPropertyManager` ile de doğrulanabilir.
 - `power` kolonu Track Mode’da **verimlilik göstergesi** sinyalinden geliyor; gerçek **motor gücü (kW)** için ayrı property gerekir (ör. başka `CarBMSManager` / `CarInfoManager` sinyali).
+
+---
+
+## 15. Lastik sıcaklığı — `YFVehicleProperty` / `CarSensorManager`
+
+Kaynak: `SaicAdapterService_out` (ve aynı stub’lu APK’lar) — `android.hardware.automotive.YFvehicle.V2_0.YFVehicleProperty`.  
+API: `CarSensorManager.registerListener(..., sensorConfigId, ...)` veya `CarPropertyManager` ile **aynı sayısal ID** (global area).
+
+| Sabit (stub) | Decimal | Hex | Not |
+|---|---|---|---|
+| `SENSOR_TIRE_TEMP_FL` | 557847899 | 0x2140155B | Ön sol lastik sıcaklığı |
+| `SENSOR_TIRE_TEMP_FR` | 557847900 | 0x2140155C | Ön sağ lastik sıcaklığı |
+| `SENSOR_TIRE_TEMP_RL` | 557847901 | 0x2140155D | Arka sol lastik sıcaklığı |
+| `SENSOR_TIRE_TEMP_RR` | 557847902 | 0x2140155E | Arka sağ lastik sıcaklığı |
+
+**Kod sabitleri:** `MG4Hardware` içinde hem `SENSOR_TIRE_TEMP_*` hem aynı adrese bağlı `PROP_TIRE_TEMP_*` (CarProperty / sensör için 32 bit ID).
+
+> Track Mode’un 15 sensörlük dizisinde **yok**; ayrı property’dir. Birim/format (°C vs ham) araçta doğrulanmalı.
+
+---
+
+## 16. Tork — yüzde (maks oranı)
+
+**Newton-metre (Nm)** için bu analizde **ayrı VehicleProperty yok.** “Maks torkun oranı” pratikte **yüzde** ile gösterilir.
+
+### 16.1 CarProperty ile güç/tork hissi (OEM Track ile aynı sinyal)
+
+| Sabit (stub) | Decimal | Hex | Not |
+|---|---|---|---|
+| `ID_DRIVE_EFFICIENCY_INDICATION` | 557847964 | 0x2140159C | 0–100 gösterge; motor kW değil; Track’te `power` kolonu |
+
+`MG4Hardware`: `TRACK_SENSOR_DRIVE_EFFICIENCY` — `getProperty` / sensör ile **aynı 32 bit adres**.
+
+### 16.2 OBD yüzde tork — teşhis indeksi (CarProperty adresi değil)
+
+`android.car.diagnostic.IntegerSensorIndex` — `CarDiagnosticManager` tamsayı sensör **indeksi**; **`getProperty(propId)` burada kullanılmaz.**
+
+| `IntegerSensorIndex` / anlam | İndeks (hex) | İndeks (dec) | `MG4Hardware` |
+|---|---|---|---|
+| `DRIVER_DEMAND_PERCENT_TORQUE` | 0x18 | 24 | `PROP_TORQUE_PERCENT_DRIVER_DEMAND_INDEX` |
+| `ENGINE_ACTUAL_PERCENT_TORQUE` | 0x19 | 25 | `PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX` |
+| `ENGINE_REFERENCE_PERCENT_TORQUE` | 0x1A | 26 | `PROP_TORQUE_PERCENT_ENGINE_REFERENCE_INDEX` |
+| `ENGINE_PERCENT_TORQUE_DATA_IDLE` | 0x1B | 27 | (teşhis eğri noktası) |
+| … | 0x1C–0x1F | 28–31 | Ek eğri noktaları |
+
+> EV’de 16.2 indekslerinin **dolu** olacağı garanti değildir. Öncelik: **16.1** (tek CarProperty adresi); teşhis için **16.2** indeksleri.

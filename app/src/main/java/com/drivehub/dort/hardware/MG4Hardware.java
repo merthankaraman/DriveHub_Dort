@@ -72,14 +72,21 @@ public class MG4Hardware {
      * Lastik sıcaklıkları — {@code YFVehicleProperty} / CarSensorManager (SaicAdapterService stub); MG4_BINDER_REFERENCE.md bölüm 15.
      * {@code CarSensorManager.registerListener(..., sensorConfigId)} veya CPM ile aynı sayısal ID; Track Mode 15’li dizisinde yok.
      */
-    public static final int SENSOR_TIRE_TEMP_FL = 0x2140155B; // 557847899 — ön sol (°C veya OEM birimi; araçta doğrula)
-    public static final int SENSOR_TIRE_TEMP_FR = 0x2140155C; // 557847900 — ön sağ
-    public static final int SENSOR_TIRE_TEMP_RL = 0x2140155D; // 557847901 — arka sol
-    public static final int SENSOR_TIRE_TEMP_RR = 0x2140155E; // 557847902 — arka sağ
     public static final int PROP_TIRE_TEMP_FL = 0x2140155B; // 557847899 — ön sol (°C veya OEM birimi; araçta doğrula)
     public static final int PROP_TIRE_TEMP_FR = 0x2140155C; // 557847900 — ön sağ
     public static final int PROP_TIRE_TEMP_RL = 0x2140155D; // 557847901 — arka sol
     public static final int PROP_TIRE_TEMP_RR = 0x2140155E; // 557847902 — arka sağ
+    /**
+     * Yüzde tork (genelde maks. torka oran, OBD anlamı) — kullanılacak **adres** = teşhis indeksi (24–26 dec).
+     * {@code CarPropertyManager.getProperty(int)} ile kullanılmaz; {@code android.car.diagnostic.IntegerSensorIndex} +
+     * {@code CarDiagnosticManager} (tamsayı sensör). Nm yok; EV’de veri gelmeyebilir.
+     * <p>
+     * CarProperty üzerinden “güç/tork hissi” için OEM’in yüzde göstergesi: {@link #TRACK_SENSOR_DRIVE_EFFICIENCY} (0x2140159C).
+     */
+    public static final int PROP_TORQUE_PERCENT_DRIVER_DEMAND_INDEX    = 0x18; // 24 — IntegerSensorIndex.DRIVER_DEMAND_PERCENT_TORQUE
+    public static final int PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX  = 0x19; // 25 — IntegerSensorIndex.ENGINE_ACTUAL_PERCENT_TORQUE (fiilî %, ana aday)
+    public static final int PROP_TORQUE_PERCENT_ENGINE_REFERENCE_INDEX = 0x1A; // 26 — IntegerSensorIndex.ENGINE_REFERENCE_PERCENT_TORQUE
+
     /** Demo: CPM {@code getProperty(Float)} — global area. NaN = okunamadı. */
     public static float readTrackSensorFloat(int propId) {
         return getFloatPropertyCPM(propId, AREA_GLOBAL);
@@ -88,6 +95,90 @@ public class MG4Hardware {
     /** Demo: CPM {@code getProperty(Integer)} — global area. -1 = okunamadı. */
     public static int readTrackSensorInt(int propId) {
         return getIntPropertyCPM(propId, AREA_GLOBAL);
+    }
+
+    /** {@link #sCarDiagnosticManager} bağlı mı (Car bağlandıktan sonra). */
+    public static boolean isCarDiagnosticManagerReady() {
+        return sCarDiagnosticManager != null;
+    }
+
+    /**
+     * Canlı teşhis çerçevesinden sistem tamsayı sensörü — {@code IntegerSensorIndex} anahtarı
+     * (örn. {@link #PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX} = 0x19).
+     * {@code CarDiagnosticEvent#getSystemIntegerSensor(int)} yoluyla okunur; CarProperty değildir.
+     *
+     * @return değer veya null (manager yok, canlı çerçeve yok, indeks yok veya desteklenmiyor)
+     */
+    public static Integer readDiagnosticSystemIntegerSensor(int integerSensorIndex) {
+        if (sCarDiagnosticManager == null) {
+            if (sLogEnabled) Log.d(TAG, "readDiagnosticSystemIntegerSensor: CarDiagnosticManager null");
+            return null;
+        }
+        try {
+            java.lang.reflect.Method isLive = sCarDiagnosticManager.getClass().getMethod("isLiveFrameSupported");
+            Object supported = isLive.invoke(sCarDiagnosticManager);
+            if (supported instanceof Boolean && !((Boolean) supported)) {
+                if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemIntegerSensor: isLiveFrameSupported=false");
+                return null;
+            }
+        } catch (NoSuchMethodException ignored) {
+        } catch (Throwable t) {
+            if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemIntegerSensor: isLiveFrameSupported: " + t.getMessage());
+        }
+        try {
+            java.lang.reflect.Method getLatest = sCarDiagnosticManager.getClass().getMethod("getLatestLiveFrame");
+            Object event = getLatest.invoke(sCarDiagnosticManager);
+            if (event == null) {
+                if (sLogEnabled) Log.d(TAG, "readDiagnosticSystemIntegerSensor: getLatestLiveFrame null");
+                return null;
+            }
+            java.lang.reflect.Method getInt = event.getClass().getMethod("getSystemIntegerSensor", int.class);
+            return (Integer) getInt.invoke(event, integerSensorIndex);
+        } catch (Throwable t) {
+            if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemIntegerSensor: " + t.getMessage());
+            return null;
+        }
+    }
+    /**
+     * Canlı teşhis çerçevesinden sistem kayan nokta sensörü — {@code FloatSensorIndex} anahtarı.
+     * {@code CarDiagnosticEvent#getSystemFloatSensor(int)} yoluyla okunur; CarProperty değildir.
+     *
+     * @return değer veya null (manager yok, canlı çerçeve yok, indeks yok veya desteklenmiyor)
+     */
+    public static Float readDiagnosticSystemFloatSensor(int floatSensorIndex) {
+        if (sCarDiagnosticManager == null) {
+            if (sLogEnabled) Log.d(TAG, "readDiagnosticSystemFloatSensor: CarDiagnosticManager null");
+            return null;
+        }
+        try {
+            java.lang.reflect.Method isLive = sCarDiagnosticManager.getClass().getMethod("isLiveFrameSupported");
+            Object supported = isLive.invoke(sCarDiagnosticManager);
+            if (supported instanceof Boolean && !((Boolean) supported)) {
+                if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemFloatSensor: isLiveFrameSupported=false");
+                return null;
+            }
+        } catch (NoSuchMethodException ignored) {
+        } catch (Throwable t) {
+            if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemFloatSensor: isLiveFrameSupported: " + t.getMessage());
+        }
+        try {
+            java.lang.reflect.Method getLatest = sCarDiagnosticManager.getClass().getMethod("getLatestLiveFrame");
+            Object event = getLatest.invoke(sCarDiagnosticManager);
+            if (event == null) {
+                if (sLogEnabled) Log.d(TAG, "readDiagnosticSystemFloatSensor: getLatestLiveFrame null");
+                return null;
+            }
+            java.lang.reflect.Method getFloat = event.getClass().getMethod("getSystemFloatSensor", int.class);
+            return (Float) getFloat.invoke(event, floatSensorIndex);
+        } catch (Throwable t) {
+            if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemFloatSensor: " + t.getMessage());
+            return null;
+        }
+    }
+
+    /** OBD yüzde tork —  fiilî (0x19); null = veri yok. */
+    public static Integer readObdValue(int id) {
+        return readDiagnosticSystemIntegerSensor(id);
     }
 
     // Araç durum / BMS — CarPropertyManager callback; ID'ler VehicleConditionBinder / VehicleChargingBinder ile uyumlu
@@ -185,6 +276,8 @@ public class MG4Hardware {
     // State
     private static Object  sCarPropertyManager     = null;
     private static Object  sCarHvacManager         = null;
+    /** {@code Car.getCarManager(DIAGNOSTIC_SERVICE)} — canlı teşhis çerçevesi (IntegerSensorIndex). */
+    private static Object  sCarDiagnosticManager   = null;
     private static boolean sCarBindAttempted       = false;
     private static IBinder sVehicleBinder          = null;
     private static boolean sInitialized            = false;
@@ -239,6 +332,7 @@ public class MG4Hardware {
     public static void destroy() {
         sCarPropertyManager    = null;
         sCarHvacManager        = null;
+        sCarDiagnosticManager  = null;
         sVehicleBinder         = null;
         sVehicleSettingService = null;
         sVsBindAttempted       = false;
@@ -326,6 +420,7 @@ public class MG4Hardware {
                         Log.w(TAG, "  Katman1: Car bağlantısı kesildi");
                         sCarPropertyManager = null;
                         sCarHvacManager = null;
+                        sCarDiagnosticManager = null;
                     }
                 };
                 try {
@@ -467,6 +562,34 @@ public class MG4Hardware {
                 }
             } catch (Exception e) {
                 Log.w(TAG, "  CarBMSManager alınamadı: " + e.getMessage());
+            }
+
+            // CarDiagnosticManager — canlı çerçeve + IntegerSensorIndex (OBD yüzde tork vb.)
+            try {
+                String diagService = "diagnostic";
+                try {
+                    java.lang.reflect.Field df = carClass.getField("DIAGNOSTIC_SERVICE");
+                    Object v = df.get(null);
+                    if (v instanceof String) diagService = (String) v;
+                } catch (Throwable ignored) {}
+                Object cdm = getCarManager.invoke(sCar, diagService);
+                if (cdm != null) {
+                    sCarDiagnosticManager = cdm;
+                    if (sLogEnabled) {
+                        Log.i(TAG, "  ✓ CarDiagnosticManager HAZIR: " + cdm.getClass().getName());
+                        try {
+                            java.lang.reflect.Method mLive = cdm.getClass().getMethod("isLiveFrameSupported");
+                            Object sup = mLive.invoke(cdm);
+                            Log.i(TAG, "  CarDiagnosticManager.isLiveFrameSupported → " + sup);
+                        } catch (Throwable t) {
+                            Log.d(TAG, "  isLiveFrameSupported: " + t.getMessage());
+                        }
+                    }
+                } else {
+                    Log.w(TAG, "  ✗ CarDiagnosticManager null");
+                }
+            } catch (Throwable e) {
+                Log.w(TAG, "  CarDiagnosticManager alınamadı: " + e.getMessage());
             }
 
             // Sürüş modu: BMS gibi onChangeEvent veren manager (CarAdvancedAssistedDrivingManager vb.)

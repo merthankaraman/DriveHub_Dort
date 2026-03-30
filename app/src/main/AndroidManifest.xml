@@ -21,6 +21,9 @@
     <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
     <uses-permission android:name="android.car.permission.CAR_VENDOR_EXTENSION"
         tools:ignore="ProtectedPermissions" />
+    <!-- CarDiagnosticManager — canlı OBD/teşhis çerçevesi (sistem uygulaması) -->
+    <uses-permission android:name="android.car.permission.CAR_DIAGNOSTICS"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.car.permission.CONTROL_CAR_CLIMATE"
         tools:ignore="ProtectedPermissions" />
 

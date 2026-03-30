@@ -298,7 +298,21 @@ public class DemoActivity extends AppCompatActivity {
         appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_BRAKE_PEDAL_PRESSURE_VALID, "Fren geçerli");
         appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_DISTANCE_ROLLING, "Mesafe sayacı");
         appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_WHEEL_ANGLE, "Direksiyon °");
+        appendTrackFloat(sb, MG4Hardware.PROP_TIRE_TEMP_FL, "Lastik sıcaklık ön sol °");
+        appendTrackFloat(sb, MG4Hardware.PROP_TIRE_TEMP_FR, "Lastik sıcaklık ön sağ °");
+        appendTrackFloat(sb, MG4Hardware.PROP_TIRE_TEMP_RL, "Lastik sıcaklık arka sol °");
+        appendTrackFloat(sb, MG4Hardware.PROP_TIRE_TEMP_RR, "Lastik sıcaklık arka sağ °");
+        appendObdRequest(sb, MG4Hardware.PROP_TORQUE_PERCENT_DRIVER_DEMAND_INDEX, "Sürüc talebi tork ");
+        appendObdRequest(sb, MG4Hardware.PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX, "Gerçek tork ");
+        appendObdRequest(sb, MG4Hardware.PROP_TORQUE_PERCENT_ENGINE_REFERENCE_INDEX, "Referans tork ");
         tv.setText(sb.toString());
+    }
+
+    /** CarDiagnosticManager — IntegerSensorIndex fiilî % tork (null = çerçeve yok / destek yok). */
+    private static void appendObdRequest(StringBuilder sb, int propId, String label) {
+        Integer v = MG4Hardware.readObdValue(propId);
+        String s = (v == null) ? "--" : String.valueOf(v);
+        sb.append(String.format(Locale.US, "%s: %s%n", label, s));
     }
 
     private static void appendTrackFloat(StringBuilder sb, int propId, String label) {
