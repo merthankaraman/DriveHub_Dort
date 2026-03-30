@@ -15,7 +15,7 @@ android {
         minSdk 28
         targetSdk 36
         versionCode 1
-        versionName "0.9.5.1"
+        versionName "0.9.6"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -41,8 +41,8 @@ android {
         }
         release {
             // R8 bazen ContentProvider/AndroidX sınıflarını siliyor; crash olursa geçici false kullan
-            minifyEnabled false
-            shrinkResources false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

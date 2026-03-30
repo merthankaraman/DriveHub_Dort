@@ -69,6 +69,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_SOUND_PROFILE = "sound_profile";
     private static final String PREF_SOUND_MASTER = "sound_master";
     private static final String PREF_MOTOR_POWER = "motor_power_kw";
+    /** MainActivity ön plandayken OEM uyku politikasını yumuşatmak için {@link WindowManager.LayoutParams#FLAG_KEEP_SCREEN_ON}. */
+    private static final String PREF_KEEP_SCREEN_ON = "keep_screen_on";
     /** Tek pedal atanacak tuş: -1=Kapalı, 17=Sol yıldız, 286=Sağ yıldız (InputReader keyCode, hafızalı) */
     private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
     private static final int[] ONE_PEDAL_KEY_VALUES = { -1, 17, 286 };
@@ -154,6 +156,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void applyFullscreen(boolean enabled) {
         FullscreenHelper.apply(this, enabled);
+    }
+
+    private void applyKeepScreenOnFromPrefs() {
+        boolean on = getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                .getBoolean(PREF_KEEP_SCREEN_ON, true);
+        if (on) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
     }
 
     // Ana ekran
@@ -572,6 +584,8 @@ public class MainActivity extends AppCompatActivity {
         // Tam ekran tercihini uygula
         boolean fullscreen = prefsSound.getBoolean(FullscreenHelper.KEY_FULLSCREEN, false);
         applyFullscreen(fullscreen);
+        boolean keepScreenOn = prefsSound.getBoolean(PREF_KEEP_SCREEN_ON, true);
+        applyKeepScreenOnFromPrefs();
 
         // Geri tuşu davranışı: jest uyumlu OnBackPressedDispatcher
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -803,6 +817,16 @@ public class MainActivity extends AppCompatActivity {
                 getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                         .edit().putBoolean(FullscreenHelper.KEY_FULLSCREEN, isChecked).apply();
                 applyFullscreen(isChecked);
+            });
+        }
+
+        SwitchCompat swKeepScreenOn = findViewById(R.id.switchKeepScreenOn);
+        if (swKeepScreenOn != null) {
+            swKeepScreenOn.setChecked(keepScreenOn);
+            swKeepScreenOn.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                        .edit().putBoolean(PREF_KEEP_SCREEN_ON, isChecked).apply();
+                applyKeepScreenOnFromPrefs();
             });
         }
 
@@ -1143,6 +1167,7 @@ public class MainActivity extends AppCompatActivity {
         }
         // Dialog / sistem UI sonrası immersive modun geri gelmesi
         FullscreenHelper.applyFromPrefs(this);
+        applyKeepScreenOnFromPrefs();
     }
 
     @Override
@@ -1150,6 +1175,7 @@ public class MainActivity extends AppCompatActivity {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
             FullscreenHelper.applyFromPrefs(this);
+            applyKeepScreenOnFromPrefs();
         }
     }
 
