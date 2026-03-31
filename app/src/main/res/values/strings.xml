@@ -262,7 +262,6 @@
 
     <!-- Ayarlar / tam ekran -->
     <string name="fullscreen_mode_label">Program Tam ekran çalışsın</string>
-    <string name="keep_screen_on_label">Bu ekranda ekranı açık tut</string>
 
     <!-- Genel -->
     <string name="back">←</string>

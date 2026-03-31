@@ -264,7 +264,6 @@
 
     <!-- Settings / fullscreen -->
     <string name="fullscreen_mode_label">Run app in fullscreen</string>
-    <string name="keep_screen_on_label">Keep screen on while here</string>
 
     <!-- General -->
     <string name="back">←</string>
