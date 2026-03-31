@@ -294,12 +294,12 @@ public class DemoActivity extends AppCompatActivity {
         TextView tv = findViewById(R.id.tvTrackSensors);
         if (tv == null) return;
         StringBuilder sb = new StringBuilder(900);
-        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_LATERAL_ACCEL, "Yanal ivme");
-        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_ACCEL_PORTRAIT, "Boyuna ivme");
-        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_DRIVE_EFFICIENCY, "Güç %");
-        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_FAST_ACCEL_DECEL, "Güç pedalı %");
-        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_BRAKE_PEDAL_PRESSURE, "Fren basıncı kPa");
-        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_WHEEL_ANGLE, "Direksiyon °");
+        appendTrackFloat(sb, MG4Hardware.PROP_SENSOR_ACCEL_LATERAL, "Yanal ivme");
+        appendTrackFloat(sb, MG4Hardware.PROP_SENSOR_ACCEL_PORTRAIT, "Boyuna ivme");
+        appendTrackInt(sb, MG4Hardware.PROP_SENSOR_DRIVE_EFFICIENCY, "Güç %");
+        appendTrackFloat(sb, MG4Hardware.PROP_SENSOR_ACC_PEDAL_POS, "Güç pedalı %");
+        appendTrackInt(sb, MG4Hardware.PROP_SENSOR_BRAKE_PEDAL_PRESSURE, "Fren basıncı kPa");
+        appendTrackFloat(sb, MG4Hardware.PROP_SENSOR_WHEEL_ANGLE, "Direksiyon °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_FL, "Lastik sıcaklık ön sol °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_PRESSURE_FL, "Lastik Basınç ön sol °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_FR, "Lastik sıcaklık ön sağ °");
@@ -308,6 +308,8 @@ public class DemoActivity extends AppCompatActivity {
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_PRESSURE_RL, "Lastik Basınç arka sol °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_RR, "Lastik sıcaklık arka sağ °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_PRESSURE_RR, "Lastik Basınç arka sağ °");
+        appendTrackFloat(sb, MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST, "tehlikeli nesne boyuna mesafe");
+        appendTrackFloat(sb, MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLATRLTVDIST, "tehlikeli nesne yanal mesafe");
         appendObdRequestInt(sb, MG4Hardware.PROP_OBD_SOC, "OBD SOC");
         appendObdRequestInt(sb, MG4Hardware.PROP_OBD_SOH, "OBD SOH");
         appendObdRequestInt(sb, MG4Hardware.PROP_OBD_BATTERY_AMP, "OBD BATT AMP");

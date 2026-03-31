@@ -52,21 +52,12 @@ public class MG4Hardware {
      * Kaynak: saic_saicmaintenance trackmodesdk + MG4_BINDER_REFERENCE.md bölüm 14.
      * OEM ekranda ör. yanal ivme, güç yüzdesi, hız; {@code DRIVE_EFFICIENCY} Track DB'de power kolonuna yazılır, anlık motor kW değildir.
      */
-    public static final int TRACK_SENSOR_LATERAL_ACCEL              = 0x216015A5; // 559945125 — Yanal ivme (g/9.8 ölçek); OEM: 侧向加速度
-    public static final int TRACK_SENSOR_LATERAL_ACCEL_VALID        = 0x2140159F; // 557847967 — Yanal ivme geçerlilik biti
-    public static final int TRACK_SENSOR_ACCEL_PORTRAIT           = 0x21601561; // 559945057 — Boyuna ivme (portrait eksen); OEM: 纵向加速度
-    public static final int TRACK_SENSOR_ACCEL_PORTRAIT_VALID     = 0x214015A1; // 557847969 — Boyuna ivme geçerlilik
-    public static final int TRACK_SENSOR_DRIVE_EFFICIENCY         = 0x2140159C; // 557847964 — Sürüş verimliliği / güç yüzdesi (0–100); OEM: 功率百分比; motor kW değil
-    public static final int TRACK_SENSOR_DRIVE_EFFICIENCY_VALID   = 0x2140159E; // 557847966 — Verimlilik sinyali geçerlilik
-    public static final int TRACK_SENSOR_FAST_ACCEL_DECEL         = 0x21601564; // 559945060 — Hızlı ivme-fren göstergesi; Track throttle_open; OEM: 油门开度 benzeri
-    public static final int TRACK_SENSOR_FAST_ACCEL_DECEL_VALID     = 0x214015A2; // 557847970 — Hızlı ivme-fren geçerlilik
-    public static final int TRACK_SENSOR_BRAKE_PEDAL_PRESSURE       = 0x2140159D; // 557847965 — Fren pedal basıncı (int); OEM: 制动开度
-    public static final int TRACK_SENSOR_BRAKE_PEDAL_PRESSURE_VALID = 0x214015A3; // 557847971 — Fren basıncı geçerlilik
-    public static final int TRACK_SENSOR_DISTANCE_ROLLING           = 0x216015A6; // 559945126 — Yuvarlanan mesafe sayacı (tur/mesafe takibi)
-    public static final int TRACK_SENSOR_DISTANCE_ROLLING_RESET     = 0x214015A4; // 557847972 — Mesafe sayacı sıfırlandı mı
-    public static final int TRACK_SENSOR_CAR_SPEED                  = 0x11600207; // 291504647 — Araç hızı (float, km/h); OEM: 车速; SENSOR_TYPE_CAR_SPEED
-    public static final int TRACK_SENSOR_CAR_SPEED_VALID          = 0x214015A0; // 557847968 — Hız geçerlilik
-    public static final int TRACK_SENSOR_WHEEL_ANGLE                = 0x21601563; // 559945059 — Direksiyon tekerlek açısı; Track DB'de steering_speed kolonuna map; OEM: 转向角度
+    public static final int PROP_SENSOR_ACCEL_LATERAL              = 0x216015A5; // 559945125 — Yanal ivme (g/9.8 ölçek); OEM: 侧向加速度
+    public static final int PROP_SENSOR_ACCEL_PORTRAIT           = 0x21601561; // 559945057 — Boyuna ivme (portrait eksen); OEM: 纵向加速度
+    public static final int PROP_SENSOR_DRIVE_EFFICIENCY            = 0x2140159C; // 557847964 — güç yüzdesi (0–100);
+    public static final int PROP_SENSOR_ACC_PEDAL_POS               = 0x21601564; // 559945060 — Hızlı ivme-fren göstergesi; Track throttle_open; OEM: 油门开度 benzeri
+    public static final int PROP_SENSOR_BRAKE_PEDAL_PRESSURE       = 0x2140159D; // 557847965 — Fren pedal basıncı (int); OEM: 制动开度
+    public static final int PROP_SENSOR_WHEEL_ANGLE                = 0x21601563; // 559945059 — Direksiyon tekerlek açısı; Track DB'de steering_speed kolonuna map; OEM: 转向角度
 
     /**
      * Lastik basınç/sıcaklıkları — {@code YFVehicleProperty} / CarSensorManager (SaicAdapterService stub);
@@ -81,12 +72,16 @@ public class MG4Hardware {
     public static final int PROP_TIRE_TEMP_FR = 0x2140155C; // 557847900 — ön sağ
     public static final int PROP_TIRE_TEMP_RL = 0x2140155D; // 557847901 — arka sol
     public static final int PROP_TIRE_TEMP_RR = 0x2140155E; // 557847902 — arka sağ
+
+
+    public static final int PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST = 0x2160A14B; // 559980875 — tehlikeli nesne boyuna mesafe
+    public static final int PROP_ADAS_FCW_OBJ_DNGRSOBJLATRLTVDIST = 0x2160A14C; // 559980876 — tehlikeli nesne yanal mesafe
     /**
      * Yüzde tork (genelde maks. torka oran, OBD anlamı) — kullanılacak **adres** = teşhis indeksi (24–26 dec).
      * {@code CarPropertyManager.getProperty(int)} ile kullanılmaz; {@code android.car.diagnostic.IntegerSensorIndex} +
      * {@code CarDiagnosticManager} (tamsayı sensör). Nm yok; EV’de veri gelmeyebilir.
      * <p>
-     * CarProperty üzerinden “güç/tork hissi” için OEM’in yüzde göstergesi: {@link #TRACK_SENSOR_DRIVE_EFFICIENCY} (0x2140159C).
+     * CarProperty üzerinden “güç/tork hissi” için OEM’in yüzde göstergesi: {@link #PROP_SENSOR_DRIVE_EFFICIENCY} (0x2140159C).
      */
     public static final int PROP_TORQUE_PERCENT_DRIVER_DEMAND_INDEX    = 0x18; // 24 — IntegerSensorIndex.DRIVER_DEMAND_PERCENT_TORQUE
     public static final int PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX  = 0x19; // 25 — IntegerSensorIndex.ENGINE_ACTUAL_PERCENT_TORQUE (fiilî %, ana aday)
@@ -108,21 +103,11 @@ public class MG4Hardware {
     public static int readTrackSensorInt(int propId) {
         return getIntPropertyCPM(propId, AREA_GLOBAL);
     }
-
-    /** {@link #sCarDiagnosticManager} bağlı mı (Car bağlandıktan sonra). */
     public static boolean isCarDiagnosticManagerReady() {
         return sCarDiagnosticManager != null;
     }
-
-    /**
-     * Canlı teşhis çerçevesinden sistem tamsayı sensörü — {@code IntegerSensorIndex} anahtarı
-     * (örn. {@link #PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX} = 0x19).
-     * {@code CarDiagnosticEvent#getSystemIntegerSensor(int)} yoluyla okunur; CarProperty değildir.
-     *
-     * @return değer veya null (manager yok, canlı çerçeve yok, indeks yok veya desteklenmiyor)
-     */
     public static Integer readDiagnosticSystemIntegerSensor(int integerSensorIndex) {
-        if (sCarDiagnosticManager == null) {
+        if (!isCarDiagnosticManagerReady()) {
             if (sLogEnabled) Log.i(TAG, "readDiagnosticSystemIntegerSensor: CarDiagnosticManager null");
             return null;
         }
@@ -158,7 +143,7 @@ public class MG4Hardware {
      * @return değer veya null (manager yok, canlı çerçeve yok, indeks yok veya desteklenmiyor)
      */
     public static Float readDiagnosticSystemFloatSensor(int floatSensorIndex) {
-        if (sCarDiagnosticManager == null) {
+        if (!isCarDiagnosticManagerReady()) {
             if (sLogEnabled) Log.d(TAG, "readDiagnosticSystemFloatSensor: CarDiagnosticManager null");
             return null;
         }
@@ -198,7 +183,7 @@ public class MG4Hardware {
 
     // Araç durum / BMS — CarPropertyManager callback; ID'ler VehicleConditionBinder / VehicleChargingBinder ile uyumlu
     // CarPropertyValue.getPropertyId() ile callback'te dönen değerler (ör. log: 0x2160f406)
-    private static final int PROP_SPEED          = TRACK_SENSOR_CAR_SPEED; // float km/h — üstteki TRACK_SENSOR_CAR_SPEED ile aynı
+    private static final int PROP_SPEED          = 0x11600207; // float km/h — üstteki TRACK_SENSOR_CAR_SPEED ile aynı
     private static final int PROP_VEHICLE_IGNITION = 289412477; // Ateşleme/kontak: 0=kapalı, 2=çalışıyor (CarInfoManager)
     private static final int PROP_ENGINE_STATE     = 557847932; // EV güç modu: 0=kapalı, >0=sistem aktif (getEngineState)
     private static final int PROP_SOC            = 560002052;   // Batarya SOC (float %); CarBMSManager ID_BMS_PACK_SOC_DSP
