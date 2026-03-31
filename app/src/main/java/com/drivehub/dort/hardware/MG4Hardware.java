@@ -55,7 +55,7 @@ public class MG4Hardware {
     public static final int PROP_SENSOR_ACCEL_LATERAL              = 0x216015A5; // 559945125 — Yanal ivme (g/9.8 ölçek); OEM: 侧向加速度
     public static final int PROP_SENSOR_ACCEL_PORTRAIT           = 0x21601561; // 559945057 — Boyuna ivme (portrait eksen); OEM: 纵向加速度
     public static final int PROP_SENSOR_DRIVE_EFFICIENCY            = 0x2140159C; // 557847964 — güç yüzdesi (0–100);
-    public static final int PROP_SENSOR_ACC_PEDAL_POS               = 0x21601564; // 559945060 — Hızlı ivme-fren göstergesi; Track throttle_open; OEM: 油门开度 benzeri
+    public static final int PROP_SENSOR_ACC_PEDAL_POS               = 0x21601564; // 559945060
     public static final int PROP_SENSOR_BRAKE_PEDAL_PRESSURE       = 0x2140159D; // 557847965 — Fren pedal basıncı (int); OEM: 制动开度
     public static final int PROP_SENSOR_WHEEL_ANGLE                = 0x21601563; // 559945059 — Direksiyon tekerlek açısı; Track DB'de steering_speed kolonuna map; OEM: 转向角度
 
@@ -263,6 +263,8 @@ public class MG4Hardware {
     private static volatile float sAcVolt            = Float.NaN;
     private static volatile float sAcAmp             = Float.NaN;
     private static volatile float sAcKw              = Float.NaN;
+    private static volatile float sVehicleACCPedalPos= Float.NaN;
+    private static volatile int sVehiclePowerPerc    = 0;
     // Şarj süresi için basit sayaç — şarj başladığı anda sistem saatini tutar
     private static volatile long  sChargingStartWallMs = 0L;
     // READY durumu (100ms polling ile güncellenen cache)
@@ -1386,6 +1388,8 @@ public class MG4Hardware {
         float speedKmh_raw = getSpeedKmh();
         float speedKmh = speedKmh_raw * (speedKmh_raw >= 80 ? 1.0035f : 1f);
         if (speedKmh < 1.0f) speedKmh = 0f;
+        sVehicleACCPedalPos = getFloatPropertyCPM(PROP_SENSOR_ACC_PEDAL_POS, AREA_GLOBAL);
+        sVehiclePowerPerc = getIntPropertyCPM(PROP_SENSOR_DRIVE_EFFICIENCY, AREA_GLOBAL);
 
 
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
@@ -1662,7 +1666,9 @@ public class MG4Hardware {
     public static float getDcKwGlobal()   { return sDcKw; }
     public static float getAcVoltGlobal() { return sAcVolt; }
     public static float getAcAmpGlobal()  { return sAcAmp; }
-    public static float getAcKwGlobal()   { return sAcKw; }
+    public static float getVehicleACCPedalPosGlobal()   { return sVehicleACCPedalPos; }
+    public static int   getVehiclePowerPercGlobal()   { return sVehiclePowerPerc; }
+
 
     /** DC batarya voltajı — V. Önce BMS cache (canlı callback), yoksa CPM. */
     public static float getDcVoltage() {

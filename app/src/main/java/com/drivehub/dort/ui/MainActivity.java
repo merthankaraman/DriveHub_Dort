@@ -438,27 +438,21 @@ public class MainActivity extends AppCompatActivity {
                     applyPowerKwTextColor(rawPowerKw, mTvGaugePower);
                 }
                 if (mTvGaugeThrottle != null) {
-                    float throttle = mEngineSound.getSimulatedThrottle();
-                    int pct = Math.round(throttle * 100f);
+                    float throttle;
+                    int pct;
+                    if (mSimSpeedActive) {
+                        throttle = mEngineSound.getSimulatedThrottle();
+                        pct = Math.round(throttle * 100f);
+                    }
+                    else if (speedForDisplay < 1){
+                        pct = (int) MG4Hardware.getVehicleACCPedalPosGlobal();
+                    }
+                    else{
+                        pct = MG4Hardware.getVehiclePowerPercGlobal();
+                    }
+
                     mTvGaugeThrottle.setText(pct + "%");
                 }
-
-                // Sim modunda ve ses açıkken: emülatörde servisin yerine sesi burada besle
-                /*if (mEngineSound != null) {
-                    if (mSoundEnabled && mSimSpeedActive) {
-                        if (!mEngineSound.isPlaying()) {
-                            mEngineSound.start();
-                        }
-                        mEngineSound.onSpeedChanged(mSimSpeedKmh, Float.NaN);
-                    } else {
-                        // Sim kapandığında veya ses kapandığında burada başlatılmış sesi durdur
-                        if (mEngineSound.isPlaying()) {
-                            mEngineSound.stop();
-                        }
-                    }
-                }*/
-
-
                 boolean ready = (MG4Hardware.isVehicleReady() || mSimSpeedActive);
                 if (mTvMotorState != null) {
                     String motorStr = ready ? getString(R.string.motor_state_ready) : getString(R.string.motor_state_off);

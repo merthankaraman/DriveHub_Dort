@@ -89,7 +89,7 @@ public class EngineSoundManager {
     private long mEngineStartTime = 0;
     private long mAutoStartupDelayMs = 0;
     private boolean mExhaustPopEnabled = true;
-    private float mExhaustPopMasterMultiplier = 0.5f;
+    private float mExhaustPopMasterMultiplier = 0.6f;
     private int[] mGlobalPopIds = new int[6];
     private int mPopsRemaining = 0;
     private long mNextPopTime = 0;
@@ -685,31 +685,15 @@ public class EngineSoundManager {
     public boolean isSubwaveEnabled() {
         return mSubwaveEnabled;
     }
-
     public void onSpeedChanged(float speedKmh) {
-        if (mUseManualThrottle) {
-            onSpeedChanged(speedKmh, Float.NaN);
-            return;
-        }
-        float dcVolt = MG4Hardware.getDcVoltGlobal();
-        float dcAmpAct = MG4Hardware.getDcAmpGlobal();
-        float kw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
-        onSpeedChanged(speedKmh, kw);
-    }
-
-    public void onSpeedChanged(float speedKmh, float dcPowerKw) {
         if (!mIsPlaying || mCurrentSamples == null || mLoadedSamplesCount < (mIsDualLayer ? mCurrentSamplesOn.length : mCurrentSamples.length)) return;
 
         mCurrentSpeedKmh = (Float.isNaN(speedKmh) || speedKmh < 0f) ? 0f : speedKmh;
         if (!mUseManualThrottle) {
-            if (!Float.isNaN(dcPowerKw)) {
-                mCurrentDcPowerKw = dcPowerKw;
-            } else {
-                float dcVolt = MG4Hardware.getDcVoltGlobal();
-                float dcAmpAct = MG4Hardware.getDcAmpGlobal();
-                mCurrentDcPowerKw = (Float.isNaN(dcVolt) || Float.isNaN(dcAmpAct)) ? 0f : (dcVolt * dcAmpAct) / 1000f;
-            }
-            mSimulatedThrottle = Math.min(1f, Math.max(0f, (mCurrentDcPowerKw < 5f ? 0f : mCurrentDcPowerKw / mMotorMaxPower)));
+            float acc_pos = MG4Hardware.getVehiclePowerPercGlobal();
+            //if (acc_pos > 95f) acc_pos = 95f;
+            if (acc_pos < 0f) acc_pos = 0f;
+            mSimulatedThrottle = Math.min(1f, Math.max(0f, acc_pos / 100f));
         }
         updateGearAndRpm();
         updateAudioMixer();
@@ -739,7 +723,8 @@ public class EngineSoundManager {
         // 1. BOŞTA GAZ VERME
         if (speed < 1.0f) {
             mCurrentGear = 0;
-            float targetRpm = mIdleRpm + (throttle * (mMaxRpm - mIdleRpm));
+            float real_acc_pedal_pos = Math.min(1,MG4Hardware.getVehicleACCPedalPosGlobal() / 100f);
+            float targetRpm = mIdleRpm + (real_acc_pedal_pos * (mMaxRpm - mIdleRpm));
             mCurrentRpm = (mCurrentRpm * 0.8f) + (targetRpm * 0.2f);
             return;
         }

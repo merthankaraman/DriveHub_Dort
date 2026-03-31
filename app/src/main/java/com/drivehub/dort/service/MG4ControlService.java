@@ -243,7 +243,6 @@ public class MG4ControlService extends Service {
             // Hız tek kaynak: sim açıksa sim, değilse hattan tek okuma (getSpeedForEngine)
             float speed = MG4Hardware.getSpeedForEngine();
             boolean ready = MG4Hardware.isVehicleReady() || MG4Hardware.isSimSpeedActive();
-            float dcPowerKw = MG4Hardware.getDcKwGlobal();
 
             boolean soundEnabled = MG4Hardware.isSoundEnabled();
 
@@ -251,7 +250,7 @@ public class MG4ControlService extends Service {
                 if (!mEngineSound.isPlaying()) {
                     mEngineSound.start();
                 }
-                mEngineSound.onSpeedChanged(speed, dcPowerKw);
+                mEngineSound.onSpeedChanged(speed);
             } else {
                 if (mEngineSound.isPlaying()) {
                     mEngineSound.stop();
