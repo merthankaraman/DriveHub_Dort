@@ -435,7 +435,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 if (mTvGaugePower != null) {
                     mTvGaugePower.setText(String.format("%.2f", dcPowerKw));
-                    applyPowerKwTextColor(rawPowerKw, mTvGaugePower);
+                    applyPowerKwTextColor(mTvGaugePower);
                 }
                 if (mTvGaugeThrottle != null) {
                     float throttle;
@@ -450,7 +450,7 @@ public class MainActivity extends AppCompatActivity {
                     else{
                         pct = MG4Hardware.getVehiclePowerPercGlobal();
                     }
-
+                    applyPowerKwTextColor(mTvGaugeThrottle);
                     mTvGaugeThrottle.setText(pct + "%");
                 }
                 boolean ready = (MG4Hardware.isVehicleReady() || mSimSpeedActive);
@@ -1904,24 +1904,14 @@ public class MainActivity extends AppCompatActivity {
      * DC güç (kW) göstergesi rengi: negatif yeşil; pozitifte kayıtlı motor gücüne göre turuncu/kırmızı.
      * Tüketim ve ses panelindeki kW TextView'ları için ortak.
      */
-    private void applyPowerKwTextColor(float powerKw, TextView target) {
+    private void applyPowerKwTextColor(TextView target) {
         if (target == null) return;
-        if (Float.isNaN(powerKw)) {
-            target.setTextColor(ContextCompat.getColor(this, R.color.status_value));
-            return;
-        }
-        if (powerKw < 0f) {
+        int percent = MG4Hardware.getVehiclePowerPercGlobal();
+        if (percent < 0f) {
             target.setTextColor(COLOR_CONSUMPTION_POWER_REGEN);
-            return;
-        }
-        SharedPreferences p = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-        float motorKw = p.getFloat(PREF_MOTOR_POWER, 150f);
-        if (motorKw < 50f || motorKw > 200f) {
-            motorKw = 150f;
-        }
-        if (powerKw > motorKw * 0.8f) {
+        } else if (percent > 80) {
             target.setTextColor(COLOR_CONSUMPTION_POWER_CRIT);
-        } else if (powerKw > motorKw * 0.5f) {
+        } else if (percent > 50) {
             target.setTextColor(COLOR_CONSUMPTION_POWER_WARN);
         } else {
             target.setTextColor(ContextCompat.getColor(this, R.color.status_value));
@@ -2025,7 +2015,7 @@ public class MainActivity extends AppCompatActivity {
                 mTvConsumptionPower.setTextColor(ContextCompat.getColor(this, R.color.status_value));
             } else {
                 mTvConsumptionPower.setText(String.format(Locale.US, "%.2f kW", powerKw));
-                applyPowerKwTextColor(powerKw, mTvConsumptionPower);
+                applyPowerKwTextColor(mTvConsumptionPower);
             }
         }
 
