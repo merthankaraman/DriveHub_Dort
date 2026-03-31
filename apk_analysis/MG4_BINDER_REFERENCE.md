@@ -458,19 +458,23 @@ Bu ID’ler için listener içinde `floatValues[0]` veya `intValues[0]` okunur (
 
 ---
 
-## 15. Lastik sıcaklığı — `YFVehicleProperty` / `CarSensorManager`
+## 15. Lastik basıncı + sıcaklığı — `YFVehicleProperty` / `CarSensorManager`
 
 Kaynak: `SaicAdapterService_out` (ve aynı stub’lu APK’lar) — `android.hardware.automotive.YFvehicle.V2_0.YFVehicleProperty`.  
 API: `CarSensorManager.registerListener(..., sensorConfigId, ...)` veya `CarPropertyManager` ile **aynı sayısal ID** (global area).
 
 | Sabit (stub) | Decimal | Hex | Not |
 |---|---|---|---|
+| `SENSOR_TIRE_PRESURE_FL` | 557847891 | 0x21401553 | Ön sol lastik basıncı (OEM birimi; araçta doğrula) |
+| `SENSOR_TIRE_PRESURE_FR` | 557847892 | 0x21401554 | Ön sağ lastik basıncı |
+| `SENSOR_TIRE_PRESURE_RL` | 557847893 | 0x21401555 | Arka sol lastik basıncı |
+| `SENSOR_TIRE_PRESURE_RR` | 557847894 | 0x21401556 | Arka sağ lastik basıncı |
 | `SENSOR_TIRE_TEMP_FL` | 557847899 | 0x2140155B | Ön sol lastik sıcaklığı |
 | `SENSOR_TIRE_TEMP_FR` | 557847900 | 0x2140155C | Ön sağ lastik sıcaklığı |
 | `SENSOR_TIRE_TEMP_RL` | 557847901 | 0x2140155D | Arka sol lastik sıcaklığı |
 | `SENSOR_TIRE_TEMP_RR` | 557847902 | 0x2140155E | Arka sağ lastik sıcaklığı |
 
-**Kod sabitleri:** `MG4Hardware` içinde hem `SENSOR_TIRE_TEMP_*` hem aynı adrese bağlı `PROP_TIRE_TEMP_*` (CarProperty / sensör için 32 bit ID).
+**Kod sabitleri:** `MG4Hardware` içinde `PROP_TIRE_PRESSURE_*` ve `PROP_TIRE_TEMP_*` (CarProperty / sensör için 32 bit ID).
 
 > Track Mode’un 15 sensörlük dizisinde **yok**; ayrı property’dir. Birim/format (°C vs ham) araçta doğrulanmalı.
 

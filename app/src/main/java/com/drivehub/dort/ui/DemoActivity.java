@@ -301,9 +301,13 @@ public class DemoActivity extends AppCompatActivity {
         appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_BRAKE_PEDAL_PRESSURE, "Fren basıncı kPa");
         appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_WHEEL_ANGLE, "Direksiyon °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_FL, "Lastik sıcaklık ön sol °");
+        appendTrackInt(sb, MG4Hardware.PROP_TIRE_PRESSURE_FL, "Lastik Basınç ön sol °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_FR, "Lastik sıcaklık ön sağ °");
+        appendTrackInt(sb, MG4Hardware.PROP_TIRE_PRESSURE_FR, "Lastik Basınç ön sağ °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_RL, "Lastik sıcaklık arka sol °");
+        appendTrackInt(sb, MG4Hardware.PROP_TIRE_PRESSURE_RL, "Lastik Basınç arka sol °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_RR, "Lastik sıcaklık arka sağ °");
+        appendTrackInt(sb, MG4Hardware.PROP_TIRE_PRESSURE_RR, "Lastik Basınç arka sağ °");
         appendObdRequestInt(sb, MG4Hardware.PROP_OBD_SOC, "OBD SOC");
         appendObdRequestInt(sb, MG4Hardware.PROP_OBD_SOH, "OBD SOH");
         appendObdRequestInt(sb, MG4Hardware.PROP_OBD_BATTERY_AMP, "OBD BATT AMP");

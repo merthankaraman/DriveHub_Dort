@@ -69,10 +69,15 @@ public class MG4Hardware {
     public static final int TRACK_SENSOR_WHEEL_ANGLE                = 0x21601563; // 559945059 — Direksiyon tekerlek açısı; Track DB'de steering_speed kolonuna map; OEM: 转向角度
 
     /**
-     * Lastik sıcaklıkları — {@code YFVehicleProperty} / CarSensorManager (SaicAdapterService stub); MG4_BINDER_REFERENCE.md bölüm 15.
+     * Lastik basınç/sıcaklıkları — {@code YFVehicleProperty} / CarSensorManager (SaicAdapterService stub);
+     * MG4_BINDER_REFERENCE.md bölüm 15.
      * {@code CarSensorManager.registerListener(..., sensorConfigId)} veya CPM ile aynı sayısal ID; Track Mode 15’li dizisinde yok.
      */
-    public static final int PROP_TIRE_TEMP_FL = 0x2140155B; // 557847899 — ön sol (°C veya OEM birimi; araçta doğrula)
+    public static final int PROP_TIRE_PRESSURE_FL = 0x21401553; // 557847891 — ön sol
+    public static final int PROP_TIRE_PRESSURE_FR = 0x21401554; // 557847892 — ön sağ
+    public static final int PROP_TIRE_PRESSURE_RL = 0x21401555; // 557847893 — arka sol
+    public static final int PROP_TIRE_PRESSURE_RR = 0x21401556; // 557847894 — arka sağ
+    public static final int PROP_TIRE_TEMP_FL = 0x2140155B; // 557847899 — ön sol
     public static final int PROP_TIRE_TEMP_FR = 0x2140155C; // 557847900 — ön sağ
     public static final int PROP_TIRE_TEMP_RL = 0x2140155D; // 557847901 — arka sol
     public static final int PROP_TIRE_TEMP_RR = 0x2140155E; // 557847902 — arka sağ
@@ -1217,7 +1222,7 @@ public class MG4Hardware {
      * Push callback bazen gelmeyebildiği / panel açılınca {@link #getDriveMode()} ile dolan cache
      * listener'ı tetiklemediği için, servis bu metodu periyodik çağırır (regen tarafına dokunmaz).
      */
-    public static void syncDriveModeFromPropertyIfChanged() {//TODO added for drive mode
+    public static void syncDriveModeFromPropertyIfChanged() {
         int v = getIntPropertyCPM(PROP_DRIVE_MODE, AREA_GLOBAL);
         if (v < 0) return;
         if (v == sCachedDriveMode) return;
