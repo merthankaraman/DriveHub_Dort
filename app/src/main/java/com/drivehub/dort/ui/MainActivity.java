@@ -210,6 +210,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvAcEnergy;
     private View     mRowAcEnergy;
     private TextView mTvDcVolt;
+    /** Şarj paneli üst satır: "Şarjda/Şarjda değil" metninin solunda SOC % */
+    private TextView mTvChargingHeaderSoc;
     private TextView mTvDcAmpAct;
     private TextView mTvDcKwAct;
     private TextView mTvDcEnergy;
@@ -405,6 +407,7 @@ public class MainActivity extends AppCompatActivity {
 
                 float rawPowerKw = MG4Hardware.getDcKwGlobal();
                 float dcPowerKw = Float.isNaN(rawPowerKw) ? 0f : rawPowerKw;
+                if (speedForDisplay == 0 && dcPowerKw < 0) dcPowerKw = Float.NaN;
 
                 if (mTvGaugeRpm != null) {
                     float rpm = mEngineSound.getCurrentRpm();
@@ -434,8 +437,12 @@ public class MainActivity extends AppCompatActivity {
                     mTvGaugeGear.setText(gearText);
                 }
                 if (mTvGaugePower != null) {
-                    mTvGaugePower.setText(String.format("%.2f", dcPowerKw));
-                    applyPowerKwTextColor(mTvGaugePower);
+                    if (Float.isNaN(dcPowerKw)) {
+                        mTvGaugePower.setText("--");
+                    } else {
+                        mTvGaugePower.setText(String.format(Locale.US, "%.2f", dcPowerKw));
+                        applyPowerKwTextColor(mTvGaugePower);
+                    }
                 }
                 if (mTvGaugeThrottle != null) {
                     float throttle;
@@ -883,7 +890,8 @@ public class MainActivity extends AppCompatActivity {
         mTvAcKw            = findViewById(R.id.tvAcKw);
         mTvAcEnergy        = findViewById(R.id.tvAcEnergy);
         mRowAcEnergy       = findViewById(R.id.rowAcEnergy);
-        mTvDcVolt          = findViewById(R.id.tvDcVolt);
+        mTvDcVolt              = findViewById(R.id.tvDcVolt);
+        mTvChargingHeaderSoc   = findViewById(R.id.tvChargingHeaderSoc);
         mTvDcAmpAct        = findViewById(R.id.tvDcAmpAct);
         mTvDcKwAct         = findViewById(R.id.tvDcKwAct);
         mTvDcEnergy        = findViewById(R.id.tvDcEnergy);
@@ -1539,7 +1547,12 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Batarya sütunu
+        float soc = MG4Hardware.getSoc();
+        String socText = Float.isNaN(soc) ? "SOC:--" : String.format(Locale.US, "SOC:%.1f %%", soc);
+        if (mTvChargingHeaderSoc != null) {
+            mTvChargingHeaderSoc.setText(socText);
+        }
+
         mTvDcVolt.setText(Float.isNaN(dcVolt)     ? "--" : String.format("%.2f V", dcVolt));
         mTvDcAmpAct.setText(Float.isNaN(dcAmpAct) ? "--" : String.format("%.2f A", dcAmpAct));
         if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct)) {
@@ -1561,7 +1574,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Şarj durumu (çıkarım: AC/DC akım veya PROP_CHG_STATUS)
         mTvChargingStatus.setText(charging ? getString(R.string.charging) : getString(R.string.not_charging));
-        mTvChargingStatus.setTextColor(charging ? 0xFF7EE787 : 0xFF8B949E);
+        mTvChargingStatus.setTextColor(charging ? 0xFF7EE787 : ContextCompat.getColor(this, R.color.status_value));
         if (mChartChargingPower != null) {
             mChartChargingPower.setVisibility(charging ? View.VISIBLE : View.GONE);
         }
@@ -1927,6 +1940,7 @@ public class MainActivity extends AppCompatActivity {
         float speedKmh = MG4Hardware.getLastSpeedKmh();
         float powerKw = MG4Hardware.getDcKwGlobal();
         powerKw = Float.isNaN(powerKw) ? Float.NaN : powerKw;
+        if (powerKw < 0 && speedKmh == 0)   powerKw = Float.NaN;
         boolean sinceStart = (mConsumptionDisplayMode == CONSUMPTION_MODE_SINCE_START);
         boolean lifetimeMode = (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME);
 

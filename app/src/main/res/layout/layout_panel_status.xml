@@ -1,349 +1,363 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/layoutStatusPanel"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    android:orientation="vertical"
+    android:paddingStart="40dp"
+    android:paddingTop="20dp"
+    android:paddingEnd="40dp"
+    android:paddingBottom="20dp"
+    android:visibility="gone">
+
+    <!-- BaÅŸlÄ±k + Geri + Yenile -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/surface"
-        android:orientation="vertical"
-        android:paddingStart="40dp"
-        android:paddingTop="20dp"
-        android:paddingEnd="40dp"
-        android:paddingBottom="20dp"
-        android:visibility="gone">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <!-- BaÅŸlÄ±k + Geri + Yenile -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:visibility="visible">
-
-            <Button
-                android:id="@+id/btnStatusBack"
-                style="@style/Widget.DriveHub.Button.PanelBack"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="16dp"
-                android:text="@string/back" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:letterSpacing="0.06"
-                android:text="@string/charging_status_title"
-                android:textColor="@color/status_value"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvChargingStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
-                android:text="@string/charging_status_label"
-                android:textColor="@color/status_value"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/tvChargingDuration"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:text="@string/charging_duration_placeholder"
-                android:textColor="#7EE787"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
-        <!-- Şarj geçmişi butonu -->
         <Button
-            android:id="@+id/btnShowChargingHistory"
+            android:id="@+id/btnStatusBack"
+            style="@style/Widget.DriveHub.Button.PanelBack"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="#21262D"
-            android:text="@string/btn_charging_history"
-            android:textColor="#C9D1D9"
-            android:textSize="12sp" />
-
-        <!-- Ä°ki sÃ¼tun: AC | Batarya (%40 kÄ±saltÄ±ldÄ±, grafik alanÄ± bÃ¼yÃ¼tÃ¼ldÃ¼) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="0.6"
-            android:orientation="horizontal">
-
-            <!-- Sol sÃ¼tun: AC -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="12dp"
-                android:layout_weight="1"
-                android:background="@color/surface_variant"
-                android:orientation="vertical"
-                android:padding="24dp">
-
-                <TextView
-                    android:id="@+id/tvLeftColumnTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="20dp"
-                    android:letterSpacing="0.12"
-                    android:text="@string/expected_charge_power"
-                    android:textColor="#6E7681"
-                    android:textSize="13sp" />
-
-                <!-- V -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="48dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/unit_v"
-                        android:textColor="#8B949E"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvAcVolt"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="monospace"
-                        android:text="--"
-                        android:textColor="@color/status_value"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- A -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="48dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/unit_a"
-                        android:textColor="#8B949E"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvAcAmp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="monospace"
-                        android:text="--"
-                        android:textColor="@color/status_value"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- kW -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="48dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/unit_kw_label"
-                        android:textColor="#8B949E"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvAcKw"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="monospace"
-                        android:text="--"
-                        android:textColor="#FFA657"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- kWh (toplam enerji) — şarj yokken satırın tamamı gizlenir -->
-                <LinearLayout
-                    android:id="@+id/rowAcEnergy"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="48dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/unit_kwh_label"
-                        android:textColor="#8B949E"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvAcEnergy"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="monospace"
-                        android:text="--"
-                        android:textColor="#7EE787"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- SaÄŸ sÃ¼tun: Batarya -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@color/surface_variant"
-                android:orientation="vertical"
-                android:padding="24dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="20dp"
-                    android:letterSpacing="0.12"
-                    android:text="@string/batarya"
-                    android:textColor="#6E7681"
-                    android:textSize="13sp" />
-
-                <!-- V -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="48dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/unit_v"
-                        android:textColor="#8B949E"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvDcVolt"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="monospace"
-                        android:text="--"
-                        android:textColor="@color/status_value"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- gerÃ§ek A -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="48dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/unit_a"
-                        android:textColor="#8B949E"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvDcAmpAct"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="monospace"
-                        android:text="--"
-                        android:textColor="@color/status_value"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- gerÃ§ek kW -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="48dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/unit_kw_label"
-                        android:textColor="#8B949E"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvDcKwAct"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="monospace"
-                        android:text="--"
-                        android:textColor="#FFA657"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- kWh (toplam enerji) — şarj yokken satırın tamamı gizlenir -->
-                <LinearLayout
-                    android:id="@+id/rowDcEnergy"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="48dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/unit_kwh_label"
-                        android:textColor="#8B949E"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvDcEnergy"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="monospace"
-                        android:text="--"
-                        android:textColor="#7EE787"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Grafik yerine tam ekran grafik iÃ§in buton -->
-        <Button
-            android:id="@+id/btnOpenChargingGraph"
-            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/charging_graph_open" />
+            android:layout_marginEnd="16dp"
+            android:text="@string/back" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:letterSpacing="0.06"
+            android:text="@string/charging_status_title"
+            android:textColor="@color/status_value"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvChargingHeaderSoc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="30dp"
+            android:fontFamily="monospace"
+            android:text="--"
+            android:textColor="@color/status_value"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvChargingStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:text="@string/not_charging"
+            android:textColor="@color/status_value"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvChargingDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:text="@string/charging_duration_placeholder"
+            android:textColor="#7EE787"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
+
+    <!-- Şarj geçmişi butonu -->
+    <Button
+        android:id="@+id/btnShowChargingHistory"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="#21262D"
+        android:text="@string/btn_charging_history"
+        android:textColor="#C9D1D9"
+        android:textSize="12sp" />
+
+    <!-- İki sütun: kalan dikey alanın tamamını kullan; satırlar weight ile eşit bölünür -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <!-- Sol sÃ¼tun: AC -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="12dp"
+            android:layout_weight="1"
+            android:background="@color/surface_variant"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/tvLeftColumnTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:letterSpacing="0.12"
+                android:text="@string/expected_charge_power"
+                android:textColor="#6E7681"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- V -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="72dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_v"
+                    android:textColor="#8B949E"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/tvAcVolt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/status_value"
+                    android:textSize="44sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- A -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="72dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_a"
+                    android:textColor="#8B949E"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/tvAcAmp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/status_value"
+                    android:textSize="44sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- kW -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="72dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_kw_label"
+                    android:textColor="#8B949E"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/tvAcKw"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="#FFA657"
+                    android:textSize="44sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- kWh (toplam enerji) — şarj yokken satırın tamamı gizlenir -->
+            <LinearLayout
+                android:id="@+id/rowAcEnergy"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="72dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_kwh_label"
+                    android:textColor="#8B949E"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/tvAcEnergy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="#7EE787"
+                    android:textSize="44sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- SaÄŸ sÃ¼tun: Batarya -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@color/surface_variant"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:letterSpacing="0.12"
+                android:text="@string/batarya"
+                android:textColor="#6E7681"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- V -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="72dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_v"
+                    android:textColor="#8B949E"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/tvDcVolt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/status_value"
+                    android:textSize="44sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- gerçek A -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="72dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_a"
+                    android:textColor="#8B949E"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/tvDcAmpAct"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/status_value"
+                    android:textSize="44sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- gerçek kW -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="72dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_kw_label"
+                    android:textColor="#8B949E"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/tvDcKwAct"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="#FFA657"
+                    android:textSize="44sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- kWh (toplam enerji) — şarj yokken satırın tamamı gizlenir -->
+            <LinearLayout
+                android:id="@+id/rowDcEnergy"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="72dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_kwh_label"
+                    android:textColor="#8B949E"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/tvDcEnergy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="#7EE787"
+                    android:textSize="44sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Grafik yerine tam ekran grafik iÃ§in buton -->
+    <Button
+        android:id="@+id/btnOpenChargingGraph"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/charging_graph_open" />
+
+</LinearLayout>
