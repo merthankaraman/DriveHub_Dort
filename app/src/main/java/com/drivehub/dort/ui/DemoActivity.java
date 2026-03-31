@@ -304,9 +304,13 @@ public class DemoActivity extends AppCompatActivity {
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_FR, "Lastik sıcaklık ön sağ °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_RL, "Lastik sıcaklık arka sol °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_RR, "Lastik sıcaklık arka sağ °");
-        appendObdRequestInt(sb, MG4Hardware.PROP_TORQUE_PERCENT_DRIVER_DEMAND_INDEX, "Sürüc talebi tork ");
-        appendObdRequestInt(sb, MG4Hardware.PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX, "Gerçek tork ");
-        appendObdRequestInt(sb, MG4Hardware.PROP_TORQUE_PERCENT_ENGINE_REFERENCE_INDEX, "Referans tork ");
+        appendObdRequestInt(sb, MG4Hardware.PROP_OBD_SOC, "OBD SOC");
+        appendObdRequestInt(sb, MG4Hardware.PROP_OBD_SOH, "OBD SOH");
+        appendObdRequestInt(sb, MG4Hardware.PROP_OBD_BATTERY_AMP, "OBD BATT AMP");
+        appendObdRequestInt(sb, MG4Hardware.PROP_OBD_MOTOR_COOLANT, "OBD MOTOR COOLANT");
+        appendObdRequestInt(sb, MG4Hardware.PROP_OBD_MOTOR_TEMP, "OBD MOTOR TEMP");
+        appendObdRequestInt(sb, MG4Hardware.PROP_OBD_MOTOR_TORQUE, "OBD MOTOR TORQUE");
+        appendObdRequestInt(sb, MG4Hardware.PROP_OBD_MOTOR_TORQUE2, "OBD MOTOR TORQUE 2");
         tv.setText(sb.toString());
     }
 

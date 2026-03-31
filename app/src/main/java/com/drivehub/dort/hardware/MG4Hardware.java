@@ -87,6 +87,13 @@ public class MG4Hardware {
     public static final int PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX  = 0x19; // 25 — IntegerSensorIndex.ENGINE_ACTUAL_PERCENT_TORQUE (fiilî %, ana aday)
     public static final int PROP_TORQUE_PERCENT_ENGINE_REFERENCE_INDEX = 0x1A; // 26 — IntegerSensorIndex.ENGINE_REFERENCE_PERCENT_TORQUE
 
+    public static final int PROP_OBD_SOC = 14010022;
+    public static final int PROP_OBD_MOTOR_COOLANT = 14010018;
+    public static final int PROP_OBD_MOTOR_TORQUE = 14010021;;
+    public static final int PROP_OBD_MOTOR_TORQUE2 = 14010033;
+    public static final int PROP_OBD_MOTOR_TEMP = 14010020;
+    public static final int PROP_OBD_BATTERY_AMP = 14010024;
+    public static final int PROP_OBD_SOH = 14010029;
     /** Demo: CPM {@code getProperty(Float)} — global area. NaN = okunamadı. */
     public static float readTrackSensorFloat(int propId) {
         return getFloatPropertyCPM(propId, AREA_GLOBAL);
