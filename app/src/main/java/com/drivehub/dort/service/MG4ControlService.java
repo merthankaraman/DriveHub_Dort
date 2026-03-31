@@ -408,6 +408,8 @@ public class MG4ControlService extends Service {
         mMainHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
+                MG4Hardware.syncDriveModeFromPropertyIfChanged();//TODO added for drive mode
+
                 int ign = MG4Hardware.getVehicleIgnition();
                 boolean isRun = ign >= 2;
                 boolean wasRun = mLastIgnitionStateForRemember >= 2;

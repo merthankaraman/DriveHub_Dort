@@ -111,7 +111,7 @@ public class MG4Hardware {
      */
     public static Integer readDiagnosticSystemIntegerSensor(int integerSensorIndex) {
         if (sCarDiagnosticManager == null) {
-            if (sLogEnabled) Log.d(TAG, "readDiagnosticSystemIntegerSensor: CarDiagnosticManager null");
+            if (sLogEnabled) Log.i(TAG, "readDiagnosticSystemIntegerSensor: CarDiagnosticManager null");
             return null;
         }
         try {
@@ -129,7 +129,7 @@ public class MG4Hardware {
             java.lang.reflect.Method getLatest = sCarDiagnosticManager.getClass().getMethod("getLatestLiveFrame");
             Object event = getLatest.invoke(sCarDiagnosticManager);
             if (event == null) {
-                if (sLogEnabled) Log.d(TAG, "readDiagnosticSystemIntegerSensor: getLatestLiveFrame null");
+                if (sLogEnabled) Log.i(TAG, "readDiagnosticSystemIntegerSensor: getLatestLiveFrame null");
                 return null;
             }
             java.lang.reflect.Method getInt = event.getClass().getMethod("getSystemIntegerSensor", int.class);
@@ -177,8 +177,11 @@ public class MG4Hardware {
     }
 
     /** OBD yüzde tork —  fiilî (0x19); null = veri yok. */
-    public static Integer readObdValue(int id) {
+    public static Integer readObdValueInt(int id) {
         return readDiagnosticSystemIntegerSensor(id);
+    }
+    public static Float readObdValueFloat(int id) {
+        return readDiagnosticSystemFloatSensor(id);
     }
 
     // Araç durum / BMS — CarPropertyManager callback; ID'ler VehicleConditionBinder / VehicleChargingBinder ile uyumlu
@@ -1199,6 +1202,23 @@ public class MG4Hardware {
         int v = getIntPropertyCPM(PROP_DRIVE_MODE, AREA_GLOBAL);
         if (v >= 0) sCachedDriveMode = v;
         return v;
+    }
+
+    /**
+     * CPM'den sürüş modunu doğrudan okur; cache'ten farklıysa cache güncellenir ve
+     * {@link #setDriveModeListener(DriveModeListener)} ile kayıtlı listener tetiklenir.
+     * Push callback bazen gelmeyebildiği / panel açılınca {@link #getDriveMode()} ile dolan cache
+     * listener'ı tetiklemediği için, servis bu metodu periyodik çağırır (regen tarafına dokunmaz).
+     */
+    public static void syncDriveModeFromPropertyIfChanged() {//TODO added for drive mode
+        int v = getIntPropertyCPM(PROP_DRIVE_MODE, AREA_GLOBAL);
+        if (v < 0) return;
+        if (v == sCachedDriveMode) return;
+        sCachedDriveMode = v;
+        DriveModeListener listener = sDriveModeListener;
+        if (listener != null) {
+            listener.onDriveModeChanged(v);
+        }
     }
     /** Regen seviyesi: önce vehicle/CPM callback cache; yoksa getProperty dene (sürüş modu gibi). */
     public static int getRegenLevel() {

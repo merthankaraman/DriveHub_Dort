@@ -43,7 +43,15 @@ public class DemoActivity extends AppCompatActivity {
         @Override
         public void run() {
             pollDemoValues();
-            mHandler.postDelayed(this, 2000); // 2 saniyede bir
+            mHandler.postDelayed(this, 2000); // 2 saniyede bir (pencereler, hava kalitesi, kilit)
+        }
+    };
+    /** Track sensörlerini daha sık (500 ms) güncelle. */
+    private final Runnable mTrackRunnable = new Runnable() {
+        @Override
+        public void run() {
+            refreshTrackSensors();
+            mHandler.postDelayed(this, 500); // 500 ms
         }
     };
 
@@ -227,8 +235,8 @@ public class DemoActivity extends AppCompatActivity {
         refreshWindowPercentages();
         refreshAirQuality();
         updateDoorLockStatus();
-        refreshTrackSensors();
         mHandler.post(mPollRunnable);
+        mHandler.post(mTrackRunnable);
         startBluetoothLockMonitoring();
     }
 
@@ -244,6 +252,7 @@ public class DemoActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mHandler.removeCallbacks(mPollRunnable);
+        mHandler.removeCallbacks(mTrackRunnable);
         stopBluetoothLockMonitoring();
     }
 
@@ -278,7 +287,6 @@ public class DemoActivity extends AppCompatActivity {
         refreshWindowPercentages();
         refreshAirQuality();
         updateDoorLockStatus();
-        refreshTrackSensors();
     }
 
     /** MG4Hardware TRACK_SENSOR_* — CarPropertyManager global area (Demo). */
@@ -287,32 +295,32 @@ public class DemoActivity extends AppCompatActivity {
         if (tv == null) return;
         StringBuilder sb = new StringBuilder(900);
         appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_LATERAL_ACCEL, "Yanal ivme");
-        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_LATERAL_ACCEL_VALID, "Yanal geçerli");
         appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_ACCEL_PORTRAIT, "Boyuna ivme");
-        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_ACCEL_PORTRAIT_VALID, "Boyuna geçerli");
-        appendTrackEfficiency(sb);
-        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_DRIVE_EFFICIENCY_VALID, "Güç % geçerli");
-        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_FAST_ACCEL_DECEL, "Gaz/fren göst.");
-        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_FAST_ACCEL_DECEL_VALID, "Gaz/fren geçerli");
-        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_BRAKE_PEDAL_PRESSURE, "Fren basıncı");
-        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_BRAKE_PEDAL_PRESSURE_VALID, "Fren geçerli");
-        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_DISTANCE_ROLLING, "Mesafe sayacı");
+        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_DRIVE_EFFICIENCY, "Güç %");
+        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_FAST_ACCEL_DECEL, "Güç pedalı %.");
+        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_BRAKE_PEDAL_PRESSURE, "Fren basıncı");// maks 4500 gördüm
         appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_WHEEL_ANGLE, "Direksiyon °");
-        appendTrackFloat(sb, MG4Hardware.PROP_TIRE_TEMP_FL, "Lastik sıcaklık ön sol °");
-        appendTrackFloat(sb, MG4Hardware.PROP_TIRE_TEMP_FR, "Lastik sıcaklık ön sağ °");
-        appendTrackFloat(sb, MG4Hardware.PROP_TIRE_TEMP_RL, "Lastik sıcaklık arka sol °");
-        appendTrackFloat(sb, MG4Hardware.PROP_TIRE_TEMP_RR, "Lastik sıcaklık arka sağ °");
-        appendObdRequest(sb, MG4Hardware.PROP_TORQUE_PERCENT_DRIVER_DEMAND_INDEX, "Sürüc talebi tork ");
-        appendObdRequest(sb, MG4Hardware.PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX, "Gerçek tork ");
-        appendObdRequest(sb, MG4Hardware.PROP_TORQUE_PERCENT_ENGINE_REFERENCE_INDEX, "Referans tork ");
+        appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_FL, "Lastik sıcaklık ön sol °");
+        appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_FR, "Lastik sıcaklık ön sağ °");
+        appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_RL, "Lastik sıcaklık arka sol °");
+        appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_RR, "Lastik sıcaklık arka sağ °");
+        appendObdRequestInt(sb, MG4Hardware.PROP_TORQUE_PERCENT_DRIVER_DEMAND_INDEX, "Sürüc talebi tork ");
+        appendObdRequestInt(sb, MG4Hardware.PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX, "Gerçek tork ");
+        appendObdRequestInt(sb, MG4Hardware.PROP_TORQUE_PERCENT_ENGINE_REFERENCE_INDEX, "Referans tork ");
         tv.setText(sb.toString());
     }
 
     /** CarDiagnosticManager — IntegerSensorIndex fiilî % tork (null = çerçeve yok / destek yok). */
-    private static void appendObdRequest(StringBuilder sb, int propId, String label) {
-        Integer v = MG4Hardware.readObdValue(propId);
-        String s = (v == null) ? "--" : String.valueOf(v);
+    private static void appendObdRequestInt(StringBuilder sb, int propId, String label) {
+        Integer v = MG4Hardware.readObdValueInt(propId);
+        //String s = (v == null) ? "--" : String.valueOf(v);
+        String s = String.valueOf(v);
         sb.append(String.format(Locale.US, "%s: %s%n", label, s));
+    }
+    private static void appendObdRequestFloat(StringBuilder sb, int propId, String label) {
+        float f = MG4Hardware.readObdValueFloat(propId);
+        String v = Float.isNaN(f) ? "--" : String.format(Locale.US, "%.4f", f);
+        sb.append(String.format(Locale.US, "%s: %s%n", label, v));
     }
 
     private static void appendTrackFloat(StringBuilder sb, int propId, String label) {
@@ -323,21 +331,9 @@ public class DemoActivity extends AppCompatActivity {
 
     private static void appendTrackInt(StringBuilder sb, int propId, String label) {
         int i = MG4Hardware.readTrackSensorInt(propId);
-        String v = (i < 0) ? "--" : String.valueOf(i);
+        //String v = (i < 0) ? "--" : String.valueOf(i);
+        String v = String.valueOf(i);
         sb.append(String.format(Locale.US, "%s: %s%n", label, v));
-    }
-
-    /** Güç % — önce float, yoksa int (0–100). */
-    private static void appendTrackEfficiency(StringBuilder sb) {
-        int pid = MG4Hardware.TRACK_SENSOR_DRIVE_EFFICIENCY;
-        float f = MG4Hardware.readTrackSensorFloat(pid);
-        if (!Float.isNaN(f)) {
-            sb.append(String.format(Locale.US, "%s: %.2f%n", "Güç %", f));
-            return;
-        }
-        int i = MG4Hardware.readTrackSensorInt(pid);
-        String v = (i < 0) ? "--" : String.valueOf(i);
-        sb.append(String.format(Locale.US, "%s: %s%n", "Güç %", v));
     }
 
     private void updateDoorLockStatus() {
