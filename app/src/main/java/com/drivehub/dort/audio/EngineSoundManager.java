@@ -89,7 +89,7 @@ public class EngineSoundManager {
     private long mEngineStartTime = 0;
     private long mAutoStartupDelayMs = 0;
     private boolean mExhaustPopEnabled = true;
-    private float mExhaustPopMasterMultiplier = 0.6f;
+    private float mExhaustPopMasterMultiplier = 0.5f;
     private int[] mGlobalPopIds = new int[6];
     private int mPopsRemaining = 0;
     private long mNextPopTime = 0;
@@ -721,9 +721,14 @@ public class EngineSoundManager {
         long currentTime = System.currentTimeMillis();
 
         // 1. BOŞTA GAZ VERME
-        if (speed < 1.0f) {
+        if (speed < 0.5f) {
             mCurrentGear = 0;
-            float real_acc_pedal_pos = Math.min(1,MG4Hardware.getVehicleACCPedalPosGlobal() / 100f);
+            float real_acc_pedal_pos;
+            if (!mUseManualThrottle)
+                real_acc_pedal_pos = Math.min(1,MG4Hardware.getVehicleACCPedalPosGlobal() / 100f);
+            else
+                real_acc_pedal_pos = throttle;
+
             float targetRpm = mIdleRpm + (real_acc_pedal_pos * (mMaxRpm - mIdleRpm));
             mCurrentRpm = (mCurrentRpm * 0.8f) + (targetRpm * 0.2f);
             return;

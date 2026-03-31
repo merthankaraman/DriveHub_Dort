@@ -451,7 +451,7 @@ public class MainActivity extends AppCompatActivity {
                         throttle = mEngineSound.getSimulatedThrottle();
                         pct = Math.round(throttle * 100f);
                     }
-                    else if (speedForDisplay < 1){
+                    else if (speedForDisplay < 0.5){
                         pct = (int) MG4Hardware.getVehicleACCPedalPosGlobal();
                     }
                     else{
