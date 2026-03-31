@@ -297,8 +297,8 @@ public class DemoActivity extends AppCompatActivity {
         appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_LATERAL_ACCEL, "Yanal ivme");
         appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_ACCEL_PORTRAIT, "Boyuna ivme");
         appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_DRIVE_EFFICIENCY, "Güç %");
-        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_FAST_ACCEL_DECEL, "Güç pedalı %.");
-        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_BRAKE_PEDAL_PRESSURE, "Fren basıncı");// maks 4500 gördüm
+        appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_FAST_ACCEL_DECEL, "Güç pedalı %");
+        appendTrackInt(sb, MG4Hardware.TRACK_SENSOR_BRAKE_PEDAL_PRESSURE, "Fren basıncı kPa");
         appendTrackFloat(sb, MG4Hardware.TRACK_SENSOR_WHEEL_ANGLE, "Direksiyon °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_FL, "Lastik sıcaklık ön sol °");
         appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_FR, "Lastik sıcaklık ön sağ °");
@@ -313,8 +313,6 @@ public class DemoActivity extends AppCompatActivity {
         appendObdRequestInt(sb, MG4Hardware.PROP_OBD_MOTOR_TORQUE2, "OBD MOTOR TORQUE 2");
         tv.setText(sb.toString());
     }
-
-    /** CarDiagnosticManager — IntegerSensorIndex fiilî % tork (null = çerçeve yok / destek yok). */
     private static void appendObdRequestInt(StringBuilder sb, int propId, String label) {
         Integer v = MG4Hardware.readObdValueInt(propId);
         //String s = (v == null) ? "--" : String.valueOf(v);
