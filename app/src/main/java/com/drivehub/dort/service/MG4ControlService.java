@@ -21,6 +21,8 @@ import android.media.session.PlaybackState;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.PowerManager;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -158,6 +160,13 @@ public class MG4ControlService extends Service {
     /** Boot sonrası sürüş modu / regen uygulaması için gecikme (ms). Debug için biraz kısaltıldı. */
     private static final long REMEMBER_APPLY_START_UP_DELAY_MS = 5_000L;
     private static final long REMEMBER_APPLY_LOOP_DELAY_MS = 1_000L;
+    /** Ekran uyandıktan sonra profil denemesinden önce bekle (HAL/property otursun). */
+    private static final long REMEMBER_APPLY_AFTER_SCREEN_ON_SETTLE_MS = 2_000L;
+    private static final long REMEMBER_APPLY_SETTLE_POLL_MS = 200L;
+    /** Son döngüde ekran interactive miydi (uyanınca 2 sn settle için). */
+    private boolean mRememberLastScreenInteractive = true;
+    /** Bu süre dolmadan sync/apply yapma (elapsedRealtime). */
+    private long mRememberSettleUntilElapsedMs = 0L;
     /** One-pedal geri yükleme için ek deneme ayarları (uzaktan uyandırma senaryosunda geç hazır olabiliyor). */
     private static final int ONE_PEDAL_RESTORE_MAX_RETRIES = 8;
     private static final long ONE_PEDAL_RESTORE_RETRY_DELAY_MS = 1_200L;
@@ -402,12 +411,28 @@ public class MG4ControlService extends Service {
         // Profil remember:
         //  - İlk deneme: servis başladıktan 5 sn sonra
         //  - Kontak KAPALIYSA: her 1 sn'de bir tekrar dene
-        //  - Kontak AÇIKKEN (ignition >= 2): sürüş/regen profillerini uygula
-        //  - Ignition düşüp tekrar RUN olursa yeniden uygula (ekran kapanmasa bile)
+        //  - Kontak AÇIKKEN (ignition >= 2) VE ekran AÇIKKEN: sürüş/regen profillerini uygula
+        //  - Ignition düşüp tekrar RUN olursa yeniden uygula (sadece ekran açıksa)
+        //  - Ekran yeni uyandıysa: 2 sn bekle (kendine gelsin), sonra sync/apply
         mMainHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                MG4Hardware.syncDriveModeFromPropertyIfChanged();//TODO added for drive mode
+                boolean interactive = isScreenOnForProfileRemember();
+                if (!interactive) {
+                    mRememberLastScreenInteractive = false;
+                    mMainHandler.postDelayed(this, REMEMBER_APPLY_LOOP_DELAY_MS);
+                    return;
+                }
+                // Kapalı → açık: kısa settle penceresi başlat
+                if (!mRememberLastScreenInteractive) {
+                    mRememberLastScreenInteractive = true;
+                    mRememberSettleUntilElapsedMs =
+                            SystemClock.elapsedRealtime() + REMEMBER_APPLY_AFTER_SCREEN_ON_SETTLE_MS;
+                }
+                if (SystemClock.elapsedRealtime() < mRememberSettleUntilElapsedMs) {
+                    mMainHandler.postDelayed(this, REMEMBER_APPLY_SETTLE_POLL_MS);
+                    return;
+                }
 
                 int ign = MG4Hardware.getVehicleIgnition();
                 boolean isRun = ign >= 2;
@@ -458,6 +483,16 @@ public class MG4ControlService extends Service {
         mMainHandler.removeCallbacks(mOnePedalRestoreRetryRunnable);
         mChargingCheckHandler.removeCallbacks(mChargingCheckRunnable);
         mConsumptionHandler.removeCallbacks(mConsumptionIntegrationRunnable);
+    }
+
+    /** Profil remember denemeleri için ekranın gerçekten açık olup olmadığını kontrol et. */
+    private boolean isScreenOnForProfileRemember() {
+        try {
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            return pm != null && pm.isInteractive();
+        } catch (Throwable t) {
+            return true;
+        }
     }
 
     /** Boot sonrası sürüş modunu otomatik geri yükle (kullanıcı \"sürüş modunu hatırla\" switch'ini açtıysa). */

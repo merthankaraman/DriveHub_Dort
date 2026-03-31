@@ -1202,23 +1202,6 @@ public class MG4Hardware {
         if (v >= 0) sCachedDriveMode = v;
         return v;
     }
-
-    /**
-     * CPM'den sürüş modunu doğrudan okur; cache'ten farklıysa cache güncellenir ve
-     * {@link #setDriveModeListener(DriveModeListener)} ile kayıtlı listener tetiklenir.
-     * Push callback bazen gelmeyebildiği / panel açılınca {@link #getDriveMode()} ile dolan cache
-     * listener'ı tetiklemediği için, servis bu metodu periyodik çağırır (regen tarafına dokunmaz).
-     */
-    public static void syncDriveModeFromPropertyIfChanged() {
-        int v = getIntPropertyCPM(PROP_DRIVE_MODE, AREA_GLOBAL);
-        if (v < 0) return;
-        if (v == sCachedDriveMode) return;
-        sCachedDriveMode = v;
-        DriveModeListener listener = sDriveModeListener;
-        if (listener != null) {
-            listener.onDriveModeChanged(v);
-        }
-    }
     /** Regen seviyesi: önce vehicle/CPM callback cache; yoksa getProperty dene (sürüş modu gibi). */
     public static int getRegenLevel() {
         int v;
