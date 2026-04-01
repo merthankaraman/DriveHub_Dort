@@ -1537,8 +1537,8 @@ public class MainActivity extends AppCompatActivity {
                 mTvAcKw.setText("--");
             }
         } else {
-            mTvAcVolt.setText(Float.isNaN(dcVolt) ? "--" : String.format("%.0f V", dcVolt));
-            mTvAcAmp.setText(Float.isNaN(dcAmpExp) ? "--" : String.format("%.1f A", dcAmpExp));
+            mTvAcVolt.setText(Float.isNaN(dcVolt) ? "--" : String.format("%.2f V", dcVolt));
+            mTvAcAmp.setText(Float.isNaN(dcAmpExp) ? "--" : String.format("%.2f A", dcAmpExp));
             if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) {
                 float expKwLeft = (dcVolt * dcAmpExp) / 1000f;
                 mTvAcKw.setText(String.format("%.3f kW", expKwLeft));
@@ -1548,7 +1548,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         float soc = MG4Hardware.getSoc();
-        String socText = Float.isNaN(soc) ? "SOC:--" : String.format(Locale.US, "SOC:%.1f %%", soc);
+        String socText = Float.isNaN(soc) ? "SOC:--" : String.format(Locale.US, "SOC:%.1f", soc);
         if (mTvChargingHeaderSoc != null) {
             mTvChargingHeaderSoc.setText(socText);
         }

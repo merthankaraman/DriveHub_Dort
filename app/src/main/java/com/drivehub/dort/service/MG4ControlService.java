@@ -577,11 +577,6 @@ public class MG4ControlService extends Service {
 
         int onePedalState = MG4Hardware.getOnePedal(); // 1=açık, 0=kapalı, -1=okunamadı
         if (onePedalState == 1) {
-            Toast.makeText(
-                    getApplicationContext(),
-                    "OPD restore: başarılı (retry=" + mOnePedalRestoreRetryCount + ")",
-                    Toast.LENGTH_SHORT
-            ).show();
             if (MG4Hardware.isLogEnabled()) {
                 Log.i(TAG, "RememberRegen(OPD): doğrulandı (reason=" + reason + ")");
             }
@@ -591,11 +586,6 @@ public class MG4ControlService extends Service {
         }
 
         if (mOnePedalRestoreRetryCount >= ONE_PEDAL_RESTORE_MAX_RETRIES) {
-            Toast.makeText(
-                    getApplicationContext(),
-                    "OPD restore: başarısız (max retry), state=" + onePedalState,
-                    Toast.LENGTH_SHORT
-            ).show();
             if (MG4Hardware.isLogEnabled()) {
                 Log.w(TAG, "RememberRegen(OPD): max retry aşıldı, state=" + onePedalState);
             }
