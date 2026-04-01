@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_SOUND_PROFILE = "sound_profile";
     private static final String PREF_SOUND_MASTER = "sound_master";
     private static final String PREF_MOTOR_POWER = "motor_power_kw";
+    private static final String PREF_ALWAYS_USB_DEBUG = "always_usb_debug";
     /** Tek pedal atanacak tuş: -1=Kapalı, 17=Sol yıldız, 286=Sağ yıldız (InputReader keyCode, hafızalı) */
     private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
     private static final int[] ONE_PEDAL_KEY_VALUES = { -1, 17, 286 };
@@ -804,6 +805,22 @@ public class MainActivity extends AppCompatActivity {
                 getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                         .edit().putBoolean(FullscreenHelper.KEY_FULLSCREEN, isChecked).apply();
                 applyFullscreen(isChecked);
+            });
+        }
+
+        SwitchCompat swAlwaysUsbDebug = findViewById(R.id.switchAlwaysUsbDebug);
+        if (swAlwaysUsbDebug != null) {
+            boolean usbDebugAlways = getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                    .getBoolean(PREF_ALWAYS_USB_DEBUG, false);
+            swAlwaysUsbDebug.setChecked(usbDebugAlways);
+            swAlwaysUsbDebug.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                        .edit().putBoolean(PREF_ALWAYS_USB_DEBUG, isChecked).apply();
+                if (isChecked) {
+                    Intent i = new Intent(this, MG4ControlService.class);
+                    i.setAction(MG4ControlService.ACTION_ENSURE_USB_DEBUG);
+                    startForegroundService(i);
+                }
             });
         }
 

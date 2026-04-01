@@ -23,6 +23,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -43,6 +44,7 @@ import com.drivehub.dort.model.RegenLevel;
 import com.drivehub.dort.util.ChargingHistory;
 
 import java.util.List;
+import java.lang.reflect.Method;
 
 public class MG4ControlService extends Service {
 
@@ -51,6 +53,9 @@ public class MG4ControlService extends Service {
     private static final int    NOTIF_ID   = 1001;
     /** Ekrandan müzik duraklat/devam için Activity'nin servise gönderdiği action */
     public static final String ACTION_TOGGLE_MUSIC = "com.drivehub.dort.TOGGLE_MUSIC";
+    /** Ayarlarda switch açıldığında veya ekran uyandığında ADB'yi tekrar aktifleştirme isteği. */
+    public static final String ACTION_ENSURE_USB_DEBUG = "com.drivehub.dort.ENSURE_USB_DEBUG";
+    private static final String PREF_ALWAYS_USB_DEBUG = "always_usb_debug";
 
     // Hardkey broadcast — logcat'ten doğrulandı (1902260031.txt):
     //   action: com.saic.keyevent.hardkey.report
@@ -133,6 +138,7 @@ public class MG4ControlService extends Service {
 
     private DriveMode mCurrentDriveMode = DriveMode.NORMAL;
     private BroadcastReceiver mHardkeyReceiver;
+    private BroadcastReceiver mScreenWakeReceiver;
 
     // Overlay
     private static final int COLOR_HEAT_ON  = 0xFF9E3333;
@@ -341,6 +347,8 @@ public class MG4ControlService extends Service {
 
         updateNotification("Bağlanıyor...");
         registerHardkeyReceiver();
+        registerScreenWakeReceiver();
+        mMainHandler.postDelayed(() -> ensureUsbDebugEnabled("service_start"), 1500);
 
         SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         MG4Hardware.setSoundEnabled(prefs.getBoolean("sound_enabled", false));
@@ -477,6 +485,9 @@ public class MG4ControlService extends Service {
         if (mHardkeyReceiver != null) {
             try { unregisterReceiver(mHardkeyReceiver); } catch (Exception ignored) {}
         }
+        if (mScreenWakeReceiver != null) {
+            try { unregisterReceiver(mScreenWakeReceiver); } catch (Exception ignored) {}
+        }
         removeOverlay();
         MG4Hardware.destroy();
         mSoundHandler.removeCallbacks(mSoundRunnable);
@@ -492,6 +503,64 @@ public class MG4ControlService extends Service {
             return pm != null && pm.isInteractive();
         } catch (Throwable t) {
             return true;
+        }
+    }
+
+    private boolean isAlwaysUsbDebugEnabled() {
+        return getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                .getBoolean(PREF_ALWAYS_USB_DEBUG, false);
+    }
+
+    private void registerScreenWakeReceiver() {
+        mScreenWakeReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent != null ? intent.getAction() : "";
+                if (Intent.ACTION_SCREEN_ON.equals(action) || Intent.ACTION_USER_PRESENT.equals(action)) {
+                    mMainHandler.postDelayed(() -> ensureUsbDebugEnabled(action), 1500);
+                }
+            }
+        };
+        IntentFilter f = new IntentFilter();
+        f.addAction(Intent.ACTION_SCREEN_ON);
+        f.addAction(Intent.ACTION_USER_PRESENT);
+        registerReceiver(mScreenWakeReceiver, f);
+    }
+
+    /** Android 9 sistem uygulamasında ADB/USB debug ayarlarını tekrar aktif etmeyi dener. */
+    private void ensureUsbDebugEnabled(String reason) {
+        if (!isAlwaysUsbDebugEnabled()) {
+            return;
+        }
+        try {
+            Settings.Global.putInt(getContentResolver(), "development_settings_enabled", 1);
+            Settings.Global.putInt(getContentResolver(), "adb_enabled", 1);
+        } catch (Throwable t) {
+            Log.w(TAG, "ADB global settings yazılamadı (" + reason + "): " + t);
+        }
+
+        // OEM'e göre sys.usb.config veya persist.sys.usb.config gerekebiliyor.
+        setSystemPropertyIfPossible("sys.usb.config", "mtp,adb");
+        setSystemPropertyIfPossible("persist.sys.usb.config", "mtp,adb");
+        setSystemPropertyIfPossible("sys.usb.config", "adb");
+
+        try {
+            int adb = Settings.Global.getInt(getContentResolver(), "adb_enabled", 0);
+            if (MG4Hardware.isLogEnabled()) {
+                Log.i(TAG, "ADB ensure(" + reason + "): adb_enabled=" + adb);
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    private void setSystemPropertyIfPossible(String key, String value) {
+        try {
+            Class<?> c = Class.forName("android.os.SystemProperties");
+            Method set = c.getMethod("set", String.class, String.class);
+            set.invoke(null, key, value);
+        } catch (Throwable t) {
+            if (MG4Hardware.isLogEnabled()) {
+                Log.w(TAG, "SystemProperties set başarısız: " + key + "=" + value + " err=" + t);
+            }
         }
     }
 
@@ -1481,6 +1550,9 @@ public class MG4ControlService extends Service {
             }
             case ACTION_TOGGLE_MUSIC:
                 toggleMusicPlayback();
+                break;
+            case ACTION_ENSURE_USB_DEBUG:
+                ensureUsbDebugEnabled("manual");
                 break;
             case "OVERLAY_ON":
                 showOverlay();

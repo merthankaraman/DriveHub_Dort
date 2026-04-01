@@ -262,6 +262,7 @@
 
     <!-- Ayarlar / tam ekran -->
     <string name="fullscreen_mode_label">Program Tam ekran çalışsın</string>
+    <string name="usb_debug_always_on_label">USB debug her uyanmada aktif et</string>
 
     <!-- Genel -->
     <string name="back">←</string>
