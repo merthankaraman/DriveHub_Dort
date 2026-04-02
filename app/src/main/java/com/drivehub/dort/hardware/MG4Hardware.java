@@ -265,6 +265,23 @@ public class MG4Hardware {
     private static volatile float sAcKw              = Float.NaN;
     private static volatile float sVehicleACCPedalPos= Float.NaN;
     private static volatile int sVehiclePowerPerc    = 0;
+    /** runMainTask ile güncellenir; NaN = okunamadı */
+    private static volatile float sSensorAccelLateral = Float.NaN;
+    private static volatile float sSensorAccelPortrait = Float.NaN;
+    /** Fren pedal basıncı; -1 = okunamadı (getIntPropertyCPM ile uyumlu) */
+    private static volatile int sSensorBrakePedalPressure = -1;
+    private static volatile float sSensorWheelAngle = Float.NaN;
+    /** Lastik basınç/sıcaklık: CPM Integer; -1 = okunamadı. {@link #runMainTask()} içinde en fazla 5 sn'de bir okunur. */
+    private static volatile int sTirePressureFl = -1;
+    private static volatile int sTirePressureFr = -1;
+    private static volatile int sTirePressureRl = -1;
+    private static volatile int sTirePressureRr = -1;
+    private static volatile int sTireTempFl = -1;
+    private static volatile int sTireTempFr = -1;
+    private static volatile int sTireTempRl = -1;
+    private static volatile int sTireTempRr = -1;
+    private static volatile long sLastTireSensorsPollElapsedMs = 0L;
+    private static final long TIRE_SENSORS_POLL_INTERVAL_MS = 5000L;
     // Şarj süresi için basit sayaç — şarj başladığı anda sistem saatini tutar
     private static volatile long  sChargingStartWallMs = 0L;
     // READY durumu (100ms polling ile güncellenen cache)
@@ -1362,7 +1379,8 @@ public class MG4Hardware {
     private static volatile int dtHourscounter1 = 0;
 
     /**
-     * Serviste 30ms'de bir çağrılır:
+     * Serviste periyodik çağrılır ({@code MG4ControlService}):
+     *  - İvme / fren / direksiyon → global cache; lastik basınç-sıcaklık → en fazla 5 sn'de bir
      *  - DC/AC güçleri oku
      *  - Enerjiyi ve mesafeyi entegre et
      *  - Global önbelleğe (sDcKw, sTripEnergyKwh, sTripDistanceKm, vb.) yaz
@@ -1374,6 +1392,23 @@ public class MG4Hardware {
         sVehicleACCPedalPos = getFloatPropertyCPM(PROP_SENSOR_ACC_PEDAL_POS, AREA_GLOBAL);
         sVehiclePowerPerc = getIntPropertyCPM(PROP_SENSOR_DRIVE_EFFICIENCY, AREA_GLOBAL);
 
+        sSensorAccelLateral = getFloatPropertyCPM(PROP_SENSOR_ACCEL_LATERAL, AREA_GLOBAL);
+        sSensorAccelPortrait = getFloatPropertyCPM(PROP_SENSOR_ACCEL_PORTRAIT, AREA_GLOBAL);
+        sSensorBrakePedalPressure = getIntPropertyCPM(PROP_SENSOR_BRAKE_PEDAL_PRESSURE, AREA_GLOBAL);
+        sSensorWheelAngle = getFloatPropertyCPM(PROP_SENSOR_WHEEL_ANGLE, AREA_GLOBAL);
+        long tirePollNow = SystemClock.elapsedRealtime();
+        if (sLastTireSensorsPollElapsedMs == 0L
+                || (tirePollNow - sLastTireSensorsPollElapsedMs) >= TIRE_SENSORS_POLL_INTERVAL_MS) {
+            sLastTireSensorsPollElapsedMs = tirePollNow;
+            sTirePressureFl = getIntPropertyCPM(PROP_TIRE_PRESSURE_FL, AREA_GLOBAL);
+            sTirePressureFr = getIntPropertyCPM(PROP_TIRE_PRESSURE_FR, AREA_GLOBAL);
+            sTirePressureRl = getIntPropertyCPM(PROP_TIRE_PRESSURE_RL, AREA_GLOBAL);
+            sTirePressureRr = getIntPropertyCPM(PROP_TIRE_PRESSURE_RR, AREA_GLOBAL);
+            sTireTempFl = getIntPropertyCPM(PROP_TIRE_TEMP_FL, AREA_GLOBAL);
+            sTireTempFr = getIntPropertyCPM(PROP_TIRE_TEMP_FR, AREA_GLOBAL);
+            sTireTempRl = getIntPropertyCPM(PROP_TIRE_TEMP_RL, AREA_GLOBAL);
+            sTireTempRr = getIntPropertyCPM(PROP_TIRE_TEMP_RR, AREA_GLOBAL);
+        }
 
         if (Float.isNaN(speedKmh)) speedKmh = sLastSpeedForDisplay;
 
@@ -1652,6 +1687,18 @@ public class MG4Hardware {
     public static float getVehicleACCPedalPosGlobal()   { return sVehicleACCPedalPos; }
     public static int   getVehiclePowerPercGlobal()   { return sVehiclePowerPerc; }
 
+    public static float getSensorAccelLateralGlobal() { return sSensorAccelLateral; }
+    public static float getSensorAccelPortraitGlobal() { return sSensorAccelPortrait; }
+    public static int getSensorBrakePedalPressureGlobal() { return sSensorBrakePedalPressure; }
+    public static float getSensorWheelAngleGlobal() { return sSensorWheelAngle; }
+    public static int getTirePressureFlGlobal() { return sTirePressureFl; }
+    public static int getTirePressureFrGlobal() { return sTirePressureFr; }
+    public static int getTirePressureRlGlobal() { return sTirePressureRl; }
+    public static int getTirePressureRrGlobal() { return sTirePressureRr; }
+    public static int getTireTempFlGlobal() { return sTireTempFl; }
+    public static int getTireTempFrGlobal() { return sTireTempFr; }
+    public static int getTireTempRlGlobal() { return sTireTempRl; }
+    public static int getTireTempRrGlobal() { return sTireTempRr; }
 
     /** DC batarya voltajı — V. Önce BMS cache (canlı callback), yoksa CPM. */
     public static float getDcVoltage() {

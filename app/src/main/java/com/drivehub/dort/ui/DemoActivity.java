@@ -289,23 +289,23 @@ public class DemoActivity extends AppCompatActivity {
         updateDoorLockStatus();
     }
 
-    /** MG4Hardware TRACK_SENSOR_* — CarPropertyManager global area (Demo). */
+    /** Ivme / fren / lastik: MG4ControlService runMainTask önbelleği; ADAS/OBD doğrudan okuma. */
     private void refreshTrackSensors() {
         TextView tv = findViewById(R.id.tvTrackSensors);
         if (tv == null) return;
         StringBuilder sb = new StringBuilder(900);
-        appendTrackFloat(sb, MG4Hardware.PROP_SENSOR_ACCEL_LATERAL, "Yanal ivme");
-        appendTrackFloat(sb, MG4Hardware.PROP_SENSOR_ACCEL_PORTRAIT, "Boyuna ivme");
-        appendTrackInt(sb, MG4Hardware.PROP_SENSOR_BRAKE_PEDAL_PRESSURE, "Fren basıncı kPa");
-        appendTrackFloat(sb, MG4Hardware.PROP_SENSOR_WHEEL_ANGLE, "Direksiyon °");
-        appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_FL, "Lastik sıcaklık ön sol °");
-        appendTrackInt(sb, MG4Hardware.PROP_TIRE_PRESSURE_FL, "Lastik Basınç ön sol kpa");
-        appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_FR, "Lastik sıcaklık ön sağ °");
-        appendTrackInt(sb, MG4Hardware.PROP_TIRE_PRESSURE_FR, "Lastik Basınç ön sağ kpa");
-        appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_RL, "Lastik sıcaklık arka sol °");
-        appendTrackInt(sb, MG4Hardware.PROP_TIRE_PRESSURE_RL, "Lastik Basınç arka sol kpa");
-        appendTrackInt(sb, MG4Hardware.PROP_TIRE_TEMP_RR, "Lastik sıcaklık arka sağ °");
-        appendTrackInt(sb, MG4Hardware.PROP_TIRE_PRESSURE_RR, "Lastik Basınç arka sağ kpa");
+        appendCachedFloat(sb, MG4Hardware.getSensorAccelLateralGlobal(), "Yanal ivme");
+        appendCachedFloat(sb, MG4Hardware.getSensorAccelPortraitGlobal(), "Boyuna ivme");
+        appendCachedTrackInt(sb, MG4Hardware.getSensorBrakePedalPressureGlobal(), "Fren basıncı kPa");
+        appendCachedFloat(sb, MG4Hardware.getSensorWheelAngleGlobal(), "Direksiyon °");
+        appendCachedTrackInt(sb, MG4Hardware.getTireTempFlGlobal(), "Lastik sıcaklık ön sol °");
+        appendCachedTrackInt(sb, MG4Hardware.getTirePressureFlGlobal(), "Lastik Basınç ön sol kpa");
+        appendCachedTrackInt(sb, MG4Hardware.getTireTempFrGlobal(), "Lastik sıcaklık ön sağ °");
+        appendCachedTrackInt(sb, MG4Hardware.getTirePressureFrGlobal(), "Lastik Basınç ön sağ kpa");
+        appendCachedTrackInt(sb, MG4Hardware.getTireTempRlGlobal(), "Lastik sıcaklık arka sol °");
+        appendCachedTrackInt(sb, MG4Hardware.getTirePressureRlGlobal(), "Lastik Basınç arka sol kpa");
+        appendCachedTrackInt(sb, MG4Hardware.getTireTempRrGlobal(), "Lastik sıcaklık arka sağ °");
+        appendCachedTrackInt(sb, MG4Hardware.getTirePressureRrGlobal(), "Lastik Basınç arka sağ kpa");
         appendTrackFloat(sb, MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST, "tehlikeli nesne boyuna mesafe");
         appendTrackFloat(sb, MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLATRLTVDIST, "tehlikeli nesne yanal mesafe");
         appendObdRequestInt(sb, MG4Hardware.PROP_OBD_SOC, "OBD SOC");
@@ -329,16 +329,20 @@ public class DemoActivity extends AppCompatActivity {
         sb.append(String.format(Locale.US, "%s: %s%n", label, v));
     }
 
-    private static void appendTrackFloat(StringBuilder sb, int propId, String label) {
-        float f = MG4Hardware.readTrackSensorFloat(propId);
+    private static void appendCachedFloat(StringBuilder sb, float f, String label) {
         String v = Float.isNaN(f) ? "--" : String.format(Locale.US, "%.4f", f);
         sb.append(String.format(Locale.US, "%s: %s%n", label, v));
     }
 
-    private static void appendTrackInt(StringBuilder sb, int propId, String label) {
-        int i = MG4Hardware.readTrackSensorInt(propId);
-        //String v = (i < 0) ? "--" : String.valueOf(i);
-        String v = String.valueOf(i);
+    /** CPM Integer track alanları (fren, lastik); okunamadı (i negatif) ise --. */
+    private static void appendCachedTrackInt(StringBuilder sb, int i, String label) {
+        String v = (i < 0) ? "--" : String.valueOf(i);
+        sb.append(String.format(Locale.US, "%s: %s%n", label, v));
+    }
+
+    private static void appendTrackFloat(StringBuilder sb, int propId, String label) {
+        float f = MG4Hardware.readTrackSensorFloat(propId);
+        String v = Float.isNaN(f) ? "--" : String.format(Locale.US, "%.4f", f);
         sb.append(String.format(Locale.US, "%s: %s%n", label, v));
     }
 
