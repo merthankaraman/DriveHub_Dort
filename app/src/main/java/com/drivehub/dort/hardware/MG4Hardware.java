@@ -1362,12 +1362,12 @@ public class MG4Hardware {
     private static volatile int dtHourscounter1 = 0;
 
     /**
-     * Serviste 100ms'de bir çağrılır:
+     * Serviste 30ms'de bir çağrılır:
      *  - DC/AC güçleri oku
      *  - Enerjiyi ve mesafeyi entegre et
      *  - Global önbelleğe (sDcKw, sTripEnergyKwh, sTripDistanceKm, vb.) yaz
      */
-    public static void run100msTask() {
+    public static void runMainTask() {
         float speedKmh_raw = getSpeedKmh();
         float speedKmh = speedKmh_raw * (speedKmh_raw >= 80 ? 1.0035f : 1f);
         if (speedKmh < 1.0f) speedKmh = 0f;

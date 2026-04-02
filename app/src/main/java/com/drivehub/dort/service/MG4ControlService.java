@@ -204,7 +204,7 @@ public class MG4ControlService extends Service {
     };
 
     /** 100 ms'lik ana görev periyodu (enerji, mesafe, hazır/şarj durumu vb.). */
-    private static final int MAIN_100MS_TASK_INTERVAL_MS = 30;
+    private static final int MAIN_TASK_INTERVAL_MS = 30;
     private static final int SOUND_TASK_MS = 30;
     private static final long TELEMETRY_INTERVAL_MS = 30L;
     /** Hayat boyu km/kWh'ı bu kadar integrasyon sonrası bir kez hafızaya yaz (≈30 sn). */
@@ -219,7 +219,7 @@ public class MG4ControlService extends Service {
     private final Runnable mConsumptionIntegrationRunnable = new Runnable() {
         @Override
         public void run() {
-            MG4Hardware.run100msTask();
+            MG4Hardware.runMainTask();
 
             long now = System.currentTimeMillis();
             if (now - mLastTelemetryBroadcastTime >= TELEMETRY_INTERVAL_MS) {
@@ -240,7 +240,7 @@ public class MG4ControlService extends Service {
                 MG4Hardware.persistLifetimeToPrefs(MG4ControlService.this);
             }
             updateDriveSessionFromReady();
-            mConsumptionHandler.postDelayed(this, MAIN_100MS_TASK_INTERVAL_MS);
+            mConsumptionHandler.postDelayed(this, MAIN_TASK_INTERVAL_MS);
         }
     };
     private final Handler mSoundHandler = new Handler(Looper.getMainLooper());
