@@ -12,6 +12,7 @@ import android.util.Log;
 
 import com.drivehub.dort.R;
 import com.drivehub.dort.hardware.MG4Hardware;
+import com.drivehub.dort.service.MG4ControlService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -1062,33 +1063,32 @@ public class EngineSoundManager {
         getInstance(context).broadcastTelemetryIfNeeded();
     }
     public void broadcastTelemetryIfNeeded() {
-
         try {
             float lMotorMaxPower = mMotorMaxPower + 20f;
+            float rpm, speed, dcKw_kadran, throttle;
+            int gear;
+            if (MG4Hardware.isSoundEnabled() && MG4Hardware.isVehicleReady()) {
+                rpm = mCurrentRpm;
+                speed = mCurrentSpeedKmh;
+                dcKw_kadran = mCurrentDcPowerKw;
+                throttle = mSimulatedThrottle;
+                gear = mCurrentGear;
+            } else {
+                rpm = -1f;
+                throttle = 0f;
+                gear = 0;
+                speed = MG4Hardware.getSpeedForEngine();
+                float dcKw = MG4Hardware.getDcKwGlobal();
+                dcKw_kadran = Float.isNaN(dcKw) ? 0f : (speed == 0 && dcKw < 0f ? 0f : dcKw);
+            }
             com.drivehub.dort.telemetry.TelemetryHolder.update(
-                    mCurrentRpm,
-                    mCurrentSpeedKmh,
-                    mCurrentGear,
-                    mSimulatedThrottle,
-                    mCurrentDcPowerKw,
+                    rpm,
+                    speed,
+                    gear,
+                    throttle,
+                    dcKw_kadran,
                     mMaxRpm,
                     lMotorMaxPower
-            );
-            mContext.getContentResolver().notifyChange(com.drivehub.dort.telemetry.TelemetryProvider.CONTENT_URI, null);
-        } catch (Throwable ignored) {
-        }
-    }
-
-    /** Ses kapalıyken Kadran için sadece hız ve güç gönderilir; RPM = 0. */
-    public static void broadcastTelemetryFromRaw(Context context, float speedKmh, float dcPowerKw) {
-        if (context == null) return;
-        getInstance(context).broadcastTelemetryFromRaw(speedKmh, dcPowerKw);
-    }
-    public void broadcastTelemetryFromRaw(float speedKmh, float dcPowerKw) {
-        try {
-            float lMotorMaxPower = mMotorMaxPower + 20f;
-            com.drivehub.dort.telemetry.TelemetryHolder.update(
-                    -1f, speedKmh, 0, 0f, dcPowerKw, mMaxRpm, lMotorMaxPower
             );
             mContext.getContentResolver().notifyChange(com.drivehub.dort.telemetry.TelemetryProvider.CONTENT_URI, null);
         } catch (Throwable ignored) {
