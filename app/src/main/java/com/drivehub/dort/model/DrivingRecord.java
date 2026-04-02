@@ -6,6 +6,10 @@ package com.drivehub.dort.model;
 public class DrivingRecord {
     public final long startMs;
     public final long endMs;
+    /** Başlangıç SOC (%); eski kayıtlarda yoksa {@link Float#NaN}. */
+    public final float startSoc;
+    /** Bitiş SOC (%); eski kayıtlarda yoksa {@link Float#NaN}. */
+    public final float endSoc;
     public final float distanceKm;
     public final float energyKwh;
     public final float avgSpeedKmh;
@@ -13,12 +17,16 @@ public class DrivingRecord {
 
     public DrivingRecord(long startMs,
                          long endMs,
+                         float startSoc,
+                         float endSoc,
                          float distanceKm,
                          float energyKwh,
                          float avgSpeedKmh,
                          float avgKwhPer100km) {
         this.startMs = startMs;
         this.endMs = endMs;
+        this.startSoc = startSoc;
+        this.endSoc = endSoc;
         this.distanceKm = distanceKm;
         this.energyKwh = energyKwh;
         this.avgSpeedKmh = avgSpeedKmh;

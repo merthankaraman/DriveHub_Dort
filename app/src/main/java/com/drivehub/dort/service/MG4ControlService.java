@@ -211,6 +211,8 @@ public class MG4ControlService extends Service {
     private static final int LIFETIME_PERSIST_MS = 30000;
     private final Handler mConsumptionHandler = new Handler(Looper.getMainLooper());
     private static long mDriveStartWallMs = 0L;
+    /** Motor çalışır (READY) oturumu başlarken SOC; kayıt için. */
+    private static float mDriveSessionStartSoc = Float.NaN;
     private static volatile boolean sDriveSessionActive = false;
     private static volatile long    sDriveSessionEndWallMs = 0L;
     private long mLastConsumptionLoop = 0;
@@ -287,6 +289,7 @@ public class MG4ControlService extends Service {
             sDriveSessionActive = true;
             mDriveStartWallMs = nowWall;
             sDriveSessionEndWallMs = 0L;
+            mDriveSessionStartSoc = MG4Hardware.getSoc();
             MG4Hardware.resetDriveGraphCounters();
             return;
         }
@@ -300,14 +303,18 @@ public class MG4ControlService extends Service {
             double durationMinutes = (nowWall - mDriveStartWallMs) / 60000.0;
 
             if ((distKm > 0.01) && durationMinutes >= 5.0) {
+                float endSoc = MG4Hardware.getSoc();
                 com.drivehub.dort.util.DrivingHistory.addSession(
                         getApplicationContext(),
                         mDriveStartWallMs,
                         nowWall,
                         (float) distKm,
-                        (float) energyKwh
+                        (float) energyKwh,
+                        mDriveSessionStartSoc,
+                        endSoc
                 );
             }
+            mDriveSessionStartSoc = Float.NaN;
         }
     }
 

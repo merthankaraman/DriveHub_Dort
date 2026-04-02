@@ -323,10 +323,13 @@
     <string name="driving_history_title">Driving history</string>
     <string name="driving_history_table_start">Start</string>
     <string name="driving_history_table_end">End</string>
+    <string name="driving_history_table_soc_start">Start SOC</string>
+    <string name="driving_history_table_soc_end">End SOC</string>
     <string name="driving_history_table_distance">Distance (km)</string>
     <string name="driving_history_table_energy">Energy (kWh)</string>
     <string name="driving_history_table_avg_consumption">Avg (kWh/100km)</string>
     <string name="driving_history_table_duration">Duration</string>
+    <string name="driving_history_csv_header">Start,End,StartSoc,EndSoc,DistanceKm,EnergyKwh,AvgSpeedKmh,AvgKwhPer100km,Hours\n</string>
     <string name="driving_history_btn_export">Export CSV</string>
     <string name="driving_history_btn_clear">Clear history</string>
     <string name="driving_history_confirm_clear">Are you sure you want to clear all driving history?</string>

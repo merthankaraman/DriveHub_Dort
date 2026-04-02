@@ -324,10 +324,14 @@
     <string name="driving_history_title">Sürüş geçmişi</string>
     <string name="driving_history_table_start">Başlangıç</string>
     <string name="driving_history_table_end">Bitiş</string>
+    <string name="driving_history_table_soc_start">Başlangıç Şarj</string>
+    <string name="driving_history_table_soc_end">Bitiş Şarj</string>
     <string name="driving_history_table_distance">Yol (km)</string>
     <string name="driving_history_table_energy">Enerji (kWh)</string>
     <string name="driving_history_table_avg_consumption">Ort. (kWh/100km)</string>
     <string name="driving_history_table_duration">Süre</string>
+    <!-- CSV ilk satır (virgülle ayrılmış başlıklar); Excel için ASCII alt çizgi kullanıldı -->
+    <string name="driving_history_csv_header">Başlangıç,Bitiş,Başlangıç_SOC,Bitiş_SOC,Yol_km,Enerji_kWh,Ort_Hız_kmh,Ort_Tüketim_kWh100km,Saat\n</string>
     <string name="driving_history_btn_export">CSV Dışa Aktar</string>
     <string name="driving_history_btn_clear">Geçmişi Sil</string>
     <string name="driving_history_confirm_clear">Tüm sürüş geçmişini silmek istediğine emin misin?</string>
