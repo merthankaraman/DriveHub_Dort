@@ -52,12 +52,12 @@ public class MG4Hardware {
      * Kaynak: saic_saicmaintenance trackmodesdk + MG4_BINDER_REFERENCE.md bölüm 14.
      * OEM ekranda ör. yanal ivme, güç yüzdesi, hız; {@code DRIVE_EFFICIENCY} Track DB'de power kolonuna yazılır, anlık motor kW değildir.
      */
-    public static final int PROP_SENSOR_ACCEL_LATERAL              = 0x216015A5; // 559945125 — Yanal ivme (g/9.8 ölçek); OEM: 侧向加速度
-    public static final int PROP_SENSOR_ACCEL_PORTRAIT           = 0x21601561; // 559945057 — Boyuna ivme (portrait eksen); OEM: 纵向加速度
+    public static final int PROP_SENSOR_ACCEL_LATERAL              = 0x216015A5; // 559945125 — Yanal ivme (m/s2)
+    public static final int PROP_SENSOR_ACCEL_PORTRAIT           = 0x21601561; // 559945057 — Boyuna ivme (m/s2)
     public static final int PROP_SENSOR_DRIVE_EFFICIENCY            = 0x2140159C; // 557847964 — güç yüzdesi (0–100);
     public static final int PROP_SENSOR_ACC_PEDAL_POS               = 0x21601564; // 559945060
-    public static final int PROP_SENSOR_BRAKE_PEDAL_PRESSURE       = 0x2140159D; // 557847965 — Fren pedal basıncı (int); OEM: 制动开度
-    public static final int PROP_SENSOR_WHEEL_ANGLE                = 0x21601563; // 559945059 — Direksiyon tekerlek açısı; Track DB'de steering_speed kolonuna map; OEM: 转向角度
+    public static final int PROP_SENSOR_BRAKE_PEDAL_PRESSURE       = 0x2140159D; // 557847965 — Fren pedal basıncı (kpa)(int)
+    public static final int PROP_SENSOR_WHEEL_ANGLE                = 0x21601563; // 559945059 — Direksiyon tekerlek açısı
 
     /**
      * Lastik basınç/sıcaklıkları — {@code YFVehicleProperty} / CarSensorManager (SaicAdapterService stub);
