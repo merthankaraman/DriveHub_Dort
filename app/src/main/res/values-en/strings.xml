@@ -139,7 +139,7 @@
     <string name="charging_history_yes">Yes</string>
     <string name="charging_history_no">No</string>
     <string name="charging_history_toast_cleared">History cleared.</string>
-    <string name="charging_history_total_format">Total: AC %.2f kWh · DC %.2f kWh</string>
+    <string name="charging_history_total_format">Total: %.2f kWh AC. %.2f kWh DC (station). %.2f kWh to battery</string>
     <string name="duration_format_hms">%d h %d min %d s</string>
     <string name="duration_format_ms">%d min %d s</string>
     <!-- CSV export headers (locale-aware) -->
@@ -340,7 +340,7 @@
     <string name="driving_history_month_total_with_avg_format">Month total: %.2f km, %.3f kWh (Avg: %.1f kWh/100km)</string>
 
     <!-- Charging history month total -->
-    <string name="charging_history_month_total_format">Month total: %.2f kWh AC, %.2f kWh DC</string>
+    <string name="charging_history_month_total_format">Month total: %.2f kWh AC. %.2f kWh DC (station). %.2f kWh to battery</string>
 
     <!-- Charging power full-screen graph -->
     <string name="charging_graph_open">Open graph</string>

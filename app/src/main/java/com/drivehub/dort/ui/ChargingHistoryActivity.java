@@ -190,10 +190,14 @@ public class ChargingHistoryActivity extends AppCompatActivity {
                 }
 
                 if (multiple) {
-                    float sumAc = 0f, sumDc = 0f;
+                    float sumAcStation = 0f, sumDcStation = 0f, sumBatt = 0f;
                     for (ChargingRecord r : dayList) {
-                        sumAc += r.acKwh;
-                        sumDc += r.dcKwh;
+                        sumBatt += r.dcKwh;
+                        if (ChargingRecord.CHARGE_TYPE_AC.equals(r.chargeType)) {
+                            sumAcStation += r.acKwh;
+                        } else if (ChargingRecord.CHARGE_TYPE_DC.equals(r.chargeType)) {
+                            sumDcStation += r.acKwh;
+                        }
                     }
                     LinearLayout bar = new LinearLayout(this);
                     bar.setOrientation(LinearLayout.HORIZONTAL);
@@ -203,7 +207,7 @@ public class ChargingHistoryActivity extends AppCompatActivity {
                     bar.setPadding(pad, pad, pad, pad);
                     bar.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                     TextView barText = new TextView(this);
-                    barText.setText(getString(R.string.charging_history_total_format, sumAc, sumDc));
+                    barText.setText(getString(R.string.charging_history_total_format, sumAcStation, sumDcStation, sumBatt));
                     barText.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
                     barText.setTextSize(12);
                     bar.addView(barText);
@@ -215,11 +219,15 @@ public class ChargingHistoryActivity extends AppCompatActivity {
                 mHistoryTableBody.addView(daySpacer);
             }
 
-            // Ay toplamı (AC/DC kWh)
-            float monthSumAc = 0f, monthSumDc = 0f;
+            // Ay toplamı: AC şarj (istasyon) · DC şarj (istasyon)
+            float monthSumAcStation = 0f, monthSumDcStation = 0f, monthSumBatt = 0f;
             for (ChargingRecord r : monthList) {
-                monthSumAc += r.acKwh;
-                monthSumDc += r.dcKwh;
+                monthSumBatt += r.dcKwh;
+                if (ChargingRecord.CHARGE_TYPE_AC.equals(r.chargeType)) {
+                    monthSumAcStation += r.acKwh;
+                } else if (ChargingRecord.CHARGE_TYPE_DC.equals(r.chargeType)) {
+                    monthSumDcStation += r.acKwh;
+                }
             }
             LinearLayout monthBar = new LinearLayout(this);
             monthBar.setOrientation(LinearLayout.HORIZONTAL);
@@ -229,7 +237,8 @@ public class ChargingHistoryActivity extends AppCompatActivity {
             monthBar.setPadding(padMonth, padMonth, padMonth, padMonth);
             monthBar.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             TextView monthBarText = new TextView(this);
-            monthBarText.setText(getString(R.string.charging_history_month_total_format, monthSumAc, monthSumDc));
+            monthBarText.setText(getString(R.string.charging_history_month_total_format,
+                    monthSumAcStation, monthSumDcStation, monthSumBatt));
             monthBarText.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
             monthBarText.setTextSize(12);
             monthBar.addView(monthBarText);

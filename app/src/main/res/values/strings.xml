@@ -137,7 +137,7 @@
     <string name="charging_history_yes">Evet</string>
     <string name="charging_history_no">Hayır</string>
     <string name="charging_history_toast_cleared">Geçmiş silindi.</string>
-    <string name="charging_history_total_format">Toplam: AC %.2f kWh · DC %.2f kWh</string>
+    <string name="charging_history_total_format">Toplam: %.2f kWh AC şarj. %.2f kWh DC şarj. %.2f kWh Gerçek şarj</string>
     <string name="duration_format_hms">%d saat %d dakika %d saniye</string>
     <string name="duration_format_ms">%d dakika %d saniye</string>
     <!-- CSV dışa aktarma başlıkları (dile göre) -->
@@ -341,7 +341,7 @@
     <string name="driving_history_month_total_with_avg_format">Ay toplamı: %.2f km, %.3f kWh (Ort: %.1f kWh/100km)</string>
 
     <!-- Charging history month total -->
-    <string name="charging_history_month_total_format">Ay toplamı: %.2f kWh AC, %.2f kWh DC</string>
+    <string name="charging_history_month_total_format">Ay toplamı: %.2f kWh AC şarj. %.2f kWh DC şarj. %.2f Gerçek şarj</string>
 
     <!-- Charging power full-screen graph -->
     <string name="charging_graph_open">Grafiği aç</string>
