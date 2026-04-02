@@ -1065,17 +1065,15 @@ public class EngineSoundManager {
     public void broadcastTelemetryIfNeeded() {
         try {
             float lMotorMaxPower = mMotorMaxPower + 20f;
-            float rpm, speed, dcKw_kadran, throttle;
+            float rpm, speed, dcKw_kadran;
             int gear;
             if (MG4Hardware.isSoundEnabled() && MG4Hardware.isVehicleReady()) {
                 rpm = mCurrentRpm;
                 speed = mCurrentSpeedKmh;
                 dcKw_kadran = mCurrentDcPowerKw;
-                throttle = mSimulatedThrottle;
                 gear = mCurrentGear;
             } else {
                 rpm = -1f;
-                throttle = 0f;
                 gear = 0;
                 speed = MG4Hardware.getSpeedForEngine();
                 float dcKw = MG4Hardware.getDcKwGlobal();
@@ -1085,10 +1083,23 @@ public class EngineSoundManager {
                     rpm,
                     speed,
                     gear,
-                    throttle,
+                    MG4Hardware.getVehicleACCPedalPosGlobal(),
                     dcKw_kadran,
                     mMaxRpm,
-                    lMotorMaxPower
+                    lMotorMaxPower,
+                    MG4Hardware.getTirePressureFlGlobal(),
+                    MG4Hardware.getTirePressureFrGlobal(),
+                    MG4Hardware.getTirePressureRlGlobal(),
+                    MG4Hardware.getTirePressureRrGlobal(),
+                    MG4Hardware.getTireTempFlGlobal(),
+                    MG4Hardware.getTireTempFrGlobal(),
+                    MG4Hardware.getTireTempRlGlobal(),
+                    MG4Hardware.getTireTempRrGlobal(),
+                    MG4Hardware.getSensorWheelAngleGlobal(),
+                    MG4Hardware.getSensorBrakePedalPressureGlobal(),
+                    MG4Hardware.getSensorAccelPortraitGlobal(),
+                    MG4Hardware.getSensorAccelLateralGlobal(),
+                    MG4Hardware.getVehiclePowerPercGlobal()
             );
             mContext.getContentResolver().notifyChange(com.drivehub.dort.telemetry.TelemetryProvider.CONTENT_URI, null);
         } catch (Throwable ignored) {
