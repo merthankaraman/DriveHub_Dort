@@ -182,6 +182,8 @@ public class ChargingHistoryActivity extends AppCompatActivity {
                     row.setPadding(0, dp4, dp12, dp4);
                     addCell(row, 1.2f, SDF_ROW.format(new Date(r.startMs)));
                     addCell(row, 1.2f, SDF_ROW.format(new Date(r.endMs)));
+                    addCell(row, 0.55f, formatSoc(r.startSoc));
+                    addCell(row, 0.55f, formatSoc(r.endSoc));
                     addCell(row, 0.45f, formatChargeTypeLabel(r.chargeType));
                     addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.acKwh));
                     addCell(row, 0.7f, String.format(Locale.US, "%.2f", r.dcKwh));
@@ -257,6 +259,13 @@ public class ChargingHistoryActivity extends AppCompatActivity {
         if (mPrefs != null && mPrefsListener != null) {
             mPrefs.unregisterOnSharedPreferenceChangeListener(mPrefsListener);
         }
+    }
+
+    private String formatSoc(float soc) {
+        if (Float.isNaN(soc)) {
+            return "—";
+        }
+        return String.format(Locale.US, "%%%.1f", soc);
     }
 
     private String formatChargeTypeLabel(String code) {

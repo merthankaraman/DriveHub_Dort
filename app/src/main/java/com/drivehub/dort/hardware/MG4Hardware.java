@@ -284,6 +284,8 @@ public class MG4Hardware {
     private static final long TIRE_SENSORS_POLL_INTERVAL_MS = 5000L;
     // Şarj süresi için basit sayaç — şarj başladığı anda sistem saatini tutar
     private static volatile long  sChargingStartWallMs = 0L;
+    /** Şarj seansı başında SOC (%); seans yoksa veya bilinmiyorsa NaN. */
+    private static volatile float sChargingStartSoc = Float.NaN;
     // READY durumu (100ms polling ile güncellenen cache)
     private static volatile boolean sVehicleReady       = false;
     private static volatile int sVehicleIgnition        = 0;
@@ -363,6 +365,7 @@ public class MG4Hardware {
         sStationDcChargeEnergyKwh  = 0f;
         sLastBmsEventMs      = 0L;
         sChargingStartWallMs = 0L;
+        sChargingStartSoc = Float.NaN;
         sAppContext          = null;
         sInitialized        = false;
         sCarBindAttempted   = false;
@@ -1770,6 +1773,7 @@ public class MG4Hardware {
         if (!isCharging() || sChargingStartWallMs != 0L) return;
         long now = System.currentTimeMillis();
         sChargingStartWallMs = now;
+        sChargingStartSoc = getSoc();
         if (sAppContext != null) {
             com.drivehub.dort.util.ChargingHistory.saveChargingStart(sAppContext, now);
             if (sLogEnabled) Log.i(TAG, "Şarj başlangıcı kaydedildi (BMS) → persist");
@@ -1796,6 +1800,7 @@ public class MG4Hardware {
         // Şarj görüldüğünde ve henüz başlangıç yoksa: hep "şimdi"den başlat (ekran uyandığında 0 görünsün).
         if (charging && sChargingStartWallMs == 0L) {
             sChargingStartWallMs = now;
+            sChargingStartSoc = getSoc();
             if (sAppContext != null) com.drivehub.dort.util.ChargingHistory.saveChargingStart(sAppContext, now);
         }
         if (charging) {
@@ -1812,9 +1817,13 @@ public class MG4Hardware {
     /** Şarj başlangıç zamanı (wall clock ms). Geçmiş kaydı için. */
     public static long getChargingStartWallMs() { return sChargingStartWallMs; }
 
+    /** Şarj seansı başındaki SOC (%). Bilinmiyorsa NaN. */
+    public static float getChargingStartSoc() { return sChargingStartSoc; }
+
     /** Şarj bittiğinde kayıt alındıktan sonra çağrılır; sonraki seans için sayacı sıfırlar. */
     public static void resetSessionAfterSave() {
         sChargingStartWallMs = 0L;
+        sChargingStartSoc = Float.NaN;
         sAcChargeEnergyKwh         = 0f;
         sDcChargeEnergyKwh         = 0f;
         sStationDcChargeEnergyKwh  = 0f;
@@ -1829,6 +1838,7 @@ public class MG4Hardware {
         sStationDcChargeEnergyKwh  = 0f;
         sLastBmsEventMs      = 0L;
         sChargingStartWallMs = 0L;
+        sChargingStartSoc = Float.NaN;
         if (sLogEnabled) Log.i(TAG, "resetEnergy() çağrıldı");
     }
 

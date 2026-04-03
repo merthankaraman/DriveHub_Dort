@@ -45,7 +45,9 @@ public final class ChargingHistory {
         String chargeType = (acKwhRaw >= 0.01f)
                 ? ChargingRecord.CHARGE_TYPE_AC
                 : ChargingRecord.CHARGE_TYPE_DC;
-        ChargingRecord record = new ChargingRecord(startMs, endMs, acKwh, dcKwh, chargeType);
+        float startSoc = MG4Hardware.getChargingStartSoc();
+        float endSoc = MG4Hardware.getSoc();
+        ChargingRecord record = new ChargingRecord(startMs, endMs, acKwh, dcKwh, chargeType, startSoc, endSoc);
         List<ChargingRecord> list = load(context);
         list.add(0, record); // en yeni başta
         save(context, list);
@@ -68,12 +70,16 @@ public final class ChargingHistory {
                             ? ChargingRecord.CHARGE_TYPE_AC
                             : ChargingRecord.CHARGE_TYPE_DC;
                 }
+                float startSoc = o.has("startSoc") ? (float) o.getDouble("startSoc") : Float.NaN;
+                float endSoc = o.has("endSoc") ? (float) o.getDouble("endSoc") : Float.NaN;
                 out.add(new ChargingRecord(
                         o.getLong("startMs"),
                         o.getLong("endMs"),
                         chargestationkwh,
                         (float) o.getDouble("dcKwh"),
-                        chargeType));
+                        chargeType,
+                        startSoc,
+                        endSoc));
             }
         } catch (JSONException e) {
             // boş veya bozuk → boş liste
@@ -91,6 +97,8 @@ public final class ChargingHistory {
                 o.put("acKwh", r.acKwh);
                 o.put("dcKwh", r.dcKwh);
                 o.put("chargeType", r.chargeType);
+                if (!Float.isNaN(r.startSoc)) o.put("startSoc", (double) r.startSoc);
+                if (!Float.isNaN(r.endSoc)) o.put("endSoc", (double) r.endSoc);
                 arr.put(o);
             } catch (JSONException ignored) {}
         }
@@ -139,6 +147,8 @@ public final class ChargingHistory {
         try (FileWriter fw = new FileWriter(out, false)) {
             String header = context.getString(R.string.csv_header_start) + ","
                     + context.getString(R.string.csv_header_end) + ","
+                    + context.getString(R.string.csv_header_soc_start) + ","
+                    + context.getString(R.string.csv_header_soc_end) + ","
                     + context.getString(R.string.csv_header_charge_type) + ","
                     + context.getString(R.string.csv_header_ac_kwh) + ","
                     + context.getString(R.string.csv_header_dc_kwh) + ","
@@ -147,9 +157,11 @@ public final class ChargingHistory {
             for (ChargingRecord r : list) {
                 String start = sdf.format(new java.util.Date(r.startMs));
                 String end = sdf.format(new java.util.Date(r.endMs));
+                String ss = Float.isNaN(r.startSoc) ? "" : String.format(java.util.Locale.US, "%.1f", r.startSoc);
+                String es = Float.isNaN(r.endSoc) ? "" : String.format(java.util.Locale.US, "%.1f", r.endSoc);
                 String line = String.format(java.util.Locale.US,
-                        "\"%s\",\"%s\",\"%s\",%.3f,%.3f,%.3f\n",
-                        start, end, r.chargeType, r.acKwh, r.dcKwh, r.getDurationHours());
+                        "\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%.3f,%.3f,%.3f\n",
+                        start, end, ss, es, r.chargeType, r.acKwh, r.dcKwh, r.getDurationHours());
                 fw.write(line);
             }
             fw.flush();

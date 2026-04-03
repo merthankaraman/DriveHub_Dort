@@ -145,6 +145,8 @@
     <!-- CSV export headers (locale-aware) -->
     <string name="csv_header_start">Start</string>
     <string name="csv_header_end">End</string>
+    <string name="csv_header_soc_start">Start_SOC</string>
+    <string name="csv_header_soc_end">End_SOC</string>
     <string name="csv_header_charge_type">Charge_type</string>
     <string name="csv_header_ac_kwh">AC_kWh</string>
     <string name="csv_header_dc_kwh">DC_kWh</string>

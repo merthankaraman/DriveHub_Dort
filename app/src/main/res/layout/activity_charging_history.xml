@@ -68,6 +68,24 @@
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="0.55"
+            android:text="@string/driving_history_table_soc_start"
+            android:textColor="@color/status_value"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.55"
+            android:text="@string/driving_history_table_soc_end"
+            android:textColor="@color/status_value"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="0.45"
             android:text="@string/charging_history_table_type"
             android:textColor="@color/status_value"

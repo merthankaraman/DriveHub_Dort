@@ -1,7 +1,7 @@
 package com.drivehub.dort.model;
 
 /**
- * Tek bir şarj seansı: başlangıç/bitiş zamanı, şarj tipi (AC/DC) ve enerji sütunları.
+ * Tek bir şarj seansı: başlangıç/bitiş zamanı, SOC, şarj tipi (AC/DC) ve enerji sütunları.
  */
 public class ChargingRecord {
 
@@ -10,17 +10,23 @@ public class ChargingRecord {
 
     public final long startMs;
     public final long endMs;
+    /** Başlangıç SOC (%); eski kayıtlarda yoksa {@link Float#NaN}. */
+    public final float startSoc;
+    /** Bitiş SOC (%); eski kayıtlarda yoksa {@link Float#NaN}. */
+    public final float endSoc;
     public final float acKwh;
     public final float dcKwh;
     /** {@link #CHARGE_TYPE_AC} veya {@link #CHARGE_TYPE_DC} */
     public final String chargeType;
-
-    public ChargingRecord(long startMs, long endMs, float acKwh, float dcKwh, String chargeType) {
+    public ChargingRecord(long startMs, long endMs, float acKwh, float dcKwh, String chargeType,
+                          float startSoc, float endSoc) {
         this.startMs = startMs;
         this.endMs = endMs;
         this.acKwh = acKwh;
         this.dcKwh = dcKwh;
         this.chargeType = (chargeType != null && !chargeType.isEmpty()) ? chargeType : CHARGE_TYPE_DC;
+        this.startSoc = startSoc;
+        this.endSoc = endSoc;
     }
 
     /** Süre — saat cinsinden (bitiş - başlangıç) */

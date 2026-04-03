@@ -143,6 +143,8 @@
     <!-- CSV dışa aktarma başlıkları (dile göre) -->
     <string name="csv_header_start">Başlangıç</string>
     <string name="csv_header_end">Bitiş</string>
+    <string name="csv_header_soc_start">Başlangıç_Şarj</string>
+    <string name="csv_header_soc_end">Bitiş_Şarj</string>
     <string name="csv_header_charge_type">Sarj_tipi</string>
     <string name="csv_header_ac_kwh">AC_kWh</string>
     <string name="csv_header_dc_kwh">DC_kWh</string>

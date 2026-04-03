@@ -188,7 +188,7 @@ public class MG4ControlService extends Service {
 
     /** Şarj bittiğinde oturumu hafızaya kaydet; uygulama kapalı veya başka ekrandayken de çalışır. */
     private static final long CHARGING_CHECK_INTERVAL_MS = 10_000L;
-    private boolean mAUTO_NIGHT_MODE_ENABLED = true;
+    private boolean mAUTO_NIGHT_MODE_ENABLED = false;
     private boolean mSystemWasAuto = false;
     private final Handler mChargingCheckHandler = new Handler(Looper.getMainLooper());
     private final Runnable mChargingCheckRunnable = new Runnable() {
