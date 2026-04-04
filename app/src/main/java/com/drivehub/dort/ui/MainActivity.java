@@ -2076,7 +2076,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         } else if (sinceStart) {
-            // Motor çalıştıktan itibaren: sDriveGraphDistanceKm, sDriveGraphEnergyKwh
+            // Motor çalıştıktan itibaren: drive graph mesafe/enerji (Kahan toplamları)
             if (mTvConsumptionTripKm != null) {
                 mTvConsumptionTripKm.setText(String.format(Locale.US, "%.3f km", driveGraphDistanceKm));
             }
