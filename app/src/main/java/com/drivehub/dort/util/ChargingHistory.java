@@ -36,18 +36,18 @@ public final class ChargingHistory {
         if (MG4Hardware.isChargingNow()) return false;
 
         long endMs = System.currentTimeMillis();
-        float acKwhRaw = MG4Hardware.getAcChargeEnergyKwh();
-        float dcKwh = MG4Hardware.getDcChargeEnergyKwh();
-        float stationDcKwh = MG4Hardware.getStationDcChargeEnergyKwh();
-        float acKwh = (acKwhRaw >= 0.01f)
+        double acKwhRaw = MG4Hardware.getAcChargeEnergyKwh();
+        double dcKwhD = MG4Hardware.getDcChargeEnergyKwh();
+        double stationDcKwh = MG4Hardware.getStationDcChargeEnergyKwh();
+        double acKwhD = (acKwhRaw >= 0.01)
                 ? acKwhRaw
-                : (stationDcKwh);
-        String chargeType = (acKwhRaw >= 0.01f)
+                : stationDcKwh;
+        String chargeType = (acKwhRaw >= 0.01)
                 ? ChargingRecord.CHARGE_TYPE_AC
                 : ChargingRecord.CHARGE_TYPE_DC;
         float startSoc = MG4Hardware.getChargingStartSoc();
         float endSoc = MG4Hardware.getSoc();
-        ChargingRecord record = new ChargingRecord(startMs, endMs, acKwh, dcKwh, chargeType, startSoc, endSoc);
+        ChargingRecord record = new ChargingRecord(startMs, endMs, (float) acKwhD, (float) dcKwhD, chargeType, startSoc, endSoc);
         List<ChargingRecord> list = load(context);
         list.add(0, record); // en yeni başta
         save(context, list);

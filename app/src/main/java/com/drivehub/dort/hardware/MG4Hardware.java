@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.drivehub.dort.model.DriveMode;
 import com.drivehub.dort.model.RegenLevel;
+import com.drivehub.dort.util.KahanSum;
 
 /**
  * MG4 EH32 — CarPropertyManager (reflection) ile araç kontrolü.
@@ -248,11 +249,7 @@ public class MG4Hardware {
     /** Eksik BMS parse metod uyarısı bir kez */
     private static volatile boolean sBmsParseWarningLogged = false;
     private static volatile boolean sBmsPropIdWarningLogged = false;
-    // Enerji birikimi — UI kapalı olsa bile servisin 100ms polling'inde güncellenir
-    private static volatile float sAcChargeEnergyKwh       = 0f;
-    private static volatile float sDcChargeEnergyKwh       = 0f;
-    /** DC istasyon: U_dc × I_beklenen (getDcCurrentExpected) trapez entegrali — kWh */
-    private static volatile float sStationDcChargeEnergyKwh = 0f;
+    // Şarj kWh birikimi — KahanSum (alanlar aşağıda trip/lifetime ile birlikte)
     private static volatile long  sLastBmsEventMs    = 0L;
 
     // 100ms polling ile güncellenen global ölçümler
@@ -360,9 +357,9 @@ public class MG4Hardware {
         sCachedDriveMode       = -1;
         sCachedRegenLevel      = -1;
         sBmsCache.clear();
-        sAcChargeEnergyKwh         = 0f;
-        sDcChargeEnergyKwh         = 0f;
-        sStationDcChargeEnergyKwh  = 0f;
+        sAcChargeEnergyKwhSum.reset();
+        sDcChargeEnergyKwhSum.reset();
+        sStationDcChargeEnergyKwhSum.reset();
         sLastBmsEventMs      = 0L;
         sChargingStartWallMs = 0L;
         sChargingStartSoc = Float.NaN;
@@ -1337,15 +1334,14 @@ public class MG4Hardware {
         return getIntPropertyCPM(PROP_GEAR, AREA_GLOBAL);
     }
     // -------------------------------------------------------------------------
-    // Enerji integrasyonu (serviste 100ms'de bir çalışır; uygulama açık olmasa da boot'tan itibaren)
-    // Sadece DC/AC kW üzerinden hesaplanır; consumption*hız tabanlı "sürüş gücü" kullanılmaz.
+    // Enerji integrasyonu (serviste periyodik; uygulama kapalı olsa da boot'tan itibaren)
+    // Sadece DC/AC kW üzerinden hesaplanır. Kümülatif kWh — {@link KahanSum} (double + telafi).
+    // Mesafe/saat — double doğrudan toplama (kullanıcı isteği: enerji sütunları).
     // -------------------------------------------------------------------------
-    private static volatile double sTripEnergyKwh = 0.0;
     private static volatile double sTripDistanceKm = 0.0;
     private static volatile double sTripHours = 0.0;
-    /** Hayat boyu km/kWh — trip gibi integral, periyodik hafızaya yazılır (sıfırlanmaz). */
+    /** Hayat boyu km — trip gibi integral, periyodik hafızaya yazılır (sıfırlanmaz). */
     private static volatile double sLifetimeKm = 0.0;
-    private static volatile double sLifetimeKwh = 0.0;
     /** Hayat boyu sürüş süresi — saat cinsinden (ortalama hız hesapları için). */
     private static volatile double sLifetimeHours = 0.0;
     private static final String PREF_NAME_LIFETIME = "drivehub_dort";
@@ -1354,19 +1350,28 @@ public class MG4Hardware {
     private static final String PREF_LIFETIME_HOURS = "consumption_lifetime_hours";
 
     // Kullanıcı tanımlı ek uzun dönem tüketim profilleri (Hayat boyu'dan bağımsız, ayrı ayrı sıfırlanabilir).
-    // Dizideki tüm slotlar (0..N-1) gerçek profil; Lifetime ayrı değişkenlerde tutulur.
     private static final int CONSUMPTION_PROFILE_SLOTS = 3; // Bu sayıyı arttırmak yeni profiller ekler.
     private static final String PREF_CONS_PROFILE_KM_PREFIX  = "cons_profile_km_";
     private static final String PREF_CONS_PROFILE_KWH_PREFIX = "cons_profile_kwh_";
     private static final String PREF_CONS_PROFILE_NAME_PREFIX  = "cons_profile_name_";
     private static final String PREF_CONS_PROFILE_HOURS_PREFIX = "cons_profile_hours_";
-    private static final String PREF_CONS_PROFILE_DEFAULT_NAME_PREFIX = "Profil ";
+    private static final KahanSum sTripEnergyKwhSum = new KahanSum();
+    private static final KahanSum sLifetimeKwhSum = new KahanSum();
+    private static final KahanSum sDriveGraphEnergyKwhSum = new KahanSum();
+    private static final KahanSum sAcChargeEnergyKwhSum = new KahanSum();
+    private static final KahanSum sDcChargeEnergyKwhSum = new KahanSum();
+    private static final KahanSum sStationDcChargeEnergyKwhSum = new KahanSum();
+    private static final KahanSum[] sConsProfileKwhSums;
+    static {
+        sConsProfileKwhSums = new KahanSum[CONSUMPTION_PROFILE_SLOTS];
+        for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
+            sConsProfileKwhSums[i] = new KahanSum();
+        }
+    }
     private static final double[] sConsProfileKm     = new double[CONSUMPTION_PROFILE_SLOTS];
-    private static final double[] sConsProfileKwh    = new double[CONSUMPTION_PROFILE_SLOTS];
     private static final double[] sConsProfileHours  = new double[CONSUMPTION_PROFILE_SLOTS];
     private static final String[] sConsProfileName   = new String[CONSUMPTION_PROFILE_SLOTS];
-    // Sürüş grafiği için bağımsız sayaçlar (UI trip reset'inden etkilenmez)
-    private static volatile double sDriveGraphEnergyKwh = 0.0;
+    // Sürüş grafiği mesafe (enerji — yukarıdaki Kahan)
     private static volatile double sDriveGraphDistanceKm = 0.0;
     private static volatile int sMileageAtConsumptionStart = -1;
     /** Son integrasyon anı (monotonik; SystemClock.elapsedRealtime()). Saat geri alınsa bile dt negatif olmaz. */
@@ -1386,7 +1391,7 @@ public class MG4Hardware {
      *  - İvme / fren / direksiyon → global cache; lastik basınç-sıcaklık → en fazla 5 sn'de bir
      *  - DC/AC güçleri oku
      *  - Enerjiyi ve mesafeyi entegre et
-     *  - Global önbelleğe (sDcKw, sTripEnergyKwh, sTripDistanceKm, vb.) yaz
+     *  - Global önbelleğe (sDcKw, trip/lifetime kWh Kahan toplamları, sTripDistanceKm, vb.) yaz
      */
     public static void runMainTask() {
         float speedKmh_raw = getSpeedKmh();
@@ -1492,12 +1497,12 @@ public class MG4Hardware {
             }
             for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
                 sConsProfileKm[i] += dKm;
-                sConsProfileKwh[i] += drivedKwh;
+                sConsProfileKwhSums[i].add(drivedKwh);
             }
             sTripDistanceKm += dKm;
-            sTripEnergyKwh += drivedKwh;
+            sTripEnergyKwhSum.add(drivedKwh);
 
-            sLifetimeKwh += drivedKwh;
+            sLifetimeKwhSum.add(drivedKwh);
             sLifetimeKm += dKm;
 
             //if (isVehicleReady()) {
@@ -1512,7 +1517,7 @@ public class MG4Hardware {
                         sDriveGraphDistanceKm += dKm;
                     }
                     if (!Float.isNaN(dcKw)) {
-                        sDriveGraphEnergyKwh += drivedKwh;
+                        sDriveGraphEnergyKwhSum.add(drivedKwh);
                     }
             //    }
             //}
@@ -1522,21 +1527,21 @@ public class MG4Hardware {
                             ? acKw
                             : (sAcKw + acKw) * 0.5;
                     if (aEffKw > 0) {
-                        sAcChargeEnergyKwh += aEffKw * dtHours;
+                        sAcChargeEnergyKwhSum.add(aEffKw * dtHours);
                     }
                 }
                 if (!Float.isNaN(dcKw)) {
                     double pEffKw = Float.isNaN(sDcKw) ? dcKw : (sDcKw + dcKw) * 0.5;
                     if (pEffKw < 0f) {
-                        sDcChargeEnergyKwh += Math.abs(pEffKw * dtHours);
+                        sDcChargeEnergyKwhSum.add(Math.abs(pEffKw * dtHours));
                     }
                 }
                 if (!Float.isNaN(stationDcKw)) {
                     double sEffKw = Float.isNaN(sDcStationKw) ? stationDcKw : (sDcStationKw + stationDcKw) * 0.5;
                     if (sEffKw < 0f) {
-                        sStationDcChargeEnergyKwh += Math.abs(sEffKw * dtHours);
+                        sStationDcChargeEnergyKwhSum.add(Math.abs(sEffKw * dtHours));
                     } else if (sEffKw > 0f) {
-                        sStationDcChargeEnergyKwh += sEffKw * dtHours;
+                        sStationDcChargeEnergyKwhSum.add(sEffKw * dtHours);
                     }
                 }
             }
@@ -1566,7 +1571,7 @@ public class MG4Hardware {
     /** Yol sıfırla: trip başlangıç km = şimdiki toplam km, enerji + mesafe = 0. */
     public static void resetConsumptionTrip() {
         sMileageAtConsumptionStart = getTotalMileage();
-        sTripEnergyKwh = 0.0;
+        sTripEnergyKwhSum.reset();
         sTripDistanceKm = 0.0;
         sTripHours = 0.0;
         sConsumptionLastRealtimeMs = SystemClock.elapsedRealtime();
@@ -1579,7 +1584,7 @@ public class MG4Hardware {
             sConsumptionLastRealtimeMs = SystemClock.elapsedRealtime();
         }
     }
-    public static double getTripEnergyKwh() { return sTripEnergyKwh; }
+    public static double getTripEnergyKwh() { return sTripEnergyKwhSum.get(); }
     public static double getTripDistanceKm() { return sTripDistanceKm; }
     public static double getTripHours() { return sTripHours; }
 
@@ -1588,12 +1593,12 @@ public class MG4Hardware {
         if (ctx == null) return;
         android.content.SharedPreferences p = ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE);
         sLifetimeKm = p.getFloat(PREF_LIFETIME_KM, 0f);
-        sLifetimeKwh = p.getFloat(PREF_LIFETIME_KWH, 0f);
+        sLifetimeKwhSum.setTotal(p.getFloat(PREF_LIFETIME_KWH, 0f));
         sLifetimeHours = p.getFloat(PREF_LIFETIME_HOURS, 0f);
         // Ek profillerin sayaçlarını ve isimlerini yükle (slot 0..N-1)
         for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
             sConsProfileKm[i] = p.getFloat(PREF_CONS_PROFILE_KM_PREFIX + i, 0f);
-            sConsProfileKwh[i] = p.getFloat(PREF_CONS_PROFILE_KWH_PREFIX + i, 0f);
+            sConsProfileKwhSums[i].setTotal(p.getFloat(PREF_CONS_PROFILE_KWH_PREFIX + i, 0f));
             sConsProfileHours[i] = p.getFloat(PREF_CONS_PROFILE_HOURS_PREFIX + i, 0f);
             sConsProfileName[i] = p.getString(PREF_CONS_PROFILE_NAME_PREFIX + i, null);
         }
@@ -1605,12 +1610,12 @@ public class MG4Hardware {
         android.content.SharedPreferences.Editor e =
                 ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE).edit()
                         .putFloat(PREF_LIFETIME_KM, (float) sLifetimeKm)
-                        .putFloat(PREF_LIFETIME_KWH, (float) sLifetimeKwh)
+                        .putFloat(PREF_LIFETIME_KWH, (float) sLifetimeKwhSum.get())
                         .putFloat(PREF_LIFETIME_HOURS, (float) sLifetimeHours);
         // Ek profillerin sayaçlarını da periyodik olarak persist et
         for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
             e.putFloat(PREF_CONS_PROFILE_KM_PREFIX + i, (float) sConsProfileKm[i]);
-            e.putFloat(PREF_CONS_PROFILE_KWH_PREFIX + i, (float) sConsProfileKwh[i]);
+            e.putFloat(PREF_CONS_PROFILE_KWH_PREFIX + i, (float) sConsProfileKwhSums[i].get());
             e.putFloat(PREF_CONS_PROFILE_HOURS_PREFIX + i, (float) sConsProfileHours[i]);
         }
         e.apply();
@@ -1618,21 +1623,21 @@ public class MG4Hardware {
     public static float getLastSpeedKmh() { return sLastSpeedKmh; }
     /** 1:P  2:R  3:N  4:D */
     public static int getLastGear() { return sLastGear; }
-    public static double getDriveGraphEnergyKwh() { return sDriveGraphEnergyKwh; }
+    public static double getDriveGraphEnergyKwh() { return sDriveGraphEnergyKwhSum.get(); }
     public static double getDriveGraphDistanceKm() { return sDriveGraphDistanceKm; }
     // Hayat boyu sayaç getter'ları
     public static double getLifetimeKm() { return sLifetimeKm; }
-    public static double getLifetimeKwh() { return sLifetimeKwh; }
+    public static double getLifetimeKwh() { return sLifetimeKwhSum.get(); }
     public static double getLifetimeHours() { return sLifetimeHours; }
     /** Hayat boyu sayaçlarını ve persist değerlerini sıfırla. */
     public static void resetLifetime(Context ctx) {
         sLifetimeKm = 0.0;
-        sLifetimeKwh = 0.0;
+        sLifetimeKwhSum.reset();
         sLifetimeHours = 0.0;
         persistLifetimeToPrefs(ctx);
     }
     public static void resetDriveGraphCounters() {
-        sDriveGraphEnergyKwh = 0.0;
+        sDriveGraphEnergyKwhSum.reset();
         sDriveGraphDistanceKm = 0.0;
     }
     // --- Ek uzun dönem profiller API'si ---
@@ -1645,7 +1650,7 @@ public class MG4Hardware {
     }
     public static double getConsumptionProfileKwh(int index) {
         if (index < 0 || index >= CONSUMPTION_PROFILE_SLOTS) return 0.0;
-        return sConsProfileKwh[index];
+        return sConsProfileKwhSums[index].get();
     }
     public static double getConsumptionProfileHours(int index) {
         if (index < 0 || index >= CONSUMPTION_PROFILE_SLOTS) return 0.0;
@@ -1671,7 +1676,7 @@ public class MG4Hardware {
             return;
         }
         sConsProfileKm[index] = 0.0;
-        sConsProfileKwh[index] = 0.0;
+        sConsProfileKwhSums[index].reset();
         sConsProfileHours[index] = 0.0;
         if (ctx != null) {
             ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE)
@@ -1780,14 +1785,14 @@ public class MG4Hardware {
         }
     }
 
-    /** AC girişinden gelen toplam enerji — kWh (şarj boyunca birikir) */
-    public static float getAcChargeEnergyKwh() { return sAcChargeEnergyKwh; }
+    /** AC girişinden gelen toplam enerji — kWh (Kahan toplamı). */
+    public static double getAcChargeEnergyKwh() { return sAcChargeEnergyKwhSum.get(); }
 
-    /** Bataryanın aldığı toplam enerji — kWh (şarj boyunca birikir) */
-    public static float getDcChargeEnergyKwh() { return sDcChargeEnergyKwh; }
+    /** Bataryanın aldığı toplam enerji — kWh (Kahan toplamı). */
+    public static double getDcChargeEnergyKwh() { return sDcChargeEnergyKwhSum.get(); }
 
-    /** İstasyon DC teklifi: U × I_beklenen entegrali — kWh (şarj oturumu boyunca) */
-    public static float getStationDcChargeEnergyKwh() { return sStationDcChargeEnergyKwh; }
+    /** İstasyon DC teklifi: U × I_beklenen entegrali — kWh (Kahan toplamı). */
+    public static double getStationDcChargeEnergyKwh() { return sStationDcChargeEnergyKwhSum.get(); }
 
     /**
      * Şarj süresi — ms.
@@ -1824,18 +1829,18 @@ public class MG4Hardware {
     public static void resetSessionAfterSave() {
         sChargingStartWallMs = 0L;
         sChargingStartSoc = Float.NaN;
-        sAcChargeEnergyKwh         = 0f;
-        sDcChargeEnergyKwh         = 0f;
-        sStationDcChargeEnergyKwh  = 0f;
+        sAcChargeEnergyKwhSum.reset();
+        sDcChargeEnergyKwhSum.reset();
+        sStationDcChargeEnergyKwhSum.reset();
         sLastBmsEventMs      = 0L;
         if (sAppContext != null) com.drivehub.dort.util.ChargingHistory.clearChargingStart(sAppContext);
     }
 
     /** Enerji ve süre sayaçlarını sıfırla */
     public static void resetEnergy() {
-        sAcChargeEnergyKwh         = 0f;
-        sDcChargeEnergyKwh         = 0f;
-        sStationDcChargeEnergyKwh  = 0f;
+        sAcChargeEnergyKwhSum.reset();
+        sDcChargeEnergyKwhSum.reset();
+        sStationDcChargeEnergyKwhSum.reset();
         sLastBmsEventMs      = 0L;
         sChargingStartWallMs = 0L;
         sChargingStartSoc = Float.NaN;

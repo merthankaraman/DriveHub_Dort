@@ -1579,15 +1579,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Enerji satırları (şarj boyunca biriken)
-        float acChargeEnergy = MG4Hardware.getAcChargeEnergyKwh();
-        float dcChargeEnergy = MG4Hardware.getDcChargeEnergyKwh();
-        float stationDcKwh = MG4Hardware.getStationDcChargeEnergyKwh();
+        double acChargeEnergy = MG4Hardware.getAcChargeEnergyKwh();
+        double dcChargeEnergy = MG4Hardware.getDcChargeEnergyKwh();
+        double stationDcKwh = MG4Hardware.getStationDcChargeEnergyKwh();
         if (leftColumnIsAc) {
-            mTvAcEnergy.setText(acChargeEnergy > 0f ? String.format("%.3f kWh", acChargeEnergy) : "--");
+            mTvAcEnergy.setText(acChargeEnergy > 0.0 ? String.format("%.3f kWh", acChargeEnergy) : "--");
         } else {
-            mTvAcEnergy.setText(stationDcKwh > 0f ? String.format("%.3f kWh", stationDcKwh) : "--");
+            mTvAcEnergy.setText(stationDcKwh > 0.0 ? String.format("%.3f kWh", stationDcKwh) : "--");
         }
-        mTvDcEnergy.setText(dcChargeEnergy > 0f ? String.format("%.3f kWh", dcChargeEnergy) : "--");
+        mTvDcEnergy.setText(dcChargeEnergy > 0.0 ? String.format("%.3f kWh", dcChargeEnergy) : "--");
 
         // Şarj durumu (çıkarım: AC/DC akım veya PROP_CHG_STATUS)
         mTvChargingStatus.setText(charging ? getString(R.string.charging) : getString(R.string.not_charging));
