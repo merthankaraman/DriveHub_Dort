@@ -48,6 +48,17 @@ public class MG4Hardware {
     private static final int AREA_HVAC          = 0x75;       // 117
 
     /**
+     * SAIC fabrika &quot;Ayarlar&quot; tema (Genel → arka plan): {@code IGeneralService} Binder.
+     * CarProperty değil; {@code bindService} ile {@link #SAIC_SETTINGS_SERVICE_CLASS} + {@link #SAIC_IGENERAL_BIND_ACTION}.
+     */
+    public static final String SAIC_SETTINGS_PACKAGE = "com.saicmotor.service.systemsettings";
+    public static final String SAIC_SETTINGS_SERVICE_CLASS = SAIC_SETTINGS_PACKAGE + ".SettingsService";
+    public static final String SAIC_IGENERAL_BIND_ACTION = SAIC_SETTINGS_PACKAGE + ".IGeneralService";
+    public static final String SAIC_IGENERAL_DESCRIPTOR = "com.saicmotor.sdk.systemsettings.IGeneralService";
+    public static final int TX_SAIC_IGENERAL_SET_IS_NIGHT_MODE = 0x11;
+    public static final int TX_SAIC_IGENERAL_SET_DAY_NIGHT_AUTO_MODE = 0x12;
+
+    /**
      * Track Mode telemetrisi — {@code CarSensorManager.registerListener(..., sensorConfigId, rate)} ile kullanılan
      * sensör config ID'leri (CarPropertyManager ile aynı sayısal ID olabilir; katman: sensör).
      * Kaynak: saic_saicmaintenance trackmodesdk + MG4_BINDER_REFERENCE.md bölüm 14.
@@ -2515,6 +2526,44 @@ public class MG4Hardware {
         } finally {
             data.recycle();
             reply.recycle();
+        }
+    }
+
+    /**
+     * {@code IGeneralService.setDayNight} — parcel: token + int 0/1. 0: Dark, 1: Light, 2: Auto.
+     */
+    public static boolean transactSaicGeneralSetDayNight(IBinder generalBinder, int light_mode) {
+        boolean auto_val = false, night_val = false, ret;
+        if (light_mode == 0) night_val = true;
+        else if (light_mode == 2) auto_val = true;
+
+        ret = transactSaicIGeneralOneBoolean(generalBinder, TX_SAIC_IGENERAL_SET_IS_NIGHT_MODE, night_val);
+        ret &= transactSaicIGeneralOneBoolean(generalBinder, TX_SAIC_IGENERAL_SET_DAY_NIGHT_AUTO_MODE, auto_val);
+        return ret;
+    }
+
+    private static boolean transactSaicIGeneralOneBoolean(IBinder binder, int txCode, boolean value) {
+        if (binder == null) {
+            Log.w(TAG, "SAIC IGeneral tx=0x" + Integer.toHexString(txCode) + " — binder null");
+            return false;
+        }
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SAIC_IGENERAL_DESCRIPTOR);
+            data.writeInt(value ? 1 : 0);
+            if (!binder.transact(txCode, data, reply, 0)) {
+                Log.w(TAG, "SAIC IGeneral transact false tx=0x" + Integer.toHexString(txCode));
+                return false;
+            }
+            reply.readException();
+            return true;
+        } catch (Exception e) {
+            Log.w(TAG, "SAIC IGeneral tx=0x" + Integer.toHexString(txCode) + ": " + e.getMessage());
+            return false;
+        } finally {
+            reply.recycle();
+            data.recycle();
         }
     }
 }
