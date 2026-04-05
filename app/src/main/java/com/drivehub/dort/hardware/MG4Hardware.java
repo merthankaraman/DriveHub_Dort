@@ -1395,8 +1395,9 @@ public class MG4Hardware {
      */
     public static void runMainTask() {
         float speedKmh_raw = getSpeedKmh();
-        float speedKmh = speedKmh_raw * (speedKmh_raw >= 80 ? 1.0035f : 1f);
-        if (speedKmh < 1.0f) speedKmh = 0f;
+        float speedKmh = speedKmh_raw;
+        //if (speedKmh_raw >= 80) speedKmh *= 1.0035f;
+        //if (speedKmh < 1.0f) speedKmh = 0f;
         sVehicleACCPedalPos = getFloatPropertyCPM(PROP_SENSOR_ACC_PEDAL_POS, AREA_GLOBAL);
         sVehiclePowerPerc = getIntPropertyCPM(PROP_SENSOR_DRIVE_EFFICIENCY, AREA_GLOBAL);
 
