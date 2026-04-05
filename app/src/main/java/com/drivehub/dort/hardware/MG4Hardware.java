@@ -2,6 +2,7 @@ package com.drivehub.dort.hardware;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.ServiceConnection;
 import android.os.IBinder;
@@ -49,7 +50,7 @@ public class MG4Hardware {
 
     /**
      * SAIC fabrika &quot;Ayarlar&quot; tema (Genel → arka plan): {@code IGeneralService} Binder.
-     * CarProperty değil; {@code bindService} ile {@link #SAIC_SETTINGS_SERVICE_CLASS} + {@link #SAIC_IGENERAL_BIND_ACTION}.
+     * {@link #init(Context)} içinde bu paket/action ile {@code bindService} tetiklenir; API {@link #transactSaicGeneralSetDayNight(int)} / {@link #querySaicGeneralDayNightMode()}.
      */
     public static final String SAIC_SETTINGS_PACKAGE = "com.saicmotor.service.systemsettings";
     public static final String SAIC_SETTINGS_SERVICE_CLASS = SAIC_SETTINGS_PACKAGE + ".SettingsService";
@@ -57,6 +58,8 @@ public class MG4Hardware {
     public static final String SAIC_IGENERAL_DESCRIPTOR = "com.saicmotor.sdk.systemsettings.IGeneralService";
     public static final int TX_SAIC_IGENERAL_SET_IS_NIGHT_MODE = 0x11;
     public static final int TX_SAIC_IGENERAL_SET_DAY_NIGHT_AUTO_MODE = 0x12;
+    public static final int TX_SAIC_IGENERAL_GET_IS_NIGHT_MODE = 0x13;
+    public static final int TX_SAIC_IGENERAL_GET_DAY_NIGHT_AUTO_MODE = 0x14;
 
     /**
      * Track Mode telemetrisi — {@code CarSensorManager.registerListener(..., sensorConfigId, rate)} ile kullanılan
@@ -317,6 +320,22 @@ public class MG4Hardware {
     private static volatile Object  sAirConditionService = null;
     private static volatile boolean sVsBindAttempted       = false;
 
+    /** {@link #SAIC_SETTINGS_PACKAGE} / {@link #SAIC_IGENERAL_BIND_ACTION} ile bind sonrası tema Binder'ı */
+    private static volatile IBinder sSaicGeneralBinder = null;
+    private static volatile boolean sSaicGeneralBindAttempted = false;
+    private static final ServiceConnection sSaicGeneralServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            sSaicGeneralBinder = service;
+            if (sLogEnabled) Log.i(TAG, "  ✓ SAIC IGeneral: SettingsService bağlandı (" + name + ")");
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            sSaicGeneralBinder = null;
+            Log.w(TAG, "  SAIC IGeneral: bağlantı kesildi (" + name + ")");
+        }
+    };
+
     // -------------------------------------------------------------------------
     // Init / Destroy
     // -------------------------------------------------------------------------
@@ -337,6 +356,7 @@ public class MG4Hardware {
         // Katman 1: CarPropertyManager — com.android.car'a bind ol
         bindCarService(appContext);
         bindVehicleService(appContext);
+        bindSaicGeneralSettingsService(appContext);
 
         // Katman 2: Binder (yedek)
         if (sLogEnabled) logAvailableVehicleServices();
@@ -359,6 +379,15 @@ public class MG4Hardware {
     public static void setLogEnabled(boolean enabled) { sLogEnabled = enabled; }
 
     public static void destroy() {
+        Context ctx = sAppContext;
+        if (ctx != null && sSaicGeneralBindAttempted) {
+            try {
+                ctx.unbindService(sSaicGeneralServiceConnection);
+            } catch (Throwable ignored) {}
+        }
+        sSaicGeneralBinder = null;
+        sSaicGeneralBindAttempted = false;
+
         sCarPropertyManager    = null;
         sCarHvacManager        = null;
         sCarDiagnosticManager  = null;
@@ -767,6 +796,26 @@ public class MG4Hardware {
             }
         } catch (Throwable t) {
             Log.e(TAG, "  Katman3: bindVehicleService hata: " + t);
+        }
+    }
+
+    /**
+     * Fabrika sistem ayarları — {@link #SAIC_IGENERAL_BIND_ACTION} + {@link #SAIC_SETTINGS_SERVICE_CLASS}.
+     * Bağlantı asenkron; tema çağrısından önce Binder hazır olmayabilir.
+     */
+    private static void bindSaicGeneralSettingsService(Context context) {
+        if (sSaicGeneralBindAttempted) return;
+        sSaicGeneralBindAttempted = true;
+        try {
+            Intent intent = new Intent(SAIC_IGENERAL_BIND_ACTION);
+            intent.setClassName(SAIC_SETTINGS_PACKAGE, SAIC_SETTINGS_SERVICE_CLASS);
+            boolean ok = context.bindService(intent, sSaicGeneralServiceConnection, Context.BIND_AUTO_CREATE);
+            if (sLogEnabled) {
+                if (ok) Log.i(TAG, "  SAIC IGeneral: bindService gönderildi (" + SAIC_SETTINGS_PACKAGE + ")");
+                else Log.w(TAG, "  SAIC IGeneral: bindService false (paket/servis yok?)");
+            }
+        } catch (Throwable t) {
+            Log.e(TAG, "  SAIC IGeneral: bind hata: " + t.getMessage());
         }
     }
 
@@ -2530,16 +2579,48 @@ public class MG4Hardware {
     }
 
     /**
-     * {@code IGeneralService.setDayNight} — parcel: token + int 0/1. 0: Dark, 1: Light, 2: Auto.
+     * HMI arka plan teması (fabrika Ayarlar ile aynı Binder). {@link #init(Context)} gerekir; bağlantı asenkron olduğu için
+     * hemen ardından false dönebilir — kısa gecikme sonrası tekrar dene.
+     * <p>{@code 0} koyu, {@code 1} açık, {@code 2} otomatik.
      */
-    public static boolean transactSaicGeneralSetDayNight(IBinder generalBinder, int light_mode) {
-        boolean auto_val = false, night_val = false, ret;
-        if (light_mode == 0) night_val = true;
-        else if (light_mode == 2) auto_val = true;
-
-        ret = transactSaicIGeneralOneBoolean(generalBinder, TX_SAIC_IGENERAL_SET_IS_NIGHT_MODE, night_val);
-        ret &= transactSaicIGeneralOneBoolean(generalBinder, TX_SAIC_IGENERAL_SET_DAY_NIGHT_AUTO_MODE, auto_val);
+    public static boolean transactSaicGeneralSetDayNight(int lightMode) {
+        IBinder b = sSaicGeneralBinder;
+        if (b == null) {
+            Log.w(TAG, "SAIC tema set — binder yok (init sonrası onServiceConnected bekleniyor)");
+            return false;
+        }
+        boolean autoVal = false;
+        boolean nightVal = false;
+        if (lightMode == 0) {
+            nightVal = true;
+        } else if (lightMode == 2) {
+            autoVal = true;
+        }
+        boolean ret = transactSaicIGeneralOneBoolean(b, TX_SAIC_IGENERAL_SET_IS_NIGHT_MODE, nightVal);
+        ret &= transactSaicIGeneralOneBoolean(b, TX_SAIC_IGENERAL_SET_DAY_NIGHT_AUTO_MODE, autoVal);
         return ret;
+    }
+
+    /**
+     * Mevcut tema: {@code 0} koyu, {@code 1} açık, {@code 2} otomatik, {@code -1} bağlı değil veya okunamadı.
+     */
+    public static int querySaicGeneralDayNightMode() {
+        IBinder b = sSaicGeneralBinder;
+        if (b == null) {
+            return -1;
+        }
+        Boolean auto = transactSaicIGeneralQueryBoolean(b, TX_SAIC_IGENERAL_GET_DAY_NIGHT_AUTO_MODE);
+        if (auto == null) {
+            return -1;
+        }
+        if (auto) {
+            return 2;
+        }
+        Boolean night = transactSaicIGeneralQueryBoolean(b, TX_SAIC_IGENERAL_GET_IS_NIGHT_MODE);
+        if (night == null) {
+            return -1;
+        }
+        return night ? 0 : 1;
     }
 
     private static boolean transactSaicIGeneralOneBoolean(IBinder binder, int txCode, boolean value) {
@@ -2561,6 +2642,30 @@ public class MG4Hardware {
         } catch (Exception e) {
             Log.w(TAG, "SAIC IGeneral tx=0x" + Integer.toHexString(txCode) + ": " + e.getMessage());
             return false;
+        } finally {
+            reply.recycle();
+            data.recycle();
+        }
+    }
+
+    private static Boolean transactSaicIGeneralQueryBoolean(IBinder binder, int txCode) {
+        if (binder == null) {
+            Log.w(TAG, "SAIC IGeneral get tx=0x" + Integer.toHexString(txCode) + " — binder null");
+            return null;
+        }
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SAIC_IGENERAL_DESCRIPTOR);
+            if (!binder.transact(txCode, data, reply, 0)) {
+                Log.w(TAG, "SAIC IGeneral get transact false tx=0x" + Integer.toHexString(txCode));
+                return null;
+            }
+            reply.readException();
+            return reply.readInt() != 0;
+        } catch (Exception e) {
+            Log.w(TAG, "SAIC IGeneral get tx=0x" + Integer.toHexString(txCode) + ": " + e.getMessage());
+            return null;
         } finally {
             reply.recycle();
             data.recycle();
