@@ -442,7 +442,7 @@ public class MainActivity extends AppCompatActivity {
                         mTvGaugePower.setText("--");
                     } else {
                         mTvGaugePower.setText(String.format(Locale.US, "%.2f", dcPowerKw));
-                        applyPowerKwTextColor(mTvGaugePower);
+                        applyPowerKwTextColor(mTvGaugePower, dcPowerKw);
                     }
                 }
                 if (mTvGaugeThrottle != null) {
@@ -458,7 +458,7 @@ public class MainActivity extends AppCompatActivity {
                     else{
                         pct = MG4Hardware.getVehiclePowerPercGlobal();
                     }
-                    applyPowerKwTextColor(mTvGaugeThrottle);
+                    applyPowerKwTextColor(mTvGaugeThrottle, dcPowerKw);
                     mTvGaugeThrottle.setText(pct + "%");
                 }
                 boolean ready = (MG4Hardware.isVehicleReady() || mSimSpeedActive);
@@ -1934,10 +1934,10 @@ public class MainActivity extends AppCompatActivity {
      * DC güç (kW) göstergesi rengi: negatif yeşil; pozitifte kayıtlı motor gücüne göre turuncu/kırmızı.
      * Tüketim ve ses panelindeki kW TextView'ları için ortak.
      */
-    private void applyPowerKwTextColor(TextView target) {
+    private void applyPowerKwTextColor(TextView target, float powerKw) {
         if (target == null) return;
         int percent = MG4Hardware.getVehiclePowerPercGlobal();
-        if (percent < 0f) {
+        if (powerKw < 0f) {
             target.setTextColor(COLOR_CONSUMPTION_POWER_REGEN);
         } else if (percent > 80) {
             target.setTextColor(COLOR_CONSUMPTION_POWER_CRIT);
@@ -2046,7 +2046,7 @@ public class MainActivity extends AppCompatActivity {
                 mTvConsumptionPower.setTextColor(ContextCompat.getColor(this, R.color.status_value));
             } else {
                 mTvConsumptionPower.setText(String.format(Locale.US, "%.2f kW", powerKw));
-                applyPowerKwTextColor(mTvConsumptionPower);
+                applyPowerKwTextColor(mTvConsumptionPower, powerKw);
             }
         }
 
