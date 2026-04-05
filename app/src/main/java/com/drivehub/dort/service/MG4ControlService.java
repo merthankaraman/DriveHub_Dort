@@ -2,7 +2,6 @@ package com.drivehub.dort.service;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
-import android.app.UiModeManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -19,7 +18,6 @@ import android.media.AudioManager;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
-import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -441,9 +439,9 @@ public class MG4ControlService extends Service {
                             SystemClock.elapsedRealtime() + REMEMBER_APPLY_AFTER_SCREEN_ON_SETTLE_MS;
                 }
                 if (SystemClock.elapsedRealtime() < mRememberSettleUntilElapsedMs) {
-                    if(isSystemNightModeAuto()) {
+                    if(MG4Hardware.GetSystemNightMode() == 2 && mAUTO_NIGHT_MODE_ENABLED) {
                         mSystemWasAuto = true;
-                        applySystemNightMode(UiModeManager.MODE_NIGHT_YES);
+                        MG4Hardware.SetSystemNightMode(0);
                     }
                     mMainHandler.postDelayed(this, REMEMBER_APPLY_SETTLE_POLL_MS);
                     return;
@@ -452,14 +450,15 @@ public class MG4ControlService extends Service {
                 int ign = MG4Hardware.getVehicleIgnition();
                 boolean isRun = ign >= 2;
                 boolean wasRun = mLastIgnitionStateForRemember >= 2;
+                Log.i(TAG, "Ekran modu: " + MG4Hardware.GetSystemNightMode());
 
                 // İlk durum veya ignition değişimi için state'i güncelle
                 mLastIgnitionStateForRemember = ign;
 
                 // RUN'a yeni geçişte (OFF/ACC -> RUN) yeniden uygula
                 if (isRun && !wasRun) {
-                    if(mSystemWasAuto){
-                        applySystemNightMode(UiModeManager.MODE_NIGHT_AUTO);
+                    if(mSystemWasAuto && mAUTO_NIGHT_MODE_ENABLED){
+                        MG4Hardware.SetSystemNightMode(2);
                     }
                     applyRememberedDriveModeIfNeeded();
                     applyRememberedRegenIfNeeded();
@@ -515,58 +514,6 @@ public class MG4ControlService extends Service {
             return true;
         }
     }
-
-    /**
-     * Android sistem gece/gündüz modu ({@link UiModeManager#setNightMode(int)}).
-     * API 23+; Android 10+ bazı cihazlarda {@code android.permission.MODIFY_DAY_NIGHT_MODE} gerekebilir (sistem uygulaması genelde sorun olmaz).
-     * <p>
-     * Modlar: {@link UiModeManager#MODE_NIGHT_AUTO} (0), {@link UiModeManager#MODE_NIGHT_NO} (açık), {@link UiModeManager#MODE_NIGHT_YES} (koyu).
-     * <p>
-     */
-    private void applySystemNightMode(int mode) {
-        if(!mAUTO_NIGHT_MODE_ENABLED){
-            return;
-        }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return;
-        }
-        try {
-            UiModeManager uim = (UiModeManager) getSystemService(Context.UI_MODE_SERVICE);
-            if (uim != null) {
-                uim.setNightMode(mode);
-                if (MG4Hardware.isLogEnabled()) {
-                    Log.i(TAG, "UiModeManager.setNightMode(" + mode + ")");
-                }
-            }
-        } catch (Throwable t) {
-            Log.w(TAG, "UiModeManager.setNightMode: " + t.getMessage());
-        }
-    }
-
-    /**
-     * {@link UiModeManager#getNightMode()} — kullanıcının seçtiği mod (auto / gündüz / gece).
-     * API &lt; 23 veya servis yok: {@code -1}.
-     */
-    private int getSystemNightMode() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return -1;
-        }
-        try {
-            UiModeManager uim = (UiModeManager) getSystemService(Context.UI_MODE_SERVICE);
-            if (uim != null) {
-                return uim.getNightMode();
-            }
-        } catch (Throwable t) {
-            Log.w(TAG, "UiModeManager.getNightMode: " + t.getMessage());
-        }
-        return -1;
-    }
-
-    /** {@link #getSystemNightMode()} {@link UiModeManager#MODE_NIGHT_AUTO} ise true. */
-    private boolean isSystemNightModeAuto() {
-        return getSystemNightMode() == UiModeManager.MODE_NIGHT_AUTO;
-    }
-
     private boolean isAlwaysUsbDebugEnabled() {
         return getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                 .getBoolean(PREF_ALWAYS_USB_DEBUG, false);

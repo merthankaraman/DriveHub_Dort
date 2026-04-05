@@ -50,7 +50,6 @@ public class MG4Hardware {
 
     /**
      * SAIC fabrika &quot;Ayarlar&quot; tema (Genel → arka plan): {@code IGeneralService} Binder.
-     * {@link #init(Context)} içinde bu paket/action ile {@code bindService} tetiklenir; API {@link #transactSaicGeneralSetDayNight(int)} / {@link #querySaicGeneralDayNightMode()}.
      */
     public static final String SAIC_SETTINGS_PACKAGE = "com.saicmotor.service.systemsettings";
     public static final String SAIC_SETTINGS_SERVICE_CLASS = SAIC_SETTINGS_PACKAGE + ".SettingsService";
@@ -2583,7 +2582,7 @@ public class MG4Hardware {
      * hemen ardından false dönebilir — kısa gecikme sonrası tekrar dene.
      * <p>{@code 0} koyu, {@code 1} açık, {@code 2} otomatik.
      */
-    public static boolean transactSaicGeneralSetDayNight(int lightMode) {
+    public static boolean SetSystemNightMode(int lightMode) {
         IBinder b = sSaicGeneralBinder;
         if (b == null) {
             Log.w(TAG, "SAIC tema set — binder yok (init sonrası onServiceConnected bekleniyor)");
@@ -2604,7 +2603,7 @@ public class MG4Hardware {
     /**
      * Mevcut tema: {@code 0} koyu, {@code 1} açık, {@code 2} otomatik, {@code -1} bağlı değil veya okunamadı.
      */
-    public static int querySaicGeneralDayNightMode() {
+    public static int GetSystemNightMode() {
         IBinder b = sSaicGeneralBinder;
         if (b == null) {
             return -1;
