@@ -117,6 +117,8 @@
     <string name="expected_charge_power">Expected charge power</string>
     <string name="charging">Charging</string>
     <string name="not_charging">Not charging</string>
+    <string name="charging_hint_km_per_min">%.1f km per minute charging</string>
+    <string name="charging_hint_km_from_energy">%.1f km charged</string>
     <string name="charging_column_ac_station">AC (STATION)</string>
     <string name="charging_column_dc_station">DC (STATION)</string>
 

@@ -215,7 +215,11 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvChargingHeaderSoc;
     private TextView mTvDcAmpAct;
     private TextView mTvDcKwAct;
+    /** Lifetime ortalamasına göre dakikada km (şarj ipucu) */
+    private TextView mTvDcKwChargeHint;
     private TextView mTvDcEnergy;
+    /** Lifetime ortalamasına göre oturum kWh → km eşdeğeri */
+    private TextView mTvDcEnergyKmHint;
     private View     mRowDcEnergy;
     private LineChart mChartChargingPower;
     private final ArrayList<Entry> mChartEntriesMaxDc = new ArrayList<>();
@@ -911,7 +915,9 @@ public class MainActivity extends AppCompatActivity {
         mTvChargingHeaderSoc   = findViewById(R.id.tvChargingHeaderSoc);
         mTvDcAmpAct        = findViewById(R.id.tvDcAmpAct);
         mTvDcKwAct         = findViewById(R.id.tvDcKwAct);
+        mTvDcKwChargeHint  = findViewById(R.id.tvDcKwChargeHint);
         mTvDcEnergy        = findViewById(R.id.tvDcEnergy);
+        mTvDcEnergyKmHint  = findViewById(R.id.tvDcEnergyKmHint);
         mRowDcEnergy       = findViewById(R.id.rowDcEnergy);
         mChartChargingPower = findViewById(R.id.chartChargingPower);
         setupChargingCharts();
@@ -1491,6 +1497,38 @@ public class MainActivity extends AppCompatActivity {
                 && !Float.isNaN(acAmp) && acAmp > 0.5f;
     }
 
+    /**
+     * Lifetime km/kWh ortalamasına göre: anlık pile giren kW → dakikada km;
+     * bu oturumda biriken DC kWh → km eşdeğeri. Yalnızca şarjdayken gösterilir.
+     */
+    private void updateChargingRangeHints(boolean charging, float dcVolt, float dcAmpAct, double dcChargeEnergy) {
+        if (mTvDcKwChargeHint == null || mTvDcEnergyKmHint == null) {
+            return;
+        }
+        if (!charging) {
+            mTvDcKwChargeHint.setVisibility(View.GONE);
+            mTvDcEnergyKmHint.setVisibility(View.GONE);
+            return;
+        }
+        double lifetimeKm = MG4Hardware.getLifetimeKm();
+        double lifetimeKwh = MG4Hardware.getLifetimeKwh();
+        if (lifetimeKm < 50 || lifetimeKwh < 1e-6) {
+            lifetimeKm = 100;
+            lifetimeKwh = 17;
+        }
+        double kmPerKwh = lifetimeKm / lifetimeKwh;
+        if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct)) {
+            float battKw = (dcVolt * dcAmpAct) / 1000f;
+            double kmPerMin = (battKw / 60.0) * kmPerKwh;
+            mTvDcKwChargeHint.setText(getString(R.string.charging_hint_km_per_min, kmPerMin));
+            mTvDcKwChargeHint.setVisibility(View.VISIBLE);
+        } else {
+            mTvDcKwChargeHint.setVisibility(View.GONE);
+        }
+        mTvDcEnergyKmHint.setText(getString(R.string.charging_hint_km_from_energy, dcChargeEnergy * kmPerKwh));
+        mTvDcEnergyKmHint.setVisibility(View.VISIBLE);
+    }
+
     private void openChargingGraphPanel() {
         mCurrentPanel = PANEL_CHARGING_GRAPH;
         mLayoutMain.setVisibility(View.GONE);
@@ -1591,6 +1629,7 @@ public class MainActivity extends AppCompatActivity {
             mTvAcEnergy.setText(stationDcKwh > 0.0 ? String.format("%.3f kWh", stationDcKwh) : "--");
         }
         mTvDcEnergy.setText(dcChargeEnergy > 0.0 ? String.format("%.3f kWh", dcChargeEnergy) : "--");
+        updateChargingRangeHints(charging, dcVolt, dcAmpAct, dcChargeEnergy);
 
         // Şarj durumu (çıkarım: AC/DC akım veya PROP_CHG_STATUS)
         mTvChargingStatus.setText(charging ? getString(R.string.charging) : getString(R.string.not_charging));
