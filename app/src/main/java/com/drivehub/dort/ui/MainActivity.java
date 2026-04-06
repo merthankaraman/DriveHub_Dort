@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -928,7 +929,18 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnChargingGraphBack).setOnClickListener(v -> closeChargingGraphPanel());
         findViewById(R.id.btnChargingGraphReset).setOnClickListener(v -> resetChargingGraph());
         findViewById(R.id.btnClimatePanel).setOnClickListener(v -> openClimatePanel());
-        findViewById(R.id.btnDemo).setOnClickListener(v -> startActivity(new android.content.Intent(this, DemoActivity.class)));
+        View btnDemo = findViewById(R.id.btnDemo);
+        if (btnDemo != null) {
+            // BuildConfig yerine: debug APK'da genelde FLAG_DEBUGGABLE set (release'te genelde kapalı)
+            boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+            if (showDemo) {
+                btnDemo.setVisibility(View.VISIBLE);
+                btnDemo.setOnClickListener(v ->
+                        startActivity(new Intent(this, DemoActivity.class)));
+            } else {
+                btnDemo.setVisibility(View.GONE);
+            }
+        }
 
         // ---- Tüketim paneli ----
         mLayoutConsumptionPanel   = findViewById(R.id.layoutConsumptionPanel);
