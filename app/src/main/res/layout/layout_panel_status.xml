@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/layoutStatusPanel"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,40 +9,69 @@
     android:paddingStart="40dp"
     android:paddingTop="20dp"
     android:paddingEnd="40dp"
-    android:paddingBottom="20dp"
-    android:visibility="gone">
+    android:paddingBottom="20dp">
 
-    <!-- BaÅŸlÄ±k + Geri + Yenile -->
+    <!-- Tek satır: geri, şarj geçmişi, grafik | boşluk | SOC, durum, süre -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_charging_card"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="14dp">
 
         <Button
             android:id="@+id/btnStatusBack"
             style="@style/Widget.DriveHub.Button.PanelBack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="10dp"
             android:text="@string/back" />
 
-        <TextView
+        <Button
+            android:id="@+id/btnShowChargingHistory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_charging_header_button"
+            android:minHeight="46dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="@string/btn_charging_history"
+            android:textAllCaps="false"
+            android:textColor="@color/charging_header_btn_text"
+            android:textSize="13sp"
+            app:backgroundTint="@null" />
+
+        <Button
+            android:id="@+id/btnOpenChargingGraph"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_charging_header_button"
+            android:minHeight="46dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="@string/charging_graph_open"
+            android:textAllCaps="false"
+            android:textColor="@color/charging_header_btn_text"
+            android:textSize="13sp"
+            app:backgroundTint="@null" />
+
+        <Space
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:letterSpacing="0.06"
-            android:text="@string/charging_status_title"
-            android:textColor="@color/status_value"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:layout_weight="1" />
 
         <TextView
             android:id="@+id/tvChargingHeaderSoc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="30dp"
+            android:layout_marginEnd="20dp"
             android:fontFamily="monospace"
             android:text="--"
             android:textColor="@color/status_value"
@@ -64,22 +94,10 @@
             android:layout_height="wrap_content"
             android:fontFamily="monospace"
             android:text="@string/charging_duration_placeholder"
-            android:textColor="#7EE787"
+            android:textColor="@color/charging_energy"
             android:textSize="18sp"
             android:textStyle="bold" />
-
     </LinearLayout>
-
-    <!-- Şarj geçmişi butonu -->
-    <Button
-        android:id="@+id/btnShowChargingHistory"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:layout_marginBottom="16dp"
-        android:backgroundTint="#21262D"
-        android:text="@string/btn_charging_history"
-        android:textColor="#C9D1D9"
-        android:textSize="12sp" />
 
     <!-- İki sütun: kalan dikey alanın tamamını kullan; satırlar weight ile eşit bölünür -->
     <LinearLayout
@@ -88,13 +106,13 @@
         android:layout_weight="1"
         android:orientation="horizontal">
 
-        <!-- Sol sÃ¼tun: AC -->
+        <!-- Sol sütun: AC / istasyon -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="16dp"
             android:layout_weight="1"
-            android:background="@color/surface_variant"
+            android:background="@drawable/bg_charging_card"
             android:orientation="vertical"
             android:padding="24dp">
 
@@ -105,7 +123,7 @@
                 android:layout_marginBottom="8dp"
                 android:letterSpacing="0.12"
                 android:text="@string/expected_charge_power"
-                android:textColor="#6E7681"
+                android:textColor="@color/text_secondary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -121,7 +139,7 @@
                     android:layout_width="72dp"
                     android:layout_height="wrap_content"
                     android:text="@string/unit_v"
-                    android:textColor="#8B949E"
+                    android:textColor="@color/text_secondary"
                     android:textSize="22sp" />
 
                 <TextView
@@ -148,7 +166,7 @@
                     android:layout_width="72dp"
                     android:layout_height="wrap_content"
                     android:text="@string/unit_a"
-                    android:textColor="#8B949E"
+                    android:textColor="@color/text_secondary"
                     android:textSize="22sp" />
 
                 <TextView
@@ -175,7 +193,7 @@
                     android:layout_width="72dp"
                     android:layout_height="wrap_content"
                     android:text="@string/unit_kw_label"
-                    android:textColor="#8B949E"
+                    android:textColor="@color/text_secondary"
                     android:textSize="22sp" />
 
                 <TextView
@@ -184,7 +202,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="monospace"
                     android:text="--"
-                    android:textColor="#FFA657"
+                    android:textColor="@color/charging_kw"
                     android:textSize="44sp"
                     android:textStyle="bold" />
 
@@ -203,7 +221,7 @@
                     android:layout_width="72dp"
                     android:layout_height="wrap_content"
                     android:text="@string/unit_kwh_label"
-                    android:textColor="#8B949E"
+                    android:textColor="@color/text_secondary"
                     android:textSize="22sp" />
 
                 <TextView
@@ -212,7 +230,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="monospace"
                     android:text="--"
-                    android:textColor="#7EE787"
+                    android:textColor="@color/charging_energy"
                     android:textSize="44sp"
                     android:textStyle="bold" />
 
@@ -220,12 +238,12 @@
 
         </LinearLayout>
 
-        <!-- SaÄŸ sÃ¼tun: Batarya -->
+        <!-- Sağ sütun: batarya / DC -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@color/surface_variant"
+            android:background="@drawable/bg_charging_card"
             android:orientation="vertical"
             android:padding="24dp">
 
@@ -235,7 +253,7 @@
                 android:layout_marginBottom="8dp"
                 android:letterSpacing="0.12"
                 android:text="@string/batarya"
-                android:textColor="#6E7681"
+                android:textColor="@color/text_secondary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -251,7 +269,7 @@
                     android:layout_width="72dp"
                     android:layout_height="wrap_content"
                     android:text="@string/unit_v"
-                    android:textColor="#8B949E"
+                    android:textColor="@color/text_secondary"
                     android:textSize="22sp" />
 
                 <TextView
@@ -278,7 +296,7 @@
                     android:layout_width="72dp"
                     android:layout_height="wrap_content"
                     android:text="@string/unit_a"
-                    android:textColor="#8B949E"
+                    android:textColor="@color/text_secondary"
                     android:textSize="22sp" />
 
                 <TextView
@@ -305,7 +323,7 @@
                     android:layout_width="72dp"
                     android:layout_height="wrap_content"
                     android:text="@string/unit_kw_label"
-                    android:textColor="#8B949E"
+                    android:textColor="@color/text_secondary"
                     android:textSize="22sp" />
 
                 <TextView
@@ -314,7 +332,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="monospace"
                     android:text="--"
-                    android:textColor="#FFA657"
+                    android:textColor="@color/charging_kw"
                     android:textSize="44sp"
                     android:textStyle="bold" />
 
@@ -333,7 +351,7 @@
                     android:layout_width="72dp"
                     android:layout_height="wrap_content"
                     android:text="@string/unit_kwh_label"
-                    android:textColor="#8B949E"
+                    android:textColor="@color/text_secondary"
                     android:textSize="22sp" />
 
                 <TextView
@@ -342,7 +360,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="monospace"
                     android:text="--"
-                    android:textColor="#7EE787"
+                    android:textColor="@color/charging_energy"
                     android:textSize="44sp"
                     android:textStyle="bold" />
 
@@ -351,13 +369,5 @@
         </LinearLayout>
 
     </LinearLayout>
-
-    <!-- Grafik yerine tam ekran grafik iÃ§in buton -->
-    <Button
-        android:id="@+id/btnOpenChargingGraph"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/charging_graph_open" />
 
 </LinearLayout>

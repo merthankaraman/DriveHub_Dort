@@ -111,7 +111,6 @@
     <string name="consumption_mode_trip">Başlangıçtan İtibaren</string>
     <string name="status">DURUM</string>
     <string name="status_charging">🔋 Şarj ve Durum</string>
-    <string name="charging_status_title">ŞARJ DURUMU</string>
     <string name="charging_status_label">Şarj durumu: --</string>
     <string name="charging_duration_placeholder">--:--:--</string>
     <string name="btn_charging_history">Şarj Geçmişini Göster</string>

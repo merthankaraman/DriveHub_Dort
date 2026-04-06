@@ -11,4 +11,12 @@
     <color name="panel_button_bg">#E6E8EB</color>
     <!-- İkincil metin (açıklama / etiket, gündüz) -->
     <color name="text_secondary">#57606A</color>
+    <!-- Şarj paneli kart çerçevesi + vurgular -->
+    <color name="charging_card_stroke">#D8DEE4</color>
+    <color name="charging_kw">#FFA657</color>
+    <color name="charging_energy">#7EE787</color>
+    <!-- Şarj üst şerit ikincil butonlar (kart yüzeyinden net ayrılsın) -->
+    <color name="charging_header_btn_fill">#FFFFFF</color>
+    <color name="charging_header_btn_stroke">#B6BEC8</color>
+    <color name="charging_header_btn_text">#111827</color>
 </resources>

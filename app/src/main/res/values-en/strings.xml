@@ -111,7 +111,6 @@
     <string name="consumption_mode_trip">From Start</string>
     <string name="status">STATUS</string>
     <string name="status_charging">🔋 Charging &amp; status</string>
-    <string name="charging_status_title">CHARGING STATUS</string>
     <string name="charging_status_label">Charging status: --</string>
     <string name="charging_duration_placeholder">--:--:--</string>
     <string name="btn_charging_history">Show charging history</string>

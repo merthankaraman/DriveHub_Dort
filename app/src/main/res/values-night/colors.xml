@@ -9,4 +9,10 @@
     <color name="panel_button_bg">#21262D</color>
     <!-- İkincil metin (açıklama / etiket, gece) -->
     <color name="text_secondary">#8B949E</color>
+    <color name="charging_card_stroke">#30363D</color>
+    <color name="charging_kw">#FFA657</color>
+    <color name="charging_energy">#7EE787</color>
+    <color name="charging_header_btn_fill">#30363D</color>
+    <color name="charging_header_btn_stroke">#58A6FF</color>
+    <color name="charging_header_btn_text">#E6EDF3</color>
 </resources>

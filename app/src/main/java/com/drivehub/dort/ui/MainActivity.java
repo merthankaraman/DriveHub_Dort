@@ -1543,6 +1543,9 @@ public class MainActivity extends AppCompatActivity {
         if (mRowDcEnergy != null) {
             mRowDcEnergy.setVisibility(energyRowVis);
         }
+        if (findViewById(R.id.btnOpenChargingGraph) != null) {
+            findViewById(R.id.btnOpenChargingGraph).setVisibility(energyRowVis);
+        }
 
         // Sol sütun: AC şarjda AC V/A/kW/kWh; DC şarjda istasyon DC (U, beklenen A, beklenen kW, DC kWh)
         if (leftColumnIsAc) {
