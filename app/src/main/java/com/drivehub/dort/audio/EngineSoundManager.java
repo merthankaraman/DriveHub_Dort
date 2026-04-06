@@ -68,7 +68,7 @@ public class EngineSoundManager {
     private int mTurboSoundId = -1;
     private int mTurboStreamId = -1;
     private float mCurrentTurboBoost = 0f;
-    private float mTurboMaxSound = 0.3f;
+    private float mTurboMaxSound = 0.5f;
     // Supercharger (kompresör) genel master seviyesi – motor sesine göre baskınlık buradan ayarlanıyor
     private float mCompressorMaxVol = 0.7f;
 
