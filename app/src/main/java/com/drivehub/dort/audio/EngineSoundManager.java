@@ -38,7 +38,6 @@ public class EngineSoundManager {
     private float mCurrentSpeedKmh = 0f;
     private float mSimulatedThrottle = 0f; // 0–1
     private float mMotorMaxPower = 130f;
-    private float mCurrentDcPowerKw = 0f;
     private boolean mUseManualThrottle = false;
     private int mCurrentGear = 0;
     private float mCurrentRpm = 1000f;
@@ -1067,18 +1066,17 @@ public class EngineSoundManager {
             float lMotorMaxPower = mMotorMaxPower + 20f;
             float rpm, speed, dcKw_kadran;
             int gear;
+            float dcKw = MG4Hardware.getDcKwGlobal();
             if (MG4Hardware.isSoundEnabled() && MG4Hardware.isVehicleReady()) {
                 rpm = mCurrentRpm;
                 speed = mCurrentSpeedKmh;
-                dcKw_kadran = mCurrentDcPowerKw;
                 gear = mCurrentGear;
             } else {
                 rpm = -1f;
                 gear = 0;
                 speed = MG4Hardware.getSpeedForEngine();
-                float dcKw = MG4Hardware.getDcKwGlobal();
-                dcKw_kadran = Float.isNaN(dcKw) ? 0f : (speed == 0 && dcKw < 0f ? 0f : dcKw);
             }
+            dcKw_kadran = Float.isNaN(dcKw) ? 0f : (speed == 0 && dcKw < 0f ? 0f : dcKw);
             com.drivehub.dort.telemetry.TelemetryHolder.update(
                     rpm,
                     speed,
