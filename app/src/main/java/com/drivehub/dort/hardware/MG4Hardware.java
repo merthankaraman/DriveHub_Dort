@@ -1455,8 +1455,8 @@ public class MG4Hardware {
     public static void runMainTask() {
         float speedKmh_raw = getSpeedKmh();
         float speedKmh = speedKmh_raw;
-        //if (speedKmh_raw >= 80) speedKmh *= 1.0035f;
-        //if (speedKmh < 1.0f) speedKmh = 0f;
+        if (speedKmh_raw >= 80) speedKmh *= 1.0034f;
+        if (speedKmh < 2.0f) speedKmh = 0f;
         sVehicleACCPedalPos = getFloatPropertyCPM(PROP_SENSOR_ACC_PEDAL_POS, AREA_GLOBAL);
         sVehiclePowerPerc = getIntPropertyCPM(PROP_SENSOR_DRIVE_EFFICIENCY, AREA_GLOBAL);
 
@@ -1500,18 +1500,9 @@ public class MG4Hardware {
         }
 
         // Güç için güvenlik sınırı: abs(dcKw) mantıksız derecede büyükse integrale sokma
-        if (!Float.isNaN(dcKw) && Math.abs(dcKw) > 300f) {
-            if (sLogEnabled) {
-                Log.w(TAG, "integral_diag: dcKw clamp edildi dcKw=" + dcKw
-                        + " dcVolt=" + dcVolt + " dcAmpAct=" + dcAmpAct
-                        + " speedKmh=" + speedKmh);
-            }
-            elseifcounter += 1;
+        if (!Float.isNaN(dcKw) && Math.abs(dcKw) > 3000f) {
             dcKw = Float.NaN;
         }
-
-        if ((elseifcounter > 0 || elsecounter > 0)) Log.i(TAG,"integral_diag: dcVolt ve dcAmp NAN elseif: " + elseifcounter + " else: " + elsecounter + "kwh/km speedKmh " + speedKmh);
-
 
         float acVolt = getAcVoltage();
         float acAmp = getAcCurrent();
@@ -1523,17 +1514,6 @@ public class MG4Hardware {
         double dtHours = (sConsumptionLastRealtimeMs > 0)
                 ? (nowRealtimeMs - sConsumptionLastRealtimeMs) / 3600000.0
                 : 0.0;
-        if (dtHours <= 0.0 || dtHours > 1.0) {
-            if (dtHours <= 0.0) dtHourscounter += 1;
-            else dtHourscounter1 += 1;
-            if (sLogEnabled) {
-                Log.w(TAG,"integral_diag: dtHours skip dt=" + dtHours
-                        + " lastRealtimeMs=" + sConsumptionLastRealtimeMs + " nowRealtimeMs=" + nowRealtimeMs);
-            }
-            sConsumptionLastRealtimeMs = nowRealtimeMs;
-            return;
-        }
-        if (dtHourscounter > 0 || dtHourscounter1 > 0) Log.i(TAG,"integral_diag: dtHourscounter " + dtHourscounter + " dtHourscounter1: " + dtHourscounter1);
 
         sConsumptionLastRealtimeMs = nowRealtimeMs;
         if (dtHours > 0) {
@@ -1565,22 +1545,18 @@ public class MG4Hardware {
             sLifetimeKwhSum.add(drivedKwh);
             sLifetimeKmSum.add(dKm);
 
-            //if (isVehicleReady()) {
-                sLifetimeHoursSum.add(dtHours);
-                sTripHoursSum.add(dtHours);
-                for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
-                    sConsProfileHoursSums[i].add(dtHours);
-                }
-            //    if (sLastGear >= 2 && sLastGear <= 4) {
+            sLifetimeHoursSum.add(dtHours);
+            sTripHoursSum.add(dtHours);
+            for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
+                sConsProfileHoursSums[i].add(dtHours);
+            }
 
-                    if (!Float.isNaN(speedKmh)) {
-                        sDriveGraphDistanceKmSum.add(dKm);
-                    }
-                    if (!Float.isNaN(dcKw)) {
-                        sDriveGraphEnergyKwhSum.add(drivedKwh);
-                    }
-            //    }
-            //}
+            if (!Float.isNaN(speedKmh)) {
+                sDriveGraphDistanceKmSum.add(dKm);
+            }
+            if (!Float.isNaN(dcKw)) {
+                sDriveGraphEnergyKwhSum.add(drivedKwh);
+            }
             if (isCharging()) {
                 if (!Float.isNaN(acKw) && acKw > 0f) {
                     double aEffKw = (Float.isNaN(sAcKw) || sAcKw <= 0f)
@@ -1605,8 +1581,6 @@ public class MG4Hardware {
                     }
                 }
             }
-        } else {
-            dtHourscounter += 1;
         }
 
         sDcVolt = dcVolt;
