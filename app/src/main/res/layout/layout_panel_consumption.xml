@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/layoutConsumptionPanel"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -15,9 +16,14 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_charging_card"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="12dp">
 
             <!-- Sol: Geri + Tüketim -->
             <LinearLayout
@@ -56,7 +62,7 @@
                     android:layout_gravity="center"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:background="@drawable/bg_consumption_segmented"
+                    android:background="@drawable/bg_charging_header_button"
                     android:padding="4dp">
 
                     <Button
@@ -67,8 +73,9 @@
                         android:minHeight="0dp"
                         android:text="@string/consumption_mode_trip"
                         android:textSize="15sp"
-                        android:backgroundTint="#21262D"
-                        android:textColor="#C9D1D9"
+                        android:background="@drawable/bg_charging_header_button"
+                        app:backgroundTint="@null"
+                        android:textColor="@color/charging_header_btn_text"
                         android:gravity="center"
                         android:paddingStart="14dp"
                         android:paddingEnd="14dp"/>
@@ -82,8 +89,9 @@
                         android:layout_marginStart="4dp"
                         android:text="@string/consumption_mode_since_start"
                         android:textSize="15sp"
-                        android:backgroundTint="#21262D"
-                        android:textColor="#C9D1D9"
+                        android:background="@drawable/bg_charging_header_button"
+                        app:backgroundTint="@null"
+                        android:textColor="@color/charging_header_btn_text"
                         android:gravity="center"
                         android:paddingStart="14dp"
                         android:paddingEnd="14dp"/>
@@ -97,8 +105,9 @@
                         android:layout_marginStart="4dp"
                         android:text="@string/consumption_lifetime"
                         android:textSize="15sp"
-                        android:backgroundTint="#21262D"
-                        android:textColor="#C9D1D9"
+                        android:background="@drawable/bg_charging_header_button"
+                        app:backgroundTint="@null"
+                        android:textColor="@color/charging_header_btn_text"
                         android:gravity="center"
                         android:paddingStart="14dp"
                         android:paddingEnd="14dp"/>
@@ -127,9 +136,10 @@
                     android:layout_width="180dp"
                     android:layout_height="44dp"
                     android:layout_marginEnd="8dp"
-                    android:backgroundTint="#21262D"
+                    android:background="@drawable/bg_charging_header_button"
+                    app:backgroundTint="@null"
                     android:text="@string/btn_reset_trip"
-                    android:textColor="#C9D1D9"
+                    android:textColor="@color/charging_header_btn_text"
                     android:textSize="12sp"
                     android:ellipsize="end"
                     android:singleLine="true" />
@@ -138,9 +148,10 @@
                     android:id="@+id/btnDrivingHistory"
                     android:layout_width="wrap_content"
                     android:layout_height="44dp"
-                    android:backgroundTint="#1F6FEB"
+                    android:background="@drawable/bg_charging_header_button"
+                    app:backgroundTint="@null"
                     android:text="@string/driving_history_title"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/charging_header_btn_text"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -152,8 +163,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_charging_card"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="10dp">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -192,9 +208,9 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="@color/surface_variant"
+            android:background="@drawable/bg_charging_card"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -207,6 +223,11 @@
                     android:layout_height="0dp"
                     android:layout_weight="1"
                     android:layout_marginBottom="8dp"
+                    android:background="@color/surface"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp"
                     android:orientation="horizontal"
                     android:weightSum="2"
                     android:gravity="center_vertical">
@@ -275,6 +296,11 @@
                     android:layout_height="0dp"
                     android:layout_weight="1"
                     android:layout_marginBottom="16dp"
+                    android:background="@color/surface"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp"
                     android:orientation="horizontal"
                     android:weightSum="2"
                     android:gravity="center_vertical">
@@ -341,6 +367,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
+                    android:background="@color/surface"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp"
                     android:orientation="horizontal"
                     android:weightSum="2"
                     android:gravity="center_vertical">

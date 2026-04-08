@@ -1941,9 +1941,9 @@ public class MainActivity extends AppCompatActivity {
         boolean currentActive = (mConsumptionDisplayMode == CONSUMPTION_MODE_CURRENT);
         boolean lifetimeActive = (mConsumptionDisplayMode == CONSUMPTION_MODE_LIFETIME);
         int activeColor = COLOR_ACTIVE;
-        int inactiveColor = COLOR_INACTIVE;
+        int inactiveColor = androidx.core.content.ContextCompat.getColor(this, R.color.panel_button_bg);
         int textActive = 0xFFFFFFFF;
-        int textInactive = 0xFF8B949E;
+        int textInactive = androidx.core.content.ContextCompat.getColor(this, R.color.status_value);
         btnSince.setBackgroundTintList(android.content.res.ColorStateList.valueOf(sinceActive ? activeColor : inactiveColor));
         btnSince.setTextColor(sinceActive ? textActive : textInactive);
         btnCurrent.setBackgroundTintList(android.content.res.ColorStateList.valueOf(currentActive ? activeColor : inactiveColor));
