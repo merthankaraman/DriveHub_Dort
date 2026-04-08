@@ -386,7 +386,6 @@ public class MG4Hardware {
     // Tüketim / gösterge — MG4_BINDER_REFERENCE.md
     private static final int PROP_TOTAL_MILEAGE = 557873939;   // Toplam km (odometer); VendorInstrumentCluster
     private static final int PROP_GEAR         = 557847918;    // Vites konumu (int); getCarGear
-    private static volatile float sTripDistanceIntegrationScale = 1f;
 
     // Katman 2 — Parcel ile doğrudan IVehicleSettingService (UID kısıtı olabilir); üstteki PROP_* ile aynı işlevler
     private static final String DESCRIPTOR_VEHICLE =
@@ -1636,10 +1635,7 @@ public class MG4Hardware {
      *  - Global önbelleğe (sDcKw; trip/lifetime kWh, km, saat Kahan toplamları, vb.) yaz
      */
     public static void runMainTask() {
-        float speedKmh_raw = getSpeedKmh();
-        float speedKmh = speedKmh_raw;
-        if (speedKmh_raw >= 80) speedKmh *= 1.0034f;
-        if (speedKmh < 2.0f) speedKmh = 0f;
+        float speedKmh = getSpeedKmh();
         sVehicleACCPedalPos = getFloatPropertyCPM(PROP_SENSOR_ACC_PEDAL_POS, AREA_GLOBAL);
         sVehiclePowerPerc = getIntPropertyCPM(PROP_SENSOR_DRIVE_EFFICIENCY, AREA_GLOBAL);
 
@@ -1707,7 +1703,8 @@ public class MG4Hardware {
             } else {
                 vEffKmh = (Math.abs(sLastSpeedKmh) + Math.abs(speedKmh)) * 0.5f;
             }
-            double dKm = vEffKmh * dtHours * sTripDistanceIntegrationScale;
+            if (vEffKmh < 2f) vEffKmh = 0f;
+            double dKm = vEffKmh * dtHours;
             // DC güç (kWh): trapez — önceki tick sDcKw + şimdiki dcKw ortalaması × dt
             if (!Float.isNaN(dcKw)) {
                 if (speedKmh == 0f && dcKw < 0f) {
