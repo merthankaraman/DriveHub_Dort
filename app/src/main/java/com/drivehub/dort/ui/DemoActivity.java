@@ -80,8 +80,8 @@ public class DemoActivity extends AppCompatActivity {
     private final Handler mBtHandler = new Handler(Looper.getMainLooper());
     // Diagnostic index brute-force tarama (Demo)
     private static final int DIAG_SCAN_START_INDEX = 0;
-    private static final int DIAG_SCAN_END_INDEX = 0x18;
-    private static final int DIAG_SCAN_MAX_LINES = 18;
+    private static final int DIAG_SCAN_END_INDEX = 128;
+    private static final int DIAG_SCAN_MAX_LINES = 30;
     private static final long DIAG_SCAN_INTERVAL_MS = 2000L;
     private final Map<Integer, Integer> mDiagLastValues = new HashMap<>();
     private long mDiagLastScanElapsedMs = 0L;
@@ -307,18 +307,14 @@ public class DemoActivity extends AppCompatActivity {
         TextView tv = findViewById(R.id.tvTrackSensors);
         if (tv == null) return;
         StringBuilder sb = new StringBuilder(900);
-        sb.append(String.format(Locale.US, "Diag manager: %s%n",
-                MG4Hardware.isCarDiagnosticManagerReady() ? "READY" : "NULL"));
-        appendObdRequestInt(sb, MG4Hardware.PROP_TORQUE_PERCENT_DRIVER_DEMAND_INDEX, "DIAG TQ DriverDemand %");
-        appendObdRequestInt(sb, MG4Hardware.PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX, "DIAG TQ EngineActual %");
-        appendObdRequestInt(sb, MG4Hardware.PROP_TORQUE_PERCENT_ENGINE_REFERENCE_INDEX, "DIAG TQ EngineRef %");
-        appendDiagnosticScan(sb); //index test
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_OBD_SOC), "PROP SOC");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(MG4Hardware.PROP_OBD_SOC), "PROP SOC int");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_OBD_BATTERY_AMP), "OBD BATT AMP");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(MG4Hardware.PROP_OBD_BATTERY_AMP), "OBD BATT AMP");
+        appendDiagnosticScan(sb); //index test
+        /*
         appendValueFloat(sb, MG4Hardware.getSensorWheelAngleGlobal(), "Direksiyon °");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST), "tehlikeli nesne boyuna mesafe");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLATRLTVDIST), "tehlikeli nesne yanal mesafe");
+        */
         tv.setText(sb.toString());
     }
     private static void appendObdRequestInt(StringBuilder sb, int propId, String label) {

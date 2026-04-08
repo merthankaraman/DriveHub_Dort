@@ -91,17 +91,6 @@ public class MG4Hardware {
 
     public static final int PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST = 0x2160A14B; // 559980875 — tehlikeli nesne boyuna mesafe
     public static final int PROP_ADAS_FCW_OBJ_DNGRSOBJLATRLTVDIST = 0x2160A14C; // 559980876 — tehlikeli nesne yanal mesafe
-    /**
-     * Yüzde tork (genelde maks. torka oran, OBD anlamı) — kullanılacak **adres** = teşhis indeksi (24–26 dec).
-     * {@code CarPropertyManager.getProperty(int)} ile kullanılmaz; {@code android.car.diagnostic.IntegerSensorIndex} +
-     * {@code CarDiagnosticManager} (tamsayı sensör). Nm yok; EV’de veri gelmeyebilir.
-     * <p>
-     * CarProperty üzerinden “güç/tork hissi” için OEM’in yüzde göstergesi: {@link #PROP_SENSOR_DRIVE_EFFICIENCY} (0x2140159C).
-     */
-    public static final int PROP_TORQUE_PERCENT_DRIVER_DEMAND_INDEX    = 0x18; // 24 — IntegerSensorIndex.DRIVER_DEMAND_PERCENT_TORQUE
-    public static final int PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX  = 0x19; // 25 — IntegerSensorIndex.ENGINE_ACTUAL_PERCENT_TORQUE (fiilî %, ana aday)
-    public static final int PROP_TORQUE_PERCENT_ENGINE_REFERENCE_INDEX = 0x1A; // 26 — IntegerSensorIndex.ENGINE_REFERENCE_PERCENT_TORQUE
-
     public static final int PROP_OBD_SOC = 14010022;
     public static final int PROP_OBD_MOTOR_COOLANT = 14010018;
     public static final int PROP_OBD_MOTOR_TORQUE = 14010021;;
