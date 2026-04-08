@@ -22,7 +22,11 @@ import androidx.appcompat.widget.SwitchCompat;
 import com.drivehub.dort.R;
 import com.drivehub.dort.hardware.MG4Hardware;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Demo ekranı: ESP, cam kontrolleri, kilit otomasyonu (uzaklaşma/yaklaşma/yakın alan), cam yüzdeleri.
@@ -74,6 +78,15 @@ public class DemoActivity extends AppCompatActivity {
     private TextView mBtLockStatusView;
 
     private final Handler mBtHandler = new Handler(Looper.getMainLooper());
+    // Diagnostic index brute-force tarama (Demo)
+    private static final int DIAG_SCAN_START_INDEX = 0;
+    private static final int DIAG_SCAN_END_INDEX = 0x18;
+    private static final int DIAG_SCAN_MAX_LINES = 18;
+    private static final long DIAG_SCAN_INTERVAL_MS = 2000L;
+    private final Map<Integer, Integer> mDiagLastValues = new HashMap<>();
+    private long mDiagLastScanElapsedMs = 0L;
+    private String mDiagScanCachedText = "";
+
     @SuppressLint("MissingPermission")
     private final Runnable mBtScanRunnable = new Runnable() {
         @Override
@@ -299,6 +312,7 @@ public class DemoActivity extends AppCompatActivity {
         appendObdRequestInt(sb, MG4Hardware.PROP_TORQUE_PERCENT_DRIVER_DEMAND_INDEX, "DIAG TQ DriverDemand %");
         appendObdRequestInt(sb, MG4Hardware.PROP_TORQUE_PERCENT_ENGINE_ACTUAL_INDEX, "DIAG TQ EngineActual %");
         appendObdRequestInt(sb, MG4Hardware.PROP_TORQUE_PERCENT_ENGINE_REFERENCE_INDEX, "DIAG TQ EngineRef %");
+        appendDiagnosticScan(sb); //index test
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_OBD_SOC), "PROP SOC");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(MG4Hardware.PROP_OBD_SOC), "PROP SOC int");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_OBD_BATTERY_AMP), "OBD BATT AMP");
@@ -312,6 +326,51 @@ public class DemoActivity extends AppCompatActivity {
         //String s = (v == null) ? "--" : String.valueOf(v);
         String s = String.valueOf(v);
         sb.append(String.format(Locale.US, "%s: %s%n", label, s));
+    }
+
+    private void appendDiagnosticScan(StringBuilder sb) {
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (mDiagScanCachedText.isEmpty() || now - mDiagLastScanElapsedMs >= DIAG_SCAN_INTERVAL_MS) {
+            mDiagScanCachedText = buildDiagnosticScanText();
+            mDiagLastScanElapsedMs = now;
+        }
+        if (!mDiagScanCachedText.isEmpty()) {
+            sb.append(mDiagScanCachedText);
+        }
+    }
+
+    private String buildDiagnosticScanText() {
+        List<String> changed = new ArrayList<>();
+        List<String> stable = new ArrayList<>();
+        int alive = 0;
+        for (int idx = DIAG_SCAN_START_INDEX; idx <= DIAG_SCAN_END_INDEX; idx++) {
+            Integer v = MG4Hardware.readDiagnosticSystemIntegerSensor(idx);
+            if (v == null) continue;
+            alive++;
+            Integer prev = mDiagLastValues.put(idx, v);
+            String line = String.format(Locale.US, "  idx=%d(0x%02X) -> %d", idx, idx, v);
+            if (prev == null || prev.intValue() != v.intValue()) {
+                changed.add(line + (prev == null ? " [new]" : " [chg " + prev + "->" + v + "]"));
+            } else {
+                stable.add(line);
+            }
+        }
+
+        StringBuilder out = new StringBuilder(800);
+        out.append(String.format(Locale.US, "Diag scan [%d..%d] alive=%d changed=%d%n",
+                DIAG_SCAN_START_INDEX, DIAG_SCAN_END_INDEX, alive, changed.size()));
+        int maxChanged = Math.min(changed.size(), DIAG_SCAN_MAX_LINES);
+        for (int i = 0; i < maxChanged; i++) {
+            out.append(changed.get(i)).append('\n');
+        }
+        if (maxChanged < DIAG_SCAN_MAX_LINES) {
+            int remain = DIAG_SCAN_MAX_LINES - maxChanged;
+            int maxStable = Math.min(stable.size(), remain);
+            for (int i = 0; i < maxStable; i++) {
+                out.append(stable.get(i)).append('\n');
+            }
+        }
+        return out.toString();
     }
     private static void appendObdRequestFloat(StringBuilder sb, int propId, String label) {
         float f = MG4Hardware.readObdValueFloat(propId);

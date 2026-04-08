@@ -30,6 +30,7 @@ import com.drivehub.dort.util.KahanSum;
 public class MG4Hardware {
 
     private static final String TAG = "MG4_HW";
+    private static final String DIAG_LOG_PREFIX = "[DIAG_FLOW] ";
 
     // Sürüş kontrol — CarAdvancedAssistedDrivingManager.setGlobalProperty (vehiclesetting binder ile aynı ID uzayı)
     private static final int PROP_DRIVE_MODE         = 0x2140a17c; //557883772 — Sürüş modu (Eco/Normal/Sport/Kar…)
@@ -121,6 +122,11 @@ public class MG4Hardware {
         return sCarDiagnosticManager != null;
     }
     public static Integer readDiagnosticSystemIntegerSensor(int integerSensorIndex) {
+        if (sLogEnabled) {
+            Log.i(TAG, DIAG_LOG_PREFIX + "INT read start idx=" + integerSensorIndex
+                    + " (0x" + Integer.toHexString(integerSensorIndex) + ")"
+                    + " mgr=" + (sCarDiagnosticManager != null ? sCarDiagnosticManager.getClass().getName() : "null"));
+        }
         if (!isCarDiagnosticManagerReady()) {
             if (sLogEnabled) Log.i(TAG, "readDiagnosticSystemIntegerSensor: CarDiagnosticManager null");
             return null;
@@ -128,13 +134,26 @@ public class MG4Hardware {
         try {
             java.lang.reflect.Method isLive = sCarDiagnosticManager.getClass().getMethod("isLiveFrameSupported");
             Object supported = isLive.invoke(sCarDiagnosticManager);
+            if (sLogEnabled) Log.i(TAG, DIAG_LOG_PREFIX + "INT isLiveFrameSupported=" + supported);
             if (supported instanceof Boolean && !((Boolean) supported)) {
                 if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemIntegerSensor: isLiveFrameSupported=false");
                 return null;
             }
         } catch (NoSuchMethodException ignored) {
+            if (sLogEnabled) Log.i(TAG, DIAG_LOG_PREFIX + "INT isLiveFrameSupported metodu yok, devam");
         } catch (Throwable t) {
             if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemIntegerSensor: isLiveFrameSupported: " + t.getMessage());
+        }
+        Integer cached = readDiagnosticIntFromEvent(sLatestDiagnosticLiveEvent, integerSensorIndex);
+        if (cached != null) {
+            if (sLogEnabled) {
+                Log.i(TAG, DIAG_LOG_PREFIX + "INT cache hit idx=" + integerSensorIndex + " value=" + cached
+                        + " ageMs=" + (SystemClock.elapsedRealtime() - sLatestDiagnosticLiveEventElapsedMs));
+            }
+            return cached;
+        } else if (sLogEnabled) {
+            Log.i(TAG, DIAG_LOG_PREFIX + "INT cache miss idx=" + integerSensorIndex
+                    + " cachedEvent=" + (sLatestDiagnosticLiveEvent != null ? sLatestDiagnosticLiveEvent.getClass().getName() : "null"));
         }
         try {
             java.lang.reflect.Method getLatest = sCarDiagnosticManager.getClass().getMethod("getLatestLiveFrame");
@@ -143,8 +162,17 @@ public class MG4Hardware {
                 if (sLogEnabled) Log.i(TAG, "readDiagnosticSystemIntegerSensor: getLatestLiveFrame null");
                 return null;
             }
-            java.lang.reflect.Method getInt = event.getClass().getMethod("getSystemIntegerSensor", int.class);
-            return (Integer) getInt.invoke(event, integerSensorIndex);
+            if (sLogEnabled) Log.i(TAG, DIAG_LOG_PREFIX + "INT latest event=" + event.getClass().getName());
+            Integer v = readDiagnosticIntFromEvent(event, integerSensorIndex);
+            if (v != null) {
+                sLatestDiagnosticLiveEvent = event;
+                sLatestDiagnosticLiveEventElapsedMs = SystemClock.elapsedRealtime();
+                if (sLogEnabled) Log.i(TAG, DIAG_LOG_PREFIX + "INT latest read ok idx=" + integerSensorIndex + " value=" + v);
+            } else if (sLogEnabled) {
+                Log.w(TAG, DIAG_LOG_PREFIX + "INT latest read null idx=" + integerSensorIndex
+                        + " event=" + event.getClass().getName());
+            }
+            return v;
         } catch (Throwable t) {
             if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemIntegerSensor: " + t.getMessage());
             return null;
@@ -157,6 +185,11 @@ public class MG4Hardware {
      * @return değer veya null (manager yok, canlı çerçeve yok, indeks yok veya desteklenmiyor)
      */
     public static Float readDiagnosticSystemFloatSensor(int floatSensorIndex) {
+        if (sLogEnabled) {
+            Log.i(TAG, DIAG_LOG_PREFIX + "FLOAT read start idx=" + floatSensorIndex
+                    + " (0x" + Integer.toHexString(floatSensorIndex) + ")"
+                    + " mgr=" + (sCarDiagnosticManager != null ? sCarDiagnosticManager.getClass().getName() : "null"));
+        }
         if (!isCarDiagnosticManagerReady()) {
             if (sLogEnabled) Log.d(TAG, "readDiagnosticSystemFloatSensor: CarDiagnosticManager null");
             return null;
@@ -164,13 +197,26 @@ public class MG4Hardware {
         try {
             java.lang.reflect.Method isLive = sCarDiagnosticManager.getClass().getMethod("isLiveFrameSupported");
             Object supported = isLive.invoke(sCarDiagnosticManager);
+            if (sLogEnabled) Log.i(TAG, DIAG_LOG_PREFIX + "FLOAT isLiveFrameSupported=" + supported);
             if (supported instanceof Boolean && !((Boolean) supported)) {
                 if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemFloatSensor: isLiveFrameSupported=false");
                 return null;
             }
         } catch (NoSuchMethodException ignored) {
+            if (sLogEnabled) Log.i(TAG, DIAG_LOG_PREFIX + "FLOAT isLiveFrameSupported metodu yok, devam");
         } catch (Throwable t) {
             if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemFloatSensor: isLiveFrameSupported: " + t.getMessage());
+        }
+        Float cached = readDiagnosticFloatFromEvent(sLatestDiagnosticLiveEvent, floatSensorIndex);
+        if (cached != null) {
+            if (sLogEnabled) {
+                Log.i(TAG, DIAG_LOG_PREFIX + "FLOAT cache hit idx=" + floatSensorIndex + " value=" + cached
+                        + " ageMs=" + (SystemClock.elapsedRealtime() - sLatestDiagnosticLiveEventElapsedMs));
+            }
+            return cached;
+        } else if (sLogEnabled) {
+            Log.i(TAG, DIAG_LOG_PREFIX + "FLOAT cache miss idx=" + floatSensorIndex
+                    + " cachedEvent=" + (sLatestDiagnosticLiveEvent != null ? sLatestDiagnosticLiveEvent.getClass().getName() : "null"));
         }
         try {
             java.lang.reflect.Method getLatest = sCarDiagnosticManager.getClass().getMethod("getLatestLiveFrame");
@@ -179,12 +225,141 @@ public class MG4Hardware {
                 if (sLogEnabled) Log.d(TAG, "readDiagnosticSystemFloatSensor: getLatestLiveFrame null");
                 return null;
             }
-            java.lang.reflect.Method getFloat = event.getClass().getMethod("getSystemFloatSensor", int.class);
-            return (Float) getFloat.invoke(event, floatSensorIndex);
+            if (sLogEnabled) Log.i(TAG, DIAG_LOG_PREFIX + "FLOAT latest event=" + event.getClass().getName());
+            Float v = readDiagnosticFloatFromEvent(event, floatSensorIndex);
+            if (v != null) {
+                sLatestDiagnosticLiveEvent = event;
+                sLatestDiagnosticLiveEventElapsedMs = SystemClock.elapsedRealtime();
+                if (sLogEnabled) Log.i(TAG, DIAG_LOG_PREFIX + "FLOAT latest read ok idx=" + floatSensorIndex + " value=" + v);
+            } else if (sLogEnabled) {
+                Log.w(TAG, DIAG_LOG_PREFIX + "FLOAT latest read null idx=" + floatSensorIndex
+                        + " event=" + event.getClass().getName());
+            }
+            return v;
         } catch (Throwable t) {
             if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemFloatSensor: " + t.getMessage());
             return null;
         }
+    }
+
+    private static Integer readDiagnosticIntFromEvent(Object event, int sensorIndex) {
+        if (event == null) return null;
+        try {
+            java.lang.reflect.Method getInt = event.getClass().getMethod("getSystemIntegerSensor", int.class);
+            Integer val = (Integer) getInt.invoke(event, sensorIndex);
+            if (sLogEnabled) {
+                Log.d(TAG, DIAG_LOG_PREFIX + "INT event read idx=" + sensorIndex
+                        + " event=" + event.getClass().getSimpleName() + " value=" + val);
+            }
+            return val;
+        } catch (Throwable t) {
+            if (sLogEnabled) {
+                Log.w(TAG, DIAG_LOG_PREFIX + "INT event read fail idx=" + sensorIndex
+                        + " event=" + event.getClass().getSimpleName() + " err="
+                        + t.getClass().getSimpleName() + ": " + t.getMessage());
+            }
+            return null;
+        }
+    }
+
+    private static Float readDiagnosticFloatFromEvent(Object event, int sensorIndex) {
+        if (event == null) return null;
+        try {
+            java.lang.reflect.Method getFloat = event.getClass().getMethod("getSystemFloatSensor", int.class);
+            Float val = (Float) getFloat.invoke(event, sensorIndex);
+            if (sLogEnabled) {
+                Log.d(TAG, DIAG_LOG_PREFIX + "FLOAT event read idx=" + sensorIndex
+                        + " event=" + event.getClass().getSimpleName() + " value=" + val);
+            }
+            return val;
+        } catch (Throwable t) {
+            if (sLogEnabled) {
+                Log.w(TAG, DIAG_LOG_PREFIX + "FLOAT event read fail idx=" + sensorIndex
+                        + " event=" + event.getClass().getSimpleName() + " err="
+                        + t.getClass().getSimpleName() + ": " + t.getMessage());
+            }
+            return null;
+        }
+    }
+
+    /** Diagnostic live callback kaydı: getLatestLiveFrame null olsa bile son olayı cache'ler. */
+    private static void registerDiagnosticCallback(Object diagnosticManager) {
+        if (diagnosticManager == null) return;
+        try {
+            java.lang.reflect.Method[] methods = diagnosticManager.getClass().getMethods();
+            java.lang.reflect.Method registerMethod = null;
+            for (java.lang.reflect.Method m : methods) {
+                String n = m.getName().toLowerCase(java.util.Locale.US);
+                if ((n.contains("register") || n.contains("listener")) && m.getParameterCount() > 0) {
+                    Class<?> p0 = m.getParameterTypes()[0];
+                    if (p0 != null && p0.isInterface()) {
+                        registerMethod = m;
+                        if (sLogEnabled) {
+                            Log.i(TAG, DIAG_LOG_PREFIX + "register adayı: " + m.getName()
+                                    + " params=" + java.util.Arrays.toString(m.getParameterTypes()));
+                        }
+                        break;
+                    }
+                }
+            }
+            if (registerMethod == null) {
+                if (sLogEnabled) Log.w(TAG, DIAG_LOG_PREFIX + "register/listener metodu bulunamadı");
+                return;
+            }
+
+            Class<?> callbackClass = registerMethod.getParameterTypes()[0];
+            Object proxy = java.lang.reflect.Proxy.newProxyInstance(
+                    callbackClass.getClassLoader(),
+                    new Class<?>[]{ callbackClass },
+                    (proxyObj, method, args) -> {
+                        if (args != null) {
+                            for (Object arg : args) {
+                                if (arg == null) continue;
+                                if (looksLikeDiagnosticEvent(arg)) {
+                                    sLatestDiagnosticLiveEvent = arg;
+                                    sLatestDiagnosticLiveEventElapsedMs = SystemClock.elapsedRealtime();
+                                    if (sLogEnabled) {
+                                        Log.d(TAG, DIAG_LOG_PREFIX + "live event cache güncellendi: " + arg.getClass().getName());
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        return null;
+                    }
+            );
+
+            Class<?>[] paramTypes = registerMethod.getParameterTypes();
+            Object[] invokeArgs = new Object[paramTypes.length];
+            invokeArgs[0] = proxy;
+            for (int i = 1; i < paramTypes.length; i++) {
+                Class<?> pt = paramTypes[i];
+                if (pt == int.class || pt == Integer.class) invokeArgs[i] = 0;
+                else if (pt == long.class || pt == Long.class) invokeArgs[i] = 0L;
+                else if (pt == float.class || pt == Float.class) invokeArgs[i] = 0f;
+                else if (pt == double.class || pt == Double.class) invokeArgs[i] = 0d;
+                else if (pt == boolean.class || pt == Boolean.class) invokeArgs[i] = Boolean.TRUE;
+                else invokeArgs[i] = null;
+            }
+            registerMethod.invoke(diagnosticManager, invokeArgs);
+            if (sLogEnabled) Log.i(TAG, DIAG_LOG_PREFIX + "callback register ✓ (" + registerMethod.getName() + ")");
+            if (sLogEnabled) Log.i(TAG, DIAG_LOG_PREFIX + "callback args=" + java.util.Arrays.toString(invokeArgs));
+        } catch (Throwable t) {
+            Log.w(TAG, DIAG_LOG_PREFIX + "callback register hata: " + t.getMessage());
+        }
+    }
+
+    private static boolean looksLikeDiagnosticEvent(Object obj) {
+        if (obj == null) return false;
+        try {
+            obj.getClass().getMethod("getSystemIntegerSensor", int.class);
+            return true;
+        } catch (Throwable ignored) {}
+        try {
+            obj.getClass().getMethod("getSystemFloatSensor", int.class);
+            return true;
+        } catch (Throwable ignored) {}
+        return false;
     }
 
     /** OBD yüzde tork —  fiilî (0x19); null = veri yok. */
@@ -309,6 +484,9 @@ public class MG4Hardware {
     private static Object  sCarHvacManager         = null;
     /** {@code Car.getCarManager(DIAGNOSTIC_SERVICE)} — canlı teşhis çerçevesi (IntegerSensorIndex). */
     private static Object  sCarDiagnosticManager   = null;
+    /** CarDiagnosticManager callback'inden gelen son live event (getLatestLiveFrame null olduğunda yedek). */
+    private static volatile Object sLatestDiagnosticLiveEvent = null;
+    private static volatile long sLatestDiagnosticLiveEventElapsedMs = 0L;
     private static boolean sCarBindAttempted       = false;
     private static IBinder sVehicleBinder          = null;
     private static boolean sInitialized            = false;
@@ -390,6 +568,8 @@ public class MG4Hardware {
         sCarPropertyManager    = null;
         sCarHvacManager        = null;
         sCarDiagnosticManager  = null;
+        sLatestDiagnosticLiveEvent = null;
+        sLatestDiagnosticLiveEventElapsedMs = 0L;
         sVehicleBinder         = null;
         sVehicleSettingService = null;
         sVsBindAttempted       = false;
@@ -479,6 +659,8 @@ public class MG4Hardware {
                         sCarPropertyManager = null;
                         sCarHvacManager = null;
                         sCarDiagnosticManager = null;
+                        sLatestDiagnosticLiveEvent = null;
+                        sLatestDiagnosticLiveEventElapsedMs = 0L;
                     }
                 };
                 try {
@@ -633,6 +815,7 @@ public class MG4Hardware {
                 Object cdm = getCarManager.invoke(sCar, diagService);
                 if (cdm != null) {
                     sCarDiagnosticManager = cdm;
+                    registerDiagnosticCallback(cdm);
                     if (sLogEnabled) {
                         Log.i(TAG, "  ✓ CarDiagnosticManager HAZIR: " + cdm.getClass().getName());
                         try {
