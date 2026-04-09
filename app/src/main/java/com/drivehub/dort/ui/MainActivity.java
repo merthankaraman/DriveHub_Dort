@@ -1532,7 +1532,7 @@ public class MainActivity extends AppCompatActivity {
         if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct)) {
             float battKw = Math.abs((dcVolt * dcAmpAct) / 1000f);
             double kmPerMin = (battKw / 60.0) * kmPerKwh;
-            if (battKw < 12.0f) {
+            if (battKw > 22.0f) {
                 mTvDcKwChargeHint.setText(getString(R.string.charging_hint_km_per_min, kmPerMin));
             }
             else{
