@@ -80,7 +80,7 @@ public class DemoActivity extends AppCompatActivity {
     private final Handler mBtHandler = new Handler(Looper.getMainLooper());
     // Diagnostic index brute-force tarama (Demo)
     private static final int DIAG_SCAN_START_INDEX = 0;
-    private static final int DIAG_SCAN_END_INDEX = 128;
+    private static final int DIAG_SCAN_END_INDEX = 512;
     private static final int DIAG_SCAN_MAX_LINES = 30;
     private static final long DIAG_SCAN_INTERVAL_MS = 2000L;
     private final Map<Integer, Integer> mDiagLastValues = new HashMap<>();
@@ -306,6 +306,7 @@ public class DemoActivity extends AppCompatActivity {
     private void refreshTrackSensors() {
         TextView tv = findViewById(R.id.tvTrackSensors);
         if (tv == null) return;
+        MG4Hardware.refreshDiagnosticLiveFrame();
         StringBuilder sb = new StringBuilder(900);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(MG4Hardware.PROP_OBD_SOC), "PROP SOC int");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(MG4Hardware.PROP_OBD_BATTERY_AMP), "OBD BATT AMP");

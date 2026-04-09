@@ -31,6 +31,8 @@ public class MG4Hardware {
 
     private static final String TAG = "MG4_HW";
     private static final String DIAG_LOG_PREFIX = "[DIAG_FLOW] ";
+    /** Diagnostic callback/getLatest cache'i bu süreden eskiyse stale sayılır. */
+    private static final long DIAG_EVENT_MAX_AGE_MS = 1500L;
 
     // Sürüş kontrol — CarAdvancedAssistedDrivingManager.setGlobalProperty (vehiclesetting binder ile aynı ID uzayı)
     private static final int PROP_DRIVE_MODE         = 0x2140a17c; //557883772 — Sürüş modu (Eco/Normal/Sport/Kar…)
@@ -133,13 +135,17 @@ public class MG4Hardware {
         } catch (Throwable t) {
             if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemIntegerSensor: isLiveFrameSupported: " + t.getMessage());
         }
-        Integer cached = readDiagnosticIntFromEvent(sLatestDiagnosticLiveEvent, integerSensorIndex);
+        boolean cacheFresh = isDiagnosticEventFresh();
+        Integer cached = cacheFresh ? readDiagnosticIntFromEvent(sLatestDiagnosticLiveEvent, integerSensorIndex) : null;
         if (cached != null) {
             if (sLogEnabled) {
                 Log.i(TAG, DIAG_LOG_PREFIX + "INT cache hit idx=" + integerSensorIndex + " value=" + cached
                         + " ageMs=" + (SystemClock.elapsedRealtime() - sLatestDiagnosticLiveEventElapsedMs));
             }
             return cached;
+        } else if (!cacheFresh && sLatestDiagnosticLiveEvent != null && sLogEnabled) {
+            Log.i(TAG, DIAG_LOG_PREFIX + "INT stale cache skip idx=" + integerSensorIndex
+                    + " ageMs=" + (SystemClock.elapsedRealtime() - sLatestDiagnosticLiveEventElapsedMs));
         } else if (sLogEnabled) {
             Log.i(TAG, DIAG_LOG_PREFIX + "INT cache miss idx=" + integerSensorIndex
                     + " cachedEvent=" + (sLatestDiagnosticLiveEvent != null ? sLatestDiagnosticLiveEvent.getClass().getName() : "null"));
@@ -196,13 +202,17 @@ public class MG4Hardware {
         } catch (Throwable t) {
             if (sLogEnabled) Log.w(TAG, "readDiagnosticSystemFloatSensor: isLiveFrameSupported: " + t.getMessage());
         }
-        Float cached = readDiagnosticFloatFromEvent(sLatestDiagnosticLiveEvent, floatSensorIndex);
+        boolean cacheFresh = isDiagnosticEventFresh();
+        Float cached = cacheFresh ? readDiagnosticFloatFromEvent(sLatestDiagnosticLiveEvent, floatSensorIndex) : null;
         if (cached != null) {
             if (sLogEnabled) {
                 Log.i(TAG, DIAG_LOG_PREFIX + "FLOAT cache hit idx=" + floatSensorIndex + " value=" + cached
                         + " ageMs=" + (SystemClock.elapsedRealtime() - sLatestDiagnosticLiveEventElapsedMs));
             }
             return cached;
+        } else if (!cacheFresh && sLatestDiagnosticLiveEvent != null && sLogEnabled) {
+            Log.i(TAG, DIAG_LOG_PREFIX + "FLOAT stale cache skip idx=" + floatSensorIndex
+                    + " ageMs=" + (SystemClock.elapsedRealtime() - sLatestDiagnosticLiveEventElapsedMs));
         } else if (sLogEnabled) {
             Log.i(TAG, DIAG_LOG_PREFIX + "FLOAT cache miss idx=" + floatSensorIndex
                     + " cachedEvent=" + (sLatestDiagnosticLiveEvent != null ? sLatestDiagnosticLiveEvent.getClass().getName() : "null"));
@@ -268,6 +278,38 @@ public class MG4Hardware {
                         + t.getClass().getSimpleName() + ": " + t.getMessage());
             }
             return null;
+        }
+    }
+
+    private static boolean isDiagnosticEventFresh() {
+        if (sLatestDiagnosticLiveEvent == null) return false;
+        long ageMs = SystemClock.elapsedRealtime() - sLatestDiagnosticLiveEventElapsedMs;
+        return ageMs >= 0L && ageMs <= DIAG_EVENT_MAX_AGE_MS;
+    }
+
+    /**
+     * Live frame'i proaktif tazeler; callback gecikirse getLatestLiveFrame ile cache'i günceller.
+     *
+     * @return true: non-null frame alındı ve cache güncellendi.
+     */
+    public static boolean refreshDiagnosticLiveFrame() {
+        if (!isCarDiagnosticManagerReady()) return false;
+        try {
+            java.lang.reflect.Method getLatest = sCarDiagnosticManager.getClass().getMethod("getLatestLiveFrame");
+            Object event = getLatest.invoke(sCarDiagnosticManager);
+            if (event == null) {
+                if (sLogEnabled) Log.d(TAG, DIAG_LOG_PREFIX + "refresh getLatestLiveFrame null");
+                return false;
+            }
+            sLatestDiagnosticLiveEvent = event;
+            sLatestDiagnosticLiveEventElapsedMs = SystemClock.elapsedRealtime();
+            if (sLogEnabled) {
+                Log.d(TAG, DIAG_LOG_PREFIX + "refresh ok event=" + event.getClass().getName());
+            }
+            return true;
+        } catch (Throwable t) {
+            if (sLogEnabled) Log.w(TAG, DIAG_LOG_PREFIX + "refresh hata: " + t.getMessage());
+            return false;
         }
     }
 
