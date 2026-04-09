@@ -1530,9 +1530,14 @@ public class MainActivity extends AppCompatActivity {
         }
         double kmPerKwh = lifetimeKm / lifetimeKwh;
         if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct)) {
-            float battKw = (dcVolt * dcAmpAct) / 1000f;
+            float battKw = Math.abs((dcVolt * dcAmpAct) / 1000f);
             double kmPerMin = (battKw / 60.0) * kmPerKwh;
-            mTvDcKwChargeHint.setText(getString(R.string.charging_hint_km_per_min, kmPerMin));
+            if (battKw < 12.0f) {
+                mTvDcKwChargeHint.setText(getString(R.string.charging_hint_km_per_min, kmPerMin));
+            }
+            else{
+                mTvDcKwChargeHint.setText(getString(R.string.charging_hint_km_per_hour, kmPerMin * 60));
+            }
             mTvDcKwChargeHint.setVisibility(View.VISIBLE);
         } else {
             mTvDcKwChargeHint.setVisibility(View.GONE);

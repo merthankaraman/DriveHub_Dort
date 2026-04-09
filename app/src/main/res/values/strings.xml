@@ -119,6 +119,7 @@
     <string name="not_charging">Şarjda değil</string>
     <!-- Lifetime ortalama tüketime göre menzil eşdeğeri; yalnızca şarjdayken -->
     <string name="charging_hint_km_per_min">dakikada %.1f km şarj oluyor</string>
+    <string name="charging_hint_km_per_hour">saatte %.2f km şarj oluyor</string>
     <string name="charging_hint_km_from_energy">%.1f km şarj oldu</string>
 
     <!-- Şarj geçmişi ekranı -->
