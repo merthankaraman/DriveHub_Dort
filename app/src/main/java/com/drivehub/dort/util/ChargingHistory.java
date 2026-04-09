@@ -45,6 +45,7 @@ public final class ChargingHistory {
         String chargeType = (acKwhRaw >= 0.01)
                 ? ChargingRecord.CHARGE_TYPE_AC
                 : ChargingRecord.CHARGE_TYPE_DC;
+        if (dcKwhD < 0.02 || (endMs - startMs < 5000)) return false;
         float startSoc = MG4Hardware.getChargingStartSoc();
         float endSoc = MG4Hardware.getSoc();
         ChargingRecord record = new ChargingRecord(startMs, endMs, (float) acKwhD, (float) dcKwhD, chargeType, startSoc, endSoc);
