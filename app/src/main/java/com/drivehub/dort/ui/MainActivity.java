@@ -2183,7 +2183,14 @@ public class MainActivity extends AppCompatActivity {
             if (mTvConsumptionAvgKwhPer100km != null) {
                 if (tripDistanceKm > 0.01) {
                     double avgKwhPer100 = (tripEnergyKwh / tripDistanceKm) * 100.0;
-                    mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f kWh/100 km", avgKwhPer100));
+                    float km2 = MG4Hardware.getTripDistanceKm2();//TODO test
+                    double avgKwhPer1002 = (tripEnergyKwh / km2) * 100.0;
+                    boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+                    if (showDemo) {
+                        mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f kWh/100 km\n%.2f kWh/100 km", avgKwhPer100, avgKwhPer1002));                    }
+                    else {
+                        mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f kWh/100 km", avgKwhPer100));
+                    }
                 } else {
                     mTvConsumptionAvgKwhPer100km.setText("--");
                 }
