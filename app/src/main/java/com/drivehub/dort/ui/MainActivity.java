@@ -2087,7 +2087,17 @@ public class MainActivity extends AppCompatActivity {
             if (Float.isNaN(speedKmh)) {
                 mTvConsumptionSpeed.setText("--");
             } else {
-                mTvConsumptionSpeed.setText(String.format(Locale.US, "%.2f km/h", speedKmh));
+                float speedKmh2 = speedKmh;//TODO test
+                if (speedKmh < 2f) speedKmh2 = 0f;
+                else if (speedKmh > 30f) speedKmh2 *= 1.02f;
+                int round_speedKmh = Math.round(speedKmh2);
+                boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+                if (showDemo) {
+                    mTvConsumptionSpeed.setText(String.format(Locale.US, "%.2f km/h\n%.2f km/h    %d km/h", speedKmh, speedKmh2, round_speedKmh));
+                }
+                else {
+                    mTvConsumptionSpeed.setText(String.format(Locale.US, "%.2f km/h", speedKmh));
+                }
             }
         }
         if (mTvConsumptionSoc != null) {
@@ -2154,7 +2164,15 @@ public class MainActivity extends AppCompatActivity {
             // Sürüş: trip (Sürüş sıfırla ile sıfırlanan)
             if (mTvConsumptionTripKm != null) {
                 if (tripDistanceKm >= 0) {
-                    mTvConsumptionTripKm.setText(String.format(Locale.US, "%.3f km", tripDistanceKm));
+
+                    float km2 = MG4Hardware.getTripDistanceKm2();//TODO test
+                    boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+                    if (showDemo) {
+                        mTvConsumptionTripKm.setText(String.format(Locale.US, "%.3f km\n%.3f km", tripDistanceKm, km2));
+                    }
+                    else {
+                        mTvConsumptionTripKm.setText(String.format(Locale.US, "%.3f km", tripDistanceKm));
+                    }
                 } else {
                     mTvConsumptionTripKm.setText("--");
                 }

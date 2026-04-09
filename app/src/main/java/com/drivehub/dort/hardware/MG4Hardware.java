@@ -1620,6 +1620,7 @@ public class MG4Hardware {
     private static final String PREF_CONS_PROFILE_KWH_PREFIX = "cons_profile_kwh_";
     private static final String PREF_CONS_PROFILE_NAME_PREFIX  = "cons_profile_name_";
     private static final String PREF_CONS_PROFILE_HOURS_PREFIX = "cons_profile_hours_";
+    private static volatile float sSpeedKmh2_km = Float.NaN;
     private static final KahanSum sTripEnergyKwhSum = new KahanSum();
     private static final KahanSum sTripDistanceKmSum = new KahanSum();
     private static final KahanSum sTripHoursSum = new KahanSum();
@@ -1736,6 +1737,11 @@ public class MG4Hardware {
             }
             if (vEffKmh < 2f) vEffKmh = 0f;
             double dKm = vEffKmh * dtHours;
+
+            float speedKmh2 = speedKmh;
+            if (speedKmh < 2f) speedKmh2 = 0f;
+            else if (speedKmh > 30) speedKmh2 *= 1.02f;
+
             // DC güç (kWh): trapez — önceki tick sDcKw + şimdiki dcKw ortalaması × dt
             if (!Float.isNaN(dcKw)) {
                 if (speedKmh == 0f && dcKw < 0f) {
@@ -1752,6 +1758,7 @@ public class MG4Hardware {
             }
             sTripDistanceKmSum.add(dKm);
             sTripEnergyKwhSum.add(drivedKwh);
+            sSpeedKmh2_km += (float) (speedKmh2 * dtHours);
 
             sLifetimeKwhSum.add(drivedKwh);
             sLifetimeKmSum.add(dKm);
@@ -1818,6 +1825,7 @@ public class MG4Hardware {
         sMileageAtConsumptionStart = getTotalMileage();
         sTripEnergyKwhSum.reset();
         sTripDistanceKmSum.reset();
+        sSpeedKmh2_km = 0f;
         sTripHoursSum.reset();
         sConsumptionLastRealtimeMs = SystemClock.elapsedRealtime();
     }
@@ -1831,6 +1839,8 @@ public class MG4Hardware {
     }
     public static double getTripEnergyKwh() { return sTripEnergyKwhSum.get(); }
     public static double getTripDistanceKm() { return sTripDistanceKmSum.get(); }
+
+    public static float getTripDistanceKm2() { return sSpeedKmh2_km; }
     public static double getTripHours() { return sTripHoursSum.get(); }
 
     /** Hayat boyu değerlerini hafızadan yükle (servis başlarken bir kez çağrılmalı). */
