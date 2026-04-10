@@ -1620,7 +1620,7 @@ public class MG4Hardware {
     private static final String PREF_CONS_PROFILE_KWH_PREFIX = "cons_profile_kwh_";
     private static final String PREF_CONS_PROFILE_NAME_PREFIX  = "cons_profile_name_";
     private static final String PREF_CONS_PROFILE_HOURS_PREFIX = "cons_profile_hours_";
-    private static volatile float sSpeedKmh2_km = Float.NaN;
+    private static volatile float sSpeedKmh2_km = 0f;
     private static final KahanSum sTripEnergyKwhSum = new KahanSum();
     private static final KahanSum sTripDistanceKmSum = new KahanSum();
     private static final KahanSum sTripHoursSum = new KahanSum();
@@ -1736,11 +1736,12 @@ public class MG4Hardware {
                 vEffKmh = (Math.abs(sLastSpeedKmh) + Math.abs(speedKmh)) * 0.5f;
             }
             if (vEffKmh < 2f) vEffKmh = 0f;
+            else if (vEffKmh > 30) vEffKmh *= 1.002f;
             double dKm = vEffKmh * dtHours;
 
             float speedKmh2 = speedKmh;
             if (speedKmh < 2f) speedKmh2 = 0f;
-            else if (speedKmh > 30) speedKmh2 *= 1.02f;
+            else if (speedKmh > 30) speedKmh2 *= 1.0025f;
 
             // DC güç (kWh): trapez — önceki tick sDcKw + şimdiki dcKw ortalaması × dt
             if (!Float.isNaN(dcKw)) {
@@ -1768,12 +1769,13 @@ public class MG4Hardware {
             for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
                 sConsProfileHoursSums[i].add(dtHours);
             }
-
-            if (!Float.isNaN(speedKmh)) {
-                sDriveGraphDistanceKmSum.add(dKm);
-            }
-            if (!Float.isNaN(dcKw)) {
-                sDriveGraphEnergyKwhSum.add(drivedKwh);
+            if (sVehicleReady) {
+                if (!Float.isNaN(speedKmh)) {
+                    sDriveGraphDistanceKmSum.add(dKm);
+                }
+                if (!Float.isNaN(dcKw)) {
+                    sDriveGraphEnergyKwhSum.add(drivedKwh);
+                }
             }
             if (isCharging()) {
                 if (!Float.isNaN(acKw) && acKw > 0f) {
