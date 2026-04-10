@@ -41,10 +41,13 @@ import com.drivehub.dort.model.DriveMode;
 import com.drivehub.dort.model.RegenLevel;
 import com.drivehub.dort.service.MG4ControlService;
 import com.drivehub.dort.util.ChargingHistory;
+import com.drivehub.dort.util.ChargingSocPowerAccumulator;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -226,9 +229,6 @@ public class MainActivity extends AppCompatActivity {
     private final ArrayList<Entry> mChartEntriesMaxDc = new ArrayList<>();
     private final ArrayList<Entry> mChartEntriesAc = new ArrayList<>();
     private final ArrayList<Entry> mChartEntriesBatt = new ArrayList<>();
-    private float mChargingChartIndex = 0f;
-        /** 100 ms'de bir nokta → 6000 nokta = 10 dakika */
-    private static final int CHARGING_CHART_MAX_POINTS = 6000;
 
     // Hangi panel açık? (yeniden yaratmada aynı ekrana dönmek için)
     private static final String STATE_PANEL = "current_panel";
@@ -1599,7 +1599,7 @@ public class MainActivity extends AppCompatActivity {
             mRowDcEnergy.setVisibility(energyRowVis);
         }
         if (findViewById(R.id.btnOpenChargingGraph) != null) {
-            findViewById(R.id.btnOpenChargingGraph).setVisibility(energyRowVis);
+            findViewById(R.id.btnOpenChargingGraph).setVisibility(View.VISIBLE);
         }
 
         // Sol sütun: AC şarjda AC V/A/kW/kWh; DC şarjda istasyon DC (U, beklenen A, beklenen kW, DC kWh)
@@ -1651,9 +1651,6 @@ public class MainActivity extends AppCompatActivity {
         // Şarj durumu (çıkarım: AC/DC akım veya PROP_CHG_STATUS)
         mTvChargingStatus.setText(charging ? getString(R.string.charging) : getString(R.string.not_charging));
         mTvChargingStatus.setTextColor(charging ? 0xFF7EE787 : ContextCompat.getColor(this, R.color.status_value));
-        if (mChartChargingPower != null) {
-            mChartChargingPower.setVisibility(charging ? View.VISIBLE : View.GONE);
-        }
 
         // Şarj süresi (sağ üst köşe)
         long totalSec = MG4Hardware.getChargingDurationMs() / 1000;
@@ -1666,18 +1663,9 @@ public class MainActivity extends AppCompatActivity {
             mTvChargingDuration.setText("--:--:--");
         }
 
-        // Güç grafiklerini güncelle (kW) — sadece şarjdayken aktif olsun
+        // Güç grafiği: SOC ekseninde 0.1% bin ortalamaları (MG4Hardware.runMainTask + biriktirici)
         if (charging) {
-            // AC şarjda (acVolt > 0) maks DC kW grafikte gösterilmez
-            float maxDcKw = Float.NaN;
-            if (Float.isNaN(acVolt) || acVolt <= 0f) {
-                if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) {
-                    maxDcKw = (dcVolt * dcAmpExp) / 1000f;
-                }
-            }
-            float acKw    = (!Float.isNaN(acVolt) && !Float.isNaN(acAmp))   ? (acVolt * acAmp) / 1000f : Float.NaN;
-            float battKw  = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct))   ? (dcVolt * dcAmpAct) / 1000f : Float.NaN;
-            updateChargingCharts(maxDcKw, acKw, battKw);
+            refreshChargingChartsFromSocCurve();
         }
     }
 
@@ -1705,10 +1693,18 @@ public class MainActivity extends AppCompatActivity {
         XAxis xAxis = chart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setTextColor(textColor);
+        xAxis.setTextSize(9f);
         xAxis.setDrawGridLines(false);
         xAxis.setDrawAxisLine(false);
-        xAxis.setDrawLabels(false); // zaman eksenini sade tut
+        xAxis.setDrawLabels(true);
         xAxis.setGranularity(1f);
+        xAxis.setLabelCount(8, false);
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getAxisLabel(float value, AxisBase axis) {
+                return String.format(Locale.US, "%.1f", value);
+            }
+        });
 
         YAxis yAxisL = chart.getAxisLeft();
         yAxisL.setTextColor(textColor);
@@ -1735,42 +1731,41 @@ public class MainActivity extends AppCompatActivity {
         return set;
     }
 
-    private void updateChargingCharts(float maxDcKw, float acKw, float battKw) {
+    /** Biriktirilmiş SOC–kW noktalarını çizer; X = SOC (%), Y = bin içi ortalama kW. */
+    private void refreshChargingChartsFromSocCurve() {
         if (mChartChargingPower == null) return;
-        float x = mChargingChartIndex++;
-        if (!Float.isNaN(maxDcKw)) {
-            float maxDcForChart = Math.abs(maxDcKw);
-            mChartEntriesMaxDc.add(new Entry(x, maxDcForChart));
+        mChartEntriesMaxDc.clear();
+        mChartEntriesAc.clear();
+        mChartEntriesBatt.clear();
+        for (ChargingSocPowerAccumulator.SocBinPoint p : MG4Hardware.getChargingSocCurvePointsMaxDc()) {
+            mChartEntriesMaxDc.add(new Entry(p.socEnd, p.avgKw));
         }
-        if (!Float.isNaN(acKw))    mChartEntriesAc.add(new Entry(x, acKw));
-        if (!Float.isNaN(battKw)) {
-            float DcForChart = (battKw < 0f) ? -battKw : 0f;
-            mChartEntriesBatt.add(new Entry(x, DcForChart));
+        for (ChargingSocPowerAccumulator.SocBinPoint p : MG4Hardware.getChargingSocCurvePointsAc()) {
+            mChartEntriesAc.add(new Entry(p.socEnd, p.avgKw));
         }
-        trimChartEntries(mChartEntriesMaxDc);
-        trimChartEntries(mChartEntriesAc);
-        trimChartEntries(mChartEntriesBatt);
+        for (ChargingSocPowerAccumulator.SocBinPoint p : MG4Hardware.getChargingSocCurvePointsBatt()) {
+            mChartEntriesBatt.add(new Entry(p.socEnd, p.avgKw));
+        }
 
-        // Legend'da son değeri "x.xx kW" olarak göster
         String labelMaxDc = getString(R.string.chart_legend_max_dc);
-        String labelAc    = getString(R.string.chart_legend_ac);
-        String labelBatt  = getString(R.string.chart_legend_batt);
+        String labelAc = getString(R.string.chart_legend_ac);
+        String labelBatt = getString(R.string.chart_legend_batt);
         if (!mChartEntriesMaxDc.isEmpty()) {
             float last = mChartEntriesMaxDc.get(mChartEntriesMaxDc.size() - 1).getY();
-            labelMaxDc = labelMaxDc + "  " + String.format("%.2f kW", last);
+            labelMaxDc = labelMaxDc + "  " + String.format(Locale.US, "%.2f kW", last);
         }
         if (!mChartEntriesAc.isEmpty()) {
             float last = mChartEntriesAc.get(mChartEntriesAc.size() - 1).getY();
-            labelAc = labelAc + "  " + String.format("%.2f kW", last);
+            labelAc = labelAc + "  " + String.format(Locale.US, "%.2f kW", last);
         }
         if (!mChartEntriesBatt.isEmpty()) {
             float last = mChartEntriesBatt.get(mChartEntriesBatt.size() - 1).getY();
-            labelBatt = labelBatt + "  " + String.format("%.2f kW", last);
+            labelBatt = labelBatt + "  " + String.format(Locale.US, "%.2f kW", last);
         }
 
         LineData data = new LineData();
         data.addDataSet(makeDataSet(mChartEntriesMaxDc, COLOR_CHART_MAX_DC, labelMaxDc));
-        if (acKw > 0f) {
+        if (!mChartEntriesAc.isEmpty()) {
             data.addDataSet(makeDataSet(mChartEntriesAc, COLOR_CHART_AC, labelAc));
         }
         data.addDataSet(makeDataSet(mChartEntriesBatt, COLOR_CHART_BATT, labelBatt));
@@ -1779,25 +1774,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void resetChargingGraph() {
+        MG4Hardware.resetChargingSocCurve();
         mChartEntriesMaxDc.clear();
         mChartEntriesAc.clear();
         mChartEntriesBatt.clear();
-        mChargingChartIndex = 0f;
         if (mChartChargingPower != null) {
             mChartChargingPower.clear();
             mChartChargingPower.invalidate();
-        }
-    }
-
-    private void trimChartEntries(ArrayList<Entry> entries) {
-        float minX = mChargingChartIndex - CHARGING_CHART_MAX_POINTS;
-        while (!entries.isEmpty() && entries.get(0).getX() < minX) {
-            entries.remove(0);
-        }
-        if (entries.isEmpty()) return;
-        float base = entries.get(0).getX();
-        for (Entry e : entries) {
-            e.setX(e.getX() - base);
         }
     }
 

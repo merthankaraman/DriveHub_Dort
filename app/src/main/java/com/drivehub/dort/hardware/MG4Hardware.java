@@ -12,7 +12,10 @@ import android.util.Log;
 
 import com.drivehub.dort.model.DriveMode;
 import com.drivehub.dort.model.RegenLevel;
+import com.drivehub.dort.util.ChargingSocPowerAccumulator;
 import com.drivehub.dort.util.KahanSum;
+
+import java.util.List;
 
 /**
  * MG4 EH32 — CarPropertyManager (reflection) ile araç kontrolü.
@@ -506,6 +509,8 @@ public class MG4Hardware {
     private static volatile int sVehicleIgnition        = 0;
     /** Şarj başlangıcını persist etmek için (BMS'te set, getChargingDurationMs'te geri yükle). */
     private static Context sAppContext = null;
+    /** SOC ekseninde 0.1% adımlarında kW ortalaması (şarj grafiği). */
+    private static final ChargingSocPowerAccumulator sChargingSocAccumulator = new ChargingSocPowerAccumulator();
     // Detay log açık mı? (BMS/StatusPanel spam'i için)
     private static volatile boolean sLogEnabled = true;
 
@@ -1820,6 +1825,23 @@ public class MG4Hardware {
         if (chgSt >= 0) {
             sBmsCache.put(PROP_CHG_STATUS, Integer.valueOf(chgSt));
         }
+
+        if (isCharging()) {
+            if (sChargingStartWallMs == 0L) {
+                ensureChargingSessionStarted();
+            }
+            float maxDcKw = Float.NaN;
+            if (Float.isNaN(acVolt) || acVolt <= 0f) {
+                if (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpExp)) {
+                    maxDcKw = (dcVolt * dcAmpExp) / 1000f;
+                }
+            }
+            float acKwChart = (!Float.isNaN(acVolt) && !Float.isNaN(acAmp))
+                    ? (acVolt * acAmp) / 1000f : Float.NaN;
+            float battKwChart = (!Float.isNaN(dcVolt) && !Float.isNaN(dcAmpAct))
+                    ? (dcVolt * dcAmpAct) / 1000f : Float.NaN;
+            sChargingSocAccumulator.onSample(sLastSoc, maxDcKw, acKwChart, battKwChart);
+        }
     }
 
     /** Yol sıfırla: trip başlangıç km = şimdiki toplam km, enerji + mesafe = 0. */
@@ -2033,13 +2055,37 @@ public class MG4Hardware {
     /** BMS cache güncellendiğinde çağrılır; şarj ilk tespit edildiğinde başlangıç zamanını kaydedip persist eder. */
     private static void onBmsCacheUpdated() {
         if (!isCharging() || sChargingStartWallMs != 0L) return;
+        ensureChargingSessionStarted();
+        if (sLogEnabled) Log.i(TAG, "Şarj başlangıcı kaydedildi (BMS) → persist");
+    }
+
+    /** Şarj seansı ilk kez başlatıldığında (wall clock + SOC + SOC–kW eğrisi sıfırlanır). */
+    private static void ensureChargingSessionStarted() {
+        if (sChargingStartWallMs != 0L) return;
         long now = System.currentTimeMillis();
+        sChargingSocAccumulator.reset();
         sChargingStartWallMs = now;
         sChargingStartSoc = getSoc();
         if (sAppContext != null) {
             com.drivehub.dort.util.ChargingHistory.saveChargingStart(sAppContext, now);
-            if (sLogEnabled) Log.i(TAG, "Şarj başlangıcı kaydedildi (BMS) → persist");
         }
+    }
+
+    /** Manuel grafik sıfırlama (şarj paneli düğmesi). */
+    public static void resetChargingSocCurve() {
+        sChargingSocAccumulator.reset();
+    }
+
+    public static List<ChargingSocPowerAccumulator.SocBinPoint> getChargingSocCurvePointsMaxDc() {
+        return sChargingSocAccumulator.getPointsMaxDc();
+    }
+
+    public static List<ChargingSocPowerAccumulator.SocBinPoint> getChargingSocCurvePointsAc() {
+        return sChargingSocAccumulator.getPointsAc();
+    }
+
+    public static List<ChargingSocPowerAccumulator.SocBinPoint> getChargingSocCurvePointsBatt() {
+        return sChargingSocAccumulator.getPointsBatt();
     }
 
     /** AC girişinden gelen toplam enerji — kWh (Kahan toplamı). */
@@ -2061,9 +2107,7 @@ public class MG4Hardware {
         long now = System.currentTimeMillis();
         // Şarj görüldüğünde ve henüz başlangıç yoksa: hep "şimdi"den başlat (ekran uyandığında 0 görünsün).
         if (charging && sChargingStartWallMs == 0L) {
-            sChargingStartWallMs = now;
-            sChargingStartSoc = getSoc();
-            if (sAppContext != null) com.drivehub.dort.util.ChargingHistory.saveChargingStart(sAppContext, now);
+            ensureChargingSessionStarted();
         }
         if (charging) {
             return Math.max(0L, now - sChargingStartWallMs);
@@ -2091,6 +2135,7 @@ public class MG4Hardware {
         sStationDcChargeEnergyKwhSum.reset();
         sLastBmsEventMs      = 0L;
         if (sAppContext != null) com.drivehub.dort.util.ChargingHistory.clearChargingStart(sAppContext);
+        // Şarj eğrisi oturum özetiyle birlikte temizlenmez; yeni şarjda ensureChargingSessionStarted sıfırlar.
     }
 
     /** Enerji ve süre sayaçlarını sıfırla */
@@ -2101,6 +2146,7 @@ public class MG4Hardware {
         sLastBmsEventMs      = 0L;
         sChargingStartWallMs = 0L;
         sChargingStartSoc = Float.NaN;
+        sChargingSocAccumulator.reset();
         if (sLogEnabled) Log.i(TAG, "resetEnergy() çağrıldı");
     }
 
