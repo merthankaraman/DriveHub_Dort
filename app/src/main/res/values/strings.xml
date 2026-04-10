@@ -34,6 +34,15 @@
     <string name="btn_demo">Demo</string>
     <string name="demo_screen_title">Demo</string>
     <string name="demo_track_sensors_title">Track sensörleri (CPM)</string>
+    <string name="demo_cpm_prop_scan_title">CPM prop aralığı</string>
+    <string name="demo_cpm_prop_start_hint">Başlangıç (örn. 0x2160f400)</string>
+    <string name="demo_cpm_prop_end_hint">Bitiş (örn. 0x2160f4ff)</string>
+    <string name="demo_cpm_prop_scan_run">Oku</string>
+    <string name="demo_cpm_prop_scan_busy">Okunuyor…</string>
+    <string name="demo_cpm_prop_scan_parse_error">Geçersiz sayı (onluk veya 0x…)</string>
+    <string name="demo_cpm_prop_scan_range_too_wide">CPM prop: aralık çok geniş (&gt;%1$d id)\n</string>
+    <string name="demo_cpm_prop_scan_result_header">CPM prop [%1$d..%2$d] satır=%3$d (int=-1 atlandı)\n</string>
+    <string name="demo_cpm_prop_scan_truncated">…[kesildi]\n</string>
 
     <!-- Sürüş modu + Regen ekranı -->
     <string name="drive_regen_screen_title">Sürüş &amp; Konfor</string>

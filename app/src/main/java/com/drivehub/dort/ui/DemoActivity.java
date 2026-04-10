@@ -12,12 +12,15 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
+
+import android.widget.Toast;
 
 import com.drivehub.dort.R;
 import com.drivehub.dort.hardware.MG4Hardware;
@@ -33,7 +36,7 @@ import java.util.Map;
  * Ana ekrandaki "Demo" düğmesiyle açılır.
  * Get'ler (getEspSwitch, getLeaveAutoLockMode, getApproachUnlockMode, getNearfieldUnlockMode vb.)
  * ekran açılışında ve öne gelince çağrılır. Pencere yüzdeleri, hava kalitesi, kapı kilidi ve
- * Track sensörleri (MG4Hardware TRACK_SENSOR_*) ayrıca 2 sn aralıkla güncellenir.
+ * Track sensörleri (MG4Hardware readTrackSensor*) ayrıca 2 sn aralıkla güncellenir; CPM prop aralığı elle okunur.
  */
 public class DemoActivity extends AppCompatActivity {
 
@@ -86,6 +89,10 @@ public class DemoActivity extends AppCompatActivity {
     private final Map<Integer, Integer> mDiagLastValues = new HashMap<>();
     private long mDiagLastScanElapsedMs = 0L;
     private String mDiagScanCachedText = "";
+    /** CPM {@link MG4Hardware#readTrackSensorFloat(int)} / {@link MG4Hardware#readTrackSensorInt(int)} aralık çıktısı. */
+    private String mCpmPropScanCachedText = "";
+    private volatile boolean mCpmPropScanRunning = false;
+    private static final int CPM_PROP_SCAN_MAX_IDS = 2048;
 
     @SuppressLint("MissingPermission")
     private final Runnable mBtScanRunnable = new Runnable() {
@@ -240,6 +247,11 @@ public class DemoActivity extends AppCompatActivity {
                 }
             });
         }
+
+        Button btnCpmPropScan = findViewById(R.id.btnCpmPropScan);
+        if (btnCpmPropScan != null) {
+            btnCpmPropScan.setOnClickListener(v -> runCpmPropRangeScan());
+        }
     }
 
     @Override
@@ -306,11 +318,12 @@ public class DemoActivity extends AppCompatActivity {
     private void refreshTrackSensors() {
         TextView tv = findViewById(R.id.tvTrackSensors);
         if (tv == null) return;
-        MG4Hardware.refreshDiagnosticLiveFrame();
+        //MG4Hardware.refreshDiagnosticLiveFrame();
         StringBuilder sb = new StringBuilder(900);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(MG4Hardware.PROP_OBD_SOC), "PROP SOC int");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(MG4Hardware.PROP_OBD_BATTERY_AMP), "OBD BATT AMP");
-        appendDiagnosticScan(sb); //index test
+        //appendValueInt(sb, MG4Hardware.readTrackSensorInt(MG4Hardware.PROP_OBD_SOC), "PROP SOC int");
+        //appendValueInt(sb, MG4Hardware.readTrackSensorInt(MG4Hardware.PROP_OBD_BATTERY_AMP), "OBD BATT AMP");
+        //appendDiagnosticScan(sb); //index test
+        appendCpmPropScan(sb);
         /*
         appendValueFloat(sb, MG4Hardware.getSensorWheelAngleGlobal(), "Direksiyon °");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST), "tehlikeli nesne boyuna mesafe");
@@ -334,6 +347,86 @@ public class DemoActivity extends AppCompatActivity {
         if (!mDiagScanCachedText.isEmpty()) {
             sb.append(mDiagScanCachedText);
         }
+    }
+
+    /** {@link MG4Hardware#readTrackSensorFloat(int)} / {@link MG4Hardware#readTrackSensorInt(int)} ile doldurulur; OBD satırlarının altına eklenir. */
+    private void appendCpmPropScan(StringBuilder sb) {
+        if (!mCpmPropScanCachedText.isEmpty()) {
+            sb.append(mCpmPropScanCachedText);
+        }
+    }
+
+    private void runCpmPropRangeScan() {
+        if (mCpmPropScanRunning) return;
+        EditText et0 = findViewById(R.id.etCpmPropStart);
+        EditText et1 = findViewById(R.id.etCpmPropEnd);
+        Button btn = findViewById(R.id.btnCpmPropScan);
+        if (et0 == null || et1 == null) return;
+        final int start;
+        final int end;
+        try {
+            start = parsePropIdString(et0.getText().toString());
+            end = parsePropIdString(et1.getText().toString());
+        } catch (NumberFormatException ex) {
+            Toast.makeText(this, R.string.demo_cpm_prop_scan_parse_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        mCpmPropScanRunning = true;
+        if (btn != null) {
+            btn.setEnabled(false);
+            btn.setText(R.string.demo_cpm_prop_scan_busy);
+        }
+        new Thread(() -> {
+            String text = buildCpmPropScanText(start, end);
+            runOnUiThread(() -> {
+                mCpmPropScanCachedText = text;
+                mCpmPropScanRunning = false;
+                if (btn != null) {
+                    btn.setEnabled(true);
+                    btn.setText(R.string.demo_cpm_prop_scan_run);
+                }
+                refreshTrackSensors();
+            });
+        }, "demo-cpm-prop-scan").start();
+    }
+
+    private static int parsePropIdString(String raw) throws NumberFormatException {
+        String s = raw.trim();
+        if (s.isEmpty()) throw new NumberFormatException("empty");
+        if (s.startsWith("0x") || s.startsWith("0X")) {
+            long v = Long.parseLong(s.substring(2), 16);
+            return (int) (v & 0xffffffffL);
+        }
+        long v = Long.parseLong(s);
+        return (int) (v & 0xffffffffL);
+    }
+
+    private String buildCpmPropScanText(int start, int end) {
+        int a = Math.min(start, end);
+        int b = Math.max(start, end);
+        long span = (long) b - (long) a + 1L;
+        if (span > CPM_PROP_SCAN_MAX_IDS) {
+            return getString(R.string.demo_cpm_prop_scan_range_too_wide, CPM_PROP_SCAN_MAX_IDS);
+        }
+        StringBuilder out = new StringBuilder(Math.min((int) span * 64 + 128, 200000));
+        int lines = 0;
+        for (int id = a; id <= b; id++) {
+            float f = MG4Hardware.readTrackSensorFloat(id);
+            int iv = MG4Hardware.readTrackSensorInt(id);
+            boolean hasF = !Float.isNaN(f);
+            boolean hasI = iv != -1;
+            if (!hasF && !hasI) continue;
+            lines++;
+            out.append(String.format(Locale.US, "  id=0x%08X (%d)", id, id));
+            if (hasF) out.append(String.format(Locale.US, " float=%.4f", f));
+            if (hasI) out.append(String.format(Locale.US, " int=%d", iv));
+            out.append('\n');
+            if (out.length() > 120000) {
+                out.append(getString(R.string.demo_cpm_prop_scan_truncated));
+                break;
+            }
+        }
+        return getString(R.string.demo_cpm_prop_scan_result_header, a, b, lines) + out;
     }
 
     private String buildDiagnosticScanText() {

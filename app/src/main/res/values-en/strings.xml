@@ -34,6 +34,15 @@
     <string name="btn_demo">Demo</string>
     <string name="demo_screen_title">Demo</string>
     <string name="demo_track_sensors_title">Track sensors (CPM)</string>
+    <string name="demo_cpm_prop_scan_title">CPM property range</string>
+    <string name="demo_cpm_prop_start_hint">Start (e.g. 0x2160f400)</string>
+    <string name="demo_cpm_prop_end_hint">End (e.g. 0x2160f4ff)</string>
+    <string name="demo_cpm_prop_scan_run">Read</string>
+    <string name="demo_cpm_prop_scan_busy">Reading…</string>
+    <string name="demo_cpm_prop_scan_parse_error">Invalid number (decimal or 0x…)</string>
+    <string name="demo_cpm_prop_scan_range_too_wide">CPM prop: range too large (&gt;%1$d ids)\n</string>
+    <string name="demo_cpm_prop_scan_result_header">CPM prop [%1$d..%2$d] lines=%3$d (int=-1 omitted)\n</string>
+    <string name="demo_cpm_prop_scan_truncated">…[truncated]\n</string>
 
     <!-- Window (Drive &amp; Comfort) -->
     <string name="window_section_title">WINDOW</string>

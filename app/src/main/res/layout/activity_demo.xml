@@ -279,6 +279,55 @@
         android:textColor="#8B949E"
         android:textSize="14sp"/>
 
+    <!-- CPM prop ID aralığı (readTrackSensorFloat / readTrackSensorInt) -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center_horizontal"
+        android:text="@string/demo_cpm_prop_scan_title"
+        android:textColor="@color/status_value"
+        android:textSize="18sp"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <EditText
+            android:id="@+id/etCpmPropStart"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/demo_cpm_prop_start_hint"
+            android:importantForAutofill="no"
+            android:inputType="textNoSuggestions"
+            android:textColor="#C9D1D9"
+            android:textColorHint="#6E7681"
+            android:textSize="13sp"
+            android:fontFamily="monospace"/>
+        <EditText
+            android:id="@+id/etCpmPropEnd"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:hint="@string/demo_cpm_prop_end_hint"
+            android:importantForAutofill="no"
+            android:inputType="textNoSuggestions"
+            android:textColor="#C9D1D9"
+            android:textColorHint="#6E7681"
+            android:textSize="13sp"
+            android:fontFamily="monospace"/>
+    </LinearLayout>
+    <Button
+        android:id="@+id/btnCpmPropScan"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="6dp"
+        android:text="@string/demo_cpm_prop_scan_run"/>
+
     <!-- Track Mode / OEM sensör ID’leri (MG4Hardware TRACK_SENSOR_*) -->
     <TextView
         android:layout_width="match_parent"
