@@ -341,23 +341,6 @@ public class DemoActivity extends AppCompatActivity {
         */
         tv.setText(sb.toString());
     }
-    private static void appendObdRequestInt(StringBuilder sb, int propId, String label) {
-        Integer v = MG4Hardware.readObdValueInt(propId);
-        //String s = (v == null) ? "--" : String.valueOf(v);
-        String s = String.valueOf(v);
-        sb.append(String.format(Locale.US, "%s: %s%n", label, s));
-    }
-
-    private void appendDiagnosticScan(StringBuilder sb) {
-        long now = android.os.SystemClock.elapsedRealtime();
-        if (mDiagScanCachedText.isEmpty() || now - mDiagLastScanElapsedMs >= DIAG_SCAN_INTERVAL_MS) {
-            mDiagScanCachedText = buildDiagnosticScanText();
-            mDiagLastScanElapsedMs = now;
-        }
-        if (!mDiagScanCachedText.isEmpty()) {
-            sb.append(mDiagScanCachedText);
-        }
-    }
 
     /** {@link MG4Hardware#readTrackSensorFloat(int)} / {@link MG4Hardware#readTrackSensorInt(int)} ile doldurulur; OBD satırlarının altına eklenir. */
     private void appendCpmPropScan(StringBuilder sb) {
@@ -451,6 +434,7 @@ public class DemoActivity extends AppCompatActivity {
             boolean hasF = !Float.isNaN(f);
             boolean hasI = iv != -1;
             if (!hasF && !hasI) continue;
+            if (f == 0f || iv == 0) continue; //TODO 0 value hide feat
             lines++;
             out.append(String.format(Locale.US, "  id=0x%08X (%d)", id, id));
             if (hasF) out.append(String.format(Locale.US, " float=%.4f", f));
