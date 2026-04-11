@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -138,33 +139,40 @@ public final class ChargingHistory {
             .apply();
     }
 
-    /** Geçmişi CSV olarak app'in dış dosya klasörüne yazar. Başlık ve sütunlar uygulama diline göre. Başarılıysa dosyayı döner, yoksa null. */
-    public static File exportToCsv(Context context) {
+    /** Tüm geçmişi CSV metni olarak üretir (dosya yazmadan). Başlık ve sütunlar uygulama diline göre. */
+    public static String buildCsvText(Context context) {
         List<ChargingRecord> list = load(context);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault());
+        StringWriter sw = new StringWriter();
+        String header = context.getString(R.string.csv_header_start) + ","
+                + context.getString(R.string.csv_header_end) + ","
+                + context.getString(R.string.csv_header_soc_start) + ","
+                + context.getString(R.string.csv_header_soc_end) + ","
+                + context.getString(R.string.csv_header_charge_type) + ","
+                + context.getString(R.string.csv_header_ac_kwh) + ","
+                + context.getString(R.string.csv_header_dc_kwh) + ","
+                + context.getString(R.string.csv_header_hours) + "\n";
+        sw.write(header);
+        for (ChargingRecord r : list) {
+            String start = sdf.format(new java.util.Date(r.startMs));
+            String end = sdf.format(new java.util.Date(r.endMs));
+            String ss = Float.isNaN(r.startSoc) ? "" : String.format(java.util.Locale.US, "%.1f", r.startSoc);
+            String es = Float.isNaN(r.endSoc) ? "" : String.format(java.util.Locale.US, "%.1f", r.endSoc);
+            String line = String.format(java.util.Locale.US,
+                    "\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%.3f,%.3f,%.3f\n",
+                    start, end, ss, es, r.chargeType, r.acKwh, r.dcKwh, r.getDurationHours());
+            sw.write(line);
+        }
+        return sw.toString();
+    }
+
+    /** Geçmişi CSV olarak app'in dış dosya klasörüne yazar. Başarılıysa dosyayı döner, yoksa null. */
+    public static File exportToCsv(Context context) {
         File dir = context.getExternalFilesDir(null);
         if (dir == null) return null;
         File out = new File(dir, "drivehub_dort_charging_history.csv");
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault());
         try (FileWriter fw = new FileWriter(out, false)) {
-            String header = context.getString(R.string.csv_header_start) + ","
-                    + context.getString(R.string.csv_header_end) + ","
-                    + context.getString(R.string.csv_header_soc_start) + ","
-                    + context.getString(R.string.csv_header_soc_end) + ","
-                    + context.getString(R.string.csv_header_charge_type) + ","
-                    + context.getString(R.string.csv_header_ac_kwh) + ","
-                    + context.getString(R.string.csv_header_dc_kwh) + ","
-                    + context.getString(R.string.csv_header_hours) + "\n";
-            fw.write(header);
-            for (ChargingRecord r : list) {
-                String start = sdf.format(new java.util.Date(r.startMs));
-                String end = sdf.format(new java.util.Date(r.endMs));
-                String ss = Float.isNaN(r.startSoc) ? "" : String.format(java.util.Locale.US, "%.1f", r.startSoc);
-                String es = Float.isNaN(r.endSoc) ? "" : String.format(java.util.Locale.US, "%.1f", r.endSoc);
-                String line = String.format(java.util.Locale.US,
-                        "\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%.3f,%.3f,%.3f\n",
-                        start, end, ss, es, r.chargeType, r.acKwh, r.dcKwh, r.getDurationHours());
-                fw.write(line);
-            }
+            fw.write(buildCsvText(context));
             fw.flush();
             return out;
         } catch (IOException e) {

@@ -1,12 +1,15 @@
 package com.drivehub.dort.ui;
 
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,8 +20,11 @@ import androidx.core.content.ContextCompat;
 import com.drivehub.dort.R;
 import com.drivehub.dort.model.DrivingRecord;
 import com.drivehub.dort.util.DrivingHistory;
+import com.drivehub.dort.util.QrExportHelper;
+import com.google.zxing.WriterException;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -71,6 +77,8 @@ public class DrivingHistoryActivity extends AppCompatActivity {
                 Toast.makeText(this, getString(R.string.driving_history_toast_export_failed), Toast.LENGTH_SHORT).show();
             }
         });
+
+        findViewById(R.id.btnDrivingHistoryQr).setOnClickListener(v -> showDrivingHistoryQr());
 
         findViewById(R.id.btnClearDrivingHistory).setOnClickListener(v -> {
             new AlertDialog.Builder(this)
@@ -278,6 +286,61 @@ public class DrivingHistoryActivity extends AppCompatActivity {
         tv.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
         tv.setTextSize(14);
         row.addView(tv);
+    }
+
+    /**
+     * CSV metnini tek bir QR kodda gösterir. QR standartlarında bayt sınırı vardır; aşılırsa kullanıcı bilgilendirilir.
+     */
+    private void showDrivingHistoryQr() {
+        if (DrivingHistory.load(this).isEmpty()) {
+            Toast.makeText(this, R.string.driving_history_qr_empty, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String csv = DrivingHistory.buildCsvText(this);
+        int qrSide = (int) (Math.min(getResources().getDisplayMetrics().widthPixels,
+                getResources().getDisplayMetrics().heightPixels) * 0.42f);
+        qrSide = Math.max(280, Math.min(qrSide, 640));
+        Bitmap bmp;
+        try {
+            bmp = QrExportHelper.encodeQr(csv, qrSide);
+        } catch (WriterException e) {
+            int byteLen = csv.getBytes(StandardCharsets.UTF_8).length;
+            Toast.makeText(this, getString(R.string.driving_history_qr_too_large, byteLen), Toast.LENGTH_LONG).show();
+            return;
+        } catch (OutOfMemoryError e) {
+            Toast.makeText(this, R.string.driving_history_qr_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int pad = (int) (getResources().getDisplayMetrics().density * 16 + 0.5f);
+        TextView hint = new TextView(this);
+        hint.setText(R.string.driving_history_qr_hint);
+        hint.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+        hint.setTextSize(14);
+        hint.setPadding(pad, 0, pad, pad);
+
+        ImageView iv = new ImageView(this);
+        iv.setImageBitmap(bmp);
+        iv.setAdjustViewBounds(true);
+        LinearLayout.LayoutParams lpIv = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lpIv.gravity = Gravity.CENTER_HORIZONTAL;
+        iv.setLayoutParams(lpIv);
+        iv.setPadding(pad, pad, pad, 0);
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.addView(iv);
+        box.addView(hint);
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.addView(box);
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.driving_history_qr_title)
+                .setView(scroll)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
     }
 }
 

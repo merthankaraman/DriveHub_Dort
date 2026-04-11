@@ -190,6 +190,12 @@
     <string name="charging_history_btn_clear">Geçmişi Sil</string>
     <string name="charging_history_toast_saved">CSV kaydedildi: %s</string>
     <string name="charging_history_toast_export_failed">CSV dışa aktarma başarısız.</string>
+    <string name="charging_history_btn_qr">QR oluştur</string>
+    <string name="charging_history_qr_title">Şarj geçmişi (CSV metni)</string>
+    <string name="charging_history_qr_hint">Telefonla QR kodu okutun; çıkan metni not defterine yapıştırın. Dosya olarak kaydetmek isterseniz metni .csv uzantılı dosyaya yapıştırın.</string>
+    <string name="charging_history_qr_empty">Gösterilecek kayıt yok.</string>
+    <string name="charging_history_qr_too_large">Tüm geçmiş tek bir QR koda sığmıyor (%1$d bayt; üst sınır yaklaşık 2900). CSV dışa aktarma kullanın veya eski kayıtları silip tekrar deneyin.</string>
+    <string name="charging_history_qr_error">QR oluşturulamadı.</string>
     <string name="charging_history_confirm_clear">Geçmişi silmek istiyor musunuz?</string>
     <string name="charging_history_yes">Evet</string>
     <string name="charging_history_no">Hayır</string>
@@ -399,6 +405,12 @@
     <string name="driving_history_toast_cleared">Sürüş geçmişi silindi.</string>
     <string name="driving_history_toast_saved">Sürüş geçmişi CSV kaydedildi: %s</string>
     <string name="driving_history_toast_export_failed">Sürüş geçmişi CSV dışa aktarılamadı.</string>
+    <string name="driving_history_btn_qr">QR oluştur</string>
+    <string name="driving_history_qr_title">Sürüş geçmişi (CSV metni)</string>
+    <string name="driving_history_qr_hint">Telefonla QR kodu okutun; çıkan metni not defterine yapıştırın. Dosya olarak kaydetmek isterseniz metni .csv uzantılı dosyaya yapıştırın.</string>
+    <string name="driving_history_qr_empty">Gösterilecek kayıt yok.</string>
+    <string name="driving_history_qr_too_large">Tüm geçmiş tek bir QR koda sığmıyor (%1$d bayt; üst sınır yaklaşık 2900). CSV dışa aktarma kullanın veya eski kayıtları silip tekrar deneyin.</string>
+    <string name="driving_history_qr_error">QR oluşturulamadı.</string>
     <string name="driving_history_total_format">Toplam: %.2f km, %.3f kWh</string>
     <string name="driving_history_total_with_avg_format">Toplam: %.2f km, %.3f kWh (Ort: %.1f kWh/100km)</string>
     <string name="driving_history_month_total_with_avg_format">Ay toplamı: %.2f km, %.3f kWh (Ort: %.1f kWh/100km)</string>

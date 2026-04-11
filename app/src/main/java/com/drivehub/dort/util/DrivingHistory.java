@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -112,27 +113,34 @@ public final class DrivingHistory {
         save(context, new ArrayList<DrivingRecord>());
     }
 
+    /** Tüm geçmişi CSV metni olarak üretir (dosya yazmadan). */
+    public static String buildCsvText(Context context) {
+        List<DrivingRecord> list = load(context);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        StringWriter sw = new StringWriter();
+        sw.write(context.getString(R.string.driving_history_csv_header));
+        for (DrivingRecord r : list) {
+            String start = sdf.format(new java.util.Date(r.startMs));
+            String end = sdf.format(new java.util.Date(r.endMs));
+            String line = String.format(Locale.US,
+                    "\"%s\",\"%s\",%s,%s,%.3f,%.3f,%.2f,%.2f,%.3f\n",
+                    start, end,
+                    Float.isNaN(r.startSoc) ? "" : String.format(Locale.US, "%.1f", r.startSoc),
+                    Float.isNaN(r.endSoc) ? "" : String.format(Locale.US, "%.1f", r.endSoc),
+                    r.distanceKm, r.energyKwh, r.avgSpeedKmh,
+                    r.avgKwhPer100km, r.getDurationHours());
+            sw.write(line);
+        }
+        return sw.toString();
+    }
+
     /** Geçmişi CSV olarak app'in dış dosya klasörüne yazar. */
     public static File exportToCsv(Context context) {
-        List<DrivingRecord> list = load(context);
         File dir = context.getExternalFilesDir(null);
         if (dir == null) return null;
         File out = new File(dir, "drivehub_dort_driving_history.csv");
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
         try (FileWriter fw = new FileWriter(out, false)) {
-            fw.write(context.getString(R.string.driving_history_csv_header));
-            for (DrivingRecord r : list) {
-                String start = sdf.format(new java.util.Date(r.startMs));
-                String end = sdf.format(new java.util.Date(r.endMs));
-                String line = String.format(Locale.US,
-                        "\"%s\",\"%s\",%s,%s,%.3f,%.3f,%.2f,%.2f,%.3f\n",
-                        start, end,
-                        Float.isNaN(r.startSoc) ? "" : String.format(Locale.US, "%.1f", r.startSoc),
-                        Float.isNaN(r.endSoc) ? "" : String.format(Locale.US, "%.1f", r.endSoc),
-                        r.distanceKm, r.energyKwh, r.avgSpeedKmh,
-                        r.avgKwhPer100km, r.getDurationHours());
-                fw.write(line);
-            }
+            fw.write(buildCsvText(context));
             fw.flush();
             return out;
         } catch (IOException e) {
