@@ -60,10 +60,6 @@
     <string name="voice_model_error_log">Could not load model: %1$s</string>
     <string name="voice_model_not_ready">Model is not ready yet.</string>
     <string name="voice_tts_init_failed">Text-to-speech failed to start (text only).</string>
-    <string name="voice_tts_ready_log">Speech (Turkish): %1$s</string>
-    <string name="voice_tts_engine_system">System default</string>
-    <string name="voice_tts_engine_espeak">eSpeak NG</string>
-    <string name="voice_tts_install_hint">Turkish speech needs a TTS engine on the device. Suggested: F-Droid eSpeak NG (package com.reecedunn.espeak, ~9 MB, arm64). Download the APK, install with adb, then reopen this screen:\nhttps://f-droid.org/repo/com.reecedunn.espeak_22.apk\nExample: adb install -r com.reecedunn.espeak_22.apk</string>
     <string name="voice_mic_granted">Microphone permission granted.</string>
     <string name="voice_mic_denied">Microphone permission denied.</string>
     <string name="voice_listening_started">Listening…</string>
