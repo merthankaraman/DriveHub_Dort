@@ -214,12 +214,16 @@ public final class VoiceIntentDispatcher {
     }
 
     private static boolean driveModeContext(String n) {
-        return n.contains("sürüş") || n.contains("surus") || n.contains("surus")
+        return n.contains("sürüş") || n.contains("surus") || n.contains("surusu")
                 || n.contains("mod") || n.contains("araç") || n.contains("arac")
                 || n.contains("konfor");
     }
 
     private static DriveMode detectDriveMode(String n) {
+        // MG4 CUSTOM = 7; "konfor özelliği" gibi yanlış tetiklememek için özel/ozel/custom dar eşlenir.
+        if (customDriveModeMention(n)) {
+            return DriveMode.CUSTOM;
+        }
         if (n.contains("spor") || n.contains("sport")) {
             return DriveMode.SPORT;
         }
@@ -240,6 +244,24 @@ public final class VoiceIntentDispatcher {
             return true;
         }
         return n.contains(" normal ") || n.startsWith("normal ") || n.endsWith(" normal");
+    }
+
+    /** Özel sürüş profili; {@code özel} kelimesi tek başına (ör. özellik) kullanılmaz. */
+    private static boolean customDriveModeMention(String n) {
+        if (n.contains("özel mod") || n.contains("ozel mod")
+                || n.contains("modu özel") || n.contains("modu ozel")
+                || n.contains("modunu özel") || n.contains("modunu ozel")) {
+            return true;
+        }
+        if (n.contains("sürüş özel") || n.contains("surus ozel")
+                || n.contains("özel sürüş") || n.contains("ozel surus")) {
+            return true;
+        }
+        if (n.contains("custom")) {
+            return n.contains("mod") || n.contains("sürüş") || n.contains("surus")
+                    || n.contains("araç") || n.contains("arac") || n.contains("konfor");
+        }
+        return false;
     }
 
     private static boolean steeringContext(String n) {
@@ -274,7 +296,7 @@ public final class VoiceIntentDispatcher {
     private static Result driveSet(Context ctx, DriveMode dm) {
         Intent i = base(ctx, "DRIVE_SET");
         i.putExtra("driveValue", dm.value);
-        return new Result(i, "Sürüş modunu " + dm.label + " olarak ayarlıyorum.");
+        return new Result(i, ctx.getString(R.string.voice_drive_set_reply, dm.label));
     }
 
     private static Result regenSet(Context ctx, RegenLevel rl) {

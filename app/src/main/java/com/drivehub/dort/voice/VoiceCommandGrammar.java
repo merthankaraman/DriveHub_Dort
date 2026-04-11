@@ -90,6 +90,25 @@ public final class VoiceCommandGrammar {
             "kış modu",
             "kis modu",
 
+            // Sürüş modu — Özel (CUSTOM)
+            "sürüş modu özel",
+            "sürüş modunu özel yap",
+            "sürüş modunu ozel yap",
+            "surus modu ozel",
+            "surus modunu ozel yap",
+            "özel mod",
+            "ozel mod",
+            "özel moda geç",
+            "ozel moda gec",
+            "özel sürüş",
+            "ozel surus",
+            "araç özel mod",
+            "arac ozel mod",
+            "konfor modu özel",
+            "custom mod",
+            "sürüş custom",
+            "surus custom",
+
             // Üşüme — sürücü (birinci şahıs / sürücü)
             "üşüdüm",
             "üşüyorum",
