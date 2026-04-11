@@ -326,54 +326,57 @@ public class DemoActivity extends AppCompatActivity {
 
     /** Ivme / fren / lastik: MG4ControlService runMainTask önbelleği; ADAS/OBD doğrudan okuma. */
     private void refreshTrackSensors() {
-        TextView tv = findViewById(R.id.tvTrackSensors);
-        if (tv == null) return;
+        TextView tvCpmL = findViewById(R.id.tvCpmScanLeft);
+        TextView tvCpmR = findViewById(R.id.tvCpmScanRight);
+        if (tvCpmL == null || tvCpmR == null) return;
         //MG4Hardware.refreshDiagnosticLiveFrame();
         StringBuilder sb = new StringBuilder(900);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40e), "0x2140f40e:");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f416), "0x2140f416:");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f41c), "0x2140f41c:");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f42d), "0x2140f42d:");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40b), "0x2140f40b:");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40c), "0x2140f40c:");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f410), "0x2140f410:");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140159d), "0x2140159d:");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11400400), "0x11400400:");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140050e), "0x1140050e:");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11403808), "0x11403808:");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140380b), "0x1140380b:");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140381c), "0x1140381c:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11603832), "0x11603832:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21601561), "0x21601561:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21601563), "0x21601563:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x216015a5), "0x216015a5:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21607b5b), "0x21607b5b:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a118), "0x2160a118:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a119), "0x2160a119:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a11a), "0x2160a11a:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a125), "0x2160a125:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a126), "0x2160a126:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a127), "0x2160a127:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160c620), "0x2160c620:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21407b18), "0x21407b18:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21407b19), "0x21407b19:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2140db73), "0x2140db73:");
+        StringBuilder sb2 = new StringBuilder(900);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40e), "0x2140f40e");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f416), "0x2140f416");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f41c), "0x2140f41c");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f42d), "0x2140f42d");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40b), "0x2140f40b");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40c), "0x2140f40c");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f410), "0x2140f410");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140159d), "0x2140159d");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11400400), "0x11400400");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140050e), "0x1140050e");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11403808), "0x11403808");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140380b), "0x1140380b");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140381c), "0x1140381c");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11603832), "0x11603832");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21601561), "0x21601561");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21601563), "0x21601563");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x216015a5), "0x216015a5");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21607b5b), "0x21607b5b");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a118), "0x2160a118");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a119), "0x2160a119");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a11a), "0x2160a11a");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a125), "0x2160a125");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a126), "0x2160a126");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a127), "0x2160a127");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160c620), "0x2160c620");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21407b18), "0x21407b18");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21407b19), "0x21407b19");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2140db73), "0x2140db73");
 
 
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f404), "0x2160f405:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f40b), "0x2160f40b:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f40d), "0x2160f40d:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f421), "0x2160f421:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44d), "0x2160f44d:");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44f), "0x2160f44f:");
-        //appendDiagnosticScan(sb); //index test
-        appendCpmPropScan(sb);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f404), "0x2160f405");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f40b), "0x2160f40b");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f40d), "0x2160f40d");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f421), "0x2160f421");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44d), "0x2160f44d");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44f), "0x2160f44f");
+
+        appendCpmPropScan(sb2);
         /*
         appendValueFloat(sb, MG4Hardware.getSensorWheelAngleGlobal(), "Direksiyon °");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST), "tehlikeli nesne boyuna mesafe");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLATRLTVDIST), "tehlikeli nesne yanal mesafe");
         */
-        tv.setText(sb.toString());
+        tvCpmL.setText(sb.toString());
+        tvCpmR.setText(sb2.toString());
     }
 
     /** {@link MG4Hardware#readTrackSensorFloat(int)} / {@link MG4Hardware#readTrackSensorInt(int)} ile doldurulur; OBD satırlarının altına eklenir. */
