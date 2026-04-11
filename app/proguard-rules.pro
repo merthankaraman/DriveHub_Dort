@@ -1,4 +1,8 @@
 ## DriveHub Dort – ProGuard/R8 rules
+
+# Vosk (yerel STT)
+-keep class org.vosk.** { *; }
+-dontwarn org.jportaudio.**
 #
 # Not: R8, manifest'te kayıtlı Activity/Service/BroadcastReceiver sınıflarını
 # zaten otomatik olarak korur (silmez). Bu dosyada sadece özel durumları

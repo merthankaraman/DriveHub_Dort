@@ -146,6 +146,12 @@ public class DemoActivity extends AppCompatActivity {
 
         findViewById(R.id.btnDemoBack).setOnClickListener(v -> finish());
 
+        Button btnVoiceAssistant = findViewById(R.id.btnVoiceAssistant);
+        if (btnVoiceAssistant != null) {
+            btnVoiceAssistant.setOnClickListener(v ->
+                    startActivity(new Intent(this, VoiceAssistantActivity.class)));
+        }
+
         // Pencere: spinner + seekbar + yüzdeler
         mWindowSpinner = findViewById(R.id.spinnerWindowSelect);
         mWindowLevel = findViewById(R.id.tvWindowLevel);

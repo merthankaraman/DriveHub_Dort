@@ -43,6 +43,50 @@
     <string name="demo_cpm_prop_scan_range_too_wide">CPM prop: aralık çok geniş (&gt;%1$d id)\n</string>
     <string name="demo_cpm_prop_scan_result_header">CPM prop [%1$d..%2$d] satır=%3$d (int=-1 atlandı)\n</string>
     <string name="demo_cpm_prop_scan_truncated">…[kesildi]\n</string>
+    <string name="btn_voice_assistant">Sesli asistan (Vosk)</string>
+
+    <!-- Yerel sesli asistan (Demo → Asistan) -->
+    <string name="voice_assistant_title">Sesli asistan</string>
+    <string name="voice_assistant_hint">İlk açılışta Türkçe model indirilir (~50 MB, Wi-Fi önerilir). Dinle düğmesine basın; mümkünse kısa, net komut cümleleri söyleyin (komut grameri). Durdur ile kayıt biter.</string>
+    <string name="voice_listen_start">Dinle</string>
+    <string name="voice_listen_stop">Durdur</string>
+    <string name="voice_model_loading">Model hazırlanıyor…</string>
+    <string name="voice_model_downloading">Model indiriliyor…</string>
+    <string name="voice_model_download_pct">İndiriliyor (%1$d%%)</string>
+    <string name="voice_model_ready">Model hazır</string>
+    <string name="voice_model_error">Model hatası</string>
+    <string name="voice_model_ready_log">Model yüklendi. Dinle ile kayıt başlatılabilir.</string>
+    <string name="voice_model_error_log">Model yüklenemedi: %1$s</string>
+    <string name="voice_model_not_ready">Model henüz hazır değil.</string>
+    <string name="voice_tts_init_failed">TTS başlatılamadı (sadece metin gösterilecek).</string>
+    <string name="voice_mic_granted">Mikrofon izni verildi.</string>
+    <string name="voice_mic_denied">Mikrofon izni reddedildi.</string>
+    <string name="voice_listening_started">Dinleniyor…</string>
+    <string name="voice_listening_stopped">Dinleme durdu.</string>
+    <string name="voice_listen_failed">Dinleme başlatılamadı (meşgul olabilir).</string>
+    <string name="voice_error">Hata: %1$s</string>
+    <string name="voice_timeout">Dinleme zaman aşımı.</string>
+    <string name="voice_heard">Algılanan: %1$s</string>
+    <string name="voice_not_understood">Asistan: Komutu anlayamadım.</string>
+    <string name="voice_not_understood_tts">Komutu anlayamadım.</string>
+    <string name="voice_reply">Asistan: %1$s</string>
+    <string name="voice_command_error">Komut gönderilemedi: %1$s</string>
+    <string name="voice_partial">… %1$s</string>
+    <string name="voice_live_idle">—</string>
+    <string name="voice_listening_prompt">Mikrofon açık — konuşun; duydukları burada görünür.</string>
+    <string name="voice_live_format">Duyulan: %1$s</string>
+    <string name="voice_logcat_hint">Logcat (uygulamada detay log açıksa): adb logcat -s VOICE_ASST VOICE_CMD VOICE_GRAMMAR</string>
+    <string name="voice_grammar_on">Komut grameri açık: yalnızca tanımlı cümlelerde daha iyi isabet (listede olmayan → [unk]).</string>
+    <string name="voice_grammar_off">Komut grameri uygulanamadı; genel kelime tanıma aktif (daha çok hata olabilir).</string>
+    <string name="voice_grammar_unk">Asistan: Bu cümle komut listesinde yok ([unk]).</string>
+    <string name="voice_mic_busy">Mikrofon açılamadı: %1$s</string>
+    <string name="voice_mic_busy_short">Mikrofon kullanılamıyor</string>
+    <string name="voice_cold_driver_reply">Sürücü için: direksiyon ısıtması ve sol ön koltuk üçüncü seviyede.</string>
+    <string name="voice_cold_passenger_reply">Yolcu için: sağ ön koltuk üçüncü seviyede.</string>
+    <string name="voice_cold_crew_reply">Hep birlikte: direksiyon ısıtması ve her iki ön koltuk üçüncü seviyede.</string>
+    <string name="voice_btn_commands_help">Komutlar</string>
+    <string name="voice_help_commands_title">Yapabileceğin sesli komutlar</string>
+    <string name="voice_help_commands_body">Genel\n• Dinle → komutu söyle → kısa sus veya Durdur.\n• Komut grameri açıksa aşağıdaki gibi kısa cümleler daha iyi tanınır; listede olmayan cümleler [unk] olabilir.\n\nDİREKSİYON\n• direksiyonu ısıt, direksiyon ısıt, direksiyonu aç, direksiyon ısıtma aç …\n• direksiyonu kapat, direksiyon kapat …\n\nSÜRÜŞ MODU\n• Cümlede sürüş / mod / araç / konfor + spor (sport) / eko (eco) / normal / kar (kış, snow).\n• Örnek: sürüş modunu spor yap, spor modu, eko modu …\n\nREGEN\n• regen veya rejeneratif / seviye + düşük / orta / yüksek / adaptif.\n• Örnek: regen düşük, regen seviyesi yüksek …\n\nTEK PEDAL\n• tek pedal aç, tek pedalı aç …\n• tek pedal kapat, tek pedal durdur …\n\nÜŞÜME (LHD: sürücü sol, yolcu sağ)\n• üşüyorum, üşüdüm, donuyorum, çok soğuk … → direksiyon + sol ön koltuk seviye 3.\n• yolcu üşüdü, yolcu üşüyor … → sağ ön koltuk seviye 3.\n• üşüyoruz, üşüdük, donuyoruz … → direksiyon + her iki ön koltuk seviye 3.\n• Yolcu cümlesinde üşüyoruz vb. varsa hep birlikte modu uygulanır.</string>
 
     <!-- Sürüş modu + Regen ekranı -->
     <string name="drive_regen_screen_title">Sürüş &amp; Konfor</string>

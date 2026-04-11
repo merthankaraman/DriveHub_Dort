@@ -1555,6 +1555,34 @@ public class MG4ControlService extends Service {
                 updateNotification("Sağ Koltuk: " + (seatRLevel == 0 ? "Kapalı" : "Sev." + seatRLevel));
                 break;
             }
+            case "COLD_COMFORT_DRIVER":
+                if (MG4Hardware.isLogEnabled()) {
+                    Log.i(TAG, "COLD_COMFORT_DRIVER: direksiyon + sol koltuk seviye 3");
+                }
+                new Thread(() -> {
+                    MG4Hardware.setSteeringHeat(true);
+                    MG4Hardware.setSeatHeatLeft(3);
+                }).start();
+                updateNotification("Üşüme sürücü: direksiyon + sol koltuk 3");
+                break;
+            case "COLD_COMFORT_PASSENGER":
+                if (MG4Hardware.isLogEnabled()) {
+                    Log.i(TAG, "COLD_COMFORT_PASSENGER: sağ koltuk seviye 3");
+                }
+                new Thread(() -> MG4Hardware.setSeatHeatRight(3)).start();
+                updateNotification("Üşüme yolcu: sağ koltuk 3");
+                break;
+            case "COLD_COMFORT_CREW":
+                if (MG4Hardware.isLogEnabled()) {
+                    Log.i(TAG, "COLD_COMFORT_CREW: direksiyon + sol/sağ koltuk seviye 3");
+                }
+                new Thread(() -> {
+                    MG4Hardware.setSteeringHeat(true);
+                    MG4Hardware.setSeatHeatLeft(3);
+                    MG4Hardware.setSeatHeatRight(3);
+                }).start();
+                updateNotification("Üşüme hep birlikte: direksiyon + iki koltuk 3");
+                break;
             case ACTION_TOGGLE_MUSIC:
                 toggleMusicPlayback();
                 break;

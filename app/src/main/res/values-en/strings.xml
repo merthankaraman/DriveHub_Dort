@@ -43,6 +43,50 @@
     <string name="demo_cpm_prop_scan_range_too_wide">CPM prop: range too large (&gt;%1$d ids)\n</string>
     <string name="demo_cpm_prop_scan_result_header">CPM prop [%1$d..%2$d] lines=%3$d (int=-1 omitted)\n</string>
     <string name="demo_cpm_prop_scan_truncated">…[truncated]\n</string>
+    <string name="btn_voice_assistant">Voice assistant (Vosk)</string>
+
+    <!-- Local voice assistant (Demo → Assistant) — commands are Turkish; UI strings in English -->
+    <string name="voice_assistant_title">Voice assistant</string>
+    <string name="voice_assistant_hint">On first launch the Turkish model downloads (~50 MB; Wi-Fi recommended). Tap Listen; speak short, clear command phrases (command grammar). Tap Stop to end recording.</string>
+    <string name="voice_listen_start">Listen</string>
+    <string name="voice_listen_stop">Stop</string>
+    <string name="voice_model_loading">Preparing model…</string>
+    <string name="voice_model_downloading">Downloading model…</string>
+    <string name="voice_model_download_pct">Downloading (%1$d%%)</string>
+    <string name="voice_model_ready">Model ready</string>
+    <string name="voice_model_error">Model error</string>
+    <string name="voice_model_ready_log">Model loaded. Tap Listen to start recording.</string>
+    <string name="voice_model_error_log">Could not load model: %1$s</string>
+    <string name="voice_model_not_ready">Model is not ready yet.</string>
+    <string name="voice_tts_init_failed">Text-to-speech failed to start (text only).</string>
+    <string name="voice_mic_granted">Microphone permission granted.</string>
+    <string name="voice_mic_denied">Microphone permission denied.</string>
+    <string name="voice_listening_started">Listening…</string>
+    <string name="voice_listening_stopped">Listening stopped.</string>
+    <string name="voice_listen_failed">Could not start listening (mic may be in use).</string>
+    <string name="voice_error">Error: %1$s</string>
+    <string name="voice_timeout">Listening timed out.</string>
+    <string name="voice_heard">Heard: %1$s</string>
+    <string name="voice_not_understood">Assistant: I did not understand the command.</string>
+    <string name="voice_not_understood_tts">I did not understand the command.</string>
+    <string name="voice_reply">Assistant: %1$s</string>
+    <string name="voice_command_error">Could not send command: %1$s</string>
+    <string name="voice_partial">… %1$s</string>
+    <string name="voice_live_idle">—</string>
+    <string name="voice_listening_prompt">Microphone on — speak; what is heard appears here.</string>
+    <string name="voice_live_format">Heard: %1$s</string>
+    <string name="voice_logcat_hint">Logcat (when app detail logs are enabled): adb logcat -s VOICE_ASST VOICE_CMD VOICE_GRAMMAR</string>
+    <string name="voice_grammar_on">Command grammar on: better accuracy for defined phrases only (not in list → [unk]).</string>
+    <string name="voice_grammar_off">Command grammar could not be applied; open-vocabulary recognition active (more errors possible).</string>
+    <string name="voice_grammar_unk">Assistant: That phrase is not in the command list ([unk]).</string>
+    <string name="voice_mic_busy">Could not open microphone: %1$s</string>
+    <string name="voice_mic_busy_short">Microphone unavailable</string>
+    <string name="voice_cold_driver_reply">For the driver: steering heat on, left front seat at level three.</string>
+    <string name="voice_cold_passenger_reply">For the passenger: right front seat at level three.</string>
+    <string name="voice_cold_crew_reply">For everyone: steering heat on, both front seats at level three.</string>
+    <string name="voice_btn_commands_help">Commands</string>
+    <string name="voice_help_commands_title">Voice commands you can use</string>
+    <string name="voice_help_commands_body">General\n• Tap Listen → speak your phrase → brief pause or Stop.\n• With command grammar on, short phrases like below work best; unknown phrases may become [unk].\n\nSTEERING HEAT\n• heat steering on / off style phrases in Turkish (e.g. direksiyonu ısıt, direksiyonu kapat …).\n\nDRIVE MODE\n• Include drive / mode / vehicle / comfort context plus sport, eco, normal, or snow (winter).\n• Example: sürüş modunu spor yap, spor modu …\n\nREGEN\n• regen or regenerative / level plus low / medium / high / adaptive.\n• Example: regen düşük …\n\nONE PEDAL\n• tek pedal aç / tek pedal kapat …\n\nCOLD COMFORT (LHD: driver left, passenger right)\n• üşüyorum, üşüdüm, donuyorum, çok soğuk … → steering + left front seat level 3.\n• yolcu üşüdü, yolcu üşüyor … → right front seat level 3.\n• üşüyoruz, üşüdük, donuyoruz … → steering + both front seats level 3.\n• If the sentence contains yolcu plus plural “we’re cold” forms, the everyone (crew) action applies.</string>
 
     <!-- Window (Drive &amp; Comfort) -->
     <string name="window_section_title">WINDOW</string>
