@@ -96,13 +96,6 @@ public class MG4Hardware {
 
     public static final int PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST = 0x2160A14B; // 559980875 — tehlikeli nesne boyuna mesafe
     public static final int PROP_ADAS_FCW_OBJ_DNGRSOBJLATRLTVDIST = 0x2160A14C; // 559980876 — tehlikeli nesne yanal mesafe
-    public static final int PROP_OBD_SOC = 14010022;
-    public static final int PROP_OBD_MOTOR_COOLANT = 14010018;
-    public static final int PROP_OBD_MOTOR_TORQUE = 14010021;;
-    public static final int PROP_OBD_MOTOR_TORQUE2 = 14010033;
-    public static final int PROP_OBD_MOTOR_TEMP = 14010020;
-    public static final int PROP_OBD_BATTERY_AMP = 14010024;
-    public static final int PROP_OBD_SOH = 14010029;
     /** Demo: CPM {@code getProperty(Float)} — global area. NaN = okunamadı. */
     public static float readTrackSensorFloat(int propId) {
         return getFloatPropertyCPM(propId, AREA_GLOBAL);
@@ -407,19 +400,20 @@ public class MG4Hardware {
     // Araç durum / BMS — CarPropertyManager callback; ID'ler VehicleConditionBinder / VehicleChargingBinder ile uyumlu
     // CarPropertyValue.getPropertyId() ile callback'te dönen değerler (ör. log: 0x2160f406)
     private static final int PROP_SPEED          = 0x11600207; // float km/h — üstteki TRACK_SENSOR_CAR_SPEED ile aynı
-    private static final int PROP_VEHICLE_IGNITION = 289412477; // Ateşleme/kontak: 0=kapalı, 2=çalışıyor (CarInfoManager)
-    private static final int PROP_ENGINE_STATE     = 557847932; // EV güç modu: 0=kapalı, >0=sistem aktif (getEngineState)
-    private static final int PROP_SOC            = 560002052;   // Batarya SOC (float %); CarBMSManager ID_BMS_PACK_SOC_DSP
+    private static final int PROP_VEHICLE_IGNITION = 0x1140157d; //289412477; // Ateşleme/kontak: 0=kapalı, 2=çalışıyor (CarInfoManager)
+    private static final int PROP_ENGINE_STATE     = 0x2140157c; //557847932; // EV güç modu: 0=kapalı, >0=sistem aktif (getEngineState)
+    private static final int PROP_SOC            = 0x2160f404; // 560002052;   // Batarya SOC (float %); CarBMSManager ID_BMS_PACK_SOC_DSP
     private static final int PROP_RANGE          = 0x214099DC; // 557904924 — Kalan menzil (int km); BMS
-    private static final int PROP_BATT_VOLT      = 0x2160f406;  // 560039942 — Paket gerilimi DC (float V); BMS şarj ekranı
-    private static final int PROP_CHR_AMP_ACT   = 0x2160f407;  // 560039943 — DC şarj akımı (float A), gerçek
-    private static final int PROP_CHR_AMP_EXP   = 0x2160f40A;  // 560039946 — DC akım beklenen (istasyon; yoksa NaN)
-    private static final int PROP_AC_AMP        = 0x2160f43c;  // 560039996 — AC şarj giriş akımı (float A)
-    private static final int PROP_AC_VOLT      = 0x2160f43d;  // 560039997 — AC şarj giriş voltajı (float V)
-    private static final int PROP_CHG_STATUS    = 557904905;   // Şarj oturumu durumu (0 = aktif şarj yok)
+    private static final int PROP_BATT_VOLT      = 0x2160f406;  // 560002054 — Paket gerilimi DC (float V); BMS şarj ekranı
+    private static final int PROP_CHR_AMP_ACT    = 0x2160f407;  // 560002055 — DC şarj akımı (float A), gerçek
+    private static final int PROP_CHR_AMP_EXP    = 0x2160f40A;  // 560039946 — DC akım beklenen (istasyon; yoksa NaN)
+    private static final int PROP_AC_AMP         = 0x2160f43c;  // 560039996 — AC şarj giriş akımı (float A)
+    private static final int PROP_AC_VOLT        = 0x2160f43d;  // 560039997 — AC şarj giriş voltajı (float V)
+    private static final int PROP_CHG_STATUS     = 0x2140f409;  //557904905;   // Şarj oturumu durumu (0 = aktif şarj yok)
     // Tüketim / gösterge — MG4_BINDER_REFERENCE.md
-    private static final int PROP_TOTAL_MILEAGE = 557873939;   // Toplam km (odometer); VendorInstrumentCluster
-    private static final int PROP_GEAR         = 557847918;    // Vites konumu (int); getCarGear
+    private static final int PROP_TOTAL_MILEAGE = 0x21407b13;   //557873939;   // Toplam km (odometer); VendorInstrumentCluster
+    private static final int PROP_TOTAL_ODOM    = 0x21401566; //int
+    private static final int PROP_GEAR         =  0x2140156e;   //557847918;    // Vites konumu (int); getCarGear
 
     // Katman 2 — Parcel ile doğrudan IVehicleSettingService (UID kısıtı olabilir); üstteki PROP_* ile aynı işlevler
     private static final String DESCRIPTOR_VEHICLE =

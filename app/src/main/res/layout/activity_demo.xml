@@ -81,8 +81,8 @@
         android:layout_marginTop="8dp"
         android:gravity="center"
         android:text="@string/window_cmd_none"
-        android:textColor="#8B949E"
-        android:textSize="14sp"/>
+        android:textColor="@color/status_value"
+        android:textSize="16sp"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -124,8 +124,8 @@
         android:layout_marginTop="8dp"
         android:gravity="center"
         android:text="@string/window_target_label"
-        android:textColor="#8B949E"
-        android:textSize="14sp"/>
+        android:textColor="@color/status_value"
+        android:textSize="16sp"/>
     <SeekBar
         android:id="@+id/seekBarWindowTarget"
         android:layout_width="match_parent"
@@ -146,16 +146,16 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:gravity="center"
-        android:textColor="#6E7681"
-        android:textSize="12sp"/>
+        android:textColor="@color/status_value"
+        android:textSize="15sp"/>
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
         android:gravity="center"
         android:text="@string/window_command_hint"
-        android:textColor="#6E7681"
-        android:textSize="11sp"/>
+        android:textColor="@color/status_value"
+        android:textSize="14sp"/>
 
     <!-- Kapı kilidi -->
     <TextView
@@ -192,8 +192,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:gravity="center"
-        android:textColor="#6E7681"
-        android:textSize="12sp"/>
+        android:textColor="@color/status_value"
+        android:textSize="15sp"/>
 
     <!-- Bluetooth kilidi (deneysel) -->
     <TextView
@@ -219,16 +219,16 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:text="@string/bt_lock_select_device"
-            android:textColor="#C9D1D9"
-            android:textSize="14sp"/>
+            android:textColor="@color/status_value"
+            android:textSize="15sp"/>
         <TextView
             android:id="@+id/tvBtLockStatus"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/bt_lock_status_no_device"
-            android:textColor="#6E7681"
-            android:textSize="12sp"/>
+            android:textColor="@color/status_value"
+            android:textSize="15sp"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
@@ -241,8 +241,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/bt_lock_enabled_label"
-            android:textColor="#6E7681"
-            android:textSize="12sp"/>
+            android:textColor="@color/status_value"
+            android:textSize="15sp"/>
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/switchBtLockEnabled"
             android:layout_width="wrap_content"
@@ -263,31 +263,31 @@
         android:id="@+id/tvAirQualityPm25"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#8B949E"
-        android:textSize="14sp"/>
+        android:textColor="@color/status_value"
+        android:textSize="16sp"/>
     <TextView
         android:id="@+id/tvAirQualityOutdoorTemp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:textColor="#8B949E"
-        android:textSize="14sp"/>
+        android:textColor="@color/status_value"
+        android:textSize="16sp"/>
     <TextView
         android:id="@+id/tvAirQualityPm25Filter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:textColor="#8B949E"
-        android:textSize="14sp"/>
+        android:textColor="@color/status_value"
+        android:textSize="16sp"/>
     <TextView
         android:id="@+id/tvAirQualityAqs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:textColor="#8B949E"
-        android:textSize="14sp"/>
+        android:textColor="@color/status_value"
+        android:textSize="16sp"/>
 
-    <!-- CPM prop ID aralığı (readTrackSensorFloat / readTrackSensorInt) -->
+    <!-- CPM prop: başlangıç ID + okunacak adet (readTrackSensorFloat / readTrackSensorInt) -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -310,22 +310,22 @@
             android:hint="@string/demo_cpm_prop_start_hint"
             android:importantForAutofill="no"
             android:inputType="textNoSuggestions"
-            android:textColor="#C9D1D9"
-            android:textColorHint="#6E7681"
-            android:textSize="13sp"
+            android:textColor="@color/status_value"
+            android:textColorHint="@color/status_value"
+            android:textSize="16sp"
             android:fontFamily="monospace"/>
         <EditText
-            android:id="@+id/etCpmPropEnd"
+            android:id="@+id/etCpmPropCount"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:hint="@string/demo_cpm_prop_end_hint"
+            android:hint="@string/demo_cpm_prop_count_hint"
             android:importantForAutofill="no"
             android:inputType="textNoSuggestions"
-            android:textColor="#C9D1D9"
-            android:textColorHint="#6E7681"
-            android:textSize="13sp"
+            android:textColor="@color/status_value"
+            android:textColorHint="@color/status_value"
+            android:textSize="16sp"
             android:fontFamily="monospace"/>
     </LinearLayout>
     <Button
@@ -350,9 +350,9 @@
         android:id="@+id/tvTrackSensors"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:lineSpacingExtra="2dp"
-        android:textColor="#8B949E"
-        android:textSize="11sp"
+        android:lineSpacingExtra="3dp"
+        android:textColor="@color/status_value"
+        android:textSize="15sp"
         android:fontFamily="monospace"/>
 
         </LinearLayout>

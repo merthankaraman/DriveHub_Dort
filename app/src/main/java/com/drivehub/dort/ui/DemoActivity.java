@@ -92,7 +92,11 @@ public class DemoActivity extends AppCompatActivity {
     /** CPM {@link MG4Hardware#readTrackSensorFloat(int)} / {@link MG4Hardware#readTrackSensorInt(int)} aralık çıktısı. */
     private String mCpmPropScanCachedText = "";
     private volatile boolean mCpmPropScanRunning = false;
-    private static final int CPM_PROP_SCAN_MAX_IDS = 2048;
+    /**
+     * Tek taramada en fazla bu kadar property ID (binder süresi uzar; çıktı yine ~120k karakterde kesilir).
+     * Örnek: 0x2160f000…0x2160ffff → adet 4096.
+     */
+    private static final int CPM_PROP_SCAN_MAX_IDS = 2_097_152; // 2^21
 
     @SuppressLint("MissingPermission")
     private final Runnable mBtScanRunnable = new Runnable() {
@@ -365,16 +369,22 @@ public class DemoActivity extends AppCompatActivity {
     private void runCpmPropRangeScan() {
         if (mCpmPropScanRunning) return;
         EditText et0 = findViewById(R.id.etCpmPropStart);
-        EditText et1 = findViewById(R.id.etCpmPropEnd);
+        EditText et1 = findViewById(R.id.etCpmPropCount);
         Button btn = findViewById(R.id.btnCpmPropScan);
         if (et0 == null || et1 == null) return;
         final int start;
-        final int end;
+        final int count;
         try {
             start = parsePropIdString(et0.getText().toString());
-            end = parsePropIdString(et1.getText().toString());
         } catch (NumberFormatException ex) {
             Toast.makeText(this, R.string.demo_cpm_prop_scan_parse_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            count = parsePositiveCountString(et1.getText().toString());
+        } catch (NumberFormatException ex) {
+            Toast.makeText(this, getString(R.string.demo_cpm_prop_scan_parse_count_error, CPM_PROP_SCAN_MAX_IDS),
+                    Toast.LENGTH_SHORT).show();
             return;
         }
         mCpmPropScanRunning = true;
@@ -383,7 +393,7 @@ public class DemoActivity extends AppCompatActivity {
             btn.setText(R.string.demo_cpm_prop_scan_busy);
         }
         new Thread(() -> {
-            String text = buildCpmPropScanText(start, end);
+            String text = buildCpmPropScanText(start, count);
             runOnUiThread(() -> {
                 mCpmPropScanCachedText = text;
                 mCpmPropScanRunning = false;
@@ -407,16 +417,35 @@ public class DemoActivity extends AppCompatActivity {
         return (int) (v & 0xffffffffL);
     }
 
-    private String buildCpmPropScanText(int start, int end) {
-        int a = Math.min(start, end);
-        int b = Math.max(start, end);
-        long span = (long) b - (long) a + 1L;
-        if (span > CPM_PROP_SCAN_MAX_IDS) {
-            return getString(R.string.demo_cpm_prop_scan_range_too_wide, CPM_PROP_SCAN_MAX_IDS);
+    /** Okunacak property sayısı: 1 … {@link #CPM_PROP_SCAN_MAX_IDS}, onluk veya 0x…. */
+    private static int parsePositiveCountString(String raw) throws NumberFormatException {
+        String s = raw.trim();
+        if (s.isEmpty()) throw new NumberFormatException("empty");
+        long v;
+        if (s.startsWith("0x") || s.startsWith("0X")) {
+            v = Long.parseLong(s.substring(2), 16);
+        } else {
+            v = Long.parseLong(s);
         }
-        StringBuilder out = new StringBuilder(Math.min((int) span * 64 + 128, 200000));
+        if (v < 1L || v > (long) CPM_PROP_SCAN_MAX_IDS) throw new NumberFormatException("range");
+        if (v > Integer.MAX_VALUE) throw new NumberFormatException("overflow");
+        return (int) v;
+    }
+
+    private String buildCpmPropScanText(int start, int count) {
+        if (count < 1 || count > CPM_PROP_SCAN_MAX_IDS) {
+            return getString(R.string.demo_cpm_prop_scan_parse_count_error, CPM_PROP_SCAN_MAX_IDS);
+        }
+        long last = (long) start + (long) count - 1L;
+        if (last > Integer.MAX_VALUE || last < Integer.MIN_VALUE) {
+            return getString(R.string.demo_cpm_prop_scan_span_overflow);
+        }
+        long rawCap = (long) count * 64L + 128L;
+        int initialCap = (int) Math.min(200_000L, Math.max(2_048L, rawCap));
+        StringBuilder out = new StringBuilder(initialCap);
         int lines = 0;
-        for (int id = a; id <= b; id++) {
+        for (int i = 0; i < count; i++) {
+            int id = (int) (((long) start) + (long) i);
             float f = MG4Hardware.readTrackSensorFloat(id);
             int iv = MG4Hardware.readTrackSensorInt(id);
             boolean hasF = !Float.isNaN(f);
@@ -432,7 +461,7 @@ public class DemoActivity extends AppCompatActivity {
                 break;
             }
         }
-        return getString(R.string.demo_cpm_prop_scan_result_header, a, b, lines) + out;
+        return getString(R.string.demo_cpm_prop_scan_result_header, start, count, lines) + out;
     }
 
     private String buildDiagnosticScanText() {
