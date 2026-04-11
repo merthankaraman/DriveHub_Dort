@@ -411,8 +411,7 @@ public class MG4Hardware {
     private static final int PROP_AC_VOLT        = 0x2160f43d;  // 560039997 — AC şarj giriş voltajı (float V)
     private static final int PROP_CHG_STATUS     = 0x2140f409;  //557904905;   // Şarj oturumu durumu (0 = aktif şarj yok)
     // Tüketim / gösterge — MG4_BINDER_REFERENCE.md
-    private static final int PROP_TOTAL_MILEAGE = 0x21407b13;   //557873939;   // Toplam km (odometer); VendorInstrumentCluster
-    private static final int PROP_TOTAL_ODOM    = 0x21401566; //int
+    private static final int PROP_TOTAL_MILEAGE = 0x21401566;   //557847910;   // Toplam km (odometer); int
     private static final int PROP_GEAR         =  0x2140156e;   //557847918;    // Vites konumu (int); getCarGear
 
     // Katman 2 — Parcel ile doğrudan IVehicleSettingService (UID kısıtı olabilir); üstteki PROP_* ile aynı işlevler
