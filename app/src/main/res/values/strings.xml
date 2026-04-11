@@ -60,6 +60,10 @@
     <string name="voice_model_error_log">Model yüklenemedi: %1$s</string>
     <string name="voice_model_not_ready">Model henüz hazır değil.</string>
     <string name="voice_tts_init_failed">TTS başlatılamadı (sadece metin gösterilecek).</string>
+    <string name="voice_tts_ready_log">Metin okuma (Türkçe): %1$s</string>
+    <string name="voice_tts_engine_system">Sistem varsayılanı</string>
+    <string name="voice_tts_engine_espeak">eSpeak NG</string>
+    <string name="voice_tts_install_hint">Türkçe ses için araçta bir TTS motoru gerekir. Öneri: F-Droid eSpeak NG (paket com.reecedunn.espeak, ~9 MB, arm64). APK indirip adb ile kurun, sonra bu ekranı yeniden açın:\nhttps://f-droid.org/repo/com.reecedunn.espeak_22.apk\nÖrnek: adb install -r com.reecedunn.espeak_22.apk</string>
     <string name="voice_mic_granted">Mikrofon izni verildi.</string>
     <string name="voice_mic_denied">Mikrofon izni reddedildi.</string>
     <string name="voice_listening_started">Dinleniyor…</string>

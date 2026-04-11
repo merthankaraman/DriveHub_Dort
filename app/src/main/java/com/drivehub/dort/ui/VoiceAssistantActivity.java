@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -37,6 +38,8 @@ import org.vosk.android.RecognitionListener;
 import org.vosk.android.SpeechService;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,6 +50,14 @@ import java.util.concurrent.Executors;
 public class VoiceAssistantActivity extends AppCompatActivity {
 
     private static final int REQ_RECORD_AUDIO = 4401;
+
+    /**
+     * Sistemde Google TTS yoksa kurulabilen açık kaynak motorlar (Android TTS çerçevesi).
+     * eSpeak NG (F-Droid): com.reecedunn.espeak — Türkçe dahil, küçük APK.
+     */
+    private static final String[] TTS_FALLBACK_ENGINE_PACKAGES = {
+            "com.reecedunn.espeak",
+    };
     private static final int MAX_LOG_CHARS = 14_000;
 
     private TextView mLogView;
@@ -69,6 +80,10 @@ public class VoiceAssistantActivity extends AppCompatActivity {
 
     private TextToSpeech mTts;
     private boolean mTtsReady;
+
+    /** Sıra: önce null (sistem varsayılanı), sonra kurulu yedek paket adları. */
+    private List<String> mTtsEngineQueue;
+    private int mTtsEnginePointer;
 
     private String mLastDispatchedText = "";
     private long mLastDispatchElapsed;
@@ -140,16 +155,50 @@ public class VoiceAssistantActivity extends AppCompatActivity {
     }
 
     private void initTts() {
-        mTts = new TextToSpeech(this, status -> {
-            mTtsReady = (status == TextToSpeech.SUCCESS);
-            if (!mTtsReady) {
-                appendLogLine(getString(R.string.voice_tts_init_failed));
+        mTtsEngineQueue = new ArrayList<>();
+        mTtsEngineQueue.add(null); // null = sistem varsayılan TTS motoru
+        for (String pkg : TTS_FALLBACK_ENGINE_PACKAGES) {
+            if (isPackageInstalled(pkg)) {
+                mTtsEngineQueue.add(pkg);
+            }
+        }
+        mTtsEnginePointer = 0;
+        tryNextTtsEngine();
+    }
+
+    private boolean isPackageInstalled(String packageName) {
+        try {
+            getPackageManager().getPackageInfo(packageName, 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    private void tryNextTtsEngine() {
+        if (mTts != null) {
+            mTts.stop();
+            mTts.shutdown();
+            mTts = null;
+        }
+        mTtsReady = false;
+        if (mTtsEngineQueue == null || mTtsEnginePointer >= mTtsEngineQueue.size()) {
+            appendLogLine(getString(R.string.voice_tts_init_failed));
+            appendLogLine(getString(R.string.voice_tts_install_hint));
+            return;
+        }
+        String enginePackage = mTtsEngineQueue.get(mTtsEnginePointer++);
+        TextToSpeech.OnInitListener listener = status -> {
+            if (status != TextToSpeech.SUCCESS || mTts == null) {
+                tryNextTtsEngine();
                 return;
             }
             int r = mTts.setLanguage(new Locale("tr", "TR"));
             if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
-                mTts.setLanguage(Locale.getDefault());
+                tryNextTtsEngine();
+                return;
             }
+            mTtsReady = true;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mTts.setAudioAttributes(
                         new AudioAttributes.Builder()
@@ -157,7 +206,23 @@ public class VoiceAssistantActivity extends AppCompatActivity {
                                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                                 .build());
             }
-        });
+            appendLogLine(getString(R.string.voice_tts_ready_log, ttsEngineLabel(enginePackage)));
+        };
+        if (enginePackage == null) {
+            mTts = new TextToSpeech(this, listener);
+        } else {
+            mTts = new TextToSpeech(this, listener, enginePackage);
+        }
+    }
+
+    private String ttsEngineLabel(@Nullable String enginePackage) {
+        if (enginePackage == null) {
+            return getString(R.string.voice_tts_engine_system);
+        }
+        if ("com.reecedunn.espeak".equals(enginePackage)) {
+            return getString(R.string.voice_tts_engine_espeak);
+        }
+        return enginePackage;
     }
 
     private boolean hasRecordPermission() {
