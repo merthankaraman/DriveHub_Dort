@@ -1734,12 +1734,12 @@ public class MG4Hardware {
                 vEffKmh = (Math.abs(sLastSpeedKmh) + Math.abs(speedKmh)) * 0.5f;
             }
             if (vEffKmh < 2f) vEffKmh = 0f;
-            else if (vEffKmh > 30) vEffKmh *= 1.002f;
+            else if (vEffKmh > 30) vEffKmh *= 1.0035f;
             double dKm = vEffKmh * dtHours;
 
             float speedKmh2 = speedKmh;
             if (speedKmh < 2f) speedKmh2 = 0f;
-            else if (speedKmh > 30) speedKmh2 *= 1.0025f;
+            else if (speedKmh > 30) speedKmh2 *= 1.004f;
 
             // DC güç (kWh): trapez — önceki tick sDcKw + şimdiki dcKw ortalaması × dt
             if (!Float.isNaN(dcKw)) {

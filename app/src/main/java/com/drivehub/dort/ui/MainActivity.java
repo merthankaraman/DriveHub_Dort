@@ -2072,7 +2072,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 float speedKmh2 = speedKmh;//TODO test
                 if (speedKmh < 2f) speedKmh2 = 0f;
-                else if (speedKmh > 30f) speedKmh2 *= 1.02f;
+                else if (speedKmh > 30f) speedKmh2 *= 1.03f;
                 int round_speedKmh = Math.round(speedKmh2);
                 boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
                 if (showDemo) {
