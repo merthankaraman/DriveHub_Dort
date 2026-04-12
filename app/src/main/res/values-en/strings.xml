@@ -86,6 +86,11 @@
     <string name="voice_cold_passenger_reply">For the passenger: right front seat at level three.</string>
     <string name="voice_cold_crew_reply">For everyone: steering heat on, both front seats at level three.</string>
     <string name="voice_drive_set_reply">Setting drive mode to %1$s.</string>
+    <string name="voice_overlay_line_heard">Heard: %1$s</string>
+    <string name="voice_overlay_line_action">Action: %1$s</string>
+    <string name="voice_overlay_action_unk">Not in command list ([unk])</string>
+    <string name="voice_overlay_action_none">No matching command</string>
+    <string name="voice_overlay_listening_status">Listening…</string>
     <string name="voice_btn_commands_help">Commands</string>
     <string name="voice_help_commands_title">Voice commands you can use</string>
     <string name="voice_help_commands_body">General\n• Tap Listen → speak your phrase → brief pause or Stop.\n• With command grammar on, short phrases like below work best; unknown phrases may become [unk].\n\nSTEERING HEAT\n• heat steering on / off style phrases in Turkish (e.g. direksiyonu ısıt, direksiyonu kapat …).\n\nDRIVE MODE\n• Include drive / mode / vehicle / comfort context plus sport, eco, normal, snow (winter), or custom (Özel).\n• Example: sürüş modunu spor yap, spor modu, sürüş modu özel, özel mod …\n\nREGEN\n• regen or regenerative / level plus low / medium / high / adaptive.\n• Example: regen düşük …\n\nONE PEDAL\n• tek pedal aç / tek pedal kapat …\n\nCOLD COMFORT (LHD: driver left, passenger right)\n• üşüyorum, üşüdüm, donuyorum, çok soğuk … → steering + left front seat level 3.\n• yolcu üşüdü, yolcu üşüyor … → right front seat level 3.\n• üşüyoruz, üşüdük, donuyoruz … → steering + both front seats level 3.\n• If the sentence contains yolcu plus plural “we’re cold” forms, the everyone (crew) action applies.</string>

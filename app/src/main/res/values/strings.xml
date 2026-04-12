@@ -86,6 +86,11 @@
     <string name="voice_cold_passenger_reply">Yolcu için: sağ ön koltuk üçüncü seviyede.</string>
     <string name="voice_cold_crew_reply">Hep birlikte: direksiyon ısıtması ve her iki ön koltuk üçüncü seviyede.</string>
     <string name="voice_drive_set_reply">Sürüş modunu %1$s olarak ayarlıyorum.</string>
+    <string name="voice_overlay_line_heard">Duyulan: %1$s</string>
+    <string name="voice_overlay_line_action">İşlem: %1$s</string>
+    <string name="voice_overlay_action_unk">Komut listesinde yok ([unk])</string>
+    <string name="voice_overlay_action_none">Eşleşen komut yok</string>
+    <string name="voice_overlay_listening_status">Dinleniyor…</string>
     <string name="voice_btn_commands_help">Komutlar</string>
     <string name="voice_help_commands_title">Yapabileceğin sesli komutlar</string>
     <string name="voice_help_commands_body">Genel\n• Dinle → komutu söyle → kısa sus veya Durdur.\n• Komut grameri açıksa aşağıdaki gibi kısa cümleler daha iyi tanınır; listede olmayan cümleler [unk] olabilir.\n\nDİREKSİYON\n• direksiyonu ısıt, direksiyon ısıt, direksiyonu aç, direksiyon ısıtma aç …\n• direksiyonu kapat, direksiyon kapat …\n\nSÜRÜŞ MODU\n• Cümlede sürüş / mod / araç / konfor + spor (sport) / eko (eco) / normal / kar (kış, snow) / özel (custom).\n• Örnek: sürüş modunu spor yap, spor modu, eko modu, sürüş modu özel, özel mod …\n\nREGEN\n• regen veya rejeneratif / seviye + düşük / orta / yüksek / adaptif.\n• Örnek: regen düşük, regen seviyesi yüksek …\n\nTEK PEDAL\n• tek pedal aç, tek pedalı aç …\n• tek pedal kapat, tek pedal durdur …\n\nÜŞÜME (LHD: sürücü sol, yolcu sağ)\n• üşüyorum, üşüdüm, donuyorum, çok soğuk … → direksiyon + sol ön koltuk seviye 3.\n• yolcu üşüdü, yolcu üşüyor … → sağ ön koltuk seviye 3.\n• üşüyoruz, üşüdük, donuyoruz … → direksiyon + her iki ön koltuk seviye 3.\n• Yolcu cümlesinde üşüyoruz vb. varsa hep birlikte modu uygulanır.</string>

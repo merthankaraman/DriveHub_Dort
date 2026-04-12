@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Sesli asistan üst overlay (sabit kutu, üst orta) -->
+    <dimen name="voice_overlay_width">500dp</dimen>
+    <dimen name="voice_overlay_height">200dp</dimen>
     <dimen name="panel_back_button_min_height">64dp</dimen>
     <dimen name="panel_back_button_min_width">132dp</dimen>
     <dimen name="panel_back_button_padding_h">28dp</dimen>

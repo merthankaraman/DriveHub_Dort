@@ -13,13 +13,17 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.PixelFormat;
 import android.media.AudioManager;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.LocaleList;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.SystemClock;
@@ -31,10 +35,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.os.LocaleListCompat;
 
 import com.drivehub.dort.R;
 import com.drivehub.dort.hardware.MG4Hardware;
@@ -44,6 +51,7 @@ import com.drivehub.dort.model.RegenLevel;
 import com.drivehub.dort.util.ChargingHistory;
 
 import java.util.List;
+import java.util.Locale;
 import java.lang.reflect.Method;
 
 public class MG4ControlService extends Service {
@@ -53,6 +61,19 @@ public class MG4ControlService extends Service {
     private static final int    NOTIF_ID   = 1001;
     /** Ekrandan müzik duraklat/devam için Activity'nin servise gönderdiği action */
     public static final String ACTION_TOGGLE_MUSIC = "com.drivehub.dort.TOGGLE_MUSIC";
+    /** Sesli asistan — üstte duyulan + işlem metni (overlay); extra: heard / action metinleri */
+    public static final String ACTION_VOICE_FEEDBACK_OVERLAY = "com.drivehub.dort.VOICE_FEEDBACK_OVERLAY";
+    public static final String EXTRA_VOICE_HEARD = "voice_heard";
+    public static final String EXTRA_VOICE_ACTION = "voice_action";
+    public static final String EXTRA_VOICE_OVERLAY_MODE = "voice_overlay_mode";
+    /** Dinleme başladı — overlay açılır, kapanış zamanlayıcısı iptal */
+    public static final String VOICE_OVERLAY_MODE_LISTEN_START = "listen_start";
+    /** Kısmi tanıma — duyulan satırı güncellenir */
+    public static final String VOICE_OVERLAY_MODE_PARTIAL = "partial";
+    /** Final sonuç — duyulan + işlem; dinleme sürüyorsa kapanış yok */
+    public static final String VOICE_OVERLAY_MODE_RESULT = "result";
+    /** Dinleme oturumu bitti — {@link R.integer#voice_feedback_overlay_dismiss_ms} sonra kapanır */
+    public static final String VOICE_OVERLAY_MODE_LISTEN_END = "listen_end";
     /** Ayarlarda switch açıldığında veya ekran uyandığında ADB'yi tekrar aktifleştirme isteği. */
     public static final String ACTION_ENSURE_USB_DEBUG = "com.drivehub.dort.ENSURE_USB_DEBUG";
     private static final String PREF_ALWAYS_USB_DEBUG = "always_usb_debug";
@@ -154,6 +175,9 @@ public class MG4ControlService extends Service {
     private View           mBtnOvSeatR;
     private View           mOvSeatLBar1, mOvSeatLBar2, mOvSeatLBar3;
     private View           mOvSeatRBar1, mOvSeatRBar2, mOvSeatRBar3;
+    /** Sesli asistan sonuç bandı (klima overlay’inden ayrı) */
+    private View mVoiceFeedbackOverlay;
+    private final Runnable mVoiceFeedbackHideRunnable = this::removeVoiceFeedbackOverlay;
     private int            mSteerLevel = 0;
     private int            mSeatLLevel = 0;
     private int            mSeatRLevel = 0;
@@ -496,6 +520,7 @@ public class MG4ControlService extends Service {
         if (mScreenWakeReceiver != null) {
             try { unregisterReceiver(mScreenWakeReceiver); } catch (Exception ignored) {}
         }
+        removeVoiceFeedbackOverlay();
         removeOverlay();
         MG4Hardware.destroy();
         mSoundHandler.removeCallbacks(mSoundRunnable);
@@ -835,6 +860,185 @@ public class MG4ControlService extends Service {
         }
         mOverlayLeft = null;
         mOverlayRight = null;
+    }
+
+    private void handleVoiceFeedbackOverlayIntent(Intent intent) {
+        String mode = intent.getStringExtra(EXTRA_VOICE_OVERLAY_MODE);
+        if (mode == null) {
+            mode = VOICE_OVERLAY_MODE_RESULT;
+        }
+        String heard = intent.getStringExtra(EXTRA_VOICE_HEARD);
+        String action = intent.getStringExtra(EXTRA_VOICE_ACTION);
+        switch (mode) {
+            case VOICE_OVERLAY_MODE_LISTEN_START:
+                mMainHandler.post(this::voiceOverlayOnListenStart);
+                break;
+            case VOICE_OVERLAY_MODE_PARTIAL:
+                mMainHandler.post(() -> voiceOverlayOnPartial(heard));
+                break;
+            case VOICE_OVERLAY_MODE_RESULT:
+                mMainHandler.post(() -> voiceOverlayOnResult(heard, action));
+                break;
+            case VOICE_OVERLAY_MODE_LISTEN_END:
+                mMainHandler.post(this::voiceOverlayOnListenEnd);
+                break;
+            default:
+                mMainHandler.post(() -> voiceOverlayOnResult(heard, action));
+                break;
+        }
+    }
+
+    private void voiceOverlayOnListenStart() {
+        mMainHandler.removeCallbacks(mVoiceFeedbackHideRunnable);
+        String status = overlayUiGetString(R.string.voice_overlay_listening_status);
+        applyVoiceFeedbackOverlayContent(overlayUiGetString(R.string.voice_overlay_line_heard, "…"),
+                overlayUiGetString(R.string.voice_overlay_line_action, status));
+    }
+
+    private void voiceOverlayOnPartial(String heard) {
+        mMainHandler.removeCallbacks(mVoiceFeedbackHideRunnable);
+        if (heard == null) {
+            heard = "";
+        }
+        heard = heard.trim();
+        String status = overlayUiGetString(R.string.voice_overlay_listening_status);
+        if (heard.isEmpty()) {
+            applyVoiceFeedbackOverlayContent(overlayUiGetString(R.string.voice_overlay_line_heard, "…"),
+                    overlayUiGetString(R.string.voice_overlay_line_action, status));
+        } else {
+            applyVoiceFeedbackOverlayContent(overlayUiGetString(R.string.voice_overlay_line_heard, heard),
+                    overlayUiGetString(R.string.voice_overlay_line_action, status));
+        }
+    }
+
+    private void voiceOverlayOnResult(String heard, String actionLine) {
+        mMainHandler.removeCallbacks(mVoiceFeedbackHideRunnable);
+        if (heard == null) {
+            heard = "";
+        }
+        if (actionLine == null) {
+            actionLine = "";
+        }
+        heard = heard.trim();
+        actionLine = actionLine.trim();
+        if (heard.isEmpty() && actionLine.isEmpty()) {
+            return;
+        }
+        applyVoiceFeedbackOverlayContent(
+                heard.isEmpty() ? null : overlayUiGetString(R.string.voice_overlay_line_heard, heard),
+                overlayUiGetString(R.string.voice_overlay_line_action, actionLine));
+    }
+
+    /**
+     * Servis {@code getString()} sistem dilini kullanır; overlay uygulama dilinde (PerAppLocales) olsun.
+     * Ayar yoksa varsayılan tr-TR.
+     */
+    private Context overlayUiContext() {
+        Configuration conf = new Configuration(getResources().getConfiguration());
+        LocaleListCompat appLocales = AppCompatDelegate.getApplicationLocales();
+        final Locale[] locales;
+        if (!appLocales.isEmpty()) {
+            int n = appLocales.size();
+            locales = new Locale[n];
+            for (int i = 0; i < n; i++) {
+                locales[i] = appLocales.get(i);
+            }
+        } else {
+            locales = new Locale[]{new Locale("tr", "TR")};
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            conf.setLocales(new LocaleList(locales));
+        } else {
+            conf.locale = locales[0];
+        }
+        return createConfigurationContext(conf);
+    }
+
+    private String overlayUiGetString(int resId, Object... formatArgs) {
+        Resources res = overlayUiContext().getResources();
+        if (formatArgs != null && formatArgs.length > 0) {
+            return res.getString(resId, formatArgs);
+        }
+        return res.getString(resId);
+    }
+
+    private void voiceOverlayOnListenEnd() {
+        int dismissMs = getResources().getInteger(R.integer.voice_feedback_overlay_dismiss_ms);
+        mMainHandler.removeCallbacks(mVoiceFeedbackHideRunnable);
+        mMainHandler.postDelayed(mVoiceFeedbackHideRunnable, dismissMs);
+    }
+
+    /**
+     * İki satır metin: {@code heardLine} null ise üst satır gizlenir; alt satır her zaman ayarlanır.
+     */
+    private void applyVoiceFeedbackOverlayContent(String heardLineOrNull, String actionLine) {
+        if (actionLine == null || actionLine.trim().isEmpty()) {
+            return;
+        }
+        try {
+            ensureVoiceFeedbackOverlayAttached();
+            TextView tvHeard = mVoiceFeedbackOverlay.findViewById(R.id.voiceOverlayHeard);
+            TextView tvAct = mVoiceFeedbackOverlay.findViewById(R.id.voiceOverlayAction);
+            if (heardLineOrNull == null || heardLineOrNull.isEmpty()) {
+                tvHeard.setVisibility(View.GONE);
+            } else {
+                tvHeard.setVisibility(View.VISIBLE);
+                tvHeard.setText(heardLineOrNull);
+            }
+            tvAct.setText(actionLine);
+        } catch (Throwable e) {
+            Log.w(TAG, "Sesli asistan overlay güncellenemedi: " + e.getMessage());
+        }
+    }
+
+    @SuppressLint("InflateParams")
+    private void ensureVoiceFeedbackOverlayAttached() {
+        if (mVoiceFeedbackOverlay != null) {
+            return;
+        }
+        WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+        if (wm == null) {
+            return;
+        }
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View v = inflater.inflate(R.layout.overlay_voice_feedback, null);
+        int w = getResources().getDimensionPixelSize(R.dimen.voice_overlay_width);
+        int h = getResources().getDimensionPixelSize(R.dimen.voice_overlay_height);
+        // Tıklamalar overlay’e değil alttaki arayüze gitsin (sadece bilgi bandı).
+        int flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
+                w,
+                h,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                flags,
+                PixelFormat.TRANSLUCENT);
+        lp.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+        lp.x = 0;
+        lp.y = Math.round(8f * getResources().getDisplayMetrics().density);
+        wm.addView(v, lp);
+        mVoiceFeedbackOverlay = v;
+    }
+
+    private void removeVoiceFeedbackOverlay() {
+        mMainHandler.removeCallbacks(mVoiceFeedbackHideRunnable);
+        detachVoiceFeedbackOverlayViewOnly();
+    }
+
+    private void detachVoiceFeedbackOverlayViewOnly() {
+        if (mVoiceFeedbackOverlay == null) {
+            return;
+        }
+        try {
+            WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+            if (wm != null) {
+                wm.removeView(mVoiceFeedbackOverlay);
+            }
+        } catch (Throwable ignored) {
+        }
+        mVoiceFeedbackOverlay = null;
     }
 
     // -------------------------------------------------------------------------
@@ -1596,6 +1800,9 @@ public class MG4ControlService extends Service {
             case "OVERLAY_OFF":
                 removeOverlay();
                 updateNotification("Overlay: Kapalı");
+                break;
+            case ACTION_VOICE_FEEDBACK_OVERLAY:
+                handleVoiceFeedbackOverlayIntent(intent);
                 break;
         }
     }

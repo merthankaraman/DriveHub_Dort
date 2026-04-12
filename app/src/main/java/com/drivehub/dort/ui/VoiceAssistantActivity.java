@@ -220,12 +220,13 @@ public class VoiceAssistantActivity extends AppCompatActivity {
         if (mRecognizer == null) {
             return;
         }
-        stopListeningSafe();
+        stopListeningSafe(true);
         try {
             mSpeechService = new SpeechService(mRecognizer, 16000.0f);
         } catch (IOException e) {
             appendLogLine(getString(R.string.voice_mic_busy, e.getMessage()));
             Toast.makeText(this, R.string.voice_mic_busy_short, Toast.LENGTH_LONG).show();
+            publishVoiceOverlay(MG4ControlService.VOICE_OVERLAY_MODE_LISTEN_END, "", "");
             return;
         }
         mListening = true;
@@ -290,8 +291,10 @@ public class VoiceAssistantActivity extends AppCompatActivity {
             if (mVoiceLive != null) {
                 mVoiceLive.setText(R.string.voice_live_idle);
             }
+            publishVoiceOverlay(MG4ControlService.VOICE_OVERLAY_MODE_LISTEN_END, "", "");
         } else {
             VoiceLog.i(VoiceLog.TAG_ASST, "startListening true");
+            publishVoiceOverlay(MG4ControlService.VOICE_OVERLAY_MODE_LISTEN_START, "", "");
         }
     }
 
@@ -306,9 +309,17 @@ public class VoiceAssistantActivity extends AppCompatActivity {
         mLastPartialLogText = display;
         mLastPartialLogMs = now;
         VoiceLog.d(VoiceLog.TAG_ASST, "onPartial display=\"" + display + "\" raw=" + raw);
+        publishVoiceOverlay(MG4ControlService.VOICE_OVERLAY_MODE_PARTIAL, display, "");
     }
 
     private void stopListeningSafe() {
+        stopListeningSafe(false);
+    }
+
+    /**
+     * @param suppressVoiceOverlayEnd yeniden dinleme başlatırken true: önceki oturum için overlay kapanışı tetiklenmez
+     */
+    private void stopListeningSafe(boolean suppressVoiceOverlayEnd) {
         boolean hadSession = mSpeechService != null;
         if (mSpeechService != null) {
             mSpeechService.stop();
@@ -326,6 +337,9 @@ public class VoiceAssistantActivity extends AppCompatActivity {
         if (mVoiceLive != null) {
             mVoiceLive.setText(R.string.voice_live_idle);
         }
+        if (hadSession && !suppressVoiceOverlayEnd) {
+            publishVoiceOverlay(MG4ControlService.VOICE_OVERLAY_MODE_LISTEN_END, "", "");
+        }
     }
 
     private void handleHypothesis(String hypothesis) {
@@ -338,6 +352,11 @@ public class VoiceAssistantActivity extends AppCompatActivity {
         if ("[unk]".equalsIgnoreCase(trimmed) || trimmed.startsWith("[unk]")) {
             VoiceLog.d(VoiceLog.TAG_ASST, "Grafik [unk] (cümle komut listesinde yok)");
             appendLogLine(getString(R.string.voice_grammar_unk));
+            String heardUnk = extractForDisplay(hypothesis);
+            if (heardUnk.isEmpty()) {
+                heardUnk = trimmed;
+            }
+            publishVoiceResultOverlay(heardUnk, getString(R.string.voice_overlay_action_unk));
             speak(getString(R.string.voice_not_understood_tts));
             return;
         }
@@ -354,11 +373,13 @@ public class VoiceAssistantActivity extends AppCompatActivity {
         VoiceIntentDispatcher.Result r = VoiceIntentDispatcher.parse(this, text);
         if (r == null) {
             appendLogLine(getString(R.string.voice_not_understood));
+            publishVoiceResultOverlay(text, getString(R.string.voice_overlay_action_none));
             speak(getString(R.string.voice_not_understood_tts));
             return;
         }
 
         appendLogLine(getString(R.string.voice_reply, r.assistantReply));
+        publishVoiceResultOverlay(text, r.assistantReply);
         speak(r.assistantReply);
 
         try {
@@ -366,7 +387,29 @@ public class VoiceAssistantActivity extends AppCompatActivity {
             startService(r.commandIntent);
         } catch (Exception e) {
             appendLogLine(getString(R.string.voice_command_error, e.getMessage()));
+            publishVoiceResultOverlay(text, getString(R.string.voice_command_error, e.getMessage()));
             VoiceLog.e(VoiceLog.TAG_ASST, "Komut gönderilemedi", e);
+        }
+    }
+
+    /** Final sonuç satırları (dinleme açıkken kapanış zamanlanmaz). */
+    private void publishVoiceResultOverlay(String heard, String actionLine) {
+        publishVoiceOverlay(MG4ControlService.VOICE_OVERLAY_MODE_RESULT, heard, actionLine);
+    }
+
+    private void publishVoiceOverlay(String mode, String heard, String actionLine) {
+        Intent i = new Intent(this, MG4ControlService.class);
+        i.setAction(MG4ControlService.ACTION_VOICE_FEEDBACK_OVERLAY);
+        i.putExtra(MG4ControlService.EXTRA_VOICE_OVERLAY_MODE, mode);
+        i.putExtra(MG4ControlService.EXTRA_VOICE_HEARD, heard != null ? heard : "");
+        i.putExtra(MG4ControlService.EXTRA_VOICE_ACTION, actionLine != null ? actionLine : "");
+        try {
+            ContextCompat.startForegroundService(this, i);
+        } catch (Throwable t) {
+            try {
+                startService(i);
+            } catch (Throwable ignored) {
+            }
         }
     }
 
