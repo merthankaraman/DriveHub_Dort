@@ -1739,7 +1739,7 @@ public class MG4Hardware {
 
             float speedKmh2 = speedKmh;
             if (speedKmh < 2f) speedKmh2 = 0f;
-            else if (speedKmh > 30) speedKmh2 *= 1.004f;
+            else if (speedKmh > 30) speedKmh2 *= 1.003f;
 
             // DC güç (kWh): trapez — önceki tick sDcKw + şimdiki dcKw ortalaması × dt
             if (!Float.isNaN(dcKw)) {
