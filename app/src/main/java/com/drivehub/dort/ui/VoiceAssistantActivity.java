@@ -40,14 +40,32 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Yerel Vosk (Türkçe) ile komut dinleme; sonuçları metin + TTS ile gösterir.
  */
 public class VoiceAssistantActivity extends AppCompatActivity {
 
+    /** {@link StartVoiceAssistantActivity} veya benzeri dış tetikleyici */
+    public static final String EXTRA_AUTO_START_LISTEN = "com.drivehub.dort.EXTRA_AUTO_START_LISTEN";
+    /** Bir hipotez işlendikten sonra (TTS için kısa gecikme ile) aktiviteyi kapat */
+    public static final String EXTRA_FINISH_AFTER_FIRST_RESULT = "com.drivehub.dort.EXTRA_FINISH_AFTER_FIRST_RESULT";
+
     private static final int REQ_RECORD_AUDIO = 4401;
+    private static final int REQ_RECORD_AUDIO_AUTO = 4402;
     private static final int MAX_LOG_CHARS = 14_000;
+
+    private boolean mWantAutoListen;
+    private boolean mAutoMicPermissionRequested;
+    private boolean mFinishAfterFirstResult;
+    private final AtomicBoolean mOneShotFinishScheduled = new AtomicBoolean(false);
+    private final Runnable mFinishAfterResultRunnable = () -> {
+        stopListeningSafe();
+        if (!isFinishing()) {
+            finish();
+        }
+    };
 
     private TextView mLogView;
     private ScrollView mScrollLog;
@@ -79,6 +97,7 @@ public class VoiceAssistantActivity extends AppCompatActivity {
         setContentView(R.layout.activity_voice_assistant);
         FullscreenHelper.applyFromPrefs(this);
         configureVoskLogLevel();
+        readVoiceIntentExtras();
 
         mLogView = findViewById(R.id.tvVoiceLog);
         mScrollLog = findViewById(R.id.scrollVoiceLog);
@@ -117,6 +136,21 @@ public class VoiceAssistantActivity extends AppCompatActivity {
         loadModelAsync();
     }
 
+    private void readVoiceIntentExtras() {
+        mWantAutoListen = getIntent().getBooleanExtra(EXTRA_AUTO_START_LISTEN, false);
+        mFinishAfterFirstResult = getIntent().getBooleanExtra(EXTRA_FINISH_AFTER_FIRST_RESULT, false);
+        mAutoMicPermissionRequested = false;
+        mOneShotFinishScheduled.set(false);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        readVoiceIntentExtras();
+        attemptAutoStartListen();
+    }
+
     private void showVoiceCommandsHelp() {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.voice_help_commands_title)
@@ -129,6 +163,7 @@ public class VoiceAssistantActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         configureVoskLogLevel();
+        attemptAutoStartListen();
     }
 
     /** Ayarlardaki “log” anahtarı ile aynı: kapalıyken Vosk API logları da sakinleşir. */
@@ -177,7 +212,60 @@ public class VoiceAssistantActivity extends AppCompatActivity {
                 appendLogLine(getString(R.string.voice_mic_denied));
                 Toast.makeText(this, R.string.voice_mic_denied, Toast.LENGTH_LONG).show();
             }
+        } else if (requestCode == REQ_RECORD_AUDIO_AUTO) {
+            mAutoMicPermissionRequested = false;
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                appendLogLine(getString(R.string.voice_mic_granted));
+                if (mWantAutoListen && mRecognizer != null && !mListening) {
+                    mWantAutoListen = false;
+                    startListeningInternal();
+                }
+            } else {
+                mWantAutoListen = false;
+                appendLogLine(getString(R.string.voice_mic_denied));
+                Toast.makeText(this, R.string.voice_mic_denied, Toast.LENGTH_LONG).show();
+                if (mFinishAfterFirstResult) {
+                    mBtnListen.postDelayed(() -> {
+                        if (!isFinishing()) {
+                            finish();
+                        }
+                    }, 600);
+                }
+            }
         }
+    }
+
+    private void attemptAutoStartListen() {
+        if (!mWantAutoListen) {
+            return;
+        }
+        if (mRecognizer == null || !mBtnListen.isEnabled()) {
+            return;
+        }
+        if (!hasRecordPermission()) {
+            if (!mAutoMicPermissionRequested) {
+                mAutoMicPermissionRequested = true;
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.RECORD_AUDIO}, REQ_RECORD_AUDIO_AUTO);
+            }
+            return;
+        }
+        mWantAutoListen = false;
+        if (!mListening) {
+            startListeningInternal();
+        }
+    }
+
+    /** Dış tetikleyici: TTS için kısa süre sonra kapanır */
+    private void scheduleFinishAfterOneShotResult() {
+        if (!mFinishAfterFirstResult) {
+            return;
+        }
+        if (!mOneShotFinishScheduled.compareAndSet(false, true)) {
+            return;
+        }
+        mBtnListen.removeCallbacks(mFinishAfterResultRunnable);
+        mBtnListen.postDelayed(mFinishAfterResultRunnable, 2500);
     }
 
     private void loadModelAsync() {
@@ -204,13 +292,22 @@ public class VoiceAssistantActivity extends AppCompatActivity {
                     appendLogLine(getString(grammarOk
                             ? R.string.voice_grammar_on
                             : R.string.voice_grammar_off));
+                    attemptAutoStartListen();
                 });
             } catch (IOException e) {
                 VoiceLog.e(VoiceLog.TAG_ASST, "Model yüklenemedi", e);
                 runOnUiThread(() -> {
+                    mWantAutoListen = false;
                     mModelStatus.setText(R.string.voice_model_error);
                     mBtnListen.setEnabled(false);
                     appendLogLine(getString(R.string.voice_model_error_log, e.getMessage()));
+                    if (mFinishAfterFirstResult) {
+                        mBtnListen.postDelayed(() -> {
+                            if (!isFinishing()) {
+                                finish();
+                            }
+                        }, 800);
+                    }
                 });
             }
         });
@@ -358,6 +455,7 @@ public class VoiceAssistantActivity extends AppCompatActivity {
             }
             publishVoiceResultOverlay(heardUnk, getString(R.string.voice_overlay_action_unk));
             speak(getString(R.string.voice_not_understood_tts));
+            scheduleFinishAfterOneShotResult();
             return;
         }
         long now = SystemClock.elapsedRealtime();
@@ -375,6 +473,7 @@ public class VoiceAssistantActivity extends AppCompatActivity {
             appendLogLine(getString(R.string.voice_not_understood));
             publishVoiceResultOverlay(text, getString(R.string.voice_overlay_action_none));
             speak(getString(R.string.voice_not_understood_tts));
+            scheduleFinishAfterOneShotResult();
             return;
         }
 
@@ -390,6 +489,7 @@ public class VoiceAssistantActivity extends AppCompatActivity {
             publishVoiceResultOverlay(text, getString(R.string.voice_command_error, e.getMessage()));
             VoiceLog.e(VoiceLog.TAG_ASST, "Komut gönderilemedi", e);
         }
+        scheduleFinishAfterOneShotResult();
     }
 
     /** Final sonuç satırları (dinleme açıkken kapanış zamanlanmaz). */
@@ -486,6 +586,7 @@ public class VoiceAssistantActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mBtnListen.removeCallbacks(mFinishAfterResultRunnable);
         stopListeningSafe();
         if (mRecognizer != null) {
             mRecognizer.close();
