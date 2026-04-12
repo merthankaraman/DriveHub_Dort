@@ -16,10 +16,6 @@
 -keep class androidx.core.app.** { *; }
 -dontwarn androidx.core.app.**
 
-# ZXing (sürüş geçmişi QR dışa aktarma)
--keep class com.google.zxing.** { *; }
--dontwarn com.google.zxing.**
-
 # Eğer ileride @Keep anotasyonu kullanırsan, bu üyeler olduğu gibi korunur.
 -keepclassmembers class * {
     @androidx.annotation.Keep *;

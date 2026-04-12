@@ -191,12 +191,6 @@
     <string name="charging_history_btn_clear">Geçmişi Sil</string>
     <string name="charging_history_toast_saved">CSV kaydedildi: %s</string>
     <string name="charging_history_toast_export_failed">CSV dışa aktarma başarısız.</string>
-    <string name="charging_history_btn_qr">QR oluştur</string>
-    <string name="charging_history_qr_title">Şarj geçmişi (CSV metni)</string>
-    <string name="charging_history_qr_hint">Telefonla QR kodu okutun; çıkan metni not defterine yapıştırın. Dosya olarak kaydetmek isterseniz metni .csv uzantılı dosyaya yapıştırın.</string>
-    <string name="charging_history_qr_empty">Gösterilecek kayıt yok.</string>
-    <string name="charging_history_qr_too_large">Tüm geçmiş tek bir QR koda sığmıyor (%1$d bayt; üst sınır yaklaşık 2900). CSV dışa aktarma kullanın veya eski kayıtları silip tekrar deneyin.</string>
-    <string name="charging_history_qr_error">QR oluşturulamadı.</string>
     <string name="charging_history_confirm_clear">Geçmişi silmek istiyor musunuz?</string>
     <string name="charging_history_yes">Evet</string>
     <string name="charging_history_no">Hayır</string>

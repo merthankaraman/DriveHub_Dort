@@ -192,12 +192,6 @@
     <string name="charging_history_btn_clear">Clear history</string>
     <string name="charging_history_toast_saved">CSV saved: %s</string>
     <string name="charging_history_toast_export_failed">CSV export failed.</string>
-    <string name="charging_history_btn_qr">Create QR</string>
-    <string name="charging_history_qr_title">Charging history (CSV text)</string>
-    <string name="charging_history_qr_hint">Scan the QR with your phone; paste the text into Notes. To keep as a file, paste into a file named something.csv.</string>
-    <string name="charging_history_qr_empty">No records to show.</string>
-    <string name="charging_history_qr_too_large">Full history does not fit in one QR code (%1$d bytes; limit about 2900). Use CSV export or remove older records and try again.</string>
-    <string name="charging_history_qr_error">Could not create QR code.</string>
     <string name="charging_history_confirm_clear">Clear charging history?</string>
     <string name="charging_history_yes">Yes</string>
     <string name="charging_history_no">No</string>
