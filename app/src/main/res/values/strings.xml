@@ -44,6 +44,12 @@
     <string name="demo_cpm_prop_scan_span_overflow">Başlangıç + adet, 32 bit ID aralığını taşıyor\n</string>
     <string name="demo_cpm_prop_scan_result_header">CPM prop start=0x%1$08X count=%2$d satır=%3$d (int=-1 atlandı)\n</string>
     <string name="demo_cpm_prop_scan_truncated">…[kesildi]\n</string>
+    <string name="demo_hvac_prop_scan_title">Klima (HVAC) CPM tarama — area 0x75</string>
+    <string name="demo_hvac_prop_start_hint">Başlangıç ID (örn. 0x15402500)</string>
+    <string name="demo_hvac_prop_count_hint">Okunacak adet (örn. 256)</string>
+    <string name="demo_hvac_prop_scan_run">HVAC oku</string>
+    <string name="demo_hvac_prop_scan_busy">HVAC okunuyor…</string>
+    <string name="demo_hvac_prop_scan_result_header">HVAC CPM area=0x75 start=0x%1$08X count=%2$d satır=%3$d (NaN ve int=-1 atlandı)\n</string>
     <string name="btn_voice_assistant">Sesli asistan (Vosk)</string>
 
     <!-- Yerel sesli asistan (Demo → Asistan) -->

@@ -36,7 +36,7 @@ import java.util.Map;
  * Ana ekrandaki "Demo" düğmesiyle açılır.
  * Get'ler (getEspSwitch, getLeaveAutoLockMode, getApproachUnlockMode, getNearfieldUnlockMode vb.)
  * ekran açılışında ve öne gelince çağrılır. Pencere yüzdeleri, hava kalitesi, kapı kilidi ve
- * Track sensörleri (MG4Hardware readTrackSensor*) ayrıca 2 sn aralıkla güncellenir; CPM prop aralığı elle okunur.
+ * Track sensörleri (MG4Hardware readTrackSensor*) ayrıca 2 sn aralıkla güncellenir; CPM / HVAC prop aralığı elle okunur.
  */
 public class DemoActivity extends AppCompatActivity {
 
@@ -92,6 +92,9 @@ public class DemoActivity extends AppCompatActivity {
     /** CPM {@link MG4Hardware#readTrackSensorFloat(int)} / {@link MG4Hardware#readTrackSensorInt(int)} aralık çıktısı. */
     private String mCpmPropScanCachedText = "";
     private volatile boolean mCpmPropScanRunning = false;
+    /** HVAC {@link MG4Hardware#readHvacPropFloat(int)} / {@link MG4Hardware#readHvacPropInt(int)} — area {@link MG4Hardware#AREA_HVAC}. */
+    private String mHvacPropScanCachedText = "";
+    private volatile boolean mHvacPropScanRunning = false;
     /**
      * Tek taramada en fazla bu kadar property ID (binder süresi uzar; çıktı yine ~120k karakterde kesilir).
      * Örnek: 0x2160f000…0x2160ffff → adet 4096.
@@ -262,6 +265,10 @@ public class DemoActivity extends AppCompatActivity {
         if (btnCpmPropScan != null) {
             btnCpmPropScan.setOnClickListener(v -> runCpmPropRangeScan());
         }
+        Button btnHvacPropScan = findViewById(R.id.btnHvacPropScan);
+        if (btnHvacPropScan != null) {
+            btnHvacPropScan.setOnClickListener(v -> runHvacPropRangeScan());
+        }
     }
 
     @Override
@@ -332,10 +339,28 @@ public class DemoActivity extends AppCompatActivity {
         //MG4Hardware.refreshDiagnosticLiveFrame();
         StringBuilder sb = new StringBuilder(900);
         StringBuilder sb2 = new StringBuilder(900);
+
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602511), "0x15602511 muhtemel dis");
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560252a), "0x1560252a muhtemel dis");
+
+
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f416), "klima açk 290 kapalı 305 0x2140f416"); //değişti 290 klima açık oldu 305 klima kapalı oldu
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f41c), "klima ve zamana bağlı değişiyor 0x2140f41c"); //değişti 150 oldu 161 oldu 158, 159 oldu klima kapalı 167 oldu 170 oldu
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f42d), "klima açık 76 kapalı 80 0x2140f42d"); //değişti 76 klima açık oldu 80 klima kapalo oldu
+
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560251e), "0x1560251e");
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560251f), "0x1560251f");
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602520), "0x15602520");
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602521), "0x15602521");
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602536), "0x15602536");
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602547), "0x15602547");
+
+
+        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250d), "0x1540250d"); // fan seviyesi 15 auto
+        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250e), "0x1540250e");
+
+
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40e), "0x2140f40e");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f416), "0x2140f416");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f41c), "0x2140f41c");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f42d), "0x2140f42d");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40b), "0x2140f40b");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40c), "0x2140f40c");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f410), "0x2140f410");
@@ -356,16 +381,15 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21407b18), "0x21407b18");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21407b19), "0x21407b19");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140db73), "0x2140db73");
-
-
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f404), "0x2160f405");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f40b), "0x2160f40b");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f40d), "0x2160f40d");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f405), "0x2160f405");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41b), "0x2160f41b");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41d), "0x2160f41d");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f421), "0x2160f421");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44d), "0x2160f44d");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44f), "0x2160f44f");
 
         appendCpmPropScan(sb2);
+        appendHvacPropScan(sb2);
         /*
         appendValueFloat(sb, MG4Hardware.getSensorWheelAngleGlobal(), "Direksiyon °");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST), "tehlikeli nesne boyuna mesafe");
@@ -379,6 +403,12 @@ public class DemoActivity extends AppCompatActivity {
     private void appendCpmPropScan(StringBuilder sb) {
         if (!mCpmPropScanCachedText.isEmpty()) {
             sb.append(mCpmPropScanCachedText);
+        }
+    }
+
+    private void appendHvacPropScan(StringBuilder sb) {
+        if (!mHvacPropScanCachedText.isEmpty()) {
+            sb.append(mHvacPropScanCachedText);
         }
     }
 
@@ -420,6 +450,46 @@ public class DemoActivity extends AppCompatActivity {
                 refreshTrackSensors();
             });
         }, "demo-cpm-prop-scan").start();
+    }
+
+    private void runHvacPropRangeScan() {
+        if (mHvacPropScanRunning) return;
+        EditText et0 = findViewById(R.id.etHvacPropStart);
+        EditText et1 = findViewById(R.id.etHvacPropCount);
+        Button btn = findViewById(R.id.btnHvacPropScan);
+        if (et0 == null || et1 == null) return;
+        final int start;
+        final int count;
+        try {
+            start = parsePropIdString(et0.getText().toString());
+        } catch (NumberFormatException ex) {
+            Toast.makeText(this, R.string.demo_cpm_prop_scan_parse_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            count = parsePositiveCountString(et1.getText().toString());
+        } catch (NumberFormatException ex) {
+            Toast.makeText(this, getString(R.string.demo_cpm_prop_scan_parse_count_error, CPM_PROP_SCAN_MAX_IDS),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        mHvacPropScanRunning = true;
+        if (btn != null) {
+            btn.setEnabled(false);
+            btn.setText(R.string.demo_hvac_prop_scan_busy);
+        }
+        new Thread(() -> {
+            String text = buildHvacPropScanText(start, count);
+            runOnUiThread(() -> {
+                mHvacPropScanCachedText = text;
+                mHvacPropScanRunning = false;
+                if (btn != null) {
+                    btn.setEnabled(true);
+                    btn.setText(R.string.demo_hvac_prop_scan_run);
+                }
+                refreshTrackSensors();
+            });
+        }, "demo-hvac-prop-scan").start();
     }
 
     private static int parsePropIdString(String raw) throws NumberFormatException {
@@ -479,6 +549,40 @@ public class DemoActivity extends AppCompatActivity {
             }
         }
         return getString(R.string.demo_cpm_prop_scan_result_header, start, count, lines) + out;
+    }
+
+    /** CPM ile aynı mantık; {@link MG4Hardware#readHvacPropFloat(int)} / {@link MG4Hardware#readHvacPropInt(int)} (area 0x75). */
+    private String buildHvacPropScanText(int start, int count) {
+        if (count < 1 || count > CPM_PROP_SCAN_MAX_IDS) {
+            return getString(R.string.demo_cpm_prop_scan_parse_count_error, CPM_PROP_SCAN_MAX_IDS);
+        }
+        long last = (long) start + (long) count - 1L;
+        if (last > Integer.MAX_VALUE || last < Integer.MIN_VALUE) {
+            return getString(R.string.demo_cpm_prop_scan_span_overflow);
+        }
+        long rawCap = (long) count * 64L + 128L;
+        int initialCap = (int) Math.min(200_000L, Math.max(2_048L, rawCap));
+        StringBuilder out = new StringBuilder(initialCap);
+        int lines = 0;
+        for (int i = 0; i < count; i++) {
+            int id = (int) (((long) start) + (long) i);
+            float f = MG4Hardware.readHvacPropFloat(id);
+            int iv = MG4Hardware.readHvacPropInt(id);
+            boolean hasF = !Float.isNaN(f);
+            boolean hasI = iv != -1;
+            if (!hasF && !hasI) continue;
+            if (f == 0f || iv == 0) continue; //TODO 0 value hide feat
+            lines++;
+            out.append(String.format(Locale.US, "  id=0x%08X (%d)", id, id));
+            if (hasF) out.append(String.format(Locale.US, " float=%.4f", f));
+            if (hasI) out.append(String.format(Locale.US, " int=%d", iv));
+            out.append('\n');
+            if (out.length() > 120000) {
+                out.append(getString(R.string.demo_cpm_prop_scan_truncated));
+                break;
+            }
+        }
+        return getString(R.string.demo_hvac_prop_scan_result_header, start, count, lines) + out;
     }
 
     private String buildDiagnosticScanText() {

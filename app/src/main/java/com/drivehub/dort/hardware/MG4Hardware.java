@@ -52,7 +52,8 @@ public class MG4Hardware {
     private static final int PROP_STEERING_HEAT = PROP_STEERING_HEAT_PUB;
     private static final int PROP_SEAT_HEAT_L   = PROP_SEAT_HEAT_L_PUB;
     private static final int PROP_SEAT_HEAT_R   = PROP_SEAT_HEAT_R_PUB;
-    private static final int AREA_HVAC          = 0x75;       // 117
+    /** CarHvacManager “tüm HVAC” zone (doküman: {@code HVAC_ALL}). */
+    public static final int AREA_HVAC          = 0x75;       // 117
 
     /**
      * SAIC fabrika &quot;Ayarlar&quot; tema (Genel → arka plan): {@code IGeneralService} Binder.
@@ -104,6 +105,16 @@ public class MG4Hardware {
     /** Demo: CPM {@code getProperty(Integer)} — global area. -1 = okunamadı. */
     public static int readTrackSensorInt(int propId) {
         return getIntPropertyCPM(propId, AREA_GLOBAL);
+    }
+
+    /** Demo: CarHvacManager / klima property — {@code area=0x75} ({@link #AREA_HVAC}). NaN = okunamadı. */
+    public static float readHvacPropFloat(int propId) {
+        return getFloatPropertyCPM(propId, AREA_HVAC);
+    }
+
+    /** Demo: CarHvacManager / klima property — {@code area=0x75}. -1 = okunamadı. */
+    public static int readHvacPropInt(int propId) {
+        return getIntPropertyCPM(propId, AREA_HVAC);
     }
     public static boolean isCarDiagnosticManagerReady() {
         return sCarDiagnosticManager != null;

@@ -44,6 +44,12 @@
     <string name="demo_cpm_prop_scan_span_overflow">Start + count exceeds 32-bit ID range\n</string>
     <string name="demo_cpm_prop_scan_result_header">CPM prop start=0x%1$08X count=%2$d lines=%3$d (int=-1 omitted)\n</string>
     <string name="demo_cpm_prop_scan_truncated">…[truncated]\n</string>
+    <string name="demo_hvac_prop_scan_title">HVAC CPM scan — area 0x75</string>
+    <string name="demo_hvac_prop_start_hint">Start ID (e.g. 0x15402500)</string>
+    <string name="demo_hvac_prop_count_hint">Count to read (e.g. 256)</string>
+    <string name="demo_hvac_prop_scan_run">Read HVAC</string>
+    <string name="demo_hvac_prop_scan_busy">Reading HVAC…</string>
+    <string name="demo_hvac_prop_scan_result_header">HVAC CPM area=0x75 start=0x%1$08X count=%2$d lines=%3$d (NaN and int=-1 omitted)\n</string>
     <string name="btn_voice_assistant">Voice assistant (Vosk)</string>
 
     <!-- Local voice assistant (Demo → Assistant) — commands are Turkish; UI strings in English -->
