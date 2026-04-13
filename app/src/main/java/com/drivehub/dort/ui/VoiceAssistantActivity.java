@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class VoiceAssistantActivity extends AppCompatActivity {
 
-    /** {@link StartVoiceAssistantActivity} veya benzeri dış tetikleyici */
+    /** Dış tetikleyici ile otomatik dinleme */
     public static final String EXTRA_AUTO_START_LISTEN = "com.drivehub.dort.EXTRA_AUTO_START_LISTEN";
     /** Bir hipotez işlendikten sonra (TTS için kısa gecikme ile) aktiviteyi kapat */
     public static final String EXTRA_FINISH_AFTER_FIRST_RESULT = "com.drivehub.dort.EXTRA_FINISH_AFTER_FIRST_RESULT";
