@@ -1623,7 +1623,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         float soc = MG4Hardware.getSoc();
-        String socText = Float.isNaN(soc) ? "SOC:--" : String.format(Locale.US, "SOC:%.1f", soc);
+        String socText = Float.isNaN(soc) ? getString(R.string.consumption_soc_placeholder) : getString(R.string.consumption_soc_format, soc);
         if (mTvChargingHeaderSoc != null) {
             mTvChargingHeaderSoc.setText(socText);
         }
