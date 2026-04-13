@@ -339,16 +339,12 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40b), "0x2140f40b");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40c), "0x2140f40c");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f410), "0x2140f410");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140159d), "0x2140159d");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11400400), "0x11400400");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140050e), "0x1140050e");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11403808), "0x11403808");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140380b), "0x1140380b");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140381c), "0x1140381c");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11603832), "0x11603832");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21601561), "0x21601561");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21601563), "0x21601563");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x216015a5), "0x216015a5");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21607b5b), "0x21607b5b");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a118), "0x2160a118");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a119), "0x2160a119");
@@ -357,9 +353,9 @@ public class DemoActivity extends AppCompatActivity {
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a126), "0x2160a126");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a127), "0x2160a127");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160c620), "0x2160c620");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21407b18), "0x21407b18");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21407b19), "0x21407b19");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2140db73), "0x2140db73");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21407b18), "0x21407b18");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21407b19), "0x21407b19");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140db73), "0x2140db73");
 
 
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f404), "0x2160f405");
