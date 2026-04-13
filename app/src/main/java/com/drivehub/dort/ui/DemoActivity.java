@@ -360,6 +360,19 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250e), "0x1540250e");
 
 
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600301), "0x11600301");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11400303), "0x11400303");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600304), "0x11600304");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600305), "0x11600305");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600703), "0x11600703");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1160030c), "0x1160030c");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600309), "0x11600309");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1540050f), "0x1540050f");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1540050b), "0x1540050b");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x15600502), "0x15600502");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600106), "0x11600106");
+
+
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40e), "0x2140f40e");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40b), "0x2140f40b");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40c), "0x2140f40c");
@@ -395,6 +408,13 @@ public class DemoActivity extends AppCompatActivity {
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST), "tehlikeli nesne boyuna mesafe");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLATRLTVDIST), "tehlikeli nesne yanal mesafe");
         */
+        appendObdRequest(sb, 0x3a, "OBD test ABSOLUTE_EVAPORATION_SYSTEM_VAPOR_PRESSURE");
+        appendObdRequest(sb, 0x1, "OBD test ENGINE_COOLANT_TEMPERATURE");
+        appendObdRequest(sb, 0x8, "OBD test ENGINE_RPM");
+        appendObdRequest(sb, 0xc, "OBD test THROTTLE_POSITION");
+        appendObdRequest(sb, 0x43, "OBD test RELATIVE_ACCELERATOR_PEDAL_POSITION");
+        appendObdRequest(sb, 0x0, "OBD test CALCULATED_ENGINE_LOAD");
+
         tvCpmL.setText(sb.toString());
         tvCpmR.setText(sb2.toString());
     }
@@ -618,9 +638,18 @@ public class DemoActivity extends AppCompatActivity {
         }
         return out.toString();
     }
-    private static void appendObdRequestFloat(StringBuilder sb, int propId, String label) {
+    private static void appendObdRequest(StringBuilder sb, int propId, String label) {
         float f = MG4Hardware.readObdValueFloat(propId);
-        String v = Float.isNaN(f) ? "--" : String.format(Locale.US, "%.4f", f);
+        int iv = MG4Hardware.readHvacPropInt(propId);
+        boolean hasF = !Float.isNaN(f);
+        boolean hasI = iv != -1;
+        String v;
+        if (hasF) {
+            v = String.format(Locale.US, "%.4f", f);
+        } else if (hasI) {
+            v = String.valueOf(iv);
+        }
+        else v = "null";
         sb.append(String.format(Locale.US, "%s: %s%n", label, v));
     }
 
