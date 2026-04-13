@@ -2070,17 +2070,7 @@ public class MainActivity extends AppCompatActivity {
             if (Float.isNaN(speedKmh)) {
                 mTvConsumptionSpeed.setText("--");
             } else {
-                float speedKmh2 = speedKmh;//TODO test
-                if (speedKmh < 2f) speedKmh2 = 0f;
-                else if (speedKmh > 30f) speedKmh2 *= 1.03f;
-                int round_speedKmh = Math.round(speedKmh2);
-                boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
-                if (showDemo) {
-                    mTvConsumptionSpeed.setText(String.format(Locale.US, "%.2f km/h\n%.2f km/h    %d km/h", speedKmh, speedKmh2, round_speedKmh));
-                }
-                else {
-                    mTvConsumptionSpeed.setText(String.format(Locale.US, "%.2f km/h", speedKmh));
-                }
+                mTvConsumptionSpeed.setText(String.format(Locale.US, "%.2f km/h", speedKmh));
             }
         }
         if (mTvConsumptionSoc != null) {
@@ -2147,10 +2137,9 @@ public class MainActivity extends AppCompatActivity {
             // Sürüş: trip (Sürüş sıfırla ile sıfırlanan)
             if (mTvConsumptionTripKm != null) {
                 if (tripDistanceKm >= 0) {
-
-                    float km2 = MG4Hardware.getTripDistanceKm2();//TODO test
                     boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
                     if (showDemo) {
+                        float km2 = MG4Hardware.getTripDistanceKm2();//TODO test
                         mTvConsumptionTripKm.setText(String.format(Locale.US, "%.3f km\n%.3f km", tripDistanceKm, km2));
                     }
                     else {
@@ -2166,10 +2155,10 @@ public class MainActivity extends AppCompatActivity {
             if (mTvConsumptionAvgKwhPer100km != null) {
                 if (tripDistanceKm > 0.01) {
                     double avgKwhPer100 = (tripEnergyKwh / tripDistanceKm) * 100.0;
-                    float km2 = MG4Hardware.getTripDistanceKm2();//TODO test
-                    double avgKwhPer1002 = (tripEnergyKwh / km2) * 100.0;
                     boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
                     if (showDemo) {
+                        float km2 = MG4Hardware.getTripDistanceKm2();//TODO test
+                        double avgKwhPer1002 = (tripEnergyKwh / km2) * 100.0;
                         mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f kWh/100 km\n%.2f kWh/100 km", avgKwhPer100, avgKwhPer1002));                    }
                     else {
                         mTvConsumptionAvgKwhPer100km.setText(String.format(Locale.US, "%.2f kWh/100 km", avgKwhPer100));
