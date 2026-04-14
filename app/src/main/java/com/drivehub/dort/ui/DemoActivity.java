@@ -348,58 +348,49 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f41c), "klima ve zamana bağlı değişiyor 0x2140f41c"); //değişti 150 oldu 161 oldu 158, 159 oldu klima kapalı 167 oldu 170 oldu
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f42d), "klima açık 76 kapalı 80 0x2140f42d"); //değişti 76 klima açık oldu 80 klima kapalo oldu
 
-        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560251e), "0x1560251e");
-        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560251f), "0x1560251f");
-        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602520), "0x15602520");
-        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602521), "0x15602521");
-        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602536), "0x15602536");
-        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602547), "0x15602547");
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560251e), "0x1560251e", 50.3937f);
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560251f), "0x1560251f", 50.3937f);
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602520), "0x15602520", 50.3937f);
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602521), "0x15602521", 50.3937f);
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602536), "0x15602536", 33.0f);
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602547), "0x15602547", 33.0f);
 
 
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250d), "0x1540250d"); // fan seviyesi 15 auto
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250e), "0x1540250e");
+        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250d), "fan seviyesi"); // fan seviyesi 15 auto
+        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250e), "0x1540250e",0);
 
 
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600301), "0x11600301");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11400303), "0x11400303");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600304), "0x11600304");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600305), "0x11600305");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600703), "0x11600703");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1160030c), "0x1160030c");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600305), "0x11600305",0f);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600703), "0x11600703");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x1160030c), "0x1160030c");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600309), "0x11600309");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1540050f), "0x1540050f");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1540050b), "0x1540050b");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x15600502), "0x15600502");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600106), "0x11600106");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x15600502), "0x15600502");
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600106), "0x11600106");
 
 
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40e), "0x2140f40e");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40b), "0x2140f40b");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40c), "0x2140f40c");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f410), "0x2140f410");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11400400), "0x11400400");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140050e), "0x1140050e");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11403808), "0x11403808");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140380b), "0x1140380b");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140381c), "0x1140381c");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11603832), "0x11603832");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21607b5b), "0x21607b5b");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a118), "0x2160a118");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a119), "0x2160a119");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a11a), "0x2160a11a");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a125), "0x2160a125");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a126), "0x2160a126");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a127), "0x2160a127");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160c620), "0x2160c620");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21407b18), "0x21407b18");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21407b19), "0x21407b19");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140db73), "0x2140db73");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f405), "0x2160f405");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41b), "0x2160f41b");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41d), "0x2160f41d");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f421), "0x2160f421");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44d), "0x2160f44d");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44f), "0x2160f44f");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40e), "0x2140f40e",22);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40b), "0x2140f40b",4);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40c), "0x2140f40c",7);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f410), "0x2140f410",6);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11400400), "0x11400400",4);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140050e), "0x1140050e",49);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11403808), "0x11403808",150);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140380b), "0x1140380b",7);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140381c), "0x1140381c",16);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11603832), "0x11603832",18.9990f);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21607b5b), "0x21607b5b",63.5f);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160c620), "0x2160c620",100.0001f);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21407b18), "0x21407b18",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21407b19), "0x21407b19",2);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140db73), "0x2140db73",2000);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f405), "0x2160f405",102.3f);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41b), "0x2160f41b",82.3f);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41d), "0x2160f41d",82.3f);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f421), "0x2160f421",82.3f);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44d), "0x2160f44d",82.3f);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44f), "0x2160f44f",82.3f);
 
         appendCpmPropScan(sb2);
         appendHvacPropScan(sb2);
@@ -408,13 +399,14 @@ public class DemoActivity extends AppCompatActivity {
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST), "tehlikeli nesne boyuna mesafe");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLATRLTVDIST), "tehlikeli nesne yanal mesafe");
         */
+        /*
         appendObdRequest(sb, 0x3a, "OBD test ABSOLUTE_EVAPORATION_SYSTEM_VAPOR_PRESSURE");
         appendObdRequest(sb, 0x1, "OBD test ENGINE_COOLANT_TEMPERATURE");
         appendObdRequest(sb, 0x8, "OBD test ENGINE_RPM");
         appendObdRequest(sb, 0xc, "OBD test THROTTLE_POSITION");
         appendObdRequest(sb, 0x43, "OBD test RELATIVE_ACCELERATOR_PEDAL_POSITION");
         appendObdRequest(sb, 0x0, "OBD test CALCULATED_ENGINE_LOAD");
-
+        */
         tvCpmL.setText(sb.toString());
         tvCpmR.setText(sb2.toString());
     }
@@ -657,8 +649,19 @@ public class DemoActivity extends AppCompatActivity {
         String v = Float.isNaN(f) ? "--" : String.format(Locale.US, "%.4f", f);
         sb.append(String.format(Locale.US, "%s: %s%n", label, v));
     }
+    private static void appendValueFloat(StringBuilder sb, float f, String label, float defaultval) {
+        if (f == defaultval) return;
+        String v = Float.isNaN(f) ? "--" : String.format(Locale.US, "%.4f", f);
+        sb.append(String.format(Locale.US, "%s: %s%n", label, v));
+    }
 
     /** CPM Integer track alanları (fren, lastik); okunamadı (i negatif) ise --. */
+    private static void appendValueInt(StringBuilder sb, int i, String label, int defaultval) {
+        if (i == defaultval) return;
+        //String v = (i < 0) ? "--" : String.valueOf(i);
+        String v = String.valueOf(i);
+        sb.append(String.format(Locale.US, "%s: %s%n", label, v));
+    }
     private static void appendValueInt(StringBuilder sb, int i, String label) {
         //String v = (i < 0) ? "--" : String.valueOf(i);
         String v = String.valueOf(i);
