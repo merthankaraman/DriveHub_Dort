@@ -66,6 +66,10 @@ public class MG4Hardware {
     public static final int TX_SAIC_IGENERAL_SET_DAY_NIGHT_AUTO_MODE = 0x12;
     public static final int TX_SAIC_IGENERAL_GET_IS_NIGHT_MODE = 0x13;
     public static final int TX_SAIC_IGENERAL_GET_DAY_NIGHT_AUTO_MODE = 0x14;
+    public static final String SAIC_MAP_PACKAGE = "com.saicmotor.adapterservice";
+    public static final String SAIC_MAP_SERVICE_CLASS = SAIC_MAP_PACKAGE + ".services.MapService";
+    public static final String SAIC_MAP_DESCRIPTOR = "com.saicmotor.adapterservice.IMapService";
+    public static final int TX_SAIC_MAP_GET_SENSOR_TEMPERATURE = 0x43;
 
     /**
      * Track Mode telemetrisi — {@code CarSensorManager.registerListener(..., sensorConfigId, rate)} ile kullanılan
@@ -539,6 +543,8 @@ public class MG4Hardware {
     /** {@link #SAIC_SETTINGS_PACKAGE} / {@link #SAIC_IGENERAL_BIND_ACTION} ile bind sonrası tema Binder'ı */
     private static volatile IBinder sSaicGeneralBinder = null;
     private static volatile boolean sSaicGeneralBindAttempted = false;
+    private static volatile IBinder sSaicMapBinder = null;
+    private static volatile boolean sSaicMapBindAttempted = false;
     private static final ServiceConnection sSaicGeneralServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -549,6 +555,18 @@ public class MG4Hardware {
         public void onServiceDisconnected(ComponentName name) {
             sSaicGeneralBinder = null;
             Log.w(TAG, "  SAIC IGeneral: bağlantı kesildi (" + name + ")");
+        }
+    };
+    private static final ServiceConnection sSaicMapServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            sSaicMapBinder = service;
+            if (sLogEnabled) Log.i(TAG, "  ✓ SAIC MapService bağlandı (" + name + ")");
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            sSaicMapBinder = null;
+            Log.w(TAG, "  SAIC MapService: bağlantı kesildi (" + name + ")");
         }
     };
 
@@ -573,6 +591,7 @@ public class MG4Hardware {
         bindCarService(appContext);
         bindVehicleService(appContext);
         bindSaicGeneralSettingsService(appContext);
+        bindSaicMapService(appContext);
 
         // Katman 2: Binder (yedek)
         if (sLogEnabled) logAvailableVehicleServices();
@@ -603,6 +622,13 @@ public class MG4Hardware {
         }
         sSaicGeneralBinder = null;
         sSaicGeneralBindAttempted = false;
+        if (ctx != null && sSaicMapBindAttempted) {
+            try {
+                ctx.unbindService(sSaicMapServiceConnection);
+            } catch (Throwable ignored) {}
+        }
+        sSaicMapBinder = null;
+        sSaicMapBindAttempted = false;
 
         sCarPropertyManager    = null;
         sCarHvacManager        = null;
@@ -1037,6 +1063,22 @@ public class MG4Hardware {
             }
         } catch (Throwable t) {
             Log.e(TAG, "  SAIC IGeneral: bind hata: " + t.getMessage());
+        }
+    }
+
+    private static void bindSaicMapService(Context context) {
+        if (sSaicMapBindAttempted) return;
+        sSaicMapBindAttempted = true;
+        try {
+            Intent intent = new Intent();
+            intent.setClassName(SAIC_MAP_PACKAGE, SAIC_MAP_SERVICE_CLASS);
+            boolean ok = context.bindService(intent, sSaicMapServiceConnection, Context.BIND_AUTO_CREATE);
+            if (sLogEnabled) {
+                if (ok) Log.i(TAG, "  SAIC MapService: bindService gönderildi (" + SAIC_MAP_PACKAGE + ")");
+                else Log.w(TAG, "  SAIC MapService: bindService false (paket/servis yok?)");
+            }
+        } catch (Throwable t) {
+            Log.e(TAG, "  SAIC MapService: bind hata: " + t.getMessage());
         }
     }
 
@@ -2870,6 +2912,39 @@ public class MG4Hardware {
             return -1;
         }
         return night ? 0 : 1;
+    }
+
+    /**
+     * SAIC AdapterService üzerinden IMU/sensör sıcaklığı.
+     * <p>IMapService.getSensorTemperature() Binder transaction code: {@code 0x43}.
+     *
+     * @return sensör sıcaklığı (int), okunamazsa -1
+     */
+    public static int getSensorTemperature() {
+        IBinder b = sSaicMapBinder;
+        if (b == null) {
+            if (sLogEnabled) Log.w(TAG, "SAIC Map getSensorTemperature — binder yok");
+            return -1;
+        }
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SAIC_MAP_DESCRIPTOR);
+            if (!b.transact(TX_SAIC_MAP_GET_SENSOR_TEMPERATURE, data, reply, 0)) {
+                if (sLogEnabled) Log.w(TAG, "SAIC Map getSensorTemperature transact false");
+                return -1;
+            }
+            reply.readException();
+            int value = reply.readInt();
+            if (sLogEnabled) Log.i(TAG, "SAIC Map getSensorTemperature => " + value);
+            return value;
+        } catch (Throwable t) {
+            Log.w(TAG, "SAIC Map getSensorTemperature hata: " + t.getMessage());
+            return -1;
+        } finally {
+            reply.recycle();
+            data.recycle();
+        }
     }
 
     private static boolean transactSaicIGeneralOneBoolean(IBinder binder, int txCode, boolean value) {

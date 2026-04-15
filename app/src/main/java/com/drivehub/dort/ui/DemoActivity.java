@@ -342,11 +342,14 @@ public class DemoActivity extends AppCompatActivity {
 
         appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602511), "0x15602511 muhtemel dis");
         appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560252a), "0x1560252a muhtemel dis");
+        appendValueFloat(sb, MG4Hardware.getACValMethodFloat("getOutCarTemp"), "getOutCarTemp");
 
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getDrvTemp"), "getDrvTemp");
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getPsgTemp"), "getPsgTemp");
-        appendValueFloat(sb, MG4Hardware.getACValMethodFloat("getOutCarTemp"), "getOutCarTemp");
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getTempDualZoneOn"), "getTempDualZoneOn");
+        appendValueInt(sb, MG4Hardware.getSensorTemperature(), "getSensorTemperature");
+
+
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f416), "klima açk 290 kapalı 305 0x2140f416"); //değişti 290 klima açık oldu 305 klima kapalı oldu
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f41c), "klima ve zamana bağlı değişiyor 0x2140f41c"); //değişti 150 oldu 161 oldu 158, 159 oldu klima kapalı 167 oldu 170 oldu
