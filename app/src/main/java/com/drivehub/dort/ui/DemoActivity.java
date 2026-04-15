@@ -350,6 +350,23 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.getSensorTemperature(), "getSensorTemperature");
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1a6), "ID_TRACK_MODE_IPK");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c5), "ID_CLSTR_DASP_VEH_SPD");
+
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1df), "ID_IBS_CH_AVAILABLY");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1e0), "ID_IBS_BRAKE_ENERGY_RECOVERY_STS");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1e1), "ID_IBS_BRAKE_PEDAL_SENSING");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1e2), "ID_IBS_MD_STATUS");
+
+
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c6), "ID_FASN_DRVR_SBLTIND");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c7), "ID_FASN_PSNG_SBLTIND");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c8), "ID_FASN_SECROW_L_SBLTIND");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c9), "ID_FASN_SECROW_MID_SBLTIND");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1ca), "ID_FASN_SECROW_R_SBLTIND");
+
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a15c), "Sağ  kör nokta");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a15d), "Sol  kör nokta");
+
 
         //MG4Hardware.writeTrackSensorInt(0x2140a1a6, 1);//ID_TRACK_MODE_IPK
 
