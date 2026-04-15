@@ -340,12 +340,18 @@ public class DemoActivity extends AppCompatActivity {
         StringBuilder sb = new StringBuilder(900);
         StringBuilder sb2 = new StringBuilder(900);
 
-        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602511), "0x15602511 muhtemel dis");
-        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560252a), "0x1560252a muhtemel dis");
-        appendValueFloat(sb, MG4Hardware.getACValMethodFloat("getOutCarTemp"), "getOutCarTemp");
+        //appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602511), "0x15602511 muhtemel dis");
+        //appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560252a), "0x1560252a muhtemel dis");
 
-        appendValueInt(sb, MG4Hardware.getACValMethodInt("getDrvTemp"), "getDrvTemp");
-        appendValueInt(sb, MG4Hardware.getACValMethodInt("getPsgTemp"), "getPsgTemp");
+        appendValueInt(sb, MG4Hardware.getACValMethodInt("getDrvTemp"), "hedef klima sıcaklık");
+        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(358622476), "getPsgTempFromCar");
+
+
+        appendValueInt(sb, MG4Hardware.getACValMethodInt("getDrvSeatHeatLevel"), "getDrvSeatHeatLevel");
+        appendValueInt(sb, MG4Hardware.getACValMethodInt("getPsgSeatHeatLevel"), "getPsgSeatHeatLevel");
+        appendValueInt(sb, MG4Hardware.getACValMethodInt("getSteeringWheelHeatLevel"), "getSteeringWheelHeatLevel");
+        //MG4Hardware.setACValMethodInt("setDrvSeatHeatLevel", 2);
+
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getTempDualZoneOn"), "getTempDualZoneOn");
         appendValueInt(sb, MG4Hardware.getSensorTemperature(), "getSensorTemperature");
 
@@ -415,7 +421,7 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140db73), "0x2140db73",2000);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f405), "0x2160f405",102.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41b), "0x2160f41b",82.3f);
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41d), "0x2160f41d",82.3f);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41d), "bir ara 27.5 oldu def: 82.3 0x2160f41d",82.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f421), "0x2160f421",82.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44d), "0x2160f44d",82.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44f), "0x2160f44f",82.3f);
@@ -678,7 +684,7 @@ public class DemoActivity extends AppCompatActivity {
         sb.append(String.format(Locale.US, "%s: %s%n", label, v));
     }
     private static void appendValueFloat(StringBuilder sb, float f, String label, float defaultval) {
-        if (f == defaultval) return;
+        if (!Float.isNaN(f) && Math.abs(f - defaultval) <= 0.4f) return;
         String v = Float.isNaN(f) ? "--" : String.format(Locale.US, "%.4f", f);
         sb.append(String.format(Locale.US, "%s: %s%n", label, v));
     }

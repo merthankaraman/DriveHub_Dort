@@ -1361,6 +1361,28 @@ public class MG4Hardware {
             return Float.NaN;
         } catch (Throwable t) { return Float.NaN; }
     }
+    private static boolean acSetInt(String methodName, int value) {
+        Object ac = sAirConditionService;
+        if (ac == null) return false;
+        try {
+            java.lang.reflect.Method m = ac.getClass().getMethod(methodName, int.class);
+            m.invoke(ac, value);
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+    private static boolean acSetFloat(String methodName, float value) {
+        Object ac = sAirConditionService;
+        if (ac == null) return false;
+        try {
+            java.lang.reflect.Method m = ac.getClass().getMethod(methodName, float.class);
+            m.invoke(ac, value);
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
 
     /** PM2.5 (partikül/toz) yoğunluğu. Okunamazsa -1. */
     public static int getPm25Concentration() {
@@ -1377,6 +1399,8 @@ public class MG4Hardware {
     /** Negatif iyon durumu. Okunamazsa -1. */
     public static int getACValMethodInt(String methodName) { return acGetInt(methodName); }
     public static float getACValMethodFloat(String methodName) { return acGetFloat(methodName); }
+    public static boolean setACValMethodInt(String methodName, int value) { return acSetInt(methodName, value); }
+    public static boolean setACValMethodFloat(String methodName, float value) { return acSetFloat(methodName, value); }
     /** Dış ortam sıcaklığı (°C). Okunamazsa NaN. */
     public static float getOutCarTemp() {
         float v = acGetFloat("getOutCarTemp");
@@ -1443,6 +1467,8 @@ public class MG4Hardware {
     }
     public static boolean setSteeringHeat(boolean targetOn) {
         // 1. Önce arabadaki mevcut durumu oku
+        return setACValMethodInt("setSteeringWheelHeat", targetOn ? 1 : 0);
+        /*
         int currentStatus = getIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC);
 
         // currentStatus: 0 ise Kapalı, 1 veya daha büyükse Açık
@@ -1459,18 +1485,21 @@ public class MG4Hardware {
         // 3. Durum farklıysa "1" göndererek toggle yap (durumu değiştir)
         if (sLogEnabled) Log.i(TAG, "Durum değişiyor, toggle komutu gönderiliyor...");
         return setIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC, 1);
+        */
     }
 
     /** Sol koltuk ısıtma seviyesi (0=kapalı, 1/2/3=seviye) */
     public static boolean setSeatHeatLeft(int level) {
         if (sLogEnabled) Log.i(TAG, "setSeatHeatLeft → " + level);
-        return setHvacLevelWithToggle(PROP_SEAT_HEAT_L, AREA_HVAC, level);
+        //return setHvacLevelWithToggle(PROP_SEAT_HEAT_L, AREA_HVAC, level);
+        return setACValMethodInt("setDrvSeatHeatLevel", level);
     }
 
     /** Sağ koltuk ısıtma seviyesi (0=kapalı, 1/2/3=seviye) */
     public static boolean setSeatHeatRight(int level) {
         if (sLogEnabled) Log.i(TAG, "setSeatHeatRight → " + level);
-        return setHvacLevelWithToggle(PROP_SEAT_HEAT_R, AREA_HVAC, level);
+        //return setHvacLevelWithToggle(PROP_SEAT_HEAT_R, AREA_HVAC, level);
+        return setACValMethodInt("setPsgSeatHeatLevel", level);
     }
 
     /**
