@@ -110,6 +110,9 @@ public class MG4Hardware {
     public static int readTrackSensorInt(int propId) {
         return getIntPropertyCPM(propId, AREA_GLOBAL);
     }
+    public static void writeTrackSensorInt(int propId, int value) {
+        setIntPropertyCPM(propId, AREA_GLOBAL, value);
+    }
 
     /** Demo: CarHvacManager / klima property — {@code area=0x75} ({@link #AREA_HVAC}). NaN = okunamadı. */
     public static float readHvacPropFloat(int propId) {

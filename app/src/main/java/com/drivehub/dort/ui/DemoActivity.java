@@ -349,6 +349,10 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getTempDualZoneOn"), "getTempDualZoneOn");
         appendValueInt(sb, MG4Hardware.getSensorTemperature(), "getSensorTemperature");
 
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1a6), "ID_TRACK_MODE_IPK");
+
+        //MG4Hardware.writeTrackSensorInt(0x2140a1a6, 1);//ID_TRACK_MODE_IPK
+
 
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f416), "klima açk 290 kapalı 305 0x2140f416"); //değişti 290 klima açık oldu 305 klima kapalı oldu
