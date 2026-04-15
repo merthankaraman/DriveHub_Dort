@@ -1330,7 +1330,8 @@ public class MG4Hardware {
         return v;
     }
     /** Negatif iyon durumu. Okunamazsa -1. */
-    public static int getAnionStatus() { return acGetInt("getAnionStatus"); }
+    public static int getACValMethodInt(String methodName) { return acGetInt(methodName); }
+    public static float getACValMethodFloat(String methodName) { return acGetFloat(methodName); }
     /** Dış ortam sıcaklığı (°C). Okunamazsa NaN. */
     public static float getOutCarTemp() {
         float v = acGetFloat("getOutCarTemp");
