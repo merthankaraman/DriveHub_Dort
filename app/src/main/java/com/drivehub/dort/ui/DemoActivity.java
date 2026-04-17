@@ -265,10 +265,7 @@ public class DemoActivity extends AppCompatActivity {
         if (btnCpmPropScan != null) {
             btnCpmPropScan.setOnClickListener(v -> runCpmPropRangeScan());
         }
-        Button btnHvacPropScan = findViewById(R.id.btnHvacPropScan);
-        if (btnHvacPropScan != null) {
-            btnHvacPropScan.setOnClickListener(v -> runHvacPropRangeScan());
-        }
+        setupHVACControl();
     }
 
     @Override
@@ -419,7 +416,6 @@ public class DemoActivity extends AppCompatActivity {
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44f), "0x2160f44f",82.3f);
 
         appendCpmPropScan(sb2);
-        appendHvacPropScan(sb2);
         /*
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST), "tehlikeli nesne boyuna mesafe");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLATRLTVDIST), "tehlikeli nesne yanal mesafe");
@@ -440,12 +436,6 @@ public class DemoActivity extends AppCompatActivity {
     private void appendCpmPropScan(StringBuilder sb) {
         if (!mCpmPropScanCachedText.isEmpty()) {
             sb.append(mCpmPropScanCachedText);
-        }
-    }
-
-    private void appendHvacPropScan(StringBuilder sb) {
-        if (!mHvacPropScanCachedText.isEmpty()) {
-            sb.append(mHvacPropScanCachedText);
         }
     }
 
@@ -489,46 +479,6 @@ public class DemoActivity extends AppCompatActivity {
         }, "demo-cpm-prop-scan").start();
     }
 
-    private void runHvacPropRangeScan() {
-        if (mHvacPropScanRunning) return;
-        EditText et0 = findViewById(R.id.etHvacPropStart);
-        EditText et1 = findViewById(R.id.etHvacPropCount);
-        Button btn = findViewById(R.id.btnHvacPropScan);
-        if (et0 == null || et1 == null) return;
-        final int start;
-        final int count;
-        try {
-            start = parsePropIdString(et0.getText().toString());
-        } catch (NumberFormatException ex) {
-            Toast.makeText(this, R.string.demo_cpm_prop_scan_parse_error, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            count = parsePositiveCountString(et1.getText().toString());
-        } catch (NumberFormatException ex) {
-            Toast.makeText(this, getString(R.string.demo_cpm_prop_scan_parse_count_error, CPM_PROP_SCAN_MAX_IDS),
-                    Toast.LENGTH_SHORT).show();
-            return;
-        }
-        mHvacPropScanRunning = true;
-        if (btn != null) {
-            btn.setEnabled(false);
-            btn.setText(R.string.demo_hvac_prop_scan_busy);
-        }
-        new Thread(() -> {
-            String text = buildHvacPropScanText(start, count);
-            runOnUiThread(() -> {
-                mHvacPropScanCachedText = text;
-                mHvacPropScanRunning = false;
-                if (btn != null) {
-                    btn.setEnabled(true);
-                    btn.setText(R.string.demo_hvac_prop_scan_run);
-                }
-                refreshTrackSensors();
-            });
-        }, "demo-hvac-prop-scan").start();
-    }
-
     private static int parsePropIdString(String raw) throws NumberFormatException {
         String s = raw.trim();
         if (s.isEmpty()) throw new NumberFormatException("empty");
@@ -538,6 +488,30 @@ public class DemoActivity extends AppCompatActivity {
         }
         long v = Long.parseLong(s);
         return (int) (v & 0xffffffffL);
+    }
+
+    private void setupHVACControl() {
+        EditText etDrvTempValue = findViewById(R.id.etDrvTempValue);
+        Button btnDrvTempSend = findViewById(R.id.btnDrvTempSend);
+        if (etDrvTempValue == null || btnDrvTempSend == null) return;
+
+        btnDrvTempSend.setOnClickListener(v -> {
+            String raw = etDrvTempValue.getText() != null
+                    ? etDrvTempValue.getText().toString().trim()
+                    : "";
+            if (raw.isEmpty()) {
+                return;
+            }
+
+            final int value;
+            try {
+                value = Integer.parseInt(raw);
+            } catch (NumberFormatException ex) {
+                return;
+            }
+
+            boolean ok = MG4Hardware.setACValMethodInt("setDrvTemp", value);
+        });
     }
 
     /** Okunacak property sayısı: 1 … {@link #CPM_PROP_SCAN_MAX_IDS}, onluk veya 0x…. */
@@ -586,40 +560,6 @@ public class DemoActivity extends AppCompatActivity {
             }
         }
         return getString(R.string.demo_cpm_prop_scan_result_header, start, count, lines) + out;
-    }
-
-    /** CPM ile aynı mantık; {@link MG4Hardware#readHvacPropFloat(int)} / {@link MG4Hardware#readHvacPropInt(int)} (area 0x75). */
-    private String buildHvacPropScanText(int start, int count) {
-        if (count < 1 || count > CPM_PROP_SCAN_MAX_IDS) {
-            return getString(R.string.demo_cpm_prop_scan_parse_count_error, CPM_PROP_SCAN_MAX_IDS);
-        }
-        long last = (long) start + (long) count - 1L;
-        if (last > Integer.MAX_VALUE || last < Integer.MIN_VALUE) {
-            return getString(R.string.demo_cpm_prop_scan_span_overflow);
-        }
-        long rawCap = (long) count * 64L + 128L;
-        int initialCap = (int) Math.min(200_000L, Math.max(2_048L, rawCap));
-        StringBuilder out = new StringBuilder(initialCap);
-        int lines = 0;
-        for (int i = 0; i < count; i++) {
-            int id = (int) (((long) start) + (long) i);
-            float f = MG4Hardware.readHvacPropFloat(id);
-            int iv = MG4Hardware.readHvacPropInt(id);
-            boolean hasF = !Float.isNaN(f);
-            boolean hasI = iv != -1;
-            if (!hasF && !hasI) continue;
-            if (f == 0f || iv == 0) continue; //TODO 0 value hide feat
-            lines++;
-            out.append(String.format(Locale.US, "  id=0x%08X (%d)", id, id));
-            if (hasF) out.append(String.format(Locale.US, " float=%.4f", f));
-            if (hasI) out.append(String.format(Locale.US, " int=%d", iv));
-            out.append('\n');
-            if (out.length() > 120000) {
-                out.append(getString(R.string.demo_cpm_prop_scan_truncated));
-                break;
-            }
-        }
-        return getString(R.string.demo_hvac_prop_scan_result_header, start, count, lines) + out;
     }
 
     private String buildDiagnosticScanText() {
