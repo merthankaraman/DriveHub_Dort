@@ -1466,10 +1466,8 @@ public class MG4Hardware {
         return ok;
     }
     public static boolean setSteeringHeat(boolean targetOn) {
-        // 1. Önce arabadaki mevcut durumu oku
-        return setACValMethodInt("setSteeringWheelHeat", targetOn ? 1 : 0);
-        /*
-        int currentStatus = getIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC);
+
+        int currentStatus = getACValMethodInt("getSteeringWheelHeatLevel");
 
         // currentStatus: 0 ise Kapalı, 1 veya daha büyükse Açık
         boolean isActuallyOn = (currentStatus > 0);
@@ -1484,22 +1482,35 @@ public class MG4Hardware {
 
         // 3. Durum farklıysa "1" göndererek toggle yap (durumu değiştir)
         if (sLogEnabled) Log.i(TAG, "Durum değişiyor, toggle komutu gönderiliyor...");
-        return setIntPropertyHvac(PROP_STEERING_HEAT, AREA_HVAC, 1);
-        */
+        return setACValMethodInt("setSteeringWheelHeat", 1);
     }
 
     /** Sol koltuk ısıtma seviyesi (0=kapalı, 1/2/3=seviye) */
     public static boolean setSeatHeatLeft(int level) {
         if (sLogEnabled) Log.i(TAG, "setSeatHeatLeft → " + level);
         //return setHvacLevelWithToggle(PROP_SEAT_HEAT_L, AREA_HVAC, level);
-        return setACValMethodInt("setDrvSeatHeatLevel", level);
+        int current_lvl = getACValMethodInt("getDrvSeatHeatLevel");
+        if (current_lvl == level) return true;
+        int req_times = (current_lvl - level + 4) % 4;
+        for (int i = 0; i < req_times; i++) {
+            setACValMethodInt("setDrvSeatHeatLevel", 1);
+        }
+        current_lvl = getACValMethodInt("getDrvSeatHeatLevel");
+        return (current_lvl == level);
     }
 
     /** Sağ koltuk ısıtma seviyesi (0=kapalı, 1/2/3=seviye) */
     public static boolean setSeatHeatRight(int level) {
         if (sLogEnabled) Log.i(TAG, "setSeatHeatRight → " + level);
         //return setHvacLevelWithToggle(PROP_SEAT_HEAT_R, AREA_HVAC, level);
-        return setACValMethodInt("setPsgSeatHeatLevel", level);
+        int current_lvl = getACValMethodInt("getPsgSeatHeatLevel");
+        if (current_lvl == level) return true;
+        int req_times = (current_lvl - level + 4) % 4;
+        for (int i = 0; i < req_times; i++) {
+            setACValMethodInt("setPsgSeatHeatLevel", 1);
+        }
+        current_lvl = getACValMethodInt("getPsgSeatHeatLevel");
+        return (current_lvl == level);
     }
 
     /**
