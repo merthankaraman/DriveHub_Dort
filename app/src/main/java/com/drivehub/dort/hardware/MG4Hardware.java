@@ -1819,15 +1819,15 @@ public class MG4Hardware {
             } else {
                 vEffKmh = (Math.abs(sLastSpeedKmh) + Math.abs(speedKmh)) * 0.5f;
             }
-            if (vEffKmh < 2f) vEffKmh = 0f;
+            if (vEffKmh < 2.5f) vEffKmh = 0f;
             else if (vEffKmh > 90) vEffKmh *= 1.0035f;
-            else if (vEffKmh > 30) vEffKmh *= 1.001f;
+            else if (vEffKmh > 30) vEffKmh *= 1.0015f;
             double dKm = vEffKmh * dtHours;
 
             float speedKmh2 = speedKmh;
-            if (speedKmh < 2f) speedKmh2 = 0f;
+            if (speedKmh < 2.5f) speedKmh2 = 0f;
             else if (speedKmh > 90) speedKmh2 *= 1.0035f;
-            else if (speedKmh > 30) speedKmh2 *= 1.002f;
+            else if (speedKmh > 30) speedKmh2 *= 1.0014f;
 
             // DC güç (kWh): trapez — önceki tick sDcKw + şimdiki dcKw ortalaması × dt
             if (!Float.isNaN(dcKw)) {
