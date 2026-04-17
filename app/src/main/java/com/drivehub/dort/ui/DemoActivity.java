@@ -344,16 +344,13 @@ public class DemoActivity extends AppCompatActivity {
         //appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560252a), "0x1560252a muhtemel dis");
 
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getDrvTemp"), "hedef klima sıcaklık");
-        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(358622476), "getPsgTempFromCar");
+        appendValueInt(sb, MG4Hardware.readHvacPropInt(358622476), "getPsgTempFromCar");
 
-
-        appendValueInt(sb, MG4Hardware.getACValMethodInt("getDrvSeatHeatLevel"), "getDrvSeatHeatLevel");
-        appendValueInt(sb, MG4Hardware.getACValMethodInt("getPsgSeatHeatLevel"), "getPsgSeatHeatLevel");
-        appendValueInt(sb, MG4Hardware.getACValMethodInt("getSteeringWheelHeatLevel"), "getSteeringWheelHeatLevel");
-        //MG4Hardware.setACValMethodInt("setDrvSeatHeatLevel", 2);
 
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getTempDualZoneOn"), "getTempDualZoneOn");
         appendValueInt(sb, MG4Hardware.getSensorTemperature(), "getSensorTemperature");
+        /*
+
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1a6), "ID_TRACK_MODE_IPK");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c5), "ID_CLSTR_DASP_VEH_SPD");
@@ -372,6 +369,8 @@ public class DemoActivity extends AppCompatActivity {
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a15c), "Sağ  kör nokta");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a15d), "Sol  kör nokta");
+
+         */
 
 
         //MG4Hardware.writeTrackSensorInt(0x2140a1a6, 1);//ID_TRACK_MODE_IPK
@@ -395,13 +394,6 @@ public class DemoActivity extends AppCompatActivity {
 
 
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600305), "0x11600305",0f);
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600703), "0x11600703");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x1160030c), "0x1160030c");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11600309), "0x11600309");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1540050f), "0x1540050f");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1540050b), "0x1540050b");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x15600502), "0x15600502");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600106), "0x11600106");
 
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40e), "0x2140f40e",22);
@@ -421,7 +413,7 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140db73), "0x2140db73",2000);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f405), "0x2160f405",102.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41b), "0x2160f41b",82.3f);
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41d), "bir ara 27.5 oldu def: 82.3 0x2160f41d",82.3f);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41d), "bir ara 27.5 oldu, 5.5 oldu def: 82.3 0x2160f41d",82.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f421), "0x2160f421",82.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44d), "0x2160f44d",82.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44f), "0x2160f44f",82.3f);
@@ -429,7 +421,6 @@ public class DemoActivity extends AppCompatActivity {
         appendCpmPropScan(sb2);
         appendHvacPropScan(sb2);
         /*
-        appendValueFloat(sb, MG4Hardware.getSensorWheelAngleGlobal(), "Direksiyon °");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLONGRLTVDIST), "tehlikeli nesne boyuna mesafe");
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_ADAS_FCW_OBJ_DNGRSOBJLATRLTVDIST), "tehlikeli nesne yanal mesafe");
         */
