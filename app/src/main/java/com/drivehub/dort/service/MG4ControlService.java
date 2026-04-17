@@ -200,6 +200,8 @@ public class MG4ControlService extends Service {
     private final AtomicBoolean mVoiceOneShotHandled = new AtomicBoolean(false);
     private String mVoiceOneShotLastPartial = "";
     private long mVoiceOneShotLastPartialMs;
+    private final Runnable mVoiceOneShotDelayedOverlayEnd = () ->
+            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_LISTEN_END, "", "");
     private int            mSteerLevel = 0;
     private int            mSeatLLevel = 0;
     private int            mSeatRLevel = 0;
@@ -1717,6 +1719,7 @@ public class MG4ControlService extends Service {
         if (!mVoiceOneShotBusy.compareAndSet(false, true)) {
             return;
         }
+        mMainHandler.removeCallbacks(mVoiceOneShotDelayedOverlayEnd);
         mVoiceOneShotHandled.set(false);
         mVoiceOneShotLastPartial = "";
         mVoiceOneShotLastPartialMs = 0L;
@@ -1734,7 +1737,7 @@ public class MG4ControlService extends Service {
             } catch (Throwable e) {
                 publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
                         getString(R.string.voice_model_error_log, e.getMessage()));
-                stopVoiceOneShotSession(true);
+                stopVoiceOneShotSessionWithDelayedOverlayDismiss();
                 return;
             }
 
@@ -1776,25 +1779,25 @@ public class MG4ControlService extends Service {
                         public void onError(Exception exception) {
                             publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
                                     getString(R.string.voice_error, exception.getMessage()));
-                            stopVoiceOneShotSession(true);
+                            stopVoiceOneShotSessionWithDelayedOverlayDismiss();
                         }
 
                         @Override
                         public void onTimeout() {
                             publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
                                     getString(R.string.voice_timeout));
-                            stopVoiceOneShotSession(true);
+                            stopVoiceOneShotSessionWithDelayedOverlayDismiss();
                         }
                     });
                     if (!ok) {
                         publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
                                 getString(R.string.voice_listen_failed));
-                        stopVoiceOneShotSession(true);
+                        stopVoiceOneShotSessionWithDelayedOverlayDismiss();
                     }
                 } catch (Throwable e) {
                     publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
                             getString(R.string.voice_mic_busy, e.getMessage()));
-                    stopVoiceOneShotSession(true);
+                    stopVoiceOneShotSessionWithDelayedOverlayDismiss();
                 }
             });
         });
@@ -1808,7 +1811,7 @@ public class MG4ControlService extends Service {
         if (text.isEmpty()) {
             publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
                     getString(R.string.voice_overlay_action_none));
-            stopVoiceOneShotSession(true);
+            stopVoiceOneShotSessionWithDelayedOverlayDismiss();
             return;
         }
         String trimmed = text.trim();
@@ -1819,7 +1822,7 @@ public class MG4ControlService extends Service {
             }
             publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, heardUnk,
                     getString(R.string.voice_overlay_action_unk));
-            stopVoiceOneShotSession(true);
+            stopVoiceOneShotSessionWithDelayedOverlayDismiss();
             return;
         }
 
@@ -1827,7 +1830,7 @@ public class MG4ControlService extends Service {
         if (r == null) {
             publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, text,
                     getString(R.string.voice_overlay_action_none));
-            stopVoiceOneShotSession(true);
+            stopVoiceOneShotSessionWithDelayedOverlayDismiss();
             return;
         }
 
@@ -1838,7 +1841,17 @@ public class MG4ControlService extends Service {
             publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, text,
                     getString(R.string.voice_command_error, e.getMessage()));
         }
-        stopVoiceOneShotSession(true);
+        stopVoiceOneShotSessionWithDelayedOverlayDismiss();
+    }
+
+    private void stopVoiceOneShotSessionWithDelayedOverlayDismiss() {
+        mMainHandler.removeCallbacks(mVoiceOneShotDelayedOverlayEnd);
+        int holdMs = getResources().getInteger(R.integer.voice_oneshot_result_hold_ms);
+        if (holdMs < 0) {
+            holdMs = 0;
+        }
+        mMainHandler.postDelayed(mVoiceOneShotDelayedOverlayEnd, holdMs);
+        stopVoiceOneShotSession(false);
     }
 
     private void stopVoiceOneShotSession(boolean scheduleOverlayDismiss) {
