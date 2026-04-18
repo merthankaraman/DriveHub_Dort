@@ -336,6 +336,94 @@
         android:layout_marginTop="6dp"
         android:text="@string/demo_cpm_prop_scan_run"/>
 
+    <!-- CPM prop yaz (adres + isteğe bağlı alan + değer) -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center_horizontal"
+        android:text="@string/demo_cpm_prop_write_title"
+        android:textColor="@color/status_value"
+        android:textSize="18sp"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <EditText
+            android:id="@+id/etCpmPropWriteId"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/demo_cpm_prop_write_addr_hint"
+            android:importantForAutofill="no"
+            android:inputType="textNoSuggestions"
+            android:textColor="@color/status_value"
+            android:textColorHint="@color/status_value"
+            android:textSize="36sp"
+            android:fontFamily="monospace"/>
+        <EditText
+            android:id="@+id/etCpmPropWriteArea"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:hint="@string/demo_cpm_prop_write_area_hint"
+            android:importantForAutofill="no"
+            android:inputType="textNoSuggestions"
+            android:textColor="@color/status_value"
+            android:textColorHint="@color/status_value"
+            android:textSize="36sp"
+            android:fontFamily="monospace"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <EditText
+            android:id="@+id/etCpmPropWriteValue"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/demo_cpm_prop_write_value_hint"
+            android:importantForAutofill="no"
+            android:inputType="textNoSuggestions"
+            android:textColor="@color/status_value"
+            android:textColorHint="@color/status_value"
+            android:textSize="36sp"
+            android:fontFamily="monospace"/>
+        <RadioGroup
+            android:id="@+id/rgCpmPropWriteType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:orientation="horizontal">
+            <RadioButton
+                android:id="@+id/rbCpmPropWriteInt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="@string/demo_cpm_prop_write_type_int"
+                android:textColor="@color/status_value"/>
+            <RadioButton
+                android:id="@+id/rbCpmPropWriteFloat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="@string/demo_cpm_prop_write_type_float"
+                android:textColor="@color/status_value"/>
+        </RadioGroup>
+        <Button
+            android:id="@+id/btnCpmPropWrite"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginStart="12dp"
+            android:text="@string/demo_cpm_prop_write_run"/>
+    </LinearLayout>
+
     <!-- Klima: setDrvTemp -->
     <TextView
         android:layout_width="match_parent"

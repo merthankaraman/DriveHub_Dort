@@ -13,6 +13,7 @@ import android.os.Looper;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -265,7 +266,75 @@ public class DemoActivity extends AppCompatActivity {
         if (btnCpmPropScan != null) {
             btnCpmPropScan.setOnClickListener(v -> runCpmPropRangeScan());
         }
+        setupCpmPropWrite();
         setupHVACControl();
+    }
+
+    private void setupCpmPropWrite() {
+        EditText etId = findViewById(R.id.etCpmPropWriteId);
+        EditText etArea = findViewById(R.id.etCpmPropWriteArea);
+        EditText etVal = findViewById(R.id.etCpmPropWriteValue);
+        RadioGroup rgType = findViewById(R.id.rgCpmPropWriteType);
+        Button btn = findViewById(R.id.btnCpmPropWrite);
+        if (etId == null || etVal == null || rgType == null || btn == null) return;
+
+        btn.setOnClickListener(v -> {
+            String rawId = etId.getText() != null ? etId.getText().toString().trim() : "";
+            if (rawId.isEmpty()) {
+                Toast.makeText(this, R.string.demo_cpm_prop_scan_parse_error, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            final int propId;
+            try {
+                propId = parsePropIdString(rawId);
+            } catch (NumberFormatException ex) {
+                Toast.makeText(this, R.string.demo_cpm_prop_scan_parse_error, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            int area = MG4Hardware.AREA_CPM_GLOBAL;
+            if (etArea != null) {
+                String rawArea = etArea.getText() != null ? etArea.getText().toString().trim() : "";
+                if (!rawArea.isEmpty()) {
+                    try {
+                        area = parsePropIdString(rawArea);
+                    } catch (NumberFormatException ex) {
+                        Toast.makeText(this, R.string.demo_cpm_prop_scan_parse_error, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                }
+            }
+            String rawVal = etVal.getText() != null ? etVal.getText().toString().trim() : "";
+            if (rawVal.isEmpty()) {
+                Toast.makeText(this, R.string.demo_cpm_prop_write_value_error, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            final boolean asFloat = rgType.getCheckedRadioButtonId() == R.id.rbCpmPropWriteFloat;
+            boolean ok;
+            if (asFloat) {
+                float fv;
+                try {
+                    fv = Float.parseFloat(rawVal);
+                } catch (NumberFormatException ex) {
+                    Toast.makeText(this, R.string.demo_cpm_prop_write_value_error, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                ok = MG4Hardware.writeCpmPropertyFloat(propId, area, fv);
+            } else {
+                int iv;
+                try {
+                    iv = parsePropIdString(rawVal);
+                } catch (NumberFormatException ex) {
+                    Toast.makeText(this, R.string.demo_cpm_prop_write_value_error, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                ok = MG4Hardware.writeCpmPropertyInt(propId, area, iv);
+            }
+            if (ok) {
+                Toast.makeText(this, getString(R.string.demo_cpm_prop_write_ok, propId, area), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, R.string.demo_cpm_prop_write_fail, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     @Override
@@ -374,7 +443,7 @@ public class DemoActivity extends AppCompatActivity {
 
 
         appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250d), "fan seviyesi"); // fan seviyesi 15 auto
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250e), "0x1540250e",0);
+        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250e), "0x1540250e 7",7);
 
 
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600305), "0x11600305",0f);
@@ -382,7 +451,7 @@ public class DemoActivity extends AppCompatActivity {
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40e), "0x2140f40e",22);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40b), "0x2140f40b",4);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40c), "0x2140f40c",7);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40c), "0x2140f40c 5,2,7,6");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f410), "0x2140f410",6);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11400400), "0x11400400",4);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140050e), "0x1140050e",49);
