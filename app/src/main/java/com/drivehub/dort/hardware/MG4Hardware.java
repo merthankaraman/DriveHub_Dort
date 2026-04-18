@@ -421,7 +421,9 @@ public class MG4Hardware {
     private static final int PROP_VEHICLE_IGNITION = 0x1140157d; //289412477; // Ateşleme/kontak: 0=kapalı, 2=çalışıyor (CarInfoManager)
     private static final int PROP_ENGINE_STATE     = 0x2140157c; //557847932; // EV güç modu: 0=kapalı, >0=sistem aktif (getEngineState)
     private static final int PROP_SOC            = 0x2160f404; // 560002052;   // Batarya SOC (float %); CarBMSManager ID_BMS_PACK_SOC_DSP
-    private static final int PROP_RANGE          = 0x214099DC; // 557904924 — Kalan menzil (int km); BMS
+    private static final int PROP_RANGE          = 0x2140f41c; // 557904924 — Kalan menzil (int km)
+    private static final int PROP_EXPECTED_RANGE_TO_TARGET_SOC = 0x2140f416; // 557904918 — Hedef şarj yüzdesindeki beklenen menzil (int km)
+    public static final int PROP_GRAPH_AVG_POWER = 0x2160f41d; // 560002077 — (float) sürüş grafiğindeki ortalama güç (kW)
     private static final int PROP_BATT_VOLT      = 0x2160f406;  // 560002054 — Paket gerilimi DC (float V); BMS şarj ekranı
     private static final int PROP_CHR_AMP_ACT    = 0x2160f407;  // 560002055 — DC şarj akımı (float A), gerçek
     private static final int PROP_CHR_AMP_EXP    = 0x2160f40A;  // 560039946 — DC akım beklenen (istasyon; yoksa NaN)

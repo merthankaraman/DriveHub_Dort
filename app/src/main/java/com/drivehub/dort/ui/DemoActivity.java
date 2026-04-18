@@ -337,15 +337,7 @@ public class DemoActivity extends AppCompatActivity {
         StringBuilder sb = new StringBuilder(900);
         StringBuilder sb2 = new StringBuilder(900);
 
-        //appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602511), "0x15602511 muhtemel dis");
-        //appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560252a), "0x1560252a muhtemel dis");
-
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getDrvTemp"), "hedef klima sıcaklık");
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(358622476), "getPsgTempFromCar");
-
-
-        appendValueInt(sb, MG4Hardware.getACValMethodInt("getTempDualZoneOn"), "getTempDualZoneOn");
-        appendValueInt(sb, MG4Hardware.getSensorTemperature(), "getSensorTemperature");
         /*
 
 
@@ -372,11 +364,6 @@ public class DemoActivity extends AppCompatActivity {
 
         //MG4Hardware.writeTrackSensorInt(0x2140a1a6, 1);//ID_TRACK_MODE_IPK
 
-
-
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f416), "klima açk 290 kapalı 305 0x2140f416"); //değişti 290 klima açık oldu 305 klima kapalı oldu
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f41c), "klima ve zamana bağlı değişiyor 0x2140f41c"); //değişti 150 oldu 161 oldu 158, 159 oldu klima kapalı 167 oldu 170 oldu
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f42d), "klima açık 76 kapalı 80 0x2140f42d"); //değişti 76 klima açık oldu 80 klima kapalo oldu
 
         appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560251e), "0x1560251e", 50.3937f);
         appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x1560251f), "0x1560251f", 50.3937f);
@@ -405,12 +392,12 @@ public class DemoActivity extends AppCompatActivity {
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11603832), "0x11603832",18.9990f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x21607b5b), "0x21607b5b",63.5f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160c620), "0x2160c620",100.0001f);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21407b18), "0x21407b18",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21407b18), "cluster sayfa",0);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21407b19), "0x21407b19",2);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140db73), "0x2140db73",2000);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f405), "0x2160f405",102.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41b), "0x2160f41b",82.3f);
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41d), "bir ara 27.5 oldu, 5.5 oldu def: 82.3 0x2160f41d",82.3f);
+        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_GRAPH_AVG_POWER), "grafik ortalama güç",82.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f421), "0x2160f421",82.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44d), "0x2160f44d",82.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44f), "0x2160f44f",82.3f);
