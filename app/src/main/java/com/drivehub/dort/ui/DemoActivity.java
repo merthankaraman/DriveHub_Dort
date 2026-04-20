@@ -223,7 +223,6 @@ public class DemoActivity extends AppCompatActivity {
                 btnGoToTarget.setOnClickListener(v -> startWindowAutoProgram());
             }
         }
-        refreshAirQuality();
 
         // Kapı kilidi butonları
         Button btnDoorLock = findViewById(R.id.btnDoorLock);
@@ -341,7 +340,6 @@ public class DemoActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         refreshWindowPercentages();
-        refreshAirQuality();
         updateDoorLockStatus();
         mHandler.post(mPollRunnable);
         mHandler.post(mTrackRunnable);
@@ -364,21 +362,10 @@ public class DemoActivity extends AppCompatActivity {
         stopBluetoothLockMonitoring();
     }
 
-    private void refreshAirQuality() {
-        String unknown = getString(R.string.air_quality_unknown);
-        TextView tvOutTemp = findViewById(R.id.tvAirQualityOutdoorTemp);
-        if (tvOutTemp != null) {
-            float t = MG4Hardware.getOutCarTemp();
-            tvOutTemp.setText(getString(R.string.air_quality_outdoor_temp,
-                    !Float.isNaN(t) ? String.format(Locale.getDefault(), "%.1f °C", t) : unknown));
-        }
-    }
-
     /** Pencere yüzdeleri ve hava kalitesini periyodik güncelle. */
     private void pollDemoValues() {
         // Pencere yüzdeleri + hava kalitesi
         refreshWindowPercentages();
-        refreshAirQuality();
         updateDoorLockStatus();
     }
 
