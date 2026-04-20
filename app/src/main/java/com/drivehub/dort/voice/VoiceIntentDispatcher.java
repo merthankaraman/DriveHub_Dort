@@ -9,6 +9,8 @@ import com.drivehub.dort.model.RegenLevel;
 import com.drivehub.dort.service.MG4ControlService;
 
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Vosk çıktısı (düz metin veya JSON içindeki text) için basit Türkçe kural eşlemesi.
@@ -16,6 +18,7 @@ import java.util.Locale;
 public final class VoiceIntentDispatcher {
 
     private VoiceIntentDispatcher() {}
+    private static final Pattern TEMP_NUMBER_PATTERN = Pattern.compile("\\b(1[6-9]|2\\d|30)\\b");
 
     public static final class Result {
         public final Intent commandIntent;
@@ -75,6 +78,17 @@ public final class VoiceIntentDispatcher {
             }
             if (steeringOff(n)) {
                 return heatOff(appContext);
+            }
+        }
+
+        if (climateContext(n)) {
+            Integer temp = detectClimateTempC(n);
+            if (temp != null) {
+                return climateTempSet(appContext, temp);
+            }
+            Integer loop = detectClimateLoopMode(n);
+            if (loop != null) {
+                return climateLoopSet(appContext, loop);
             }
         }
 
@@ -279,6 +293,51 @@ public final class VoiceIntentDispatcher {
                 || n.contains("söndür") || n.contains("sondur");
     }
 
+    private static boolean climateContext(String n) {
+        return n.contains("klima")
+                || n.contains("iklim")
+                || n.contains("derece")
+                || n.contains("sirk")
+                || n.contains("hava");
+    }
+
+    private static Integer detectClimateTempC(String n) {
+        if (!(n.contains("klima") || n.contains("derece") || n.contains("sıcak") || n.contains("sicak"))) {
+            return null;
+        }
+        Matcher m = TEMP_NUMBER_PATTERN.matcher(n);
+        if (!m.find()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(m.group(1));
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * @return loopMode: 0=iç sirkülasyon, 1=dış/temiz hava, 2=auto
+     */
+    private static Integer detectClimateLoopMode(String n) {
+        if (n.contains("otomatik sirk") || n.contains("sirkülasyon otomatik")
+                || n.contains("sirkulasyon otomatik") || n.contains("hava otomatik")) {
+            return 2;
+        }
+        if (n.contains("temiz hava") || n.contains("dış hava") || n.contains("dis hava")
+                || n.contains("dışarıdan hava") || n.contains("disaridan hava")) {
+            return 1;
+        }
+        if ((n.contains("iç sirk") || n.contains("ic sirk") || n.contains("iç hava") || n.contains("ic hava"))
+                && (isOnPhrase(n) || !isOffPhrase(n))) {
+            return 0;
+        }
+        if ((n.contains("iç sirk") || n.contains("ic sirk")) && isOffPhrase(n)) {
+            return 1;
+        }
+        return null;
+    }
+
     private static Intent base(Context ctx, String action) {
         Intent i = new Intent(ctx, MG4ControlService.class);
         i.setAction(action);
@@ -311,5 +370,20 @@ public final class VoiceIntentDispatcher {
 
     private static Result pedalOff(Context ctx) {
         return new Result(base(ctx, "PEDAL_OFF"), "Tek pedal modunu kapatıyorum.");
+    }
+
+    private static Result climateTempSet(Context ctx, int celsius) {
+        Intent i = base(ctx, "CLIMATE_TEMP_SET");
+        i.putExtra("tempC", celsius);
+        return new Result(i, celsius + " dereceye ayarlıyorum.");
+    }
+
+    private static Result climateLoopSet(Context ctx, int mode) {
+        Intent i = base(ctx, "CLIMATE_LOOP_SET");
+        i.putExtra("loopMode", mode);
+        String reply = (mode == 0) ? "İç sirkülasyonu açıyorum."
+                : (mode == 1) ? "Dışarıdan temiz hava alıyorum."
+                : "Sirkülasyonu otomatiğe alıyorum.";
+        return new Result(i, reply);
     }
 }

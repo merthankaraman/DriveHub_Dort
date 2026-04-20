@@ -65,6 +65,21 @@ public final class VoiceCommandGrammar {
             "seviye yüksek",
             "seviye adaptif",
 
+            // Klima: derece + sirkülasyon
+            "klimayı 22 derece yap",
+            "klima 22 derece",
+            "klima sıcaklığı 23 derece",
+            "klima 24 yap",
+            "iç sirkülasyonu aç",
+            "ic sirkulasyonu ac",
+            "iç hava dolaşımı aç",
+            "ic hava dolasimi ac",
+            "temiz hava al",
+            "dış hava al",
+            "dis hava al",
+            "sirkülasyon otomatik",
+            "sirkulasyon otomatik",
+
             // Sürüş modu (bağlamlı kısa ifadeler)
             "sürüş modunu spor yap",
             "sürüş modu spor",

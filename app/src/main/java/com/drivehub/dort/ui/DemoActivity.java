@@ -389,6 +389,10 @@ public class DemoActivity extends AppCompatActivity {
 */
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1a6), "ID_TRACK_MODE_IPK");
+        //closeDrvSeatHeat dene
+        //openLoopInner
+        //openLoopOutside
+        //openLoopAuto
 
 
 
@@ -538,7 +542,7 @@ public class DemoActivity extends AppCompatActivity {
                     ? etHvacMethodName.getText().toString().trim()
                     : "";
             if (methodName.isEmpty()) {
-                Toast.makeText(this, R.string.demo_hvac_method_empty, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Method adı boş olamaz", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -546,7 +550,7 @@ public class DemoActivity extends AppCompatActivity {
                     ? etDrvTempValue.getText().toString().trim()
                     : "";
             if (raw.isEmpty()) {
-                Toast.makeText(this, R.string.demo_hvac_value_empty, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Değer boş olamaz.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -554,15 +558,15 @@ public class DemoActivity extends AppCompatActivity {
             try {
                 value = Integer.parseInt(raw);
             } catch (NumberFormatException ex) {
-                Toast.makeText(this, R.string.demo_hvac_value_invalid, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Değer geçerli bir sayı değil", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             boolean ok = MG4Hardware.setACValMethodInt(methodName, value);
             if (ok) {
-                Toast.makeText(this, getString(R.string.demo_hvac_send_ok, methodName, value), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "gönderildi", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, getString(R.string.demo_hvac_send_fail, methodName), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "göderilemedi", Toast.LENGTH_SHORT).show();
             }
         });
     }

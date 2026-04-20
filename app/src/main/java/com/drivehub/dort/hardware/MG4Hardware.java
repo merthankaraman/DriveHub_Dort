@@ -1403,6 +1403,17 @@ public class MG4Hardware {
             return false;
         }
     }
+    private static boolean acCallNoArg(String methodName) {
+        Object ac = sAirConditionService;
+        if (ac == null) return false;
+        try {
+            java.lang.reflect.Method m = ac.getClass().getMethod(methodName);
+            m.invoke(ac);
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
 
     /** PM2.5 (partikül/toz) yoğunluğu. Okunamazsa -1. */
     public static int getPm25Concentration() {
@@ -1421,6 +1432,13 @@ public class MG4Hardware {
     public static float getACValMethodFloat(String methodName) { return acGetFloat(methodName); }
     public static boolean setACValMethodInt(String methodName, int value) { return acSetInt(methodName, value); }
     public static boolean setACValMethodFloat(String methodName, float value) { return acSetFloat(methodName, value); }
+    public static boolean callACMethodNoArg(String methodName) { return acCallNoArg(methodName); }
+    /** İç sirkülasyon (binder: IAirConditionService.openLoopInner). */
+    public static boolean openLoopInner() { return acCallNoArg("openLoopInner"); }
+    /** Dış/temiz hava (binder: IAirConditionService.openLoopOutside). */
+    public static boolean openLoopOutside() { return acCallNoArg("openLoopOutside"); }
+    /** Otomatik loop (binder: IAirConditionService.openLoopAuto). */
+    public static boolean openLoopAuto() { return acCallNoArg("openLoopAuto"); }
     /** Dış ortam sıcaklığı (°C). Okunamazsa NaN. */
     public static float getOutCarTemp() {
         float v = acGetFloat("getOutCarTemp");

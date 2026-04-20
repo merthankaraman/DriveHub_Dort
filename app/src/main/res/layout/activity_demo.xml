@@ -305,7 +305,7 @@
         android:layout_marginTop="20dp"
         android:layout_marginBottom="8dp"
         android:gravity="center_horizontal"
-        android:text="@string/demo_hvac_send_title"
+        android:text="HVAC metod + değer"
         android:textColor="@color/status_value"
         android:textSize="18sp"/>
     <LinearLayout
@@ -316,7 +316,7 @@
             android:id="@+id/etHvacMethodName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/demo_hvac_method_hint"
+            android:hint="Method adı (örn. setDrvTemp)"
             android:importantForAutofill="no"
             android:inputType="textNoSuggestions"
             android:textColor="@color/status_value"
@@ -334,7 +334,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="@string/demo_hvac_int_value_hint"
+            android:hint="Değer"
             android:importantForAutofill="no"
             android:inputType="numberSigned"
             android:textColor="@color/status_value"
@@ -346,7 +346,7 @@
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:layout_marginStart="8dp"
-            android:text="@string/demo_hvac_send_button"/>
+            android:text="Gönder"/>
         </LinearLayout>
     </LinearLayout>
             <!-- CPM prop yaz (adres + isteğe bağlı alan + değer) -->

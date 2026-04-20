@@ -60,15 +60,6 @@
     <string name="demo_hvac_prop_scan_run">HVAC oku</string>
     <string name="demo_hvac_prop_scan_busy">HVAC okunuyor…</string>
     <string name="demo_hvac_prop_scan_result_header">HVAC CPM area=0x75 start=0x%1$08X count=%2$d satır=%3$d (NaN ve int=-1 atlandı)\n</string>
-    <string name="demo_hvac_send_title">HVAC method + değer gönder</string>
-    <string name="demo_hvac_method_hint">Method adı (örn. setDrvTemp)</string>
-    <string name="demo_hvac_int_value_hint">Integer değer (örn. 21)</string>
-    <string name="demo_hvac_send_button">Gönder</string>
-    <string name="demo_hvac_method_empty">Method adı boş olamaz.</string>
-    <string name="demo_hvac_value_empty">Değer boş olamaz.</string>
-    <string name="demo_hvac_value_invalid">Değer geçerli bir sayı değil.</string>
-    <string name="demo_hvac_send_ok">%1$s(%2$d) gönderildi.</string>
-    <string name="demo_hvac_send_fail">%1$s gönderilemedi.</string>
     <string name="btn_voice_assistant">Sesli asistan (Vosk)</string>
 
     <!-- Yerel sesli asistan (Demo → Asistan) -->
@@ -118,7 +109,7 @@
     <string name="voice_overlay_listening_status">Dinleniyor…</string>
     <string name="voice_btn_commands_help">Komutlar</string>
     <string name="voice_help_commands_title">Yapabileceğin sesli komutlar</string>
-    <string name="voice_help_commands_body">Genel\n• Dinle → komutu söyle → kısa sus veya Durdur.\n• Komut grameri açıksa aşağıdaki gibi kısa cümleler daha iyi tanınır; listede olmayan cümleler [unk] olabilir.\n\nDİREKSİYON\n• direksiyonu ısıt, direksiyon ısıt, direksiyonu aç, direksiyon ısıtma aç …\n• direksiyonu kapat, direksiyon kapat …\n\nSÜRÜŞ MODU\n• Cümlede sürüş / mod / araç / konfor + spor (sport) / eko (eco) / normal / kar (kış, snow) / özel (custom).\n• Örnek: sürüş modunu spor yap, spor modu, eko modu, sürüş modu özel, özel mod …\n\nREGEN\n• regen veya rejeneratif / seviye + düşük / orta / yüksek / adaptif.\n• Örnek: regen düşük, regen seviyesi yüksek …\n\nTEK PEDAL\n• tek pedal aç, tek pedalı aç …\n• tek pedal kapat, tek pedal durdur …\n\nÜŞÜME (LHD: sürücü sol, yolcu sağ)\n• üşüyorum, üşüdüm, donuyorum, çok soğuk … → direksiyon + sol ön koltuk seviye 3.\n• yolcu üşüdü, yolcu üşüyor … → sağ ön koltuk seviye 3.\n• üşüyoruz, üşüdük, donuyoruz … → direksiyon + her iki ön koltuk seviye 3.\n• Yolcu cümlesinde üşüyoruz vb. varsa hep birlikte modu uygulanır.</string>
+    <string name="voice_help_commands_body">Genel\n• Dinle → komutu söyle → kısa sus veya Durdur.\n• Komut grameri açıksa aşağıdaki gibi kısa cümleler daha iyi tanınır; listede olmayan cümleler [unk] olabilir.\n\nDİREKSİYON\n• direksiyonu ısıt, direksiyon ısıt, direksiyonu aç, direksiyon ısıtma aç …\n• direksiyonu kapat, direksiyon kapat …\n\nSÜRÜŞ MODU\n• Cümlede sürüş / mod / araç / konfor + spor (sport) / eko (eco) / normal / kar (kış, snow) / özel (custom).\n• Örnek: sürüş modunu spor yap, spor modu, eko modu, sürüş modu özel, özel mod …\n\nKLİMA\n• klimayı 22 derece yap, klima 23 derece, klima sıcaklığı 24 derece …\n• iç sirkülasyonu aç, temiz hava al, dış hava al, sirkülasyon otomatik …\n\nREGEN\n• regen veya rejeneratif / seviye + düşük / orta / yüksek / adaptif.\n• Örnek: regen düşük, regen seviyesi yüksek …\n\nTEK PEDAL\n• tek pedal aç, tek pedalı aç …\n• tek pedal kapat, tek pedal durdur …\n\nÜŞÜME (LHD: sürücü sol, yolcu sağ)\n• üşüyorum, üşüdüm, donuyorum, çok soğuk … → direksiyon + sol ön koltuk seviye 3.\n• yolcu üşüdü, yolcu üşüyor … → sağ ön koltuk seviye 3.\n• üşüyoruz, üşüdük, donuyoruz … → direksiyon + her iki ön koltuk seviye 3.\n• Yolcu cümlesinde üşüyoruz vb. varsa hep birlikte modu uygulanır.</string>
 
     <!-- Sürüş modu + Regen ekranı -->
     <string name="drive_regen_screen_title">Sürüş &amp; Konfor</string>

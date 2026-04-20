@@ -1951,6 +1951,44 @@ public class MG4ControlService extends Service {
                 updateNotification("Sağ Koltuk: " + (seatRLevel == 0 ? "Kapalı" : "Sev." + seatRLevel));
                 break;
             }
+            case "CLIMATE_TEMP_SET": {
+                int tempC = intent.getIntExtra("tempC", 22);
+                if (tempC < 16) tempC = 16;
+                if (tempC > 30) tempC = 30;
+                final int targetTemp = tempC;
+                new Thread(() -> {
+                    MG4Hardware.setACValMethodInt("setDrvTemp", targetTemp);
+                    //MG4Hardware.setACValMethodInt("setPsgTemp", targetTemp);
+                    // Bazı firmware'lerde klima kapalıyken derece set ignored oluyor.
+                    //MG4Hardware.setACValMethodInt("setHvacPowerStatus", 1);
+                }).start();
+                updateNotification("Klima: " + targetTemp + "°C");
+                break;
+            }
+            case "CLIMATE_LOOP_SET": {
+                int loopMode = intent.getIntExtra("loopMode", 2);
+                if (loopMode < 0 || loopMode > 2) loopMode = 2;
+                final int lm = loopMode;
+                new Thread(() -> {
+                    boolean ok;
+                    if (lm == 0) {
+                        ok = MG4Hardware.openLoopInner();
+                    } else if (lm == 1) {
+                        ok = MG4Hardware.openLoopOutside();
+                    } else {
+                        ok = MG4Hardware.openLoopAuto();
+                    }
+                    // Bazı sürümlerde openLoop* olmayabilir; setLoopMode fallback.
+                    if (!ok) {
+                        MG4Hardware.setACValMethodInt("setLoopMode", lm);
+                    }
+                }).start();
+                String loopLabel = (loopMode == 0) ? "İç sirkülasyon"
+                        : (loopMode == 1) ? "Dış hava"
+                        : "Otomatik";
+                updateNotification("Klima hava: " + loopLabel);
+                break;
+            }
             case "COLD_COMFORT_DRIVER":
                 if (MG4Hardware.isLogEnabled()) {
                     Log.i(TAG, "COLD_COMFORT_DRIVER: direksiyon + sol koltuk seviye 3");
