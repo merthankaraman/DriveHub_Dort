@@ -303,7 +303,7 @@ public class DemoActivity extends AppCompatActivity {
         TextView tvAqs = findViewById(R.id.tvAirQualityAqs);
         if (tvPm25 != null) {
             int pm = MG4Hardware.getPm25Concentration();
-            tvPm25.setText(getString(R.string.air_quality_pm25, pm >= 0 ? String.valueOf(pm) : unknown));
+            tvPm25.setText(getString(R.string.air_quality_pm25, pm > 0 ? String.valueOf(pm) : unknown));
         }
         if (tvOutTemp != null) {
             float t = MG4Hardware.getOutCarTemp();
@@ -312,11 +312,11 @@ public class DemoActivity extends AppCompatActivity {
         }
         if (tvFilter != null) {
             int f = MG4Hardware.getPm25Filter();
-            tvFilter.setText(getString(R.string.air_quality_pm25_filter, f >= 0 ? String.valueOf(f) : unknown));
+            tvFilter.setText(getString(R.string.air_quality_pm25_filter, f != 1 ? String.valueOf(f) : unknown));
         }
         if (tvAqs != null) {
             int aqs = MG4Hardware.getAqsSensitivity();
-            tvAqs.setText(getString(R.string.air_quality_aqs, aqs >= 0 ? String.valueOf(aqs) : unknown));
+            tvAqs.setText(getString(R.string.air_quality_aqs, aqs != 3 ? String.valueOf(aqs) : unknown));
         }
     }
 
