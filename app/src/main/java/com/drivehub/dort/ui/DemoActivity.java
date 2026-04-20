@@ -374,7 +374,7 @@ public class DemoActivity extends AppCompatActivity {
 
 
         appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250d), "fan seviyesi"); // fan seviyesi 15 auto
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250e), "0x1540250e",0);
+        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250e), "0: ön, 1: ön ve ayaklar, 2: ayaklar, 3: ayak ve üst, 4: üst, 5: hepsi, 7:auto");
 
 
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600305), "0x11600305",0f);
