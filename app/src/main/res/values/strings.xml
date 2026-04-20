@@ -44,6 +44,16 @@
     <string name="demo_cpm_prop_scan_span_overflow">Başlangıç + adet, 32 bit ID aralığını taşıyor\n</string>
     <string name="demo_cpm_prop_scan_result_header">CPM prop start=0x%1$08X count=%2$d satır=%3$d (int=-1 atlandı)\n</string>
     <string name="demo_cpm_prop_scan_truncated">…[kesildi]\n</string>
+    <string name="demo_cpm_prop_write_title">CPM prop yaz</string>
+    <string name="demo_cpm_prop_write_addr_hint">Property ID (örn. 0x2140a1a6)</string>
+    <string name="demo_cpm_prop_write_area_hint">Alan (boş = 0x01000000)</string>
+    <string name="demo_cpm_prop_write_value_hint">Değer</string>
+    <string name="demo_cpm_prop_write_type_int">int</string>
+    <string name="demo_cpm_prop_write_type_float">float</string>
+    <string name="demo_cpm_prop_write_run">Yaz</string>
+    <string name="demo_cpm_prop_write_ok">Yazıldı: 0x%1$08X area=0x%2$08X</string>
+    <string name="demo_cpm_prop_write_fail">Yazılamadı (ayrıntı logcat)</string>
+    <string name="demo_cpm_prop_write_value_error">Geçersiz değer</string>
     <string name="demo_hvac_prop_scan_title">Klima (HVAC) CPM tarama — area 0x75</string>
     <string name="demo_hvac_prop_start_hint">Başlangıç ID (örn. 0x15402500)</string>
     <string name="demo_hvac_prop_count_hint">Okunacak adet (örn. 256)</string>

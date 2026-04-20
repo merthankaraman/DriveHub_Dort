@@ -42,7 +42,9 @@ public class MG4Hardware {
     private static final int PROP_REGEN_LEVEL        = 0x2140a191; //557883793 — Rejeneratif fren seviyesi
     private static final int PROP_ONE_PEDAL          = 0x2140a193; //557883795 — One-pedal / tek pedal sürüş
 
-    private static final int AREA_GLOBAL        = 0x01000000;
+    /** CPM global area — çoğu araç property’si. */
+    public static final int AREA_CPM_GLOBAL     = 0x01000000;
+    private static final int AREA_GLOBAL        = AREA_CPM_GLOBAL;
 
     // HVAC — CarHvacManager (area 0x75); araç ayarları servisi ile aynı property'ler
     // Service'in callback'inde kullanabilmesi için public
@@ -112,6 +114,22 @@ public class MG4Hardware {
     }
     public static void writeTrackSensorInt(int propId, int value) {
         setIntPropertyCPM(propId, AREA_GLOBAL, value);
+    }
+
+    /**
+     * Demo: CPM {@code setIntProperty} — istenen area (çoğu global için {@link #AREA_CPM_GLOBAL}, HVAC için {@link #AREA_HVAC}).
+     * @return yazma başarılı mı
+     */
+    public static boolean writeCpmPropertyInt(int propId, int area, int value) {
+        return setIntPropertyCPM(propId, area, value);
+    }
+
+    /**
+     * Demo: CPM {@code setFloatProperty}.
+     * @return yazma başarılı mı
+     */
+    public static boolean writeCpmPropertyFloat(int propId, int area, float value) {
+        return setFloatPropertyCPM(propId, area, value);
     }
 
     /** Demo: CarHvacManager / klima property — {@code area=0x75} ({@link #AREA_HVAC}). NaN = okunamadı. */
@@ -2272,6 +2290,34 @@ public class MG4Hardware {
             return false;
         } catch (Exception e) {
             Log.e(TAG, "  CPM setInt 0x" + Integer.toHexString(propId)
+                    + " HATA: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    private static boolean setFloatPropertyCPM(int propId, int area, float value) {
+        if (sCarPropertyManager == null) {
+            Log.w(TAG, "  CPM setFloat 0x" + Integer.toHexString(propId) + " — CPM hazır değil");
+            return false;
+        }
+        try {
+            java.lang.reflect.Method setFloat = sCarPropertyManager.getClass()
+                    .getMethod("setFloatProperty", int.class, int.class, float.class);
+            setFloat.invoke(sCarPropertyManager, propId, area, value);
+            if (sLogEnabled) Log.i(TAG, "  CPM setFloat 0x" + Integer.toHexString(propId)
+                    + " area=0x" + Integer.toHexString(area) + " value=" + value + " ✓");
+            return true;
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause != null) {
+                Log.e(TAG, "  CPM setFloat 0x" + Integer.toHexString(propId)
+                        + " ITE→" + cause.getClass().getSimpleName() + ": " + cause.getMessage());
+            } else {
+                Log.e(TAG, "  CPM setFloat 0x" + Integer.toHexString(propId) + " ITE (cause null)");
+            }
+            return false;
+        } catch (Exception e) {
+            Log.e(TAG, "  CPM setFloat 0x" + Integer.toHexString(propId)
                     + " HATA: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             return false;
         }

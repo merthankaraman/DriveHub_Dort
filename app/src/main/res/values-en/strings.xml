@@ -44,6 +44,16 @@
     <string name="demo_cpm_prop_scan_span_overflow">Start + count exceeds 32-bit ID range\n</string>
     <string name="demo_cpm_prop_scan_result_header">CPM prop start=0x%1$08X count=%2$d lines=%3$d (int=-1 omitted)\n</string>
     <string name="demo_cpm_prop_scan_truncated">…[truncated]\n</string>
+    <string name="demo_cpm_prop_write_title">CPM property write</string>
+    <string name="demo_cpm_prop_write_addr_hint">Property ID (e.g. 0x2140a1a6)</string>
+    <string name="demo_cpm_prop_write_area_hint">Area (empty = 0x01000000)</string>
+    <string name="demo_cpm_prop_write_value_hint">Value</string>
+    <string name="demo_cpm_prop_write_type_int">int</string>
+    <string name="demo_cpm_prop_write_type_float">float</string>
+    <string name="demo_cpm_prop_write_run">Write</string>
+    <string name="demo_cpm_prop_write_ok">Written: 0x%1$08X area=0x%2$08X</string>
+    <string name="demo_cpm_prop_write_fail">Write failed (see logcat)</string>
+    <string name="demo_cpm_prop_write_value_error">Invalid value</string>
     <string name="demo_hvac_prop_scan_title">HVAC CPM scan — area 0x75</string>
     <string name="demo_hvac_prop_start_hint">Start ID (e.g. 0x15402500)</string>
     <string name="demo_hvac_prop_count_hint">Count to read (e.g. 256)</string>
