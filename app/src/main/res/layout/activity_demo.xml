@@ -336,26 +336,43 @@
         android:layout_marginTop="6dp"
         android:text="@string/demo_cpm_prop_scan_run"/>
 
-    <!-- Klima: setDrvTemp -->
+    <!-- Klima: method + int value gönder -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="8dp"
         android:gravity="center_horizontal"
-        android:text="HVAC değer gönder"
+        android:text="@string/demo_hvac_send_title"
         android:textColor="@color/status_value"
         android:textSize="18sp"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="vertical">
+        <EditText
+            android:id="@+id/etHvacMethodName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/demo_hvac_method_hint"
+            android:importantForAutofill="no"
+            android:inputType="textNoSuggestions"
+            android:textColor="@color/status_value"
+            android:textColorHint="@color/status_value"
+            android:textSize="28sp"
+            android:fontFamily="monospace"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
         <EditText
             android:id="@+id/etDrvTempValue"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:hint="@string/demo_hvac_int_value_hint"
             android:importantForAutofill="no"
             android:inputType="numberSigned"
             android:textColor="@color/status_value"
@@ -367,7 +384,8 @@
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:layout_marginStart="8dp"
-            android:text="Gönder"/>
+            android:text="@string/demo_hvac_send_button"/>
+        </LinearLayout>
     </LinearLayout>
 
     <!-- Track Mode / OEM sensör ID’leri (MG4Hardware TRACK_SENSOR_*) -->

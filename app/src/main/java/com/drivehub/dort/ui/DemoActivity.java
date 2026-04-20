@@ -338,7 +338,15 @@ public class DemoActivity extends AppCompatActivity {
         StringBuilder sb2 = new StringBuilder(900);
 
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getDrvTemp"), "hedef klima sıcaklık");
-        /*
+        appendValueInt(sb, MG4Hardware.getACValMethodInt("getHvacPowerStatus"), "getHvacPowerStatus");//1 ile klima aç kapat
+        appendValueInt(sb, MG4Hardware.getACValMethodInt("getLoopMode"), "Flap yönü",-1,new String[]{"in", "out","auto"}); //set loop 1 ile adım adım artıyor
+        appendValueInt(sb, MG4Hardware.getACValMethodInt("getBlowerDirectionMode"), "fan yönü",-1, new String[]{"ön","ön ve ayaklar", "ayaklar","ayak ve üst", "üst", "hepsi","ön ve üst","auto"});
+        appendValueInt(sb, MG4Hardware.getACValMethodInt("getAirVolumeLevel"), "fan hızı");
+
+        appendValueInt(sb, MG4Hardware.getACValMethodInt("getFrontWindowDefroster"), "getFrontWindowDefroster");
+        appendValueInt(sb, MG4Hardware.getACValMethodInt("getBackWindowDefroster"), "getBackWindowDefroster");
+
+
 
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1a6), "ID_TRACK_MODE_IPK");
@@ -359,7 +367,7 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a15c), "Sağ  kör nokta");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a15d), "Sol  kör nokta");
 
-         */
+
 
 
         //MG4Hardware.writeTrackSensorInt(0x2140a1a6, 1);//ID_TRACK_MODE_IPK
@@ -371,10 +379,6 @@ public class DemoActivity extends AppCompatActivity {
         appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602521), "0x15602521", 50.3937f);
         appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602536), "0x15602536", 33.0f);
         appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602547), "0x15602547", 33.0f);
-
-
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250d), "fan seviyesi"); // fan seviyesi 15 auto
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250e), "0: ön, 1: ön ve ayaklar, 2: ayaklar, 3: ayak ve üst, 4: üst, 5: hepsi, 7:auto");
 
 
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600305), "0x11600305",0f);
@@ -478,15 +482,25 @@ public class DemoActivity extends AppCompatActivity {
     }
 
     private void setupHVACControl() {
+        EditText etHvacMethodName = findViewById(R.id.etHvacMethodName);
         EditText etDrvTempValue = findViewById(R.id.etDrvTempValue);
         Button btnDrvTempSend = findViewById(R.id.btnDrvTempSend);
-        if (etDrvTempValue == null || btnDrvTempSend == null) return;
+        if (etHvacMethodName == null || etDrvTempValue == null || btnDrvTempSend == null) return;
 
         btnDrvTempSend.setOnClickListener(v -> {
+            String methodName = etHvacMethodName.getText() != null
+                    ? etHvacMethodName.getText().toString().trim()
+                    : "";
+            if (methodName.isEmpty()) {
+                Toast.makeText(this, R.string.demo_hvac_method_empty, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             String raw = etDrvTempValue.getText() != null
                     ? etDrvTempValue.getText().toString().trim()
                     : "";
             if (raw.isEmpty()) {
+                Toast.makeText(this, R.string.demo_hvac_value_empty, Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -494,10 +508,16 @@ public class DemoActivity extends AppCompatActivity {
             try {
                 value = Integer.parseInt(raw);
             } catch (NumberFormatException ex) {
+                Toast.makeText(this, R.string.demo_hvac_value_invalid, Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            boolean ok = MG4Hardware.setACValMethodInt("setDrvTemp", value);
+            boolean ok = MG4Hardware.setACValMethodInt(methodName, value);
+            if (ok) {
+                Toast.makeText(this, getString(R.string.demo_hvac_send_ok, methodName, value), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, getString(R.string.demo_hvac_send_fail, methodName), Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
@@ -608,6 +628,16 @@ public class DemoActivity extends AppCompatActivity {
     }
 
     /** CPM Integer track alanları (fren, lastik); okunamadı (i negatif) ise --. */
+    private static void appendValueInt(StringBuilder sb, int i, String label, int defaultval, String[] vals) {
+        if (i == defaultval) return;
+        String v;
+        if (vals != null && i >= 0 && i < vals.length && vals[i] != null) {
+            v = vals[i];
+        } else {
+            v = String.valueOf(i);
+        }
+        sb.append(String.format(Locale.US, "%s: %s%n", label, v));
+    }
     private static void appendValueInt(StringBuilder sb, int i, String label, int defaultval) {
         if (i == defaultval) return;
         //String v = (i < 0) ? "--" : String.valueOf(i);

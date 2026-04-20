@@ -50,6 +50,15 @@
     <string name="demo_hvac_prop_scan_run">HVAC oku</string>
     <string name="demo_hvac_prop_scan_busy">HVAC okunuyor…</string>
     <string name="demo_hvac_prop_scan_result_header">HVAC CPM area=0x75 start=0x%1$08X count=%2$d satır=%3$d (NaN ve int=-1 atlandı)\n</string>
+    <string name="demo_hvac_send_title">HVAC method + değer gönder</string>
+    <string name="demo_hvac_method_hint">Method adı (örn. setDrvTemp)</string>
+    <string name="demo_hvac_int_value_hint">Integer değer (örn. 21)</string>
+    <string name="demo_hvac_send_button">Gönder</string>
+    <string name="demo_hvac_method_empty">Method adı boş olamaz.</string>
+    <string name="demo_hvac_value_empty">Değer boş olamaz.</string>
+    <string name="demo_hvac_value_invalid">Değer geçerli bir sayı değil.</string>
+    <string name="demo_hvac_send_ok">%1$s(%2$d) gönderildi.</string>
+    <string name="demo_hvac_send_fail">%1$s gönderilemedi.</string>
     <string name="btn_voice_assistant">Sesli asistan (Vosk)</string>
 
     <!-- Yerel sesli asistan (Demo → Asistan) -->
