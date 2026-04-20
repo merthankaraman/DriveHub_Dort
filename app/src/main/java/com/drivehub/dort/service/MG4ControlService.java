@@ -1048,9 +1048,9 @@ public class MG4ControlService extends Service {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 flags,
                 PixelFormat.TRANSLUCENT);
-        lp.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+        lp.gravity = Gravity.CENTER;
         lp.x = 0;
-        lp.y = Math.round(8f * getResources().getDisplayMetrics().density);
+        lp.y = 0;
         wm.addView(v, lp);
         mVoiceFeedbackOverlay = v;
     }
