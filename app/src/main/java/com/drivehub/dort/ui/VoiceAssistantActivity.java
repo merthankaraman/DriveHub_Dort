@@ -22,13 +22,11 @@ import androidx.core.content.ContextCompat;
 import com.drivehub.dort.R;
 import com.drivehub.dort.hardware.MG4Hardware;
 import com.drivehub.dort.service.MG4ControlService;
-import com.drivehub.dort.voice.VoiceCommandGrammar;
-import com.drivehub.dort.voice.VoiceIntentDispatcher;
+import com.drivehub.dort.voice.VoiceHypothesisResolver;
 import com.drivehub.dort.voice.VoiceLog;
 import com.drivehub.dort.voice.VoiceModelDownloader;
+import com.drivehub.dort.voice.VoiceRecognitionUtils;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.vosk.LibVosk;
 import org.vosk.LogLevel;
 import org.vosk.Model;
@@ -284,14 +282,12 @@ public class VoiceAssistantActivity extends AppCompatActivity {
                         }));
                 mModel = new Model(path);
                 mRecognizer = new Recognizer(mModel, 16000.0f);
-                final boolean grammarOk = VoiceCommandGrammar.applyIfSupported(mRecognizer);
+                VoiceRecognitionUtils.prepareRecognizerForCommands(mRecognizer);
                 runOnUiThread(() -> {
                     mModelStatus.setText(R.string.voice_model_ready);
                     mBtnListen.setEnabled(true);
                     appendLogLine(getString(R.string.voice_model_ready_log));
-                    appendLogLine(getString(grammarOk
-                            ? R.string.voice_grammar_on
-                            : R.string.voice_grammar_off));
+                    appendLogLine(getString(R.string.voice_grammar_on));
                     attemptAutoStartListen();
                 });
             } catch (IOException e) {
@@ -341,7 +337,7 @@ public class VoiceAssistantActivity extends AppCompatActivity {
         RecognitionListener listener = new RecognitionListener() {
             @Override
             public void onPartialResult(String hypothesis) {
-                String t = extractForDisplay(hypothesis);
+                String t = VoiceRecognitionUtils.extractForDisplay(hypothesis);
                 if (mVoiceLive != null) {
                     if (t.isEmpty()) {
                         mVoiceLive.setText(R.string.voice_listening_prompt);
@@ -440,53 +436,47 @@ public class VoiceAssistantActivity extends AppCompatActivity {
     }
 
     private void handleHypothesis(String hypothesis) {
-        String text = extractForCommand(hypothesis);
-        if (text.isEmpty()) {
+        VoiceHypothesisResolver.Resolution r = VoiceHypothesisResolver.resolve(this, hypothesis);
+        if (r.kind == VoiceHypothesisResolver.Kind.EMPTY) {
             VoiceLog.d(VoiceLog.TAG_ASST, "handleHypothesis boş metin, yoksayıldı raw=" + hypothesis);
             return;
         }
-        String trimmed = text.trim();
-        if ("[unk]".equalsIgnoreCase(trimmed) || trimmed.startsWith("[unk]")) {
+        if (r.kind == VoiceHypothesisResolver.Kind.UNKNOWN) {
             VoiceLog.d(VoiceLog.TAG_ASST, "Grafik [unk] (cümle komut listesinde yok)");
             appendLogLine(getString(R.string.voice_grammar_unk));
-            String heardUnk = extractForDisplay(hypothesis);
-            if (heardUnk.isEmpty()) {
-                heardUnk = trimmed;
-            }
-            publishVoiceResultOverlay(heardUnk, getString(R.string.voice_overlay_action_unk));
+            publishVoiceResultOverlay(r.heardForOverlay, r.actionForOverlay);
             speak(getString(R.string.voice_not_understood_tts));
             scheduleFinishAfterOneShotResult();
             return;
         }
         long now = SystemClock.elapsedRealtime();
-        if (text.equals(mLastDispatchedText) && (now - mLastDispatchElapsed) < 900) {
+        if (r.commandText.equals(mLastDispatchedText) && (now - mLastDispatchElapsed) < 900) {
             return;
         }
-        mLastDispatchedText = text;
+        mLastDispatchedText = r.commandText;
         mLastDispatchElapsed = now;
 
-        appendLogLine(getString(R.string.voice_heard, text));
-        VoiceLog.i(VoiceLog.TAG_ASST, "Komut metni: \"" + text + "\"");
-
-        VoiceIntentDispatcher.Result r = VoiceIntentDispatcher.parse(this, text);
-        if (r == null) {
+        appendLogLine(getString(R.string.voice_heard, r.commandText));
+        VoiceLog.i(VoiceLog.TAG_ASST, "Komut metni: \"" + r.commandText + "\"");
+        if (r.kind == VoiceHypothesisResolver.Kind.NO_MATCH) {
             appendLogLine(getString(R.string.voice_not_understood));
-            publishVoiceResultOverlay(text, getString(R.string.voice_overlay_action_none));
+            publishVoiceResultOverlay(r.heardForOverlay, r.actionForOverlay);
             speak(getString(R.string.voice_not_understood_tts));
             scheduleFinishAfterOneShotResult();
             return;
         }
 
-        appendLogLine(getString(R.string.voice_reply, r.assistantReply));
-        publishVoiceResultOverlay(text, r.assistantReply);
-        speak(r.assistantReply);
+        appendLogLine(getString(R.string.voice_reply, r.actionForOverlay));
+        publishVoiceResultOverlay(r.heardForOverlay, r.actionForOverlay);
+        speak(r.actionForOverlay);
 
         try {
             ContextCompat.startForegroundService(this, new Intent(this, MG4ControlService.class));
             startService(r.commandIntent);
         } catch (Exception e) {
-            appendLogLine(getString(R.string.voice_command_error, e.getMessage()));
-            publishVoiceResultOverlay(text, getString(R.string.voice_command_error, e.getMessage()));
+            String err = getString(R.string.voice_command_error, e.getMessage());
+            appendLogLine(err);
+            publishVoiceResultOverlay(r.commandText, err);
             VoiceLog.e(VoiceLog.TAG_ASST, "Komut gönderilemedi", e);
         }
         scheduleFinishAfterOneShotResult();
@@ -510,47 +500,6 @@ public class VoiceAssistantActivity extends AppCompatActivity {
                 startService(i);
             } catch (Throwable ignored) {
             }
-        }
-    }
-
-    /**
-     * Vosk tam cümle / sonuç: {@code "text"}. Komut eşlemesi için yalnızca bunu kullan.
-     */
-    private static String extractForCommand(String jsonOrPlain) {
-        if (jsonOrPlain == null) {
-            return "";
-        }
-        String s = jsonOrPlain.trim();
-        if (s.startsWith("{")) {
-            try {
-                return new JSONObject(s).optString("text", "").trim();
-            } catch (JSONException e) {
-                return "";
-            }
-        }
-        return s;
-    }
-
-    /**
-     * Arayüz ve kısmi sonuç: Vosk kısmi çıktıda {@code "partial"}, tam metinde {@code "text"}.
-     */
-    private static String extractForDisplay(String jsonOrPlain) {
-        if (jsonOrPlain == null) {
-            return "";
-        }
-        String s = jsonOrPlain.trim();
-        if (!s.startsWith("{")) {
-            return s;
-        }
-        try {
-            JSONObject o = new JSONObject(s);
-            String text = o.optString("text", "").trim();
-            if (!text.isEmpty()) {
-                return text;
-            }
-            return o.optString("partial", "").trim();
-        } catch (JSONException e) {
-            return "";
         }
     }
 

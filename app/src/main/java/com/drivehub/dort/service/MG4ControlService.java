@@ -49,8 +49,9 @@ import com.drivehub.dort.audio.EngineSoundManager;
 import com.drivehub.dort.model.DriveMode;
 import com.drivehub.dort.model.RegenLevel;
 import com.drivehub.dort.util.ChargingHistory;
-import com.drivehub.dort.voice.VoiceIntentDispatcher;
+import com.drivehub.dort.voice.VoiceHypothesisResolver;
 import com.drivehub.dort.voice.VoiceModelDownloader;
+import com.drivehub.dort.voice.VoiceRecognitionUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -59,8 +60,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.vosk.Model;
 import org.vosk.Recognizer;
 import org.vosk.android.RecognitionListener;
@@ -1731,9 +1730,9 @@ public class MG4ControlService extends Service {
                     String path = VoiceModelDownloader.ensureModel(this, null);
                     mVoiceOneShotModel = new Model(path);
                     mVoiceOneShotRecognizer = new Recognizer(mVoiceOneShotModel, 16000.0f);
-                } else {
-                    mVoiceOneShotRecognizer.reset();
                 }
+                // One-shot algılama demo ekranıyla aynı hazırlık akışını kullanır.
+                VoiceRecognitionUtils.prepareRecognizerForCommands(mVoiceOneShotRecognizer);
             } catch (Throwable e) {
                 publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
                         getString(R.string.voice_model_error_log, e.getMessage()));
@@ -1752,7 +1751,7 @@ public class MG4ControlService extends Service {
                     boolean ok = mVoiceOneShotSpeechService.startListening(new RecognitionListener() {
                         @Override
                         public void onPartialResult(String hypothesis) {
-                            String t = extractForDisplay(hypothesis);
+                            String t = VoiceRecognitionUtils.extractForDisplay(hypothesis);
                             long now = SystemClock.elapsedRealtime();
                             if (t.isEmpty()) {
                                 return;
@@ -1804,41 +1803,34 @@ public class MG4ControlService extends Service {
     }
 
     private void handleVoiceOneShotHypothesis(String hypothesis) {
+        if (!mVoiceOneShotBusy.get()) {
+            return;
+        }
+        VoiceHypothesisResolver.Resolution r = VoiceHypothesisResolver.resolve(this, hypothesis);
+        if (r.kind == VoiceHypothesisResolver.Kind.EMPTY) {
+            // Ara/boş sonuçları yoksay: final sonuç gelirse onu işle.
+            return;
+        }
         if (!mVoiceOneShotHandled.compareAndSet(false, true)) {
             return;
         }
-        String text = extractForCommand(hypothesis);
-        if (text.isEmpty()) {
-            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
-                    getString(R.string.voice_overlay_action_none));
-            stopVoiceOneShotSessionWithDelayedOverlayDismiss();
-            return;
-        }
-        String trimmed = text.trim();
-        if ("[unk]".equalsIgnoreCase(trimmed) || trimmed.startsWith("[unk]")) {
-            String heardUnk = extractForDisplay(hypothesis);
-            if (heardUnk.isEmpty()) {
-                heardUnk = trimmed;
-            }
-            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, heardUnk,
-                    getString(R.string.voice_overlay_action_unk));
+        if (r.kind == VoiceHypothesisResolver.Kind.UNKNOWN) {
+            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, r.heardForOverlay, r.actionForOverlay);
             stopVoiceOneShotSessionWithDelayedOverlayDismiss();
             return;
         }
 
-        VoiceIntentDispatcher.Result r = VoiceIntentDispatcher.parse(this, text);
-        if (r == null) {
-            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, text,
-                    getString(R.string.voice_overlay_action_none));
+        if (r.kind == VoiceHypothesisResolver.Kind.NO_MATCH) {
+            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, r.heardForOverlay, r.actionForOverlay);
             stopVoiceOneShotSessionWithDelayedOverlayDismiss();
             return;
         }
 
-        publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, text, r.assistantReply);
+        publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, r.heardForOverlay, r.actionForOverlay);
         try {
             startService(r.commandIntent);
         } catch (Throwable e) {
-            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, text,
+            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, r.commandText,
                     getString(R.string.voice_command_error, e.getMessage()));
         }
         stopVoiceOneShotSessionWithDelayedOverlayDismiss();
@@ -1868,7 +1860,6 @@ public class MG4ControlService extends Service {
                 publishVoiceOverlayMode(VOICE_OVERLAY_MODE_LISTEN_END, "", "");
             }
             mVoiceOneShotBusy.set(false);
-            mVoiceOneShotHandled.set(false);
         });
     }
 
@@ -1879,41 +1870,6 @@ public class MG4ControlService extends Service {
         i.putExtra(EXTRA_VOICE_HEARD, heard != null ? heard : "");
         i.putExtra(EXTRA_VOICE_ACTION, action != null ? action : "");
         startService(i);
-    }
-
-    private static String extractForCommand(String jsonOrPlain) {
-        if (jsonOrPlain == null) {
-            return "";
-        }
-        String s = jsonOrPlain.trim();
-        if (s.startsWith("{")) {
-            try {
-                return new JSONObject(s).optString("text", "").trim();
-            } catch (JSONException e) {
-                return "";
-            }
-        }
-        return s;
-    }
-
-    private static String extractForDisplay(String jsonOrPlain) {
-        if (jsonOrPlain == null) {
-            return "";
-        }
-        String s = jsonOrPlain.trim();
-        if (!s.startsWith("{")) {
-            return s;
-        }
-        try {
-            JSONObject o = new JSONObject(s);
-            String text = o.optString("text", "").trim();
-            if (!text.isEmpty()) {
-                return text;
-            }
-            return o.optString("partial", "").trim();
-        } catch (JSONException e) {
-            return "";
-        }
     }
 
     // -------------------------------------------------------------------------
