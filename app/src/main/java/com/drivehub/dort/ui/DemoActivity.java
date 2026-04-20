@@ -366,26 +366,11 @@ public class DemoActivity extends AppCompatActivity {
 
     private void refreshAirQuality() {
         String unknown = getString(R.string.air_quality_unknown);
-        TextView tvPm25 = findViewById(R.id.tvAirQualityPm25);
         TextView tvOutTemp = findViewById(R.id.tvAirQualityOutdoorTemp);
-        TextView tvFilter = findViewById(R.id.tvAirQualityPm25Filter);
-        TextView tvAqs = findViewById(R.id.tvAirQualityAqs);
-        if (tvPm25 != null) {
-            int pm = MG4Hardware.getPm25Concentration();
-            tvPm25.setText(getString(R.string.air_quality_pm25, pm > 0 ? String.valueOf(pm) : unknown));
-        }
         if (tvOutTemp != null) {
             float t = MG4Hardware.getOutCarTemp();
             tvOutTemp.setText(getString(R.string.air_quality_outdoor_temp,
                     !Float.isNaN(t) ? String.format(Locale.getDefault(), "%.1f °C", t) : unknown));
-        }
-        if (tvFilter != null) {
-            int f = MG4Hardware.getPm25Filter();
-            tvFilter.setText(getString(R.string.air_quality_pm25_filter, f != 1 ? String.valueOf(f) : unknown));
-        }
-        if (tvAqs != null) {
-            int aqs = MG4Hardware.getAqsSensitivity();
-            tvAqs.setText(getString(R.string.air_quality_aqs, aqs != 3 ? String.valueOf(aqs) : unknown));
         }
     }
 
@@ -405,7 +390,7 @@ public class DemoActivity extends AppCompatActivity {
         //MG4Hardware.refreshDiagnosticLiveFrame();
         StringBuilder sb = new StringBuilder(900);
         StringBuilder sb2 = new StringBuilder(900);
-
+/*
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getDrvTemp"), "hedef klima sıcaklık");
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getHvacPowerStatus"), "getHvacPowerStatus");//1 ile klima aç kapat
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getLoopMode"), "Flap yönü",-1,new String[]{"in", "out","auto"}); //set loop 1 ile adım adım artıyor
@@ -414,11 +399,16 @@ public class DemoActivity extends AppCompatActivity {
 
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getFrontWindowDefroster"), "getFrontWindowDefroster");
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getBackWindowDefroster"), "getBackWindowDefroster");
-
-
-
+*/
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1a6), "ID_TRACK_MODE_IPK");
+
+
+
+        appendValueInt(sb, MG4Hardware.getAqsSensitivity(), "AQS", 3);
+        appendValueInt(sb, MG4Hardware.getPm25Filter(), "Pm25Filter", 1);
+        appendValueInt(sb, MG4Hardware.getPm25Concentration(), "Pm25Concentration", 0);
+        /*
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c5), "ID_CLSTR_DASP_VEH_SPD");
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1df), "ID_IBS_CH_AVAILABLY");
@@ -435,7 +425,7 @@ public class DemoActivity extends AppCompatActivity {
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a15c), "Sağ  kör nokta");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a15d), "Sol  kör nokta");
-
+*/
 
 
 
