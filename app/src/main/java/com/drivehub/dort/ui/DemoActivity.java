@@ -399,24 +399,24 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.getAqsSensitivity(), "AQS", 3);
         appendValueInt(sb, MG4Hardware.getPm25Filter(), "Pm25Filter", 1);
         appendValueInt(sb, MG4Hardware.getPm25Concentration(), "Pm25Concentration", 0);
-        /*
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c5), "ID_CLSTR_DASP_VEH_SPD");
 
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1df), "ID_IBS_CH_AVAILABLY");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1e0), "ID_IBS_BRAKE_ENERGY_RECOVERY_STS");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1e1), "ID_IBS_BRAKE_PEDAL_SENSING");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1e2), "ID_IBS_MD_STATUS");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c5), "ID_CLSTR_DASP_VEH_SPD",0);
+
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1df), "ID_IBS_CH_AVAILABLY",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1e0), "ID_IBS_BRAKE_ENERGY_RECOVERY_STS",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1e1), "ID_IBS_BRAKE_PEDAL_SENSING",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1e2), "ID_IBS_MD_STATUS",0);
 
 
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c6), "ID_FASN_DRVR_SBLTIND");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c7), "ID_FASN_PSNG_SBLTIND");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c8), "ID_FASN_SECROW_L_SBLTIND");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c9), "ID_FASN_SECROW_MID_SBLTIND");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1ca), "ID_FASN_SECROW_R_SBLTIND");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c6), "ID_FASN_DRVR_SBLTIND",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c7), "ID_FASN_PSNG_SBLTIND",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c8), "ID_FASN_SECROW_L_SBLTIND",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1c9), "ID_FASN_SECROW_MID_SBLTIND",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1ca), "ID_FASN_SECROW_R_SBLTIND",0);
 
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a15c), "Sağ  kör nokta");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a15d), "Sol  kör nokta");
-*/
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a15c), "Sağ  kör nokta",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a15d), "Sol  kör nokta",0);
+
 
 
 
@@ -432,11 +432,12 @@ public class DemoActivity extends AppCompatActivity {
 
 
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600305), "0x11600305",0f);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f417), "0x2140f417",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f42d), "0x2140f42d",0);
 
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40e), "0x2140f40e",22);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40b), "0x2140f40b",4);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f40c), "0x2140f40c 5,2,7,6");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f410), "0x2140f410",6);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11400400), "0x11400400",4);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140050e), "0x1140050e",49);
@@ -451,7 +452,7 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140db73), "0x2140db73",2000);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f405), "0x2160f405",102.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41b), "0x2160f41b",82.3f);
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_GRAPH_AVG_POWER), "grafik ortalama güç",82.3f);
+        //appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(MG4Hardware.PROP_GRAPH_AVG_POWER), "grafik ortalama güç",82.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f421), "0x2160f421",82.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44d), "0x2160f44d",82.3f);
         appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f44f), "0x2160f44f",82.3f);
