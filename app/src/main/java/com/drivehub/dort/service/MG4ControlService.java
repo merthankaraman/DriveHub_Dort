@@ -318,6 +318,26 @@ public class MG4ControlService extends Service {
         }
     };
 
+    public void syncDriveModeFromPolling(int new_drive_mode) {
+        if (new_drive_mode < 0) {
+            return;
+        }
+        DriveMode newMode = DriveMode.fromValue(new_drive_mode);
+        if (newMode == null || newMode == mCurrentDriveMode) {
+            return;
+        }
+        mCurrentDriveMode = newMode;
+        updateNotification("Sürüş: " + mCurrentDriveMode.label);
+
+        SharedPreferences sp = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
+        String soundChar = sp.getString("sound_character", "ECO");
+        if ("AUTO".equals(soundChar) && mEngineSound != null) {
+            mEngineSound.applySoundCharacterFromString(
+                    (mCurrentDriveMode == DriveMode.ECO) ? "ECO" : "SPORT"
+            );
+        }
+    }
+
     private void updateDriveSessionFromReady() {
         boolean ready = MG4Hardware.isVehicleReady();
         long nowWall = System.currentTimeMillis();
@@ -408,32 +428,6 @@ public class MG4ControlService extends Service {
                 Log.i(TAG, "Overlay kullanıcı ayarı nedeniyle kapalı (overlay_enabled=false)");
             }
         }
-
-        // Araçtaki gerçek sürüş modu değişince haberdar ol (Eco/Normal/Sport düğmesi dışından da)
-        MG4Hardware.setDriveModeListener(modeValue -> {
-            mCurrentDriveMode = DriveMode.fromValue(modeValue);
-            updateNotification("Sürüş: " + mCurrentDriveMode.label);
-
-            // Ses "Araç(AUTO)" modundayken, sürüş modu Eco ise Eco, değilse sürekli Sport'e kilitle.
-            SharedPreferences sp = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-            String soundChar = sp.getString("sound_character", "ECO");
-            if ("AUTO".equals(soundChar) && mEngineSound != null) {
-                mEngineSound.applySoundCharacterFromString(
-                        (mCurrentDriveMode == DriveMode.ECO) ? "ECO" : "SPORT"
-                );
-            }
-
-            // Son modu sadece araç READY iken hafızaya yaz. Araç kapanırken son anda Normal/regen 3'e
-            // çektiği değerleri yazmayalım (hatırlama yanlış değerle üzerine yazılmasın).
-            if (mDriveRegenRememberInitialized && (MG4Hardware.getVehicleIgnition() >= 2)) {
-                sp.edit().putInt(PREF_LAST_DRIVE_MODE, modeValue).apply();
-
-                int regenVal = MG4Hardware.getRegenLevel();
-                if (regenVal >= 0) {
-                    sp.edit().putInt(PREF_LAST_REGEN_LEVEL, regenVal).apply();
-                }
-            }
-        });
 
         // EngineSoundManager'ı her durumda servis tarafında başlat.
         // Sesin açık/kapalı olması her 100 ms'de PREF_SOUND_ENABLED'den okunuyor.
@@ -650,6 +644,16 @@ public class MG4ControlService extends Service {
         }
         mCurrentDriveMode = dm;
         updateNotification("Sürüş: " + mCurrentDriveMode.label);
+    }
+
+    private void persistLastRegenLevel(int regenValue, boolean onlyWhenReady) {
+        if (onlyWhenReady && (!mDriveRegenRememberInitialized || MG4Hardware.getVehicleIgnition() < 2)) {
+            return;
+        }
+        getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                .edit()
+                .putInt(PREF_LAST_REGEN_LEVEL, regenValue)
+                .apply();
     }
 
     /** Boot sonrası regen seviyesini otomatik geri yükle (kullanıcı \"Regen seviyesini hatırla\" switch'ini açtıysa). */
@@ -1882,11 +1886,6 @@ public class MG4ControlService extends Service {
                 mCurrentDriveMode = mCurrentDriveMode.next();
                 MG4Hardware.setDriveMode(mCurrentDriveMode);
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
-                // Son seçilen modu kaydet (sadece flag aktifse)
-                if (mDriveRegenRememberInitialized && (MG4Hardware.getVehicleIgnition() >= 2)) {
-                    getSharedPreferences("drivehub_dort", MODE_PRIVATE)
-                            .edit().putInt(PREF_LAST_DRIVE_MODE, mCurrentDriveMode.value).apply();
-                }
                 break;
             case "DRIVE_SET":
                 DriveMode dm = DriveMode.fromValue(
@@ -1894,11 +1893,6 @@ public class MG4ControlService extends Service {
                 MG4Hardware.setDriveMode(dm);
                 mCurrentDriveMode = dm;
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
-                // Son seçilen modu kaydet (sadece flag aktifse)
-                if (mDriveRegenRememberInitialized && (MG4Hardware.getVehicleIgnition() >= 2)) {
-                    getSharedPreferences("drivehub_dort", MODE_PRIVATE)
-                            .edit().putInt(PREF_LAST_DRIVE_MODE, mCurrentDriveMode.value).apply();
-                }
                 break;
             case "REGEN_SET":
                 RegenLevel rl = RegenLevel.fromValue(
@@ -1910,9 +1904,6 @@ public class MG4ControlService extends Service {
                 } else {
                     updateNotification("Regen: " + rl.label);
                 }
-                // Son seçilen regen seviyesini kaydet (hatırlama açıksa boot sonrasında tekrar göndereceğiz)
-                getSharedPreferences("drivehub_dort", MODE_PRIVATE)
-                        .edit().putInt(PREF_LAST_REGEN_LEVEL, rl.value).apply();
                 break;
             case "PEDAL_ON":
                 MG4Hardware.setRegenLevel(RegenLevel.ONE_PEDAL);
