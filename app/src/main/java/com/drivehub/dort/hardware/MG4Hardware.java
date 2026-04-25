@@ -467,8 +467,6 @@ public class MG4Hardware {
     }
 
     private static volatile HvacListener      sHvacListener      = null;
-    /** Aynı şekilde regen seviyesi — vehicle manager callback'ten cache. */
-    private static volatile int sCachedRegenLevel = -1;
 
     /** Motor sesi açık mı (prefs yerine tek kaynak; tuş/ekran değiştirince güncellenir). */
     private static volatile boolean sSoundEnabled = false;
@@ -526,6 +524,8 @@ public class MG4Hardware {
     private static volatile float sChargingStartSoc = Float.NaN;
     // READY durumu (100ms polling ile güncellenen cache)
     private static volatile boolean sVehicleReady       = false;
+    private static volatile int sDriveModeCurrent = 0;
+    private static volatile int sRegenLevelCurrent = 0;
     private static volatile int sVehicleIgnition        = 0;
     /** Şarj başlangıcını persist etmek için (BMS'te set, getChargingDurationMs'te geri yükle). */
     private static Context sAppContext = null;
@@ -650,7 +650,6 @@ public class MG4Hardware {
         sVehicleBinder         = null;
         sVehicleSettingService = null;
         sVsBindAttempted       = false;
-        sCachedRegenLevel      = -1;
         sBmsCache.clear();
         sAcChargeEnergyKwhSum.reset();
         sDcChargeEnergyKwhSum.reset();
@@ -1598,34 +1597,17 @@ public class MG4Hardware {
     // -------------------------------------------------------------------------
 
     /** Sürüş modu: önce CPM callback cache (onChangeEvent); yoksa getProperty dene. */
-    public static int getDriveMode() {
-        int v = getIntPropertyCPM(PROP_DRIVE_MODE, AREA_GLOBAL);
-        if (v >= 0 && sAppContext != null) {
-            SharedPreferences prefs = sAppContext.getSharedPreferences("drivehub_dort", Context.MODE_PRIVATE);
-            boolean rememberDriveMode = prefs.getBoolean(
-                    com.drivehub.dort.service.MG4ControlService.PREF_REMEMBER_DRIVE_MODE,
-                    false
-            );
-            if (rememberDriveMode && getVehicleIgnition() >= 2) {
-                prefs.edit()
-                        .putInt(com.drivehub.dort.service.MG4ControlService.PREF_LAST_DRIVE_MODE, v)
-                        .apply();
-            }
-        }
-        MG4ControlService.syncDriveModeFromPolling(v);
-        return v;
+    public static int getDriveMode() { return sDriveModeCurrent;}
+    private static int getDriveModeCPM() {
+        return getIntPropertyCPM(PROP_DRIVE_MODE, AREA_GLOBAL);
     }
     /** Regen seviyesi: önce vehicle/CPM callback cache; yoksa getProperty dene (sürüş modu gibi). */
-    public static int getRegenLevel() {
+    public static int getRegenLevel() { return sRegenLevelCurrent;}
+    public static int getRegenLevelCPM() {
         int v;
-        if (sCachedRegenLevel >= 0) return sCachedRegenLevel;
+        v = getIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL);
         if (getOnePedal() == 1) {
-            sCachedRegenLevel = 6;
-            v = sCachedRegenLevel;
-        }
-        else {
-            v = getIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL);
-            if (v >= 0) sCachedRegenLevel = v;
+            v = 6;
         }
         return v;
     }
@@ -1938,6 +1920,8 @@ public class MG4Hardware {
         sAcKw   = acKw;
         sLastSpeedKmh = speedKmh;
         sLastGear = getGear();
+        sDriveModeCurrent = getDriveModeCPM();
+        sRegenLevelCurrent = getRegenLevelCPM();
 
         sVehicleIgnition = getIntPropertyCPM(PROP_VEHICLE_IGNITION, AREA_GLOBAL);
         sVehicleReady = (getIntPropertyCPM(PROP_ENGINE_STATE, AREA_GLOBAL) == 1);
@@ -2777,7 +2761,6 @@ public class MG4Hardware {
                             if (propId == PROP_DRIVE_MODE) {
                                 Log.i(TAG, "  Sürüş modu (vehicle manager) 0x" + Integer.toHexString(propId) + " → " + value + " (DriveHub Dort abonesi)");
                             } else if (propId == PROP_REGEN_LEVEL) {
-                                sCachedRegenLevel = value;
                                 if (sLogEnabled) Log.i(TAG, "  Regen seviyesi (vehicle manager) 0x" + Integer.toHexString(propId) + " → " + value);
                             }
                         }

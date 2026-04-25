@@ -297,7 +297,7 @@ public class MG4ControlService extends Service {
                 mSoundHandler.postDelayed(this, 1000);
                 return;
             }
-
+            syncDriveModeFromPolling(MG4Hardware.getDriveMode());
             // Hız tek kaynak: sim açıksa sim, değilse hattan tek okuma (getSpeedForEngine)
             float speed = MG4Hardware.getSpeedForEngine();
             boolean ready = MG4Hardware.isVehicleReady() || MG4Hardware.isSimSpeedActive();
@@ -495,6 +495,12 @@ public class MG4ControlService extends Service {
                 // İlk durum veya ignition değişimi için state'i güncelle
                 mLastIgnitionStateForRemember = ign;
 
+                if (!isRun){
+                    mDriveRegenRememberInitialized = false;
+                }
+                persistLastDriveMode(MG4Hardware.getDriveMode());
+                persistLastRegenLevel(MG4Hardware.getRegenLevel());
+
                 // RUN'a yeni geçişte (OFF/ACC -> RUN) yeniden uygula
                 if (isRun && !wasRun) {
                     if(mSystemWasAuto && mAUTO_NIGHT_MODE_ENABLED){
@@ -646,14 +652,25 @@ public class MG4ControlService extends Service {
         updateNotification("Sürüş: " + mCurrentDriveMode.label);
     }
 
-    private void persistLastRegenLevel(int regenValue, boolean onlyWhenReady) {
-        if (onlyWhenReady && (!mDriveRegenRememberInitialized || MG4Hardware.getVehicleIgnition() < 2)) {
+    private void persistLastRegenLevel(int regenValue) {
+        if (!mDriveRegenRememberInitialized) {
             return;
         }
         getSharedPreferences("drivehub_dort", MODE_PRIVATE)
                 .edit()
                 .putInt(PREF_LAST_REGEN_LEVEL, regenValue)
                 .apply();
+    }
+    public void persistLastDriveMode(int driveModeValue) {
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", Context.MODE_PRIVATE);
+        boolean rememberDriveMode = prefs.getBoolean(PREF_REMEMBER_DRIVE_MODE,
+                false
+        );
+        if (rememberDriveMode && mDriveRegenRememberInitialized) {
+            prefs.edit()
+                    .putInt(PREF_LAST_DRIVE_MODE, driveModeValue)
+                    .apply();
+        }
     }
 
     /** Boot sonrası regen seviyesini otomatik geri yükle (kullanıcı \"Regen seviyesini hatırla\" switch'ini açtıysa). */
@@ -713,8 +730,8 @@ public class MG4ControlService extends Service {
         // Kontak RUN değilken zorlamayalım; bir sonraki loop'ta ignition geçişi tekrar tetikler.
         if (MG4Hardware.getVehicleIgnition() < 2) return;
 
-        int onePedalState = MG4Hardware.getOnePedal(); // 1=açık, 0=kapalı, -1=okunamadı
-        if (onePedalState == 1) {
+        boolean onePedalState = MG4Hardware.getRegenLevel() == 6; // 1=açık, 0=kapalı, -1=okunamadı
+        if (onePedalState) {
             if (MG4Hardware.isLogEnabled()) {
                 Log.i(TAG, "RememberRegen(OPD): doğrulandı (reason=" + reason + ")");
             }
@@ -1263,12 +1280,12 @@ public class MG4ControlService extends Service {
                     while (mOnePedalKeyPressed) {
                         if (System.currentTimeMillis() - start >= ONE_PEDAL_LONG_PRESS_MS) {
                             mOnePedalLongTriggered = true;
-                            if ("long".equals(pressTypeOn) && MG4Hardware.getOnePedal() != 1) {
+                            if ("long".equals(pressTypeOn) && MG4Hardware.getRegenLevel() != 6) {
                                 MG4Hardware.setRegenLevel(RegenLevel.ONE_PEDAL);
                                 new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> MG4Hardware.setRegenLevel(RegenLevel.ONE_PEDAL), 250);
                                 updateNotification("Tek Pedal: Açık");
                             }
-                            if ("long".equals(pressTypeOff) && MG4Hardware.getOnePedal() == 1) {
+                            if ("long".equals(pressTypeOff) && MG4Hardware.getRegenLevel() == 6) {
                                 MG4Hardware.setOnePedal(false);
                                 updateNotification("Tek Pedal: Kapalı");
                             }
@@ -1288,20 +1305,20 @@ public class MG4ControlService extends Service {
                 if (isDouble) {
                     mOnePedalLastTapTime = 0;
                     mOnePedalLastTapKeyCode = -1;
-                    if ("double".equals(pressTypeOn) && MG4Hardware.getOnePedal() != 1) {
+                    if ("double".equals(pressTypeOn) && MG4Hardware.getRegenLevel() != 6) {
                         MG4Hardware.setRegenLevel(RegenLevel.ONE_PEDAL);
                         updateNotification("Tek Pedal: Açık");
-                    } else if ("double".equals(pressTypeOff) && MG4Hardware.getOnePedal() == 1) {
+                    } else if ("double".equals(pressTypeOff) && MG4Hardware.getRegenLevel() == 6) {
                         MG4Hardware.setOnePedal(false);
                         updateNotification("Tek Pedal: Kapalı");
                     }
                 } else {
                     mOnePedalLastTapTime = now;
                     mOnePedalLastTapKeyCode = keyCode;
-                    if ("single".equals(pressTypeOn) && MG4Hardware.getOnePedal() != 1) {
+                    if ("single".equals(pressTypeOn) && MG4Hardware.getRegenLevel() != 6) {
                         MG4Hardware.setRegenLevel(RegenLevel.ONE_PEDAL);
                         updateNotification("Tek Pedal: Açık");
-                    } else if ("single".equals(pressTypeOff) && MG4Hardware.getOnePedal() == 1) {
+                    } else if ("single".equals(pressTypeOff) && MG4Hardware.getRegenLevel() == 6) {
                         MG4Hardware.setOnePedal(false);
                         updateNotification("Tek Pedal: Kapalı");
                     }
