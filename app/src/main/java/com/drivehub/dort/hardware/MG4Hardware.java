@@ -1505,7 +1505,8 @@ public class MG4Hardware {
     /** Sol koltuk ısıtma seviyesi (0=kapalı, 1/2/3=seviye) */
     public static boolean setSeatHeatLeft(int level) {
         if (sLogEnabled) Log.i(TAG, "setSeatHeatLeft → " + level);
-        //return setHvacLevelWithToggle(PROP_SEAT_HEAT_L, AREA_HVAC, level);
+        return setHvacLevelWithToggle(PROP_SEAT_HEAT_L, AREA_HVAC, level);
+        /*
         int current_lvl = getACValMethodInt("getDrvSeatHeatLevel");
         if (current_lvl == level) return true;
         int req_times = (current_lvl - level + 4) % 4;
@@ -1514,12 +1515,15 @@ public class MG4Hardware {
         }
         current_lvl = getACValMethodInt("getDrvSeatHeatLevel");
         return (current_lvl == level);
+
+         */
     }
 
     /** Sağ koltuk ısıtma seviyesi (0=kapalı, 1/2/3=seviye) */
     public static boolean setSeatHeatRight(int level) {
         if (sLogEnabled) Log.i(TAG, "setSeatHeatRight → " + level);
-        //return setHvacLevelWithToggle(PROP_SEAT_HEAT_R, AREA_HVAC, level);
+        return setHvacLevelWithToggle(PROP_SEAT_HEAT_R, AREA_HVAC, level);
+        /*
         int current_lvl = getACValMethodInt("getPsgSeatHeatLevel");
         if (current_lvl == level) return true;
         int req_times = (current_lvl - level + 4) % 4;
@@ -1528,6 +1532,8 @@ public class MG4Hardware {
         }
         current_lvl = getACValMethodInt("getPsgSeatHeatLevel");
         return (current_lvl == level);
+
+         */
     }
 
     /**
