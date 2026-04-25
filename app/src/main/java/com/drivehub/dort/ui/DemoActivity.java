@@ -551,7 +551,12 @@ public class DemoActivity extends AppCompatActivity {
                     ? etDrvTempValue.getText().toString().trim()
                     : "";
             if (raw.isEmpty()) {
-                Toast.makeText(this, "Değer boş olamaz.", Toast.LENGTH_SHORT).show();
+                boolean ok = MG4Hardware.callACMethodNoArg(methodName);
+                if (ok) {
+                    Toast.makeText(this, "arg yok: gonderildi", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "arg yok: gonderilemedi", Toast.LENGTH_SHORT).show();
+                }
                 return;
             }
 
