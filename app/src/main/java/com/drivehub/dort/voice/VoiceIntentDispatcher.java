@@ -9,6 +9,8 @@ import com.drivehub.dort.model.RegenLevel;
 import com.drivehub.dort.service.MG4ControlService;
 
 import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,7 +20,9 @@ import java.util.regex.Pattern;
 public final class VoiceIntentDispatcher {
 
     private VoiceIntentDispatcher() {}
-    private static final Pattern TEMP_NUMBER_PATTERN = Pattern.compile("\\b(1[6-9]|2\\d|30)\\b");
+    /** Sayısal sıcaklık yakalama: 16, 22, 30; ekli yazımlar: 22ye, 22'ye, 22ye. */
+    private static final Pattern TEMP_NUMBER_PATTERN = Pattern.compile("\\b(\\d{1,2})\\D*\\b");
+    private static final Map<String, Integer> TR_NUMBER_WORDS = createTrNumberWordMap();
 
     public static final class Result {
         public final Intent commandIntent;
@@ -305,15 +309,87 @@ public final class VoiceIntentDispatcher {
         if (!(n.contains("klima") || n.contains("derece") || n.contains("sıcak") || n.contains("sicak"))) {
             return null;
         }
+        Integer fromDigits = detectTempFromDigits(n);
+        if (fromDigits != null) {
+            return fromDigits;
+        }
+        return detectTempFromTurkishWords(n);
+    }
+
+    private static Integer detectTempFromDigits(String n) {
         Matcher m = TEMP_NUMBER_PATTERN.matcher(n);
-        if (!m.find()) {
+        while (m.find()) {
+            try {
+                int v = Integer.parseInt(m.group(1));
+                if (v >= 16 && v <= 30) {
+                    return v;
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return null;
+    }
+
+    private static Integer detectTempFromTurkishWords(String n) {
+        // "yirmi iki", "on dokuz", "otuz", "yirmi dokuz" gibi ifadeler.
+        String[] toks = n.split("\\s+");
+        for (int i = 0; i < toks.length; i++) {
+            Integer single = wordToNum(toks[i]);
+            if (single != null && single >= 16 && single <= 30) {
+                return single;
+            }
+            if (i + 1 < toks.length) {
+                Integer left = wordToNum(toks[i]);
+                Integer right = wordToNum(toks[i + 1]);
+                if (left != null && right != null) {
+                    int combined = left + right;
+                    if (combined >= 16 && combined <= 30) {
+                        return combined;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private static Integer wordToNum(String token) {
+        if (token == null || token.isEmpty()) {
             return null;
         }
-        try {
-            return Integer.parseInt(m.group(1));
-        } catch (NumberFormatException ignored) {
-            return null;
+        // ASR bazen apostrof/sonek birleştiriyor: "yirmiye", "yirmi'ye", "yirmibir".
+        String t = token.replace("'", "").replace("’", "");
+        if (t.endsWith("ye") || t.endsWith("ya")) {
+            if (t.length() > 2) {
+                t = t.substring(0, t.length() - 2);
+            }
         }
+        if (t.endsWith("e") || t.endsWith("a")) {
+            if (t.length() > 1) {
+                t = t.substring(0, t.length() - 1);
+            }
+        }
+        return TR_NUMBER_WORDS.get(t);
+    }
+
+    private static Map<String, Integer> createTrNumberWordMap() {
+        Map<String, Integer> m = new HashMap<>();
+        m.put("on", 10);
+        m.put("bir", 1);
+        m.put("iki", 2);
+        m.put("uc", 3);
+        m.put("üç", 3);
+        m.put("dort", 4);
+        m.put("dört", 4);
+        m.put("bes", 5);
+        m.put("beş", 5);
+        m.put("alti", 6);
+        m.put("altı", 6);
+        m.put("yedi", 7);
+        m.put("sekiz", 8);
+        m.put("dokuz", 9);
+        m.put("yirmi", 20);
+        m.put("otuz", 30);
+        return m;
     }
 
     /**
