@@ -208,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
     };
     private TextView mTvChargingDuration;
     private TextView mTvChargingStatus;
+    private View mTvLeftColumn;
     private TextView mTvLeftColumnTitle;
     private TextView mTvAcVolt;
     private TextView mTvAcAmp;
@@ -906,6 +907,7 @@ public class MainActivity extends AppCompatActivity {
         mLayoutChargingGraphPanel = findViewById(R.id.layoutChargingGraphPanel);
         mTvChargingDuration = findViewById(R.id.tvChargingDuration);
         mTvChargingStatus   = findViewById(R.id.tvChargingStatus);
+        mTvLeftColumn = findViewById(R.id.tvLeftColumn);
         mTvLeftColumnTitle = findViewById(R.id.tvLeftColumnTitle);
         mTvAcVolt          = findViewById(R.id.tvAcVolt);
         mTvAcAmp           = findViewById(R.id.tvAcAmp);
@@ -1589,6 +1591,16 @@ public class MainActivity extends AppCompatActivity {
                         : getString(R.string.charging_column_dc_station));
             } else {
                 mTvLeftColumnTitle.setText(getString(R.string.expected_charge_power));
+            }
+        }
+
+        if (mTvLeftColumn != null) {
+            //if (!Float.isNaN(dcAmpExp) && ((Math.abs(dcAmpExp - 511.50) <= 0.4f) || dcAmpExp == 0f)){
+            if (dcAmpExp == 511.50f || dcAmpExp == 0f){
+                mTvLeftColumn.setVisibility(View.INVISIBLE);
+            }
+            else {
+                mTvLeftColumn.setVisibility(View.VISIBLE);
             }
         }
         int energyRowVis = charging ? View.VISIBLE : View.GONE;
