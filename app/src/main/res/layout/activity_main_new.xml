@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#080B0F">
+
+    <!-- Ana Panel İçeriği -->
+    <include
+        android:id="@+id/layoutMain"
+        layout="@layout/layout_main_new"
+        android:visibility="visible" />
+
+    <!-- Overlay Paneller (Varsayılan gizli) -->
+    <!-- Not: Diğer tüm paneller (Regen, Klima, Şarj vb.)
+         burada FrameLayout içinde üst üste biner ve kod ile gösterilir/gizlenir. -->
+
+    <include
+        android:id="@+id/layoutStatusPanel"
+        layout="@layout/layout_panel_status_new"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/layoutRegenPanel"
+        layout="@layout/layout_panel_regen"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/layoutClimatePanel"
+        layout="@layout/layout_panel_climate_new"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/layoutSoundPanel"
+        layout="@layout/layout_panel_sound_new"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/layoutConsumptionPanel"
+        layout="@layout/layout_panel_consumption_new"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/layoutSettingsPanel"
+        layout="@layout/layout_panel_settings_new"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/layoutDriveRegenPanel"
+        layout="@layout/layout_panel_drive_regen_new"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/layoutShortcutsPanel"
+        layout="@layout/layout_panel_shortcuts"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/layoutIdlePanel"
+        layout="@layout/layout_panel_idle"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/layoutChargingGraphPanel"
+        layout="@layout/layout_panel_charging_graph"
+        android:visibility="gone" />
+
+</FrameLayout>

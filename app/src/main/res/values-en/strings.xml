@@ -345,6 +345,7 @@
     <!-- Settings / fullscreen -->
     <string name="fullscreen_mode_label">Run app in fullscreen</string>
     <string name="usb_debug_always_on_label">Enable USB debugging after every wake</string>
+    <string name="use_new_layouts_label">Use new layout design</string>
 
     <!-- General -->
     <string name="back">←</string>

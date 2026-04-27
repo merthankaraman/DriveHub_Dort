@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layoutSoundPanel"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:visibility="gone">
+
+    <!-- Üst Bar -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSoundBack"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="90dp"
+            android:layout_height="90dp"
+            android:text="@string/back"
+            android:textSize="44sp"
+            app:cornerRadius="32dp"
+            android:backgroundTint="@color/surface_variant"
+            android:textColor="@color/status_value"
+            android:padding="0dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/btnSoundBack"
+            android:layout_marginStart="20dp"
+            android:layout_centerVertical="true"
+            android:text="@string/motor_sound_title"
+            android:textColor="@color/status_value"
+            android:textSize="32sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/tvMotorState"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:text="@string/motor_state_placeholder"
+            android:textColor="@color/text_secondary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="12dp"/>
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Teknik Veriler (Dev Kadranlar) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp"
+                android:paddingHorizontal="4dp">
+
+                <!-- Her biri eşit ağırlıklı devasa veri kutuları -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="120dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    app:cardCornerRadius="24dp"
+                    app:cardBackgroundColor="@color/surface_variant"
+                    app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/gauge_rpm" android:textColor="@color/text_secondary" android:textSize="12sp" android:textStyle="bold"/>
+                        <TextView android:id="@+id/tvGaugeRpm" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="32sp" android:textStyle="bold" android:fontFamily="sans-serif-condensed"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="120dp"
+                    android:layout_weight="0.8"
+                    android:layout_marginHorizontal="4dp"
+                    app:cardCornerRadius="24dp"
+                    app:cardBackgroundColor="@color/surface_variant"
+                    app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/gauge_gear" android:textColor="@color/text_secondary" android:textSize="12sp" android:textStyle="bold"/>
+                        <TextView android:id="@+id/tvGaugeGear" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="32sp" android:textStyle="bold" android:fontFamily="sans-serif-condensed"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="120dp"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="4dp"
+                    app:cardCornerRadius="24dp"
+                    app:cardBackgroundColor="@color/surface_variant"
+                    app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/gauge_speed" android:textColor="@color/text_secondary" android:textSize="12sp" android:textStyle="bold"/>
+                        <TextView android:id="@+id/tvGaugeSpeed" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="#FFA657" android:textSize="32sp" android:textStyle="bold" android:fontFamily="sans-serif-condensed"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="120dp"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="4dp"
+                    app:cardCornerRadius="24dp"
+                    app:cardBackgroundColor="@color/surface_variant"
+                    app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/gauge_power" android:textColor="@color/text_secondary" android:textSize="12sp" android:textStyle="bold"/>
+                        <TextView android:id="@+id/tvGaugePower" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="32sp" android:textStyle="bold" android:fontFamily="sans-serif-condensed"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="120dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    app:cardCornerRadius="24dp"
+                    app:cardBackgroundColor="@color/surface_variant"
+                    app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/gauge_pedal" android:textColor="@color/text_secondary" android:textSize="12sp" android:textStyle="bold"/>
+                        <TextView android:id="@+id/tvGaugeThrottle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/status_value" android:textSize="32sp" android:textStyle="bold" android:fontFamily="sans-serif-condensed"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Ses Seviyesi ve Ayarlar -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="4dp"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="32dp"
+                app:cardBackgroundColor="@color/surface_variant"
+                app:strokeWidth="0dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="16dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sound_volume" android:textColor="@color/status_value" android:textSize="20sp" android:textStyle="bold" android:layout_marginEnd="16dp"/>
+                        <SeekBar android:id="@+id/seekSoundVolume" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="100"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+                        <TextView android:id="@+id/tvAlarmVolumeHint" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/notification_volume" android:textColor="@color/text_secondary" android:textSize="14sp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnAlarmSource" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content" android:layout_height="56dp" android:layout_marginEnd="8dp" android:text="@string/sound_source_notification" android:textSize="14sp" app:cornerRadius="16dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnAlarmVolumeMax" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content" android:layout_height="56dp" android:text="@string/btn_max_volume" android:textSize="14sp" app:cornerRadius="16dp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Mega Kontrol Butonları -->
+            <GridLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:columnCount="2" android:paddingHorizontal="4dp">
+
+                <com.google.android.material.button.MaterialButton android:id="@+id/btnSoundToggle" android:layout_width="0dp" android:layout_height="110dp" android:layout_columnWeight="1" android:layout_margin="4dp" android:text="@string/btn_sound_enabled" android:textSize="20sp" android:textStyle="bold" app:cornerRadius="32dp" android:backgroundTint="#1A7F37" android:textColor="#FFFFFF"/>
+                <com.google.android.material.button.MaterialButton android:id="@+id/btnSoundProfile" android:layout_width="0dp" android:layout_height="110dp" android:layout_columnWeight="1" android:layout_margin="4dp" android:text="@string/vehicle_sound_placeholder" android:textSize="18sp" app:cornerRadius="32dp" android:backgroundTint="@color/surface_variant" android:textColor="@color/status_value"/>
+                <com.google.android.material.button.MaterialButton android:id="@+id/btnGearProfile" android:layout_width="0dp" android:layout_height="110dp" android:layout_columnWeight="1" android:layout_margin="4dp" android:text="@string/gearbox_sport" android:textSize="18sp" app:cornerRadius="32dp" android:backgroundTint="@color/surface_variant" android:textColor="@color/status_value"/>
+                <com.google.android.material.button.MaterialButton android:id="@+id/btnSpeedTest" android:layout_width="0dp" android:layout_height="110dp" android:layout_columnWeight="1" android:layout_margin="4dp" android:text="@string/btn_speed_test" android:textSize="18sp" app:cornerRadius="32dp" android:backgroundTint="@color/surface_variant" android:textColor="@color/status_value"/>
+                <com.google.android.material.button.MaterialButton android:id="@+id/btnRevMatch" android:layout_width="0dp" android:layout_height="110dp" android:layout_columnWeight="1" android:layout_margin="4dp" android:text="@string/rev_match" android:textSize="18sp" app:cornerRadius="32dp" android:backgroundTint="@color/surface_variant" android:textColor="@color/status_value"/>
+                <com.google.android.material.button.MaterialButton android:id="@+id/btnGearWhine" android:layout_width="0dp" android:layout_height="110dp" android:layout_columnWeight="1" android:layout_margin="4dp" android:text="@string/gear_whine" android:textSize="18sp" app:cornerRadius="32dp" android:backgroundTint="@color/surface_variant" android:textColor="@color/status_value"/>
+                <com.google.android.material.button.MaterialButton android:id="@+id/btnExhaustPop" android:layout_width="0dp" android:layout_height="110dp" android:layout_columnWeight="1" android:layout_margin="4dp" android:text="@string/exhaust_pop" android:textSize="18sp" app:cornerRadius="32dp" android:backgroundTint="@color/surface_variant" android:textColor="@color/status_value"/>
+                <com.google.android.material.button.MaterialButton android:id="@+id/btnSubwave" android:layout_width="0dp" android:layout_height="110dp" android:layout_columnWeight="1" android:layout_margin="4dp" android:text="@string/btn_subwave_on" android:textSize="18sp" app:cornerRadius="32dp" android:backgroundTint="@color/surface_variant" android:textColor="@color/status_value"/>
+                <com.google.android.material.button.MaterialButton android:id="@+id/btnIdleSettings" android:layout_width="0dp" android:layout_height="110dp" android:layout_columnWeight="2" android:layout_margin="4dp" android:text="@string/btn_idle_settings" android:textSize="20sp" android:textStyle="bold" app:cornerRadius="32dp" android:backgroundTint="@color/surface_variant" android:textColor="@color/status_value"/>
+
+            </GridLayout>
+
+            <!-- Simüle Hız Testi (Gizli) -->
+            <LinearLayout android:id="@+id/layoutSpeedTest" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp" android:layout_margin="4dp" android:background="@drawable/bg_charging_card" android:visibility="gone">
+                <TextView android:id="@+id/tvSpeedTestLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/sim_speed_label" android:textColor="@color/status_value" android:textSize="18sp" android:textStyle="bold" android:layout_marginBottom="8dp"/>
+                <SeekBar android:id="@+id/seekSpeedTest" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="170" android:layout_marginBottom="16dp"/>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/sim_throttle_label" android:textColor="@color/status_value" android:textSize="18sp" android:textStyle="bold" android:layout_marginBottom="8dp"/>
+                <SeekBar android:id="@+id/seekThrottleTest" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

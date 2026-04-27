@@ -113,6 +113,13 @@ public class MainActivity extends AppCompatActivity {
     private int mThemeMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM; // Oto
     /** recreate() tema yüzünden tetiklendiyse onCreate'de sese dokunma (ses kesilmesin). */
     private static boolean sRecreatedDueToThemeChange = false;
+    /**
+     * Layout varyantı (normal <-> _new) değiştiğinde bazı id'ler farklı View sınıflarına
+     * denk gelebiliyor. Bu durumda Android'in hiyerarşi state restore'u crash üretebiliyor.
+     * Bir sonraki recreate'te view-state restore'u atlayıp bu çakışmayı engelliyoruz.
+     */
+    private static boolean sSkipNextViewHierarchyRestore = false;
+    private static final String KEY_ANDROID_VIEW_HIERARCHY_STATE = "android:viewHierarchyState";
 
     private TextView mTvStatus;
     private TextView mTvBinder;
@@ -513,7 +520,7 @@ public class MainActivity extends AppCompatActivity {
         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(lang));
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(LayoutVariantResolver.resolveLayout(this, "activity_main"));
 
         mTvStatus = findViewById(R.id.tvStatus);
         mTvBinder = findViewById(R.id.tvBinderStatus);
@@ -830,6 +837,19 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
+        // Yeni layout varyantı switch'i (ör. activity_main_new, layout_panel_*_new)
+        SwitchCompat swUseNewLayouts = findViewById(R.id.switchUseNewLayouts);
+        if (swUseNewLayouts != null) {
+            boolean useNewLayouts = LayoutVariantResolver.isNewLayoutsEnabled(this);
+            swUseNewLayouts.setChecked(useNewLayouts);
+            swUseNewLayouts.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                LayoutVariantResolver.setNewLayoutsEnabled(this, isChecked);
+                sSkipNextViewHierarchyRestore = true;
+                // Kaynağı anında değiştir: aktivite yeniden oluşturulur.
+                recreate();
+            });
+        }
+
         // Tema butonları: Gündüz / Gece / Oto (araç sistemine göre)
         Button btnThemeDay  = findViewById(R.id.btnThemeDay);
         Button btnThemeNight = findViewById(R.id.btnThemeNight);
@@ -1108,6 +1128,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        if (sSkipNextViewHierarchyRestore) {
+            outState.remove(KEY_ANDROID_VIEW_HIERARCHY_STATE);
+            sSkipNextViewHierarchyRestore = false;
+        }
         outState.putInt(STATE_PANEL, mCurrentPanel);
     }
 

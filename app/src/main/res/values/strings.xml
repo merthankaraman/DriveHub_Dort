@@ -344,6 +344,7 @@
     <!-- Ayarlar / tam ekran -->
     <string name="fullscreen_mode_label">Program Tam ekran çalışsın</string>
     <string name="usb_debug_always_on_label">USB debug her uyanmada aktif et</string>
+    <string name="use_new_layouts_label">Yeni layout tasarımını kullan</string>
 
     <!-- Genel -->
     <string name="back">←</string>

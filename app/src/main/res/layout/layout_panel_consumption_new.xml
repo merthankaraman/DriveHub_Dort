@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layoutConsumptionPanel"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:visibility="gone">
+
+    <!-- Üst Bar -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConsumptionBack"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="90dp"
+            android:layout_height="90dp"
+            android:text="@string/back"
+            android:textSize="44sp"
+            app:cornerRadius="32dp"
+            android:backgroundTint="@color/surface_variant"
+            android:textColor="@color/status_value"
+            android:padding="0dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/btnConsumptionBack"
+            android:layout_marginStart="12dp"
+            android:layout_centerVertical="true"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnConsumptionModeCurrent"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="72dp"
+                android:layout_marginEnd="6dp"
+                android:text="@string/consumption_mode_trip"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="24dp"
+                android:backgroundTint="@color/surface_variant"
+                android:textColor="@color/status_value"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnConsumptionModeSinceStart"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="72dp"
+                android:layout_marginEnd="6dp"
+                android:text="@string/consumption_mode_since_start"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="24dp"
+                android:backgroundTint="@color/surface_variant"
+                android:textColor="@color/status_value"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnConsumptionModeLifetime"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="72dp"
+                android:text="@string/consumption_lifetime"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="24dp"
+                android:backgroundTint="@color/surface_variant"
+                android:textColor="@color/status_value"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvConsumptionSoc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:text="@string/consumption_soc_placeholder"
+                android:textColor="@color/status_value"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-condensed"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnConsumptionResetTrip"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="72dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/btn_reset_trip"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="24dp"
+                android:backgroundTint="#9E3333"
+                android:textColor="#FFFFFF"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDrivingHistory"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="72dp"
+                android:text="@string/driving_history_title"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="24dp"
+                android:backgroundTint="@color/surface_variant"
+                android:textColor="@color/status_value"/>
+        </LinearLayout>
+    </RelativeLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_margin="4dp"
+        app:cardCornerRadius="40dp"
+        app:cardBackgroundColor="@color/surface_variant"
+        app:strokeWidth="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/consumption_elapsed_time_label"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+                    <TextView
+                        android:id="@+id/tvConsumptionElapsedTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="01:24:00"
+                        android:textColor="@color/status_value"
+                        android:textSize="36sp"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layoutConsumptionProfiles"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"/>
+            </LinearLayout>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:columnCount="3"
+                android:rowCount="2">
+
+                <!-- Hız -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_rowWeight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/consumption_speed"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+                    <TextView
+                        android:id="@+id/tvConsumptionSpeed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="@color/status_value"
+                        android:textSize="54sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed"/>
+                </LinearLayout>
+
+                <!-- Güç -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_rowWeight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/consumption_power"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+                    <TextView
+                        android:id="@+id/tvConsumptionPower"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="#FFA657"
+                        android:textSize="54sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed"/>
+                </LinearLayout>
+
+                <!-- Ortalama Tüketim -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_rowWeight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/consumption_avg"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+                    <TextView
+                        android:id="@+id/tvConsumptionAvgKwhPer100km"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="#7EE787"
+                        android:textSize="54sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed"/>
+                </LinearLayout>
+
+                <!-- Ortalama Hız -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_rowWeight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView
+                        android:id="@+id/tvConsumptionTimeAvgLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/consumption_avg_speed_only"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+                    <TextView
+                        android:id="@+id/tvConsumptionTimeAvg"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="@color/status_value"
+                        android:textSize="48sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed"/>
+                </LinearLayout>
+
+                <!-- Enerji -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_rowWeight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/consumption_energy"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+                    <TextView
+                        android:id="@+id/tvConsumptionEnergy"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="@color/status_value"
+                        android:textSize="48sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed"/>
+                </LinearLayout>
+
+                <!-- Yol -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_rowWeight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/consumption_trip"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+                    <TextView
+                        android:id="@+id/tvConsumptionTripKm"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="@color/status_value"
+                        android:textSize="48sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed"/>
+                </LinearLayout>
+
+            </GridLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>

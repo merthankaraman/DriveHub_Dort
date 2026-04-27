@@ -47,7 +47,7 @@ public class ChargingHistoryActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_charging_history);
+        setContentView(LayoutVariantResolver.resolveLayout(this, "activity_charging_history"));
 
         mHistoryTableBody = findViewById(R.id.historyTableBody);
 
