@@ -1597,7 +1597,7 @@ public class MainActivity extends AppCompatActivity {
         if (mTvLeftColumn != null) {
             //if (!Float.isNaN(dcAmpExp) && ((Math.abs(dcAmpExp - 511.50) <= 0.4f) || dcAmpExp == 0f)){
             if (dcAmpExp == 511.50f || dcAmpExp == 0f){
-                mTvLeftColumn.setVisibility(View.INVISIBLE);
+                mTvLeftColumn.setVisibility(View.GONE);
             }
             else {
                 mTvLeftColumn.setVisibility(View.VISIBLE);
