@@ -87,16 +87,6 @@
                     android:fontFamily="sans-serif-condensed-light"
                     android:includeFontPadding="false"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="-40dp"
-                    android:text="km/h"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="36sp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
-
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnOpenGaugeApp"
                     style="@style/Widget.Material3.Button.TonalButton"
@@ -111,30 +101,6 @@
                     app:cornerRadius="20dp"
                     android:backgroundTint="@color/panel_button_bg"
                     android:textColor="@color/status_value"/>
-
-                <TextView
-                    android:id="@+id/tvStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:gravity="center"
-                    android:text="Hazır"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="18sp"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/tvBinderStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:fontFamily="monospace"
-                    android:gravity="center"
-                    android:text="Sistem OK"
-                    android:textColor="#7EE787"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

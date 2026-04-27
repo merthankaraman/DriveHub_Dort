@@ -19,7 +19,7 @@
 
     <include
         android:id="@+id/layoutStatusPanel"
-        layout="@layout/layout_panel_status_new"
+        layout="@layout/layout_panel_status"
         android:visibility="gone" />
 
     <include
