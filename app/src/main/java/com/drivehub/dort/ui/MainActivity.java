@@ -69,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_LANGUAGE = "app_language";
     private static final String PREF_SOUND_ENABLED = "sound_enabled";
     private static final String PREF_SOUND_MODE = "sound_mode";
-    private static final String PREF_OVERLAY_ENABLED = "overlay_enabled";
     private static final String PREF_SOUND_PROFILE = "sound_profile";
     private static final String PREF_SOUND_MASTER = "sound_master";
     private static final String PREF_MOTOR_POWER = "motor_power_kw";
@@ -1080,20 +1079,6 @@ public class MainActivity extends AppCompatActivity {
         mBtnSeatRL1  = findViewById(R.id.btnSeatRL1);
         mBtnSeatRL2  = findViewById(R.id.btnSeatRL2);
         mBtnSeatRL3  = findViewById(R.id.btnSeatRL3);
-
-        // Overlay görünürlüğü (klima ekranı üstünde)
-        SwitchCompat swOverlay = findViewById(R.id.switchOverlay);
-        if (swOverlay != null) {
-            SharedPreferences p = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-            boolean enabled = p.getBoolean(PREF_OVERLAY_ENABLED, false);
-            swOverlay.setChecked(enabled);
-            swOverlay.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                p.edit().putBoolean(PREF_OVERLAY_ENABLED, isChecked).apply();
-                Intent i = new Intent(this, MG4ControlService.class);
-                i.setAction(isChecked ? "OVERLAY_ON" : "OVERLAY_OFF");
-                startService(i);
-            });
-        }
 
         Button btnShowHistory = findViewById(R.id.btnShowChargingHistory);
         if (btnShowHistory != null) {

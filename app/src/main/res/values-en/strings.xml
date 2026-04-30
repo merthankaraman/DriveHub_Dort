@@ -168,7 +168,6 @@
     <string name="climate">HEATING</string>
     <string name="climate_settings">♨ Heating settings</string>
     <string name="climate_panel_title">HEATING SETTINGS</string>
-    <string name="climate_overlay_hint">Heating shortcut on overlay</string>
     <string name="heating_steering">STEERING HEAT</string>
     <string name="heating_seat_left">LEFT SEAT</string>
     <string name="heating_seat_right">RIGHT SEAT</string>

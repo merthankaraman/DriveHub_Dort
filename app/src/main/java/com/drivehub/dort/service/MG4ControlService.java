@@ -174,20 +174,6 @@ public class MG4ControlService extends Service {
     private BroadcastReceiver mHardkeyReceiver;
     private BroadcastReceiver mScreenWakeReceiver;
 
-    // Overlay
-    private static final int COLOR_HEAT_ON  = 0xFF9E3333;
-    private static final int COLOR_INACTIVE = 0xFF21262D;
-    // Merkez offseti (px) — araca yükleyince deneme/yanılma ile ayarla
-    private static final int OVERLAY_OFFSET_PX = 200;
-
-    private WindowManager mWindowManager;
-    private View           mOverlayLeft;   // DIR + SOL koltuk
-    private View           mOverlayRight;  // SAĞ koltuk
-    private Button         mBtnOvSteer;
-    private View           mBtnOvSeatL;
-    private View           mBtnOvSeatR;
-    private View           mOvSeatLBar1, mOvSeatLBar2, mOvSeatLBar3;
-    private View           mOvSeatRBar1, mOvSeatRBar2, mOvSeatRBar3;
     /** Sesli asistan sonuç bandı (klima overlay’inden ayrı) */
     private View mVoiceFeedbackOverlay;
     private final Runnable mVoiceFeedbackHideRunnable = this::removeVoiceFeedbackOverlay;
@@ -201,9 +187,6 @@ public class MG4ControlService extends Service {
     private long mVoiceOneShotLastPartialMs;
     private final Runnable mVoiceOneShotDelayedOverlayEnd = () ->
             publishVoiceOverlayMode(VOICE_OVERLAY_MODE_LISTEN_END, "", "");
-    private int            mSteerLevel = 0;
-    private int            mSeatLLevel = 0;
-    private int            mSeatRLevel = 0;
 
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
@@ -420,14 +403,6 @@ public class MG4ControlService extends Service {
 
         SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
         MG4Hardware.setSoundEnabled(prefs.getBoolean("sound_enabled", false));
-        boolean overlayEnabled = prefs.getBoolean("overlay_enabled", false);
-        if (overlayEnabled) {
-            showOverlay();
-        } else {
-            if (MG4Hardware.isLogEnabled()) {
-                Log.i(TAG, "Overlay kullanıcı ayarı nedeniyle kapalı (overlay_enabled=false)");
-            }
-        }
 
         // EngineSoundManager'ı her durumda servis tarafında başlat.
         // Sesin açık/kapalı olması her 100 ms'de PREF_SOUND_ENABLED'den okunuyor.
@@ -544,7 +519,6 @@ public class MG4ControlService extends Service {
             try { unregisterReceiver(mScreenWakeReceiver); } catch (Exception ignored) {}
         }
         removeVoiceFeedbackOverlay();
-        removeOverlay();
         MG4Hardware.destroy();
         mSoundHandler.removeCallbacks(mSoundRunnable);
         mMainHandler.removeCallbacks(mOnePedalRestoreRetryRunnable);
@@ -763,159 +737,6 @@ public class MG4ControlService extends Service {
     @Override
     public IBinder onBind(Intent intent) { return null; }
 
-    // -------------------------------------------------------------------------
-    // Floating overlay — ısıtma hızlı erişim
-    // -------------------------------------------------------------------------
-
-    // inflate(..., null) zorunlu — overlay view'lar WindowManager'a eklenir, parent yoktur
-    @SuppressLint("InflateParams")
-    private void showOverlay() {
-        try {
-            // Eski overlay varsa temizle
-            removeOverlay();
-
-            mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-            LayoutInflater inflater = LayoutInflater.from(this);
-
-            int flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                    | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
-
-            // --- SOL GRUP (DIR + SOL koltuk) ---
-            mOverlayLeft = inflater.inflate(R.layout.overlay_left, null);
-
-            // Ekran genişliği — sol grubun x konumunu hesaplamak için
-            int screenW = getResources().getDisplayMetrics().widthPixels;
-            int centerX = screenW / 2;
-
-            WindowManager.LayoutParams lpLeft = new WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                    flags, PixelFormat.TRANSLUCENT);
-            // Sol grup: merkez - offset - tahmini grup genişliği (~120dp→px)
-            int groupWidthPx = Math.round(120 * getResources().getDisplayMetrics().density);
-            lpLeft.gravity = Gravity.TOP | Gravity.START;
-            lpLeft.x = centerX - OVERLAY_OFFSET_PX - groupWidthPx;
-            lpLeft.y = 0;
-
-            mBtnOvSteer = mOverlayLeft.findViewById(R.id.btnOvSteer);
-            mBtnOvSeatL = mOverlayLeft.findViewById(R.id.btnOvSeatL);
-            mOvSeatLBar1 = mOverlayLeft.findViewById(R.id.ovSeatLBar1);
-            mOvSeatLBar2 = mOverlayLeft.findViewById(R.id.ovSeatLBar2);
-            mOvSeatLBar3 = mOverlayLeft.findViewById(R.id.ovSeatLBar3);
-
-            mBtnOvSteer.setOnClickListener(v -> {
-                mSteerLevel = (mSteerLevel == 0) ? 1 : 0;
-                ovSteer(mSteerLevel);
-            });
-            mBtnOvSeatL.setOnClickListener(v -> showSeatPopup(v, true));
-
-            mWindowManager.addView(mOverlayLeft, lpLeft);
-
-            // --- SAĞ GRUP (SAĞ koltuk) ---
-            mOverlayRight = inflater.inflate(R.layout.overlay_right, null);
-
-            WindowManager.LayoutParams lpRight = new WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                    flags, PixelFormat.TRANSLUCENT);
-            // Sağ grup: merkez + offset
-            lpRight.gravity = Gravity.TOP | Gravity.START;
-            lpRight.x = centerX + OVERLAY_OFFSET_PX;
-            lpRight.y = 0;
-
-            mBtnOvSeatR = mOverlayRight.findViewById(R.id.btnOvSeatR);
-            mOvSeatRBar1 = mOverlayRight.findViewById(R.id.ovSeatRBar1);
-            mOvSeatRBar2 = mOverlayRight.findViewById(R.id.ovSeatRBar2);
-            mOvSeatRBar3 = mOverlayRight.findViewById(R.id.ovSeatRBar3);
-
-            mBtnOvSeatR.setOnClickListener(v -> showSeatPopup(v, false));
-
-            mWindowManager.addView(mOverlayRight, lpRight);
-
-            // CarHvacManager callback'ini kayıt et
-            MG4Hardware.setHvacListener(mHvacListener);
-
-            if (MG4Hardware.isLogEnabled()) {
-                Log.i(TAG, "Overlay eklendi — sol x=" + (-OVERLAY_OFFSET_PX)
-                        + "  sağ x=+" + OVERLAY_OFFSET_PX);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Overlay eklenemedi: " + e.getMessage());
-        }
-    }
-
-    // Açık olan seat popup view'u (ikisi aynı anda açılmasın)
-    private View mSeatPopupView;
-
-    @SuppressLint("InflateParams")
-    private void showSeatPopup(View anchor, boolean isLeft) {
-        // Önceki popup varsa kapat
-        dismissSeatPopup();
-
-        LayoutInflater inflater = LayoutInflater.from(this);
-        mSeatPopupView = inflater.inflate(R.layout.overlay_seat_popup, null);
-
-        int currentLevel = isLeft ? mSeatLLevel : mSeatRLevel;
-
-        int[] ids = { R.id.popupOff, R.id.popup1, R.id.popup2, R.id.popup3 };
-        for (int i = 0; i < ids.length; i++) {
-            Button b = mSeatPopupView.findViewById(ids[i]);
-            boolean active = (i == currentLevel);
-            b.setBackgroundTintList(ColorStateList.valueOf(active ? COLOR_HEAT_ON : COLOR_INACTIVE));
-            b.setTextColor(active ? 0xFFFFFFFF : 0xFF8B949E);
-        }
-
-        // Popup item tıklamaları
-        for (int i = 0; i < ids.length; i++) {
-            final int level = i;
-            mSeatPopupView.findViewById(ids[i]).setOnClickListener(v -> {
-                if (isLeft) ovSeatL(level);
-                else        ovSeatR(level);
-                dismissSeatPopup();
-            });
-        }
-
-        // Anchor konumunu bul (sağ taraftan offset hesapla)
-        int[] loc = new int[2];
-        anchor.getLocationOnScreen(loc);
-        int screenW = getResources().getDisplayMetrics().widthPixels;
-        // x: sağdan mesafe (sağ üst yerleşim için)
-        int xFromRight = screenW - loc[0] - anchor.getWidth();
-
-        WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                        | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                PixelFormat.TRANSLUCENT);
-        lp.gravity = Gravity.TOP | Gravity.END;
-        lp.x = xFromRight;
-        lp.y = loc[1] + anchor.getHeight() + 4;
-
-        mWindowManager.addView(mSeatPopupView, lp);
-    }
-
-    private void dismissSeatPopup() {
-        if (mSeatPopupView != null) {
-            try { mWindowManager.removeView(mSeatPopupView); } catch (Exception ignored) {}
-            mSeatPopupView = null;
-        }
-    }
-
-    private void removeOverlay() {
-        MG4Hardware.setHvacListener(null);
-        dismissSeatPopup();
-        if (mWindowManager != null) {
-            if (mOverlayLeft  != null) try { mWindowManager.removeView(mOverlayLeft);  } catch (Exception ignored) {}
-            if (mOverlayRight != null) try { mWindowManager.removeView(mOverlayRight); } catch (Exception ignored) {}
-        }
-        mOverlayLeft = null;
-        mOverlayRight = null;
-    }
-
     private void handleVoiceFeedbackOverlayIntent(Intent intent) {
         String mode = intent.getStringExtra(EXTRA_VOICE_OVERLAY_MODE);
         if (mode == null) {
@@ -1093,99 +914,6 @@ public class MG4ControlService extends Service {
         } catch (Throwable ignored) {
         }
         mVoiceFeedbackOverlay = null;
-    }
-
-    // -------------------------------------------------------------------------
-    // HVAC callback — CarHvacManager property değişikliklerini dinle
-    // -------------------------------------------------------------------------
-
-    /**
-     * MG4Hardware'e kayıt edilir. CarHvacManager bir property değiştiğinde çağrılır.
-     * propId: PROP_STEERING_HEAT / PROP_SEAT_HEAT_L / PROP_SEAT_HEAT_R
-     * value : yeni değer (int)
-     */
-    private final MG4Hardware.HvacListener mHvacListener =
-            (propId, value) -> mMainHandler.post(() -> onHvacChanged(propId, value));
-
-    private void onHvacChanged(int propId, int value) {
-        if (mOverlayLeft == null || mOverlayRight == null) return;
-        Log.d(TAG, "onHvacChanged propId=0x" + Integer.toHexString(propId) + " value=" + value);
-
-        switch (propId) {
-            case MG4Hardware.PROP_STEERING_HEAT_PUB: {
-                int newSteer = (value > 0) ? 1 : 0;
-                if (newSteer != mSteerLevel) {
-                    mSteerLevel = newSteer;
-                    applySteerUi(mSteerLevel);
-                }
-                break;
-            }
-            case MG4Hardware.PROP_SEAT_HEAT_L_PUB:
-                if (value != mSeatLLevel) {
-                    mSeatLLevel = value;
-                    applySeatLUi(mSeatLLevel);
-                }
-                break;
-            case MG4Hardware.PROP_SEAT_HEAT_R_PUB:
-                if (value != mSeatRLevel) {
-                    mSeatRLevel = value;
-                    applySeatRUi(mSeatRLevel);
-                }
-                break;
-        }
-    }
-
-    /** Direksiyon ısıtma UI'ı — sadece görsel (yazma yok) */
-    private void applySteerUi(int level) {
-        if (mBtnOvSteer == null) return;
-        mBtnOvSteer.setBackgroundTintList(
-                ColorStateList.valueOf(level > 0 ? COLOR_HEAT_ON : 0xFFFFA657));
-        mBtnOvSteer.setTextColor(0xFFFFFFFF);
-    }
-
-    /** Sol koltuk UI'ı — sadece görsel */
-    private void applySeatLUi(int level) {
-        if (mBtnOvSeatL == null) return;
-        mBtnOvSeatL.setBackgroundColor(level > 0 ? COLOR_HEAT_ON : 0xFFFFA657);
-        updateSeatBars(mOvSeatLBar1, mOvSeatLBar2, mOvSeatLBar3, level);
-    }
-
-    /** Sağ koltuk UI'ı — sadece görsel */
-    private void applySeatRUi(int level) {
-        if (mBtnOvSeatR == null) return;
-        mBtnOvSeatR.setBackgroundColor(level > 0 ? COLOR_HEAT_ON : 0xFFFFA657);
-        updateSeatBars(mOvSeatRBar1, mOvSeatRBar2, mOvSeatRBar3, level);
-    }
-
-    private void ovSteer(int level) {
-        new Thread(() -> MG4Hardware.setSteeringHeat(level > 0)).start();
-        applySteerUi(level);
-        updateNotification("Direksiyon: " + (level == 0 ? "Kapalı" : "Açık"));
-    }
-
-    private void ovSeatL(int level) {
-        mSeatLLevel = level;
-        final int l = level;
-        new Thread(() -> MG4Hardware.setSeatHeatLeft(l)).start();
-        applySeatLUi(level);
-        updateNotification("Sol Koltuk: " + (level == 0 ? "Kapalı" : "Sev." + level));
-    }
-
-    private void ovSeatR(int level) {
-        mSeatRLevel = level;
-        final int l = level;
-        new Thread(() -> MG4Hardware.setSeatHeatRight(l)).start();
-        applySeatRUi(level);
-        updateNotification("Sağ Koltuk: " + (level == 0 ? "Kapalı" : "Sev." + level));
-    }
-
-    /** Seviye çubuklarını güncelle: level=0→hepsi gri, 1→1 kırmızı, 2→2, 3→3 */
-    private void updateSeatBars(View bar1, View bar2, View bar3, int level) {
-        int on  = 0xFFBB3333;
-        int off = 0xFF3D2020;
-        bar1.setBackgroundColor(level >= 1 ? on : off);
-        bar2.setBackgroundColor(level >= 2 ? on : off);
-        bar3.setBackgroundColor(level >= 3 ? on : off);
     }
 
     // -------------------------------------------------------------------------
@@ -2033,14 +1761,6 @@ public class MG4ControlService extends Service {
                 break;
             case ACTION_VOICE_ONESHOT_START:
                 startVoiceOneShotSession();
-                break;
-            case "OVERLAY_ON":
-                showOverlay();
-                updateNotification("Overlay: Açık");
-                break;
-            case "OVERLAY_OFF":
-                removeOverlay();
-                updateNotification("Overlay: Kapalı");
                 break;
             case ACTION_VOICE_FEEDBACK_OVERLAY:
                 handleVoiceFeedbackOverlayIntent(intent);

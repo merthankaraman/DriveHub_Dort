@@ -41,31 +41,6 @@
 
         </LinearLayout>
 
-        <!-- Overlay (Ã¼stte Ä±sÄ±tma kÄ±sayolu) aÃ§/kapa -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/climate_overlay_hint"
-                android:textColor="@color/status_value"
-                android:textSize="12sp" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchOverlay"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="@color/status_value" />
-
-        </LinearLayout>
-
         <!-- DÄ°REKSÄ°YON ISITMA -->
         <TextView
             android:layout_width="match_parent"
