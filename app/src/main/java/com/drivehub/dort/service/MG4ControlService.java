@@ -214,7 +214,7 @@ public class MG4ControlService extends Service {
     private static final long REMEMBER_APPLY_START_UP_DELAY_MS = 5_000L;
     private static final long REMEMBER_APPLY_LOOP_DELAY_MS = 1_000L;
     /** Ekran uyandıktan sonra profil denemesinden önce bekle (HAL/property otursun). */
-    private static final long REMEMBER_APPLY_AFTER_SCREEN_ON_SETTLE_MS = 2_000L;
+    private static final long REMEMBER_APPLY_AFTER_SCREEN_ON_SETTLE_MS = 10_000L;
     private static final long REMEMBER_APPLY_SETTLE_POLL_MS = 200L;
     /** Son döngüde ekran interactive miydi (uyanınca 2 sn settle için). */
     private boolean mRememberLastScreenInteractive = true;
