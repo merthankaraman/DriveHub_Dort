@@ -838,15 +838,23 @@ public class MainActivity extends AppCompatActivity {
 
         // Yeni layout varyantı switch'i (ör. activity_main_new, layout_panel_*_new)
         SwitchCompat swUseNewLayouts = findViewById(R.id.switchUseNewLayouts);
-        if (swUseNewLayouts != null) {
-            boolean useNewLayouts = LayoutVariantResolver.isNewLayoutsEnabled(this);
-            swUseNewLayouts.setChecked(useNewLayouts);
-            swUseNewLayouts.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                LayoutVariantResolver.setNewLayoutsEnabled(this, isChecked);
-                sSkipNextViewHierarchyRestore = true;
-                // Kaynağı anında değiştir: aktivite yeniden oluşturulur.
-                recreate();
-            });
+        View UseNewLayoutsPanel = findViewById(R.id.UseNewLayoutsPanel);
+        boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0; //TODO
+        if (showDemo) {
+            UseNewLayoutsPanel.setVisibility(View.VISIBLE);
+            if (swUseNewLayouts != null) {
+                boolean useNewLayouts = LayoutVariantResolver.isNewLayoutsEnabled(this);
+                swUseNewLayouts.setChecked(useNewLayouts);
+                swUseNewLayouts.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    LayoutVariantResolver.setNewLayoutsEnabled(this, isChecked);
+                    sSkipNextViewHierarchyRestore = true;
+                    // Kaynağı anında değiştir: aktivite yeniden oluşturulur.
+                    recreate();
+                });
+            }
+        }
+        else{
+            UseNewLayoutsPanel.setVisibility(View.GONE);
         }
 
         // Tema butonları: Gündüz / Gece / Oto (araç sistemine göre)
@@ -953,7 +961,7 @@ public class MainActivity extends AppCompatActivity {
         View btnDemo = findViewById(R.id.btnDemo);
         if (btnDemo != null) {
             // BuildConfig yerine: debug APK'da genelde FLAG_DEBUGGABLE set (release'te genelde kapalı)
-            boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+            //boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
             if (showDemo) {
                 btnDemo.setVisibility(View.VISIBLE);
                 btnDemo.setOnClickListener(v ->
