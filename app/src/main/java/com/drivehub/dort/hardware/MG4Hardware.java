@@ -113,6 +113,12 @@ public class MG4Hardware {
     public static int readTrackSensorInt(int propId) {
         return getIntPropertyCPM(propId, AREA_GLOBAL);
     }
+    public static float readTrackSensorFloat(int propId, int area) {
+        return getFloatPropertyCPM(propId, area);
+    }
+    public static int readTrackSensorInt(int propId, int area) {
+        return getIntPropertyCPM(propId, area);
+    }
     public static void writeTrackSensorInt(int propId, int value) {
         setIntPropertyCPM(propId, AREA_GLOBAL, value);
     }
