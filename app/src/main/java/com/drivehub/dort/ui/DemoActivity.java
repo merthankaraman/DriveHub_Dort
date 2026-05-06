@@ -457,6 +457,8 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f444), "SCU_SOC_MODE_STATUS");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21401552), "SENSOR_DRIVICE_MODE");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140155f), "SENSOR_WHEEL_FEEL");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21401560), "SENSOR_WHEEL_FEEL_OPEN");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11510306), "WHEEL_TICK");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f449), "SOC_ELECTRIC_MANAGEMENT");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140381f), "TCS_OPNG_MD");
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11403820), "TCS_OPNG_STS");
