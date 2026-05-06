@@ -187,9 +187,9 @@ public class MG4ControlService extends Service {
     };
 
     /** 100 ms'lik ana görev periyodu (enerji, mesafe, hazır/şarj durumu vb.). */
-    private static final int MAIN_TASK_INTERVAL_MS = 30;
+    private static final int MAIN_TASK_INTERVAL_MS = 50;
     private static final int SOUND_TASK_MS = 30;
-    private static final long TELEMETRY_INTERVAL_MS = 30L;
+    private static final long TELEMETRY_INTERVAL_MS = 50L;
     /** Hayat boyu km/kWh'ı bu kadar integrasyon sonrası bir kez hafızaya yaz (≈30 sn). */
     private static final int LIFETIME_PERSIST_MS = 30000;
     private final Handler mConsumptionHandler = new Handler(Looper.getMainLooper());
