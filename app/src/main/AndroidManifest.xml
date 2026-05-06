@@ -11,7 +11,6 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
@@ -69,12 +68,6 @@
             android:screenOrientation="landscape"
             android:theme="@style/Theme.DriveHubDort" />
 
-        <activity
-            android:name=".ui.VoiceAssistantActivity"
-            android:exported="false"
-            android:launchMode="singleTop"
-            android:screenOrientation="landscape"
-            android:theme="@style/Theme.DriveHubDort" />
 
         <!-- Dış uygulamalardan motor sesini AÇMA Activity'si -->
         <activity
@@ -117,24 +110,6 @@
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
-            </intent-filter>
-        </receiver>
-
-        <!-- Dış tetikleyici: uygulamayı foreground'a almadan tek atımlık sesli asistan -->
-        <!--
-        adb shell am broadcast -a com.drivehub.dort.action.START_VOICE_ASSISTANT_ACTIVITY -n com.drivehub.dort/com.drivehub.dort.receiver.StartVoiceAssistantReceiver
-        adb shell am broadcast -a com.drivehub.dort.action.START_VOICE_ASSISTANT_ACTIVITY -p com.drivehub.dort
-
-
-        adb shell am broadcast -a com.drivehub.dort.action.START_VOICE_ASSISTANT_ACTIVITY -n com.drivehub.dort.sim/com.drivehub.dort.receiver.StartVoiceAssistantReceiver
-        adb shell am broadcast -a com.drivehub.dort.action.START_VOICE_ASSISTANT_ACTIVITY -p com.drivehub.dort.sim
-        -->
-        <receiver
-            android:name=".receiver.StartVoiceAssistantReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.drivehub.dort.action.START_VOICE_ASSISTANT_ACTIVITY" />
-                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
 

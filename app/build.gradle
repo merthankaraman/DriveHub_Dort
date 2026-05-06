@@ -56,8 +56,6 @@ dependencies {
     // Açık bağımlılık: AppCompat üzerinden gelen transitive bazen eksik görünebiliyor;
     // CoreComponentFactory (androidx.core.app) sınıfları APK'da kesin dursun.
     implementation "androidx.core:core:1.13.1"
-    // Yerel Türkçe konuşma tanıma (Vosk). 0.3.75+: 16 KB sayfa boyutu + JNA 5.18.1 (Play / Android 15+).
-    implementation "com.alphacephei:vosk-android:0.3.75"
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity

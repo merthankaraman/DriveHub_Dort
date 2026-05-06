@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Sesli asistan üst overlay: otomatik kapanma (ms) -->
-    <integer name="voice_feedback_overlay_dismiss_ms">2000</integer>
-    <!-- One-shot sesli asistan: final sonuç satırını en az bu kadar tut (ms) -->
-    <integer name="voice_oneshot_result_hold_ms">3000</integer>
-</resources>

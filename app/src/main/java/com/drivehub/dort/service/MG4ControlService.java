@@ -13,8 +13,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.graphics.PixelFormat;
 import android.media.AudioManager;
 import android.media.session.MediaController;
@@ -23,7 +21,6 @@ import android.media.session.PlaybackState;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.LocaleList;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.SystemClock;
@@ -38,10 +35,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.os.LocaleListCompat;
 
 import com.drivehub.dort.R;
 import com.drivehub.dort.hardware.MG4Hardware;
@@ -49,21 +44,9 @@ import com.drivehub.dort.audio.EngineSoundManager;
 import com.drivehub.dort.model.DriveMode;
 import com.drivehub.dort.model.RegenLevel;
 import com.drivehub.dort.util.ChargingHistory;
-import com.drivehub.dort.voice.VoiceHypothesisResolver;
-import com.drivehub.dort.voice.VoiceModelDownloader;
-import com.drivehub.dort.voice.VoiceRecognitionUtils;
 
 import java.util.List;
-import java.util.Locale;
 import java.lang.reflect.Method;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.vosk.Model;
-import org.vosk.Recognizer;
-import org.vosk.android.RecognitionListener;
-import org.vosk.android.SpeechService;
 
 public class MG4ControlService extends Service {
 
@@ -72,21 +55,6 @@ public class MG4ControlService extends Service {
     private static final int    NOTIF_ID   = 1001;
     /** Ekrandan müzik duraklat/devam için Activity'nin servise gönderdiği action */
     public static final String ACTION_TOGGLE_MUSIC = "com.drivehub.dort.TOGGLE_MUSIC";
-    /** Dış tetikleyici: ekran açmadan tek atımlık sesli komut dinleme */
-    public static final String ACTION_VOICE_ONESHOT_START = "com.drivehub.dort.VOICE_ONESHOT_START";
-    /** Sesli asistan — üstte duyulan + işlem metni (overlay); extra: heard / action metinleri */
-    public static final String ACTION_VOICE_FEEDBACK_OVERLAY = "com.drivehub.dort.VOICE_FEEDBACK_OVERLAY";
-    public static final String EXTRA_VOICE_HEARD = "voice_heard";
-    public static final String EXTRA_VOICE_ACTION = "voice_action";
-    public static final String EXTRA_VOICE_OVERLAY_MODE = "voice_overlay_mode";
-    /** Dinleme başladı — overlay açılır, kapanış zamanlayıcısı iptal */
-    public static final String VOICE_OVERLAY_MODE_LISTEN_START = "listen_start";
-    /** Kısmi tanıma — duyulan satırı güncellenir */
-    public static final String VOICE_OVERLAY_MODE_PARTIAL = "partial";
-    /** Final sonuç — duyulan + işlem; dinleme sürüyorsa kapanış yok */
-    public static final String VOICE_OVERLAY_MODE_RESULT = "result";
-    /** Dinleme oturumu bitti — {@link R.integer#voice_feedback_overlay_dismiss_ms} sonra kapanır */
-    public static final String VOICE_OVERLAY_MODE_LISTEN_END = "listen_end";
     /** Ayarlarda switch açıldığında veya ekran uyandığında ADB'yi tekrar aktifleştirme isteği. */
     public static final String ACTION_ENSURE_USB_DEBUG = "com.drivehub.dort.ENSURE_USB_DEBUG";
     private static final String PREF_ALWAYS_USB_DEBUG = "always_usb_debug";
@@ -174,19 +142,6 @@ public class MG4ControlService extends Service {
     private BroadcastReceiver mHardkeyReceiver;
     private BroadcastReceiver mScreenWakeReceiver;
 
-    /** Sesli asistan sonuç bandı (klima overlay’inden ayrı) */
-    private View mVoiceFeedbackOverlay;
-    private final Runnable mVoiceFeedbackHideRunnable = this::removeVoiceFeedbackOverlay;
-    private final ExecutorService mVoiceOneShotExecutor = Executors.newSingleThreadExecutor();
-    private SpeechService mVoiceOneShotSpeechService;
-    private Model mVoiceOneShotModel;
-    private Recognizer mVoiceOneShotRecognizer;
-    private final AtomicBoolean mVoiceOneShotBusy = new AtomicBoolean(false);
-    private final AtomicBoolean mVoiceOneShotHandled = new AtomicBoolean(false);
-    private String mVoiceOneShotLastPartial = "";
-    private long mVoiceOneShotLastPartialMs;
-    private final Runnable mVoiceOneShotDelayedOverlayEnd = () ->
-            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_LISTEN_END, "", "");
 
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
@@ -518,22 +473,11 @@ public class MG4ControlService extends Service {
         if (mScreenWakeReceiver != null) {
             try { unregisterReceiver(mScreenWakeReceiver); } catch (Exception ignored) {}
         }
-        removeVoiceFeedbackOverlay();
         MG4Hardware.destroy();
         mSoundHandler.removeCallbacks(mSoundRunnable);
         mMainHandler.removeCallbacks(mOnePedalRestoreRetryRunnable);
         mChargingCheckHandler.removeCallbacks(mChargingCheckRunnable);
         mConsumptionHandler.removeCallbacks(mConsumptionIntegrationRunnable);
-        stopVoiceOneShotSession(false);
-        mVoiceOneShotExecutor.shutdownNow();
-        if (mVoiceOneShotRecognizer != null) {
-            try { mVoiceOneShotRecognizer.close(); } catch (Throwable ignored) {}
-            mVoiceOneShotRecognizer = null;
-        }
-        if (mVoiceOneShotModel != null) {
-            try { mVoiceOneShotModel.close(); } catch (Throwable ignored) {}
-            mVoiceOneShotModel = null;
-        }
     }
 
     /** Profil remember denemeleri için ekranın gerçekten açık olup olmadığını kontrol et. */
@@ -736,185 +680,6 @@ public class MG4ControlService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) { return null; }
-
-    private void handleVoiceFeedbackOverlayIntent(Intent intent) {
-        String mode = intent.getStringExtra(EXTRA_VOICE_OVERLAY_MODE);
-        if (mode == null) {
-            mode = VOICE_OVERLAY_MODE_RESULT;
-        }
-        String heard = intent.getStringExtra(EXTRA_VOICE_HEARD);
-        String action = intent.getStringExtra(EXTRA_VOICE_ACTION);
-        switch (mode) {
-            case VOICE_OVERLAY_MODE_LISTEN_START:
-                mMainHandler.post(this::voiceOverlayOnListenStart);
-                break;
-            case VOICE_OVERLAY_MODE_PARTIAL:
-                mMainHandler.post(() -> voiceOverlayOnPartial(heard));
-                break;
-            case VOICE_OVERLAY_MODE_RESULT:
-                mMainHandler.post(() -> voiceOverlayOnResult(heard, action));
-                break;
-            case VOICE_OVERLAY_MODE_LISTEN_END:
-                mMainHandler.post(this::voiceOverlayOnListenEnd);
-                break;
-            default:
-                mMainHandler.post(() -> voiceOverlayOnResult(heard, action));
-                break;
-        }
-    }
-
-    private void voiceOverlayOnListenStart() {
-        mMainHandler.removeCallbacks(mVoiceFeedbackHideRunnable);
-        String status = overlayUiGetString(R.string.voice_overlay_listening_status);
-        applyVoiceFeedbackOverlayContent(overlayUiGetString(R.string.voice_overlay_line_heard, "…"),
-                overlayUiGetString(R.string.voice_overlay_line_action, status));
-    }
-
-    private void voiceOverlayOnPartial(String heard) {
-        mMainHandler.removeCallbacks(mVoiceFeedbackHideRunnable);
-        if (heard == null) {
-            heard = "";
-        }
-        heard = heard.trim();
-        String status = overlayUiGetString(R.string.voice_overlay_listening_status);
-        if (heard.isEmpty()) {
-            applyVoiceFeedbackOverlayContent(overlayUiGetString(R.string.voice_overlay_line_heard, "…"),
-                    overlayUiGetString(R.string.voice_overlay_line_action, status));
-        } else {
-            applyVoiceFeedbackOverlayContent(overlayUiGetString(R.string.voice_overlay_line_heard, heard),
-                    overlayUiGetString(R.string.voice_overlay_line_action, status));
-        }
-    }
-
-    private void voiceOverlayOnResult(String heard, String actionLine) {
-        mMainHandler.removeCallbacks(mVoiceFeedbackHideRunnable);
-        if (heard == null) {
-            heard = "";
-        }
-        if (actionLine == null) {
-            actionLine = "";
-        }
-        heard = heard.trim();
-        actionLine = actionLine.trim();
-        if (heard.isEmpty() && actionLine.isEmpty()) {
-            return;
-        }
-        applyVoiceFeedbackOverlayContent(
-                heard.isEmpty() ? null : overlayUiGetString(R.string.voice_overlay_line_heard, heard),
-                overlayUiGetString(R.string.voice_overlay_line_action, actionLine));
-    }
-
-    /**
-     * Servis {@code getString()} sistem dilini kullanır; overlay uygulama dilinde (PerAppLocales) olsun.
-     * Ayar yoksa varsayılan tr-TR.
-     */
-    private Context overlayUiContext() {
-        Configuration conf = new Configuration(getResources().getConfiguration());
-        LocaleListCompat appLocales = AppCompatDelegate.getApplicationLocales();
-        final Locale[] locales;
-        if (!appLocales.isEmpty()) {
-            int n = appLocales.size();
-            locales = new Locale[n];
-            for (int i = 0; i < n; i++) {
-                locales[i] = appLocales.get(i);
-            }
-        } else {
-            locales = new Locale[]{new Locale("tr", "TR")};
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            conf.setLocales(new LocaleList(locales));
-        } else {
-            conf.locale = locales[0];
-        }
-        return createConfigurationContext(conf);
-    }
-
-    private String overlayUiGetString(int resId, Object... formatArgs) {
-        Resources res = overlayUiContext().getResources();
-        if (formatArgs != null && formatArgs.length > 0) {
-            return res.getString(resId, formatArgs);
-        }
-        return res.getString(resId);
-    }
-
-    private void voiceOverlayOnListenEnd() {
-        int dismissMs = getResources().getInteger(R.integer.voice_feedback_overlay_dismiss_ms);
-        mMainHandler.removeCallbacks(mVoiceFeedbackHideRunnable);
-        mMainHandler.postDelayed(mVoiceFeedbackHideRunnable, dismissMs);
-    }
-
-    /**
-     * İki satır metin: {@code heardLine} null ise üst satır gizlenir; alt satır her zaman ayarlanır.
-     */
-    private void applyVoiceFeedbackOverlayContent(String heardLineOrNull, String actionLine) {
-        if (actionLine == null || actionLine.trim().isEmpty()) {
-            return;
-        }
-        try {
-            ensureVoiceFeedbackOverlayAttached();
-            TextView tvHeard = mVoiceFeedbackOverlay.findViewById(R.id.voiceOverlayHeard);
-            TextView tvAct = mVoiceFeedbackOverlay.findViewById(R.id.voiceOverlayAction);
-            if (heardLineOrNull == null || heardLineOrNull.isEmpty()) {
-                tvHeard.setVisibility(View.GONE);
-            } else {
-                tvHeard.setVisibility(View.VISIBLE);
-                tvHeard.setText(heardLineOrNull);
-            }
-            tvAct.setText(actionLine);
-        } catch (Throwable e) {
-            Log.w(TAG, "Sesli asistan overlay güncellenemedi: " + e.getMessage());
-        }
-    }
-
-    @SuppressLint("InflateParams")
-    private void ensureVoiceFeedbackOverlayAttached() {
-        if (mVoiceFeedbackOverlay != null) {
-            return;
-        }
-        WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-        if (wm == null) {
-            return;
-        }
-        LayoutInflater inflater = LayoutInflater.from(this);
-        View v = inflater.inflate(R.layout.overlay_voice_feedback, null);
-        int w = getResources().getDimensionPixelSize(R.dimen.voice_overlay_width);
-        int h = getResources().getDimensionPixelSize(R.dimen.voice_overlay_height);
-        // Tıklamalar overlay’e değil alttaki arayüze gitsin (sadece bilgi bandı).
-        int flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
-        WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
-                w,
-                h,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                flags,
-                PixelFormat.TRANSLUCENT);
-        lp.gravity = Gravity.CENTER;
-        lp.x = 0;
-        lp.y = 0;
-        wm.addView(v, lp);
-        mVoiceFeedbackOverlay = v;
-    }
-
-    private void removeVoiceFeedbackOverlay() {
-        mMainHandler.removeCallbacks(mVoiceFeedbackHideRunnable);
-        detachVoiceFeedbackOverlayViewOnly();
-    }
-
-    private void detachVoiceFeedbackOverlayViewOnly() {
-        if (mVoiceFeedbackOverlay == null) {
-            return;
-        }
-        try {
-            WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-            if (wm != null) {
-                wm.removeView(mVoiceFeedbackOverlay);
-            }
-        } catch (Throwable ignored) {
-        }
-        mVoiceFeedbackOverlay = null;
-    }
 
     // -------------------------------------------------------------------------
     // Hardkey receiver
@@ -1462,165 +1227,6 @@ public class MG4ControlService extends Service {
         }
     }
 
-    /** Ekran açmadan tek atımlık ses dinleme (overlay + komut gönderimi). */
-    private void startVoiceOneShotSession() {
-        if (!mVoiceOneShotBusy.compareAndSet(false, true)) {
-            return;
-        }
-        mMainHandler.removeCallbacks(mVoiceOneShotDelayedOverlayEnd);
-        mVoiceOneShotHandled.set(false);
-        mVoiceOneShotLastPartial = "";
-        mVoiceOneShotLastPartialMs = 0L;
-        publishVoiceOverlayMode(VOICE_OVERLAY_MODE_LISTEN_START, "", "");
-
-        mVoiceOneShotExecutor.execute(() -> {
-            try {
-                if (mVoiceOneShotModel == null || mVoiceOneShotRecognizer == null) {
-                    String path = VoiceModelDownloader.ensureModel(this, null);
-                    mVoiceOneShotModel = new Model(path);
-                    mVoiceOneShotRecognizer = new Recognizer(mVoiceOneShotModel, 16000.0f);
-                }
-                // One-shot algılama demo ekranıyla aynı hazırlık akışını kullanır.
-                VoiceRecognitionUtils.prepareRecognizerForCommands(mVoiceOneShotRecognizer);
-            } catch (Throwable e) {
-                publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
-                        getString(R.string.voice_model_error_log, e.getMessage()));
-                stopVoiceOneShotSessionWithDelayedOverlayDismiss();
-                return;
-            }
-
-            mMainHandler.post(() -> {
-                try {
-                    if (mVoiceOneShotSpeechService != null) {
-                        mVoiceOneShotSpeechService.stop();
-                        mVoiceOneShotSpeechService.shutdown();
-                        mVoiceOneShotSpeechService = null;
-                    }
-                    mVoiceOneShotSpeechService = new SpeechService(mVoiceOneShotRecognizer, 16000.0f);
-                    boolean ok = mVoiceOneShotSpeechService.startListening(new RecognitionListener() {
-                        @Override
-                        public void onPartialResult(String hypothesis) {
-                            String t = VoiceRecognitionUtils.extractForDisplay(hypothesis);
-                            long now = SystemClock.elapsedRealtime();
-                            if (t.isEmpty()) {
-                                return;
-                            }
-                            if (t.equals(mVoiceOneShotLastPartial) && (now - mVoiceOneShotLastPartialMs) < 350) {
-                                return;
-                            }
-                            mVoiceOneShotLastPartial = t;
-                            mVoiceOneShotLastPartialMs = now;
-                            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_PARTIAL, t, "");
-                        }
-
-                        @Override
-                        public void onResult(String hypothesis) {
-                            handleVoiceOneShotHypothesis(hypothesis);
-                        }
-
-                        @Override
-                        public void onFinalResult(String hypothesis) {
-                            handleVoiceOneShotHypothesis(hypothesis);
-                        }
-
-                        @Override
-                        public void onError(Exception exception) {
-                            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
-                                    getString(R.string.voice_error, exception.getMessage()));
-                            stopVoiceOneShotSessionWithDelayedOverlayDismiss();
-                        }
-
-                        @Override
-                        public void onTimeout() {
-                            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
-                                    getString(R.string.voice_timeout));
-                            stopVoiceOneShotSessionWithDelayedOverlayDismiss();
-                        }
-                    });
-                    if (!ok) {
-                        publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
-                                getString(R.string.voice_listen_failed));
-                        stopVoiceOneShotSessionWithDelayedOverlayDismiss();
-                    }
-                } catch (Throwable e) {
-                    publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, "",
-                            getString(R.string.voice_mic_busy, e.getMessage()));
-                    stopVoiceOneShotSessionWithDelayedOverlayDismiss();
-                }
-            });
-        });
-    }
-
-    private void handleVoiceOneShotHypothesis(String hypothesis) {
-        if (!mVoiceOneShotBusy.get()) {
-            return;
-        }
-        VoiceHypothesisResolver.Resolution r = VoiceHypothesisResolver.resolve(this, hypothesis);
-        if (r.kind == VoiceHypothesisResolver.Kind.EMPTY) {
-            // Ara/boş sonuçları yoksay: final sonuç gelirse onu işle.
-            return;
-        }
-        if (!mVoiceOneShotHandled.compareAndSet(false, true)) {
-            return;
-        }
-        if (r.kind == VoiceHypothesisResolver.Kind.UNKNOWN) {
-            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, r.heardForOverlay, r.actionForOverlay);
-            stopVoiceOneShotSessionWithDelayedOverlayDismiss();
-            return;
-        }
-
-        if (r.kind == VoiceHypothesisResolver.Kind.NO_MATCH) {
-            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, r.heardForOverlay, r.actionForOverlay);
-            stopVoiceOneShotSessionWithDelayedOverlayDismiss();
-            return;
-        }
-
-        publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, r.heardForOverlay, r.actionForOverlay);
-        try {
-            startService(r.commandIntent);
-        } catch (Throwable e) {
-            publishVoiceOverlayMode(VOICE_OVERLAY_MODE_RESULT, r.commandText,
-                    getString(R.string.voice_command_error, e.getMessage()));
-        }
-        stopVoiceOneShotSessionWithDelayedOverlayDismiss();
-    }
-
-    private void stopVoiceOneShotSessionWithDelayedOverlayDismiss() {
-        mMainHandler.removeCallbacks(mVoiceOneShotDelayedOverlayEnd);
-        int holdMs = getResources().getInteger(R.integer.voice_oneshot_result_hold_ms);
-        if (holdMs < 0) {
-            holdMs = 0;
-        }
-        mMainHandler.postDelayed(mVoiceOneShotDelayedOverlayEnd, holdMs);
-        stopVoiceOneShotSession(false);
-    }
-
-    private void stopVoiceOneShotSession(boolean scheduleOverlayDismiss) {
-        mMainHandler.post(() -> {
-            try {
-                if (mVoiceOneShotSpeechService != null) {
-                    mVoiceOneShotSpeechService.stop();
-                    mVoiceOneShotSpeechService.shutdown();
-                    mVoiceOneShotSpeechService = null;
-                }
-            } catch (Throwable ignored) {
-            }
-            if (scheduleOverlayDismiss) {
-                publishVoiceOverlayMode(VOICE_OVERLAY_MODE_LISTEN_END, "", "");
-            }
-            mVoiceOneShotBusy.set(false);
-        });
-    }
-
-    private void publishVoiceOverlayMode(String mode, String heard, String action) {
-        Intent i = new Intent(this, MG4ControlService.class);
-        i.setAction(ACTION_VOICE_FEEDBACK_OVERLAY);
-        i.putExtra(EXTRA_VOICE_OVERLAY_MODE, mode);
-        i.putExtra(EXTRA_VOICE_HEARD, heard != null ? heard : "");
-        i.putExtra(EXTRA_VOICE_ACTION, action != null ? action : "");
-        startService(i);
-    }
-
     // -------------------------------------------------------------------------
     // Komut yönetimi (MainActivity'den intent ile)
     // -------------------------------------------------------------------------
@@ -1758,12 +1364,6 @@ public class MG4ControlService extends Service {
                 break;
             case ACTION_ENSURE_USB_DEBUG:
                 ensureUsbDebugEnabled("manual");
-                break;
-            case ACTION_VOICE_ONESHOT_START:
-                startVoiceOneShotSession();
-                break;
-            case ACTION_VOICE_FEEDBACK_OVERLAY:
-                handleVoiceFeedbackOverlayIntent(intent);
                 break;
         }
     }
