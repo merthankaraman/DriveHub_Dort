@@ -513,7 +513,6 @@ public class MG4Hardware {
     /** Fren pedal basıncı; -1 = okunamadı (getIntPropertyCPM ile uyumlu) */
     private static volatile int sSensorBrakePedalPressure = -1;
     private static volatile float sSensorWheelAngle = Float.NaN;
-    /** Lastik basınç/sıcaklık: CPM Integer; -1 = okunamadı. {@link #runMainTask()} içinde en fazla 5 sn'de bir okunur. */
     private static volatile int sTirePressureFl = -1;
     private static volatile int sTirePressureFr = -1;
     private static volatile int sTirePressureRl = -1;
@@ -1860,8 +1859,8 @@ public class MG4Hardware {
 
             float speedKmh2 = speedKmh;
             if (speedKmh < 2.5f) speedKmh2 = 0f;
-            //else if (speedKmh > 90) speedKmh2 *= 1.0035f;
-            //else if (speedKmh > 30) speedKmh2 *= 1.0014f;
+            else if (speedKmh > 90) speedKmh2 *= 1.0035f;
+            else if (speedKmh > 30) speedKmh2 *= 1.0014f;
 
             // DC güç (kWh): trapez — önceki tick sDcKw + şimdiki dcKw ortalaması × dt
             if (!Float.isNaN(dcKw)) {
