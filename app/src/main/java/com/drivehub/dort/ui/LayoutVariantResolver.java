@@ -3,6 +3,8 @@ package com.drivehub.dort.ui;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.drivehub.dort.R;
+
 /**
  * "new" layout varyantını aç/kapat ve runtime'da doğru kaynağı seç.
  */
@@ -24,20 +26,20 @@ public final class LayoutVariantResolver {
     }
 
     public static int resolveLayout(Context context, String baseLayoutName) {
-        if (isNewLayoutsEnabled(context)) {
-            int newLayoutId = getLayoutId(context, baseLayoutName + "_new");
-            if (newLayoutId != 0) {
-                return newLayoutId;
-            }
+        boolean useNewLayouts = isNewLayoutsEnabled(context);
+        switch (baseLayoutName) {
+            case "activity_main":
+                return useNewLayouts ? R.layout.activity_main_new : R.layout.activity_main;
+            case "activity_driving_history":
+                return useNewLayouts ? R.layout.activity_driving_history_new : R.layout.activity_driving_history;
+            case "activity_charging_history":
+                return useNewLayouts ? R.layout.activity_charging_history_new : R.layout.activity_charging_history;
+            default:
+                return 0;
         }
-        return getLayoutId(context, baseLayoutName);
     }
 
     public static boolean hasLayout(Context context, String layoutName) {
-        return getLayoutId(context, layoutName) != 0;
-    }
-
-    private static int getLayoutId(Context context, String layoutName) {
-        return context.getResources().getIdentifier(layoutName, "layout", context.getPackageName());
+        return resolveLayout(context, layoutName) != 0;
     }
 }
