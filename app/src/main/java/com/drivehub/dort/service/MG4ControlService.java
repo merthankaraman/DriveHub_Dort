@@ -546,16 +546,30 @@ public class MG4ControlService extends Service {
             }
         }
     }
-
+    private void persistLastRegenLevel(int regenValue) {
+        if (!mDriveRegenRememberInitialized) {
+            return;
+        }
+        getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                .edit()
+                .putInt(PREF_LAST_REGEN_LEVEL, regenValue)
+                .apply();
+    }
+    public void persistLastDriveMode(int driveModeValue) {
+        if (!mDriveRegenRememberInitialized) {
+            return;
+        }
+        getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                .edit()
+                .putInt(PREF_LAST_DRIVE_MODE, driveModeValue)
+                .apply();
+    }
     /** Boot sonrası sürüş modunu otomatik geri yükle (kullanıcı \"sürüş modunu hatırla\" switch'ini açtıysa). */
     private void applyRememberedDriveModeIfNeeded() {
         SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-        boolean rememberEnabled = prefs.getBoolean(PREF_REMEMBER_DRIVE_MODE, false);
+        if (!prefs.getBoolean(PREF_REMEMBER_DRIVE_MODE, false)) return;
+
         int lastValue = prefs.getInt(PREF_LAST_DRIVE_MODE, DriveMode.NORMAL.value);
-        
-        if (!rememberEnabled) {
-            return;
-        }
 
         DriveMode dm = DriveMode.fromValue(lastValue);
         if (dm == null) {
@@ -568,27 +582,6 @@ public class MG4ControlService extends Service {
         }
         mCurrentDriveMode = dm;
         updateNotification("Sürüş: " + mCurrentDriveMode.label);
-    }
-
-    private void persistLastRegenLevel(int regenValue) {
-        if (!mDriveRegenRememberInitialized) {
-            return;
-        }
-        getSharedPreferences("drivehub_dort", MODE_PRIVATE)
-                .edit()
-                .putInt(PREF_LAST_REGEN_LEVEL, regenValue)
-                .apply();
-    }
-    public void persistLastDriveMode(int driveModeValue) {
-        SharedPreferences prefs = getSharedPreferences("drivehub_dort", Context.MODE_PRIVATE);
-        boolean rememberDriveMode = prefs.getBoolean(PREF_REMEMBER_DRIVE_MODE,
-                false
-        );
-        if (rememberDriveMode && mDriveRegenRememberInitialized) {
-            prefs.edit()
-                    .putInt(PREF_LAST_DRIVE_MODE, driveModeValue)
-                    .apply();
-        }
     }
 
     /** Boot sonrası regen seviyesini otomatik geri yükle (kullanıcı \"Regen seviyesini hatırla\" switch'ini açtıysa). */
@@ -1247,7 +1240,7 @@ public class MG4ControlService extends Service {
                 break;
             case "REGEN_SET":
                 RegenLevel rl = RegenLevel.fromValue(
-                        intent.getIntExtra("regenValue", RegenLevel.MEDIUM.value));
+                        intent.getIntExtra("regenValue", RegenLevel.HIGH.value));
                 boolean regenOk = MG4Hardware.setRegenLevel(rl);
                 if (rl == RegenLevel.OFF && !regenOk) {
                     Log.w(TAG, "Regen KAPALI başarısız (Binder null) — araç desteklemiyor olabilir");

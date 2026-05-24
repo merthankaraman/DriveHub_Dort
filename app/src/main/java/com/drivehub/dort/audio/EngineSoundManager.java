@@ -719,9 +719,10 @@ public class EngineSoundManager {
         float speed = mCurrentSpeedKmh;
         float throttle = mSimulatedThrottle;
         long currentTime = System.currentTimeMillis();
+        boolean car_not_in_gear = MG4Hardware.getLastGear() == 1 || MG4Hardware.getLastGear() == 3;
 
         // 1. BOŞTA GAZ VERME
-        if (speed < 0.5f) {
+        if (car_not_in_gear) {
             mCurrentGear = 0;
             float real_acc_pedal_pos;
             if (!mUseManualThrottle)

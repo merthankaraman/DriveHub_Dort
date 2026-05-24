@@ -382,60 +382,26 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.getACValMethodInt("getBackWindowDefroster"), "getBackWindowDefroster");
 */
 
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1a6,0), "ID_TRACK_MODE_IPK");
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140b97c,0), "LEFT_REAR_CAR_WARNING",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140b97d), "RIGHT_REAR_CAR_WARNING",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140b970), "PDC_FRONT_REAR_STS",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140b976), "REAR_LEFT_OBS_SHOW",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140b977), "REAR_MID_LEFT_OBS_SHOW",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140b978), "REAR_MID_RIGHT_OBS_SHOW",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140b97b), "REAR_OBS_CLOSEST_DISTANCE",0);
+        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140b979), "REAR_RIGHT_OBS_SHOW",0);
+
         //closeDrvSeatHeat dene
         //openLoopInner
         //openLoopOutside
         //openLoopAuto
 
 
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600305,0), "SENSOR_TYPE_RPM");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140156d,0), "SENSOR_RPM_STS");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21401594,0), "SENSOR_RPM_STSV",1);
-
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f42d), "BMS_DIS_ESTD_ELEC_RNG");
 
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f418), "BMS_CHRG_RMN_ST_TIME", 2046);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f41a), "BMS_CHRG_STTN_MCHNG_STA",0);
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f405), "BMS_PACK_SOC", 102.3f);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f446), "CLSTR_ELEC_RNG",0);
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160f41b), "CRNT_AVG_ELEC_CSUMP", 82.3f);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1540050f,0x31), "HVAC_ACTUAL_FAN_SPEED_RPM");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1540252e,0x31), "HVAC_AC_DRVRTEMSWA",0);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x15402543,0x31), "HVAC_AIRCLNR_FLTR_CSUMLVL",0);
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540253f), "HVAC_AIRCLNR_FLTR_LIFE",0);
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x15402542), "HVAC_AIRCLNR_IONIZER",0);
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540253b), "HVAC_AIRCLNR_ONOFF_SW",0);
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x15402510), "HVAC_ANION_STATUS",0);
-        appendValueInt(sb, MG4Hardware.getAqsSensitivity(), "AQS", 3);
-        appendValueInt(sb, MG4Hardware.getPm25Filter(), "Pm25Filter", 1);
-        appendValueInt(sb, MG4Hardware.getPm25Concentration(), "Pm25Concentration", 0);
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x15402527), "HVAC_CUST_AIR_QULT", 3);
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x15402509), "HVAC_PM25_CONCENTRATION",0);
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250a), "HVAC_PM25_FILTER",1);
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x15402512), "HVAC_PM25_OUTCAR",0);
-        appendValueInt(sb, MG4Hardware.readHvacPropInt(0x1540250f), "HVAC_POWER_STATUS",0);
-        appendValueFloat(sb, MG4Hardware.readHvacPropFloat(0x15602536), "HVAC_REAR_TEMPERATURE", 33.0f);
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x15600502, 0x31), "HVAC_TEMPERATURE_CURRENT");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x15600503, 0x31), "HVAC_TEMPERATURE_SET");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140a1a5), "IMCU_VEHICLE_ELECTRIC_RANGE_DSP_CMD");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x2160a19b), "INCREASED_VEHICLE_ELECTRIC_RANGE");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600106,0), "INFO_EV_BATTERY_CAPACITY");
-        appendValueFloat(sb, MG4Hardware.readTrackSensorFloat(0x11600104,0), "INFO_FUEL_CAPACITY");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140b97c,0), "LEFT_REAR_CAR_WARNING",0);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140b97d,0), "RIGHT_REAR_CAR_WARNING",0);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x14400b43,1), "MIRROR_Y_MOVE");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x14400b42,2), "MIRROR_Y_POS");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x14400b41,2), "MIRROR_Z_MOVE");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x14400b40,4), "MIRROR_Z_POS");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f444), "SCU_SOC_MODE_STATUS",0);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21401552), "SENSOR_DRIVICE_MODE",0);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140155f), "SENSOR_WHEEL_FEEL",0);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x21401560), "SENSOR_WHEEL_FEEL_OPEN",0);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11510306), "WHEEL_TICK");
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f449), "SOC_ELECTRIC_MANAGEMENT",0);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x1140381f), "TCS_OPNG_MD",1);
-        appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x11403805), "VEHICLE_ESP",1);
 
         appendCpmPropScan(sb2);
         /*

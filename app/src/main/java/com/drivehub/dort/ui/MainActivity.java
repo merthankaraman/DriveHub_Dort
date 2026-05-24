@@ -1355,7 +1355,7 @@ public class MainActivity extends AppCompatActivity {
             case HIGH:     return mBtnRegenHigh;
             case ADAPTIVE: return mBtnRegenAdaptive;
             case ONE_PEDAL: return mBtnRegenOnePedal;
-            default:       return mBtnRegenMedium;
+            default:       return mBtnRegenHigh;
         }
     }
 
@@ -2646,6 +2646,7 @@ public class MainActivity extends AppCompatActivity {
         i.setAction("DRIVE_SET");
         i.putExtra("driveValue", mode.value);
         startService(i);
+        highlightDriveModeButton(mode);
     }
 
     private void sendRegenLevel(RegenLevel level) {
