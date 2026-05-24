@@ -1692,7 +1692,7 @@ public class MainActivity extends AppCompatActivity {
             mTvChargingDuration.setText("--:--:--");
         }
 
-        // Güç grafiği: SOC ekseninde 0.1% bin ortalamaları (MG4Hardware.runMainTask + biriktirici)
+        // Güç grafiği: kapanmış 0.1% bin ortalamaları + anlık canlı uç (100 ms UI)
         if (charging) {
             refreshChargingChartsFromSocCurve();
         }
@@ -1760,36 +1760,66 @@ public class MainActivity extends AppCompatActivity {
         return set;
     }
 
-    /** Biriktirilmiş SOC–kW noktalarını çizer; X = SOC (%), Y = bin içi ortalama kW. */
+    /**
+     * Kapanmış SOC bin ortalamalarına, açık bin için anlık kW noktasını ekler.
+     * Geçmiş (finalize edilmiş) noktalar 0.1% ortalama; canlı uç her 100 ms güncellenir.
+     */
+    private static void appendLiveChargingPoint(ArrayList<Entry> entries,
+            List<ChargingSocPowerAccumulator.SocBinPoint> bins,
+            float soc, float kw) {
+        if (Float.isNaN(soc) || Float.isNaN(kw) || kw <= 0f) return;
+        float lastBinSoc = bins.isEmpty() ? -1f : bins.get(bins.size() - 1).socEnd;
+        if (soc <= lastBinSoc + 0.001f) return;
+        entries.add(new Entry(soc, kw));
+    }
+
+    private static float lastChartKw(ArrayList<Entry> entries) {
+        return entries.isEmpty() ? Float.NaN : entries.get(entries.size() - 1).getY();
+    }
+
+    /** Biriktirilmiş SOC–kW noktalarını çizer; geçmiş = bin ortalaması, uç = anlık kW. */
     private void refreshChargingChartsFromSocCurve() {
         if (mChartChargingPower == null) return;
         mChartEntriesMaxDc.clear();
         mChartEntriesAc.clear();
         mChartEntriesBatt.clear();
-        for (ChargingSocPowerAccumulator.SocBinPoint p : MG4Hardware.getChargingSocCurvePointsMaxDc()) {
+
+        List<ChargingSocPowerAccumulator.SocBinPoint> binsMaxDc =
+                MG4Hardware.getChargingSocCurvePointsMaxDc();
+        List<ChargingSocPowerAccumulator.SocBinPoint> binsAc =
+                MG4Hardware.getChargingSocCurvePointsAc();
+        List<ChargingSocPowerAccumulator.SocBinPoint> binsBatt =
+                MG4Hardware.getChargingSocCurvePointsBatt();
+
+        for (ChargingSocPowerAccumulator.SocBinPoint p : binsMaxDc) {
             mChartEntriesMaxDc.add(new Entry(p.socEnd, p.avgKw));
         }
-        for (ChargingSocPowerAccumulator.SocBinPoint p : MG4Hardware.getChargingSocCurvePointsAc()) {
+        for (ChargingSocPowerAccumulator.SocBinPoint p : binsAc) {
             mChartEntriesAc.add(new Entry(p.socEnd, p.avgKw));
         }
-        for (ChargingSocPowerAccumulator.SocBinPoint p : MG4Hardware.getChargingSocCurvePointsBatt()) {
+        for (ChargingSocPowerAccumulator.SocBinPoint p : binsBatt) {
             mChartEntriesBatt.add(new Entry(p.socEnd, p.avgKw));
         }
+
+        float liveSoc = MG4Hardware.getChargingLiveSoc();
+        appendLiveChargingPoint(mChartEntriesMaxDc, binsMaxDc, liveSoc, MG4Hardware.getChargingLiveMaxDcKw());
+        appendLiveChargingPoint(mChartEntriesAc, binsAc, liveSoc, MG4Hardware.getChargingLiveAcKw());
+        appendLiveChargingPoint(mChartEntriesBatt, binsBatt, liveSoc, MG4Hardware.getChargingLiveBattKw());
 
         String labelMaxDc = getString(R.string.chart_legend_max_dc);
         String labelAc = getString(R.string.chart_legend_ac);
         String labelBatt = getString(R.string.chart_legend_batt);
-        if (!mChartEntriesMaxDc.isEmpty()) {
-            float last = mChartEntriesMaxDc.get(mChartEntriesMaxDc.size() - 1).getY();
-            labelMaxDc = labelMaxDc + "  " + String.format(Locale.US, "%.2f kW", last);
+        float lastMaxDc = lastChartKw(mChartEntriesMaxDc);
+        if (!Float.isNaN(lastMaxDc)) {
+            labelMaxDc = labelMaxDc + "  " + String.format(Locale.US, "%.2f kW", lastMaxDc);
         }
-        if (!mChartEntriesAc.isEmpty()) {
-            float last = mChartEntriesAc.get(mChartEntriesAc.size() - 1).getY();
-            labelAc = labelAc + "  " + String.format(Locale.US, "%.2f kW", last);
+        float lastAc = lastChartKw(mChartEntriesAc);
+        if (!Float.isNaN(lastAc)) {
+            labelAc = labelAc + "  " + String.format(Locale.US, "%.2f kW", lastAc);
         }
-        if (!mChartEntriesBatt.isEmpty()) {
-            float last = mChartEntriesBatt.get(mChartEntriesBatt.size() - 1).getY();
-            labelBatt = labelBatt + "  " + String.format(Locale.US, "%.2f kW", last);
+        float lastBatt = lastChartKw(mChartEntriesBatt);
+        if (!Float.isNaN(lastBatt)) {
+            labelBatt = labelBatt + "  " + String.format(Locale.US, "%.2f kW", lastBatt);
         }
 
         LineData data = new LineData();

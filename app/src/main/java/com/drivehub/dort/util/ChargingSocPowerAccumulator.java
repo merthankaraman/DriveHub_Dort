@@ -5,8 +5,9 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Şarj sırasında SOC ekseninde 0.1% adımlarında kW ortalaması toplar.
+ * Şarj sırasında SOC ekseninde 0.1% adımlarında kW ortalaması toplar (grafik geçmişi).
  * Her bin [socEnd−0.1, socEnd) aralığında örneklenen değerlerin ortalaması; X = bin sonu (% SOC).
+ * Açık bin için getLiveSoc / getLiveMaxDcKw vb. anlık son örneği döner (grafik canlı ucu).
  */
 public final class ChargingSocPowerAccumulator {
 
@@ -14,6 +15,10 @@ public final class ChargingSocPowerAccumulator {
 
     /** Bir sonraki bin üst sınırı (ör. 45.0 → [44.9, 45.0) kapanınca nokta eklenir). */
     private float mBucketUpper = Float.NaN;
+    private float mLiveSoc = Float.NaN;
+    private float mLiveMaxDcKw = Float.NaN;
+    private float mLiveAcKw = Float.NaN;
+    private float mLiveBattKw = Float.NaN;
     private double mSumMaxDc;
     private double mSumAc;
     private double mSumBatt;
@@ -37,6 +42,10 @@ public final class ChargingSocPowerAccumulator {
 
     public void reset() {
         mBucketUpper = Float.NaN;
+        mLiveSoc = Float.NaN;
+        mLiveMaxDcKw = Float.NaN;
+        mLiveAcKw = Float.NaN;
+        mLiveBattKw = Float.NaN;
         mSumMaxDc = mSumAc = mSumBatt = 0;
         mCountMaxDc = mCountAc = mCountBatt = 0;
         mPointsMaxDc.clear();
@@ -78,6 +87,15 @@ public final class ChargingSocPowerAccumulator {
                 }
             }
         }
+        mLiveSoc = soc;
+        mLiveMaxDcKw = Float.isNaN(maxDcKw) ? Float.NaN : Math.abs(maxDcKw);
+        mLiveAcKw = (!Float.isNaN(acKw) && acKw > 0f) ? acKw : Float.NaN;
+        if (!Float.isNaN(battKw)) {
+            float battChg = battKw < 0f ? -battKw : 0f;
+            mLiveBattKw = battChg > 0f ? battChg : Float.NaN;
+        } else {
+            mLiveBattKw = Float.NaN;
+        }
     }
 
     private void finalizeCurrentBucket() {
@@ -105,5 +123,21 @@ public final class ChargingSocPowerAccumulator {
 
     public List<SocBinPoint> getPointsBatt() {
         return Collections.unmodifiableList(new ArrayList<>(mPointsBatt));
+    }
+
+    public float getLiveSoc() {
+        return mLiveSoc;
+    }
+
+    public float getLiveMaxDcKw() {
+        return mLiveMaxDcKw;
+    }
+
+    public float getLiveAcKw() {
+        return mLiveAcKw;
+    }
+
+    public float getLiveBattKw() {
+        return mLiveBattKw;
     }
 }

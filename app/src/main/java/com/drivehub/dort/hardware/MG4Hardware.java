@@ -534,7 +534,7 @@ public class MG4Hardware {
     private static volatile int sVehicleIgnition        = 0;
     /** Şarj başlangıcını persist etmek için (BMS'te set, getChargingDurationMs'te geri yükle). */
     private static Context sAppContext = null;
-    /** SOC ekseninde 0.1% adımlarında kW ortalaması (şarj grafiği). */
+    /** SOC ekseninde 0.1% bin ortalamaları + anlık canlı uç (şarj grafiği). */
     private static final ChargingSocPowerAccumulator sChargingSocAccumulator = new ChargingSocPowerAccumulator();
     // Detay log açık mı? (BMS/StatusPanel spam'i için)
     private static volatile boolean sLogEnabled = true;
@@ -2202,6 +2202,22 @@ public class MG4Hardware {
 
     public static List<ChargingSocPowerAccumulator.SocBinPoint> getChargingSocCurvePointsBatt() {
         return sChargingSocAccumulator.getPointsBatt();
+    }
+
+    public static float getChargingLiveSoc() {
+        return sChargingSocAccumulator.getLiveSoc();
+    }
+
+    public static float getChargingLiveMaxDcKw() {
+        return sChargingSocAccumulator.getLiveMaxDcKw();
+    }
+
+    public static float getChargingLiveAcKw() {
+        return sChargingSocAccumulator.getLiveAcKw();
+    }
+
+    public static float getChargingLiveBattKw() {
+        return sChargingSocAccumulator.getLiveBattKw();
     }
 
     /** AC girişinden gelen toplam enerji — kWh (Kahan toplamı). */
