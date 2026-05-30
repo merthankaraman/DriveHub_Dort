@@ -24,6 +24,9 @@ import java.util.List;
 public class EngineSoundManager {
 
     private static final String TAG = "EngineSoundV3";
+    public static final String PREF_MOTOR_POWER_KW = "motor_power_kw";
+    private static final float[] MOTOR_POWER_OPTIONS_KW = {125f, 150f, 320f};
+    public static final float DEFAULT_MOTOR_POWER_KW = 150f;
     private static EngineSoundManager sInstance = null;
     private final Context mContext;
     private final Handler mHandler;
@@ -37,7 +40,7 @@ public class EngineSoundManager {
 
     private float mCurrentSpeedKmh = 0f;
     private float mSimulatedThrottle = 0f; // 0–1
-    private float mMotorMaxPower = 130f;
+    private float mMotorMaxPower = 150f;
     private boolean mUseManualThrottle = false;
     private int mCurrentGear = 0;
     private float mCurrentRpm = 1000f;
@@ -164,7 +167,30 @@ public class EngineSoundManager {
     }
 
     public void setMasterVolume(float volume01) { mMasterVolume = Math.max(0f, Math.min(1f, volume01)); }
-    public void setMotorMaxPower(float powerKw) { mMotorMaxPower = (Math.max(50f, Math.min(200f, powerKw)) - 20f); }
+    public void setMotorMaxPower(float powerKw) { mMotorMaxPower = Math.max(50f, Math.min(320f, powerKw)); }
+
+    public static float normalizeMotorPowerKw(float value) {
+        float best = MOTOR_POWER_OPTIONS_KW[0];
+        float bestDiff = Math.abs(value - best);
+        for (float option : MOTOR_POWER_OPTIONS_KW) {
+            float diff = Math.abs(value - option);
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                best = option;
+            }
+        }
+        return best;
+    }
+
+    public static float nextMotorPowerKw(float current) {
+        float normalized = normalizeMotorPowerKw(current);
+        for (int i = 0; i < MOTOR_POWER_OPTIONS_KW.length; i++) {
+            if (Math.abs(normalized - MOTOR_POWER_OPTIONS_KW[i]) < 0.5f) {
+                return MOTOR_POWER_OPTIONS_KW[(i + 1) % MOTOR_POWER_OPTIONS_KW.length];
+            }
+        }
+        return MOTOR_POWER_OPTIONS_KW[0];
+    }
 
     public void initFromPreferences(Context context) {
         android.content.SharedPreferences prefs = context.getSharedPreferences("drivehub_dort", Context.MODE_PRIVATE);
@@ -173,6 +199,7 @@ public class EngineSoundManager {
         loadIdleSettingsForProfile(context, profile);
         applySoundCharacterFromString(prefs.getString("sound_character", "SPORT"));
         setMasterVolume(Math.max(0, Math.min(100, prefs.getInt("sound_master", 60))) / 100f);
+        setMotorMaxPower(normalizeMotorPowerKw(prefs.getFloat(PREF_MOTOR_POWER_KW, DEFAULT_MOTOR_POWER_KW)));
     }
 
     public String getCurrentProfileName() { return mCurrentProfileLabel != null ? mCurrentProfileLabel : "Lotus Exige 240"; }
@@ -1064,7 +1091,6 @@ public class EngineSoundManager {
     }
     public void broadcastTelemetryIfNeeded() {
         try {
-            float lMotorMaxPower = mMotorMaxPower + 20f;
             float rpm, speed, dcKw_kadran;
             int gear;
             float dcKw = MG4Hardware.getDcKwGlobal();
@@ -1085,7 +1111,7 @@ public class EngineSoundManager {
                     MG4Hardware.getVehicleACCPedalPosGlobal(),
                     dcKw_kadran,
                     mMaxRpm,
-                    lMotorMaxPower,
+                    mMotorMaxPower,
                     MG4Hardware.getTirePressureFlGlobal(),
                     MG4Hardware.getTirePressureFrGlobal(),
                     MG4Hardware.getTirePressureRlGlobal(),

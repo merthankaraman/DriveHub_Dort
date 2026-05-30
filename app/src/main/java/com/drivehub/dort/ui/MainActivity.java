@@ -71,7 +71,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_SOUND_MODE = "sound_mode";
     private static final String PREF_SOUND_PROFILE = "sound_profile";
     private static final String PREF_SOUND_MASTER = "sound_master";
-    private static final String PREF_MOTOR_POWER = "motor_power_kw";
     private static final String PREF_ALWAYS_USB_DEBUG = "always_usb_debug";
     /** Tek pedal atanacak tuş: -1=Kapalı, 17=Sol yıldız, 286=Sağ yıldız (InputReader keyCode, hafızalı) */
     private static final String PREF_ONE_PEDAL_KEY = "one_pedal_key";
@@ -579,7 +578,7 @@ public class MainActivity extends AppCompatActivity {
         // Loglar varsayılan olarak KAPALI olsun
         boolean logsEnabled = prefsSound.getBoolean("logs_enabled", false);
         int savedMaster = prefsSound.getInt(PREF_SOUND_MASTER, 20);
-        float savedMotorPower = prefsSound.getFloat(PREF_MOTOR_POWER, 150f);
+        float savedMotorPower = prefsSound.getFloat(EngineSoundManager.PREF_MOTOR_POWER_KW, EngineSoundManager.DEFAULT_MOTOR_POWER_KW);
         MG4Hardware.setLogEnabled(logsEnabled);
         updateSoundToggleButton();
 
@@ -620,13 +619,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Motor gücü düğmesi (125 kW / 150 kW, hafızalı)
+        // Motor gücü düğmesi (125 / 150 / 320 kW, hafızalı)
         if (mBtnMotorPower != null) {
-            // Başlangıç text'i
-            float initialPower = savedMotorPower;
-            if (initialPower < 50f || initialPower > 200f) {
-                initialPower = 150f;
-            }
+            float initialPower = EngineSoundManager.normalizeMotorPowerKw(savedMotorPower);
             int displayKw = (int) initialPower;
             mBtnMotorPower.setText(getString(R.string.motor_power_format, displayKw));
             if (mEngineSound != null) {
@@ -636,14 +631,14 @@ public class MainActivity extends AppCompatActivity {
             final float currentPowerInit = initialPower;
             mBtnMotorPower.setOnClickListener(v -> {
                 SharedPreferences p = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-                float current = p.getFloat(PREF_MOTOR_POWER, currentPowerInit);
-                float next = (current >= 149f) ? 125f : 150f;
+                float current = p.getFloat(EngineSoundManager.PREF_MOTOR_POWER_KW, currentPowerInit);
+                float next = EngineSoundManager.nextMotorPowerKw(current);
                 int showKw = (int) next;
                 mBtnMotorPower.setText(getString(R.string.motor_power_format, showKw));
                 if (mEngineSound != null) {
                     mEngineSound.setMotorMaxPower(next);
                 }
-                p.edit().putFloat(PREF_MOTOR_POWER, next).apply();
+                p.edit().putFloat(EngineSoundManager.PREF_MOTOR_POWER_KW, next).apply();
             });
         }
 
