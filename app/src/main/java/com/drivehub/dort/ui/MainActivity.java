@@ -2515,7 +2515,7 @@ public class MainActivity extends AppCompatActivity {
     }
     private static final String SOUND_CHAR_ECO    = "ECO";
     private static final String SOUND_CHAR_SPORT  = "SPORT";
-    private static final String SOUND_CHAR_AUTO   = "AUTO"; // Araç modunu takip et (Eco ise Eco, değilse Sport)
+    private static final String SOUND_CHAR_AUTO   = "AUTO"; // Araç modunu takip et (Sport ise Sport, değilse Eco)
     private static final String[] SOUND_CHAR_CYCLE = {
             SOUND_CHAR_ECO, SOUND_CHAR_SPORT, SOUND_CHAR_AUTO
     };

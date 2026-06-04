@@ -222,19 +222,19 @@ public class EngineSoundManager {
     public void setIdlePitch(float pitch) { mIdlePitch = Math.max(0.5f, Math.min(2f, pitch)); }
 
     public void applySoundCharacterFromString(String character) {
-        float agg = 0.7f;
+        float agg = 0.25f;
         if ("ECO".equals(character)) {
             agg = 0.25f;
         } else if ("SPORT".equals(character)) {
             agg = 0.7f;
         } else if ("NORMAL".equals(character)) {
-            // NORMAL opsiyonu kaldırıldı; geriye dönük uyumluluk için SPORT'a eşliyoruz.
-            agg = 0.7f;
+            // NORMAL opsiyonu kaldırıldı; geriye dönük uyumluluk için Eco'ya eşliyoruz.
+            agg = 0.5f;
         } else if ("AUTO".equals(character)) {
-            // AUTO'da sürüş moduna göre: Eco -> Eco, Eco değil -> Sport
+            // AUTO: araç modu Sport ise ses Sport, diğer tüm modlarda Eco
             int dm = com.drivehub.dort.hardware.MG4Hardware.getDriveMode();
             com.drivehub.dort.model.DriveMode mode = com.drivehub.dort.model.DriveMode.fromValue(dm);
-            agg = (mode == com.drivehub.dort.model.DriveMode.ECO) ? 0.25f : 0.7f;
+            agg = (mode == com.drivehub.dort.model.DriveMode.SPORT) ? 0.7f : 0.25f;
         }
 
         // Eğer sürüş modu GERÇEKTEN değiştiyse şanzımanı uyandır!

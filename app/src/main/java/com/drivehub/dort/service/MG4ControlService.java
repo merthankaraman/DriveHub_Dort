@@ -266,13 +266,16 @@ public class MG4ControlService extends Service {
         }
         mCurrentDriveMode = newMode;
         updateNotification("Sürüş: " + mCurrentDriveMode.label);
+        applyAutoSoundCharacterIfNeeded();
+    }
 
-        SharedPreferences sp = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-        String soundChar = sp.getString("sound_character", "ECO");
-        if ("AUTO".equals(soundChar) && mEngineSound != null) {
-            mEngineSound.applySoundCharacterFromString(
-                    (mCurrentDriveMode == DriveMode.ECO) ? "ECO" : "SPORT"
-            );
+    /** Şanzıman AUTO: sürüş modu değişince ses profilini hemen güncelle (polling + uygulama komutu). */
+    private void applyAutoSoundCharacterIfNeeded() {
+        if (mEngineSound == null) return;
+        String soundChar = getSharedPreferences("drivehub_dort", MODE_PRIVATE)
+                .getString("sound_character", "ECO");
+        if ("AUTO".equals(soundChar)) {
+            mEngineSound.applySoundCharacterFromString("AUTO");
         }
     }
 
@@ -582,6 +585,7 @@ public class MG4ControlService extends Service {
         }
         mCurrentDriveMode = dm;
         updateNotification("Sürüş: " + mCurrentDriveMode.label);
+        applyAutoSoundCharacterIfNeeded();
     }
 
     /** Boot sonrası regen seviyesini otomatik geri yükle (kullanıcı \"Regen seviyesini hatırla\" switch'ini açtıysa). */
@@ -1230,6 +1234,7 @@ public class MG4ControlService extends Service {
                 mCurrentDriveMode = mCurrentDriveMode.next();
                 MG4Hardware.setDriveMode(mCurrentDriveMode);
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
+                applyAutoSoundCharacterIfNeeded();
                 break;
             case "DRIVE_SET":
                 DriveMode dm = DriveMode.fromValue(
@@ -1237,6 +1242,7 @@ public class MG4ControlService extends Service {
                 MG4Hardware.setDriveMode(dm);
                 mCurrentDriveMode = dm;
                 updateNotification("Sürüş: " + mCurrentDriveMode.label);
+                applyAutoSoundCharacterIfNeeded();
                 break;
             case "REGEN_SET":
                 RegenLevel rl = RegenLevel.fromValue(
