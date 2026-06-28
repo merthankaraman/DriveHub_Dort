@@ -26,6 +26,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:layout_marginStart="64dp"
                 android:text="v0.0.0"
                 android:textColor="@color/accent_title"
                 android:textSize="20sp" />
