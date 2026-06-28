@@ -1730,11 +1730,13 @@ public class MG4Hardware {
     private static final String PREF_LIFETIME_KM = "consumption_lifetime_km";
     private static final String PREF_LIFETIME_KWH = "consumption_lifetime_kwh1";
     private static final String PREF_LIFETIME_HOURS = "consumption_lifetime_hours";
+    private static final String PREF_LIFETIME_SOC = "consumption_lifetime_soc";
 
     // Kullanıcı tanımlı ek uzun dönem tüketim profilleri (Hayat boyu'dan bağımsız, ayrı ayrı sıfırlanabilir).
     private static final int CONSUMPTION_PROFILE_SLOTS = 3; // Bu sayıyı arttırmak yeni profiller ekler.
     private static final String PREF_CONS_PROFILE_KM_PREFIX  = "cons_profile_km_";
     private static final String PREF_CONS_PROFILE_KWH_PREFIX = "cons_profile_kwh_";
+    private static final String PREF_CONS_PROFILE_SOC_PREFIX = "cons_profile_soc_";
     private static final String PREF_CONS_PROFILE_NAME_PREFIX  = "cons_profile_name_";
     private static final String PREF_CONS_PROFILE_HOURS_PREFIX = "cons_profile_hours_";
     private static volatile float sSpeedKmh2_km = 0f;
@@ -1744,6 +1746,7 @@ public class MG4Hardware {
     private static final KahanSum sLifetimeKwhSum = new KahanSum();
     private static final KahanSum sLifetimeKmSum = new KahanSum();
     private static final KahanSum sLifetimeHoursSum = new KahanSum();
+    private static final KahanSum sLifetimeSocSum = new KahanSum();
     private static final KahanSum sDriveGraphEnergyKwhSum = new KahanSum();
     private static final KahanSum sDriveGraphDistanceKmSum = new KahanSum();
     private static final KahanSum sAcChargeEnergyKwhSum = new KahanSum();
@@ -1751,14 +1754,17 @@ public class MG4Hardware {
     private static final KahanSum sStationDcChargeEnergyKwhSum = new KahanSum();
     private static final KahanSum[] sConsProfileKwhSums;
     private static final KahanSum[] sConsProfileKmSums;
+    private static final KahanSum[] sConsProfileSocSums;
     private static final KahanSum[] sConsProfileHoursSums;
     static {
         sConsProfileKwhSums = new KahanSum[CONSUMPTION_PROFILE_SLOTS];
         sConsProfileKmSums = new KahanSum[CONSUMPTION_PROFILE_SLOTS];
+        sConsProfileSocSums = new KahanSum[CONSUMPTION_PROFILE_SLOTS];
         sConsProfileHoursSums = new KahanSum[CONSUMPTION_PROFILE_SLOTS];
         for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
             sConsProfileKwhSums[i] = new KahanSum();
             sConsProfileKmSums[i] = new KahanSum();
+            sConsProfileSocSums[i] = new KahanSum();
             sConsProfileHoursSums[i] = new KahanSum();
         }
     }
@@ -1769,6 +1775,8 @@ public class MG4Hardware {
     private static volatile float sLastSpeedKmh = Float.NaN;
     /** SOC cache: 100ms task içinde güncellenir. */
     private static volatile float sLastSoc = Float.NaN;
+    /** Bir önceki SOC — şarj dışında ΔSOC toplamı için. */
+    private static volatile float sLastSocForDelta = Float.NaN;
     /** 1:P  2:R  3:N  4:D */
     private static volatile int sLastGear = -1;
     private static volatile int elseifcounter = 0;
@@ -1888,6 +1896,16 @@ public class MG4Hardware {
             for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
                 sConsProfileHoursSums[i].add(dtHours);
             }
+            if (!isCharging() && !Float.isNaN(sLastSoc) && !Float.isNaN(sLastSocForDelta)) {
+                float dSoc = sLastSocForDelta - sLastSoc;
+                for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
+                    sConsProfileSocSums[i].add(dSoc);
+                }
+                sLifetimeSocSum.add(dSoc);
+            }
+            if (!Float.isNaN(sLastSoc)) {
+                sLastSocForDelta = sLastSoc;
+            }
             if (sVehicleReady) {
                 if (!Float.isNaN(speedKmh)) {
                     sDriveGraphDistanceKmSum.add(dKm);
@@ -1990,10 +2008,12 @@ public class MG4Hardware {
         sLifetimeKmSum.setTotal(p.getFloat(PREF_LIFETIME_KM, 0f));
         sLifetimeKwhSum.setTotal(p.getFloat(PREF_LIFETIME_KWH, 0f));
         sLifetimeHoursSum.setTotal(p.getFloat(PREF_LIFETIME_HOURS, 0f));
+        sLifetimeSocSum.setTotal(p.getFloat(PREF_LIFETIME_SOC, 0f));
         // Ek profillerin sayaçlarını ve isimlerini yükle (slot 0..N-1)
         for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
             sConsProfileKmSums[i].setTotal(p.getFloat(PREF_CONS_PROFILE_KM_PREFIX + i, 0f));
             sConsProfileKwhSums[i].setTotal(p.getFloat(PREF_CONS_PROFILE_KWH_PREFIX + i, 0f));
+            sConsProfileSocSums[i].setTotal(p.getFloat(PREF_CONS_PROFILE_SOC_PREFIX + i, 0f));
             sConsProfileHoursSums[i].setTotal(p.getFloat(PREF_CONS_PROFILE_HOURS_PREFIX + i, 0f));
             sConsProfileName[i] = p.getString(PREF_CONS_PROFILE_NAME_PREFIX + i, null);
         }
@@ -2006,11 +2026,13 @@ public class MG4Hardware {
                 ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE).edit()
                         .putFloat(PREF_LIFETIME_KM, (float) sLifetimeKmSum.get())
                         .putFloat(PREF_LIFETIME_KWH, (float) sLifetimeKwhSum.get())
-                        .putFloat(PREF_LIFETIME_HOURS, (float) sLifetimeHoursSum.get());
+                        .putFloat(PREF_LIFETIME_HOURS, (float) sLifetimeHoursSum.get())
+                        .putFloat(PREF_LIFETIME_SOC, (float) sLifetimeSocSum.get());
         // Ek profillerin sayaçlarını da periyodik olarak persist et
         for (int i = 0; i < CONSUMPTION_PROFILE_SLOTS; i++) {
             e.putFloat(PREF_CONS_PROFILE_KM_PREFIX + i, (float) sConsProfileKmSums[i].get());
             e.putFloat(PREF_CONS_PROFILE_KWH_PREFIX + i, (float) sConsProfileKwhSums[i].get());
+            e.putFloat(PREF_CONS_PROFILE_SOC_PREFIX + i, (float) sConsProfileSocSums[i].get());
             e.putFloat(PREF_CONS_PROFILE_HOURS_PREFIX + i, (float) sConsProfileHoursSums[i].get());
         }
         e.apply();
@@ -2024,11 +2046,13 @@ public class MG4Hardware {
     public static double getLifetimeKm() { return sLifetimeKmSum.get(); }
     public static double getLifetimeKwh() { return sLifetimeKwhSum.get(); }
     public static double getLifetimeHours() { return sLifetimeHoursSum.get(); }
+    public static double getLifetimeSoc() { return sLifetimeSocSum.get(); }
     /** Hayat boyu sayaçlarını ve persist değerlerini sıfırla. */
     public static void resetLifetime(Context ctx) {
         sLifetimeKmSum.reset();
         sLifetimeKwhSum.reset();
         sLifetimeHoursSum.reset();
+        sLifetimeSocSum.reset();
         persistLifetimeToPrefs(ctx);
     }
     public static void resetDriveGraphCounters() {
@@ -2051,6 +2075,10 @@ public class MG4Hardware {
         if (index < 0 || index >= CONSUMPTION_PROFILE_SLOTS) return 0.0;
         return sConsProfileHoursSums[index].get();
     }
+    public static double getConsumptionProfileSoc(int index) {
+        if (index < 0 || index >= CONSUMPTION_PROFILE_SLOTS) return 0.0;
+        return sConsProfileSocSums[index].get();
+    }
     public static String getConsumptionProfileName(int index) {
         if (index < 0 || index >= CONSUMPTION_PROFILE_SLOTS) return "";
         String name = sConsProfileName[index];
@@ -2072,12 +2100,14 @@ public class MG4Hardware {
         }
         sConsProfileKmSums[index].reset();
         sConsProfileKwhSums[index].reset();
+        sConsProfileSocSums[index].reset();
         sConsProfileHoursSums[index].reset();
         if (ctx != null) {
             ctx.getSharedPreferences(PREF_NAME_LIFETIME, Context.MODE_PRIVATE)
                     .edit()
                     .remove(PREF_CONS_PROFILE_KM_PREFIX + index)
                     .remove(PREF_CONS_PROFILE_KWH_PREFIX + index)
+                    .remove(PREF_CONS_PROFILE_SOC_PREFIX + index)
                     .remove(PREF_CONS_PROFILE_HOURS_PREFIX + index)
                     .apply();
         }

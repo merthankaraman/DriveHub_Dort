@@ -2150,18 +2150,21 @@ public class MainActivity extends AppCompatActivity {
             // Lifetime modu: -1 ise global lifetime, >=0 ise seçili profilin toplamı
             double lifetimeKm;
             double lifetimeKwh;
+            double lifetimeSoc;
             if (mActiveConsumptionProfile < 0) {
                 lifetimeKm  = MG4Hardware.getLifetimeKm();
                 lifetimeKwh = MG4Hardware.getLifetimeKwh();
+                lifetimeSoc = MG4Hardware.getLifetimeSoc();
             } else {
                 lifetimeKm  = MG4Hardware.getConsumptionProfileKm(mActiveConsumptionProfile);
                 lifetimeKwh = MG4Hardware.getConsumptionProfileKwh(mActiveConsumptionProfile);
+                lifetimeSoc = MG4Hardware.getConsumptionProfileSoc(mActiveConsumptionProfile);
             }
             if (mTvConsumptionTripKm != null) {
                 mTvConsumptionTripKm.setText(String.format(Locale.US, "%.3f km", lifetimeKm));
             }
             if (mTvConsumptionEnergy != null) {
-                mTvConsumptionEnergy.setText(String.format(Locale.US, "%.3f kWh", lifetimeKwh));
+                mTvConsumptionEnergy.setText(getString(R.string.consumption_energy_soc_format, lifetimeKwh, lifetimeSoc));
             }
             if (mTvConsumptionAvgKwhPer100km != null) {
                 if (lifetimeKm > 0.01) {

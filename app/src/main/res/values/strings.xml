@@ -327,6 +327,7 @@
     <string name="consumption_power">Güç</string>
     <string name="consumption_trip">Yol Km</string>
     <string name="consumption_energy">Tüketilen Enerji </string>
+    <string name="consumption_energy_soc_format">%.3f kWh\nΔSOC %.1f%%</string>
     <string name="consumption_avg">Ortalama tüketim </string>
     <string name="consumption_lifetime">Hayat boyu</string>
     <!-- Varsayılan tüketim profili etiketi: Sürüş A, Sürüş B, ... -->
