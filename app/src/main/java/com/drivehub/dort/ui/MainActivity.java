@@ -2191,7 +2191,7 @@ public class MainActivity extends AppCompatActivity {
             // Sürüş: trip (Sürüş sıfırla ile sıfırlanan)
             if (mTvConsumptionTripKm != null) {
                 if (tripDistanceKm >= 0) {
-                    boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+                    boolean showDemo = false; //(getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
                     if (showDemo) {
                         float km2 = MG4Hardware.getTripDistanceKm2();//TODO test
                         mTvConsumptionTripKm.setText(String.format(Locale.US, "%.3f km\n%.3f km", tripDistanceKm, km2));
@@ -2209,7 +2209,7 @@ public class MainActivity extends AppCompatActivity {
             if (mTvConsumptionAvgKwhPer100km != null) {
                 if (tripDistanceKm > 0.01) {
                     double avgKwhPer100 = (tripEnergyKwh / tripDistanceKm) * 100.0;
-                    boolean showDemo = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+                    boolean showDemo = false; //(getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
                     if (showDemo) {
                         float km2 = MG4Hardware.getTripDistanceKm2();//TODO test
                         double avgKwhPer1002 = (tripEnergyKwh / km2) * 100.0;
