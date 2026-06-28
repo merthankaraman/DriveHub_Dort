@@ -1756,15 +1756,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Kapanmış SOC bin ortalamalarına, açık bin için anlık kW noktasını ekler.
-     * Geçmiş (finalize edilmiş) noktalar 0.1% ortalama; canlı uç her 100 ms güncellenir.
+     * Kapanmış SOC bin ortalamalarının ucuna anlık kW ekler veya aynı SOC'de Y'yi günceller.
+     * BMS SOC adımı 0.1% olduğu için açık bin boyunca SOC çoğu zaman son kapanmış bin ile aynı
+     * kalır; bu durumda ortalama noktanın Y değeri anlık kW ile değiştirilir.
      */
-    private static void appendLiveChargingPoint(ArrayList<Entry> entries,
-            List<ChargingSocPowerAccumulator.SocBinPoint> bins,
-            float soc, float kw) {
+    private static void appendLiveChargingPoint(ArrayList<Entry> entries, float soc, float kw) {
         if (Float.isNaN(soc) || Float.isNaN(kw) || kw <= 0f) return;
-        float lastBinSoc = bins.isEmpty() ? -1f : bins.get(bins.size() - 1).socEnd;
-        if (soc <= lastBinSoc + 0.001f) return;
+        if (!entries.isEmpty()) {
+            Entry last = entries.get(entries.size() - 1);
+            if (Math.abs(last.getX() - soc) < 0.051f) {
+                entries.set(entries.size() - 1, new Entry(soc, kw));
+                return;
+            }
+        }
         entries.add(new Entry(soc, kw));
     }
 
@@ -1797,9 +1801,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         float liveSoc = MG4Hardware.getChargingLiveSoc();
-        appendLiveChargingPoint(mChartEntriesMaxDc, binsMaxDc, liveSoc, MG4Hardware.getChargingLiveMaxDcKw());
-        appendLiveChargingPoint(mChartEntriesAc, binsAc, liveSoc, MG4Hardware.getChargingLiveAcKw());
-        appendLiveChargingPoint(mChartEntriesBatt, binsBatt, liveSoc, MG4Hardware.getChargingLiveBattKw());
+        appendLiveChargingPoint(mChartEntriesMaxDc, liveSoc, MG4Hardware.getChargingLiveMaxDcKw());
+        appendLiveChargingPoint(mChartEntriesAc, liveSoc, MG4Hardware.getChargingLiveAcKw());
+        appendLiveChargingPoint(mChartEntriesBatt, liveSoc, MG4Hardware.getChargingLiveBattKw());
 
         String labelMaxDc = getString(R.string.chart_legend_max_dc);
         String labelAc = getString(R.string.chart_legend_ac);
