@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/rootScroll"
+    android:background="@color/screen_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="0dp"
+        android:paddingVertical="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="8dp"
+            android:paddingTop="4dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvVersion"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="v0.0.0"
+                android:textColor="@color/accent_title"
+                android:textSize="20sp" />
+
+            <Button
+                android:id="@+id/btnMode"
+                android:layout_width="72dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:backgroundTint="@color/button_secondary_bg"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="Gece"
+                android:textColor="@color/button_secondary_text"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnSpeedTest"
+                android:layout_width="80dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:backgroundTint="@color/button_secondary_bg"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="Hız Testi"
+                android:textColor="@color/button_secondary_text"
+                android:textSize="12sp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="0dp"
+            android:gravity="center_horizontal|top"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.github.anastr.speedviewlib.TubeSpeedometer
+                    android:id="@+id/gaugeRpmDial"
+                    android:layout_width="650dp"
+                    android:layout_height="650dp"
+                    android:paddingTop="20dp"
+                    android:layout_gravity="center"
+                    app:sv_maxSpeed="8000"
+                    app:sv_speedometerWidth="70dp"
+                    app:sv_speedTextColor="@color/gauge_text"
+                    app:sv_speedometerBackColor="@color/gauge_dial_back"
+                    app:sv_textColor="#00000000"
+                    app:sv_unit="RPM"
+                    app:sv_speedTextSize="50dp"
+                    app:sv_speedTextPadding="70dp"
+                    app:sv_unitTextColor="@color/gauge_text"
+                    app:sv_withTremble="false" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp">
+
+                <TextView
+                    android:id="@+id/tvGaugeGear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="32dp"
+                    android:gravity="center"
+                    android:fontFamily="monospace"
+                    android:text="--"
+                    android:textColor="@color/gauge_text"
+                    android:textSize="90sp" />
+
+                <com.github.anastr.speedviewlib.PointerSpeedometer
+                    android:id="@+id/gaugePowerDial"
+                    android:layout_width="460dp"
+                    android:layout_height="460dp"
+                    android:layout_marginBottom="16dp"
+                    android:padding="0dp"
+                    app:sv_minSpeed="0"
+                    app:sv_maxSpeed="150"
+                    app:sv_markWidth="10dp"
+                    app:sv_speedTextSize="50dp"
+                    app:sv_textSize="25dp"
+                    app:sv_speedometerBackColor="@color/gauge_dial_back"
+                    app:sv_speedTextColor="@color/gauge_text"
+                    app:sv_backgroundCircleColor="@color/gauge_accent"
+                    app:sv_unit="kW"
+                    app:sv_withTremble="false"
+                    app:sv_unitTextColor="@color/gauge_text" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:layout_width="650dp"
+                    android:layout_height="650dp"
+                    android:layout_gravity="center"
+                    android:foregroundGravity="center"
+                    android:visibility="visible">
+
+                    <me.ibrahimsn.lib.Speedometer
+                        android:id="@+id/gaugeSpeedometer"
+                        android:layout_width="1300dp"
+                        android:layout_height="1300dp"
+                        android:layout_gravity="center"
+                        android:scaleX="0.5"
+                        android:scaleY="0.5"
+                        app:borderColor="@color/gauge_dial_back"
+                        app:borderSize="120dp"
+                        app:fillColor="@color/gauge_accent"
+                        app:maxSpeed="180"
+                        app:metricText="km/h"
+                        app:textColor="@color/gauge_text" />
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutSpeedTest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/panel_bottom"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvSimSpeedLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:fontFamily="monospace"
+            android:text="Simüle hız (km/h)"
+            android:textColor="@color/status_value"
+            android:textSize="14sp" />
+
+        <SeekBar
+            android:id="@+id/seekSpeedTest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:max="180"
+            android:minHeight="32dp" />
+
+        <TextView
+            android:id="@+id/tvSimRpmLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:fontFamily="monospace"
+            android:text="Simüle RPM"
+            android:textColor="@color/status_value"
+            android:textSize="14sp" />
+
+        <SeekBar
+            android:id="@+id/seekRpmTest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="8000"
+            android:minHeight="32dp" />
+
+        <TextView
+            android:id="@+id/tvSimThrottleLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="6dp"
+            android:fontFamily="monospace"
+            android:text="Simüle pedal (%)"
+            android:textColor="@color/status_value"
+            android:textSize="14sp" />
+
+        <SeekBar
+            android:id="@+id/seekThrottleTest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:max="100"
+            android:minHeight="32dp" />
+
+        <TextView
+            android:id="@+id/tvSimPowerLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:fontFamily="monospace"
+            android:text="Simüle güç (kW)"
+            android:textColor="@color/status_value"
+            android:textSize="14sp" />
+
+        <SeekBar
+            android:id="@+id/seekPowerTest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="280"
+            android:minHeight="32dp" />
+
+    </LinearLayout>
+
+</FrameLayout>

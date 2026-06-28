@@ -873,24 +873,12 @@ public class MainActivity extends AppCompatActivity {
             tvVersion.setText(getString(R.string.version_format, pInfo.versionName));
         } catch (Exception ignored) {}
 
-        // Harici kadran uygulaması (com.drivehub.kadran.DashboardActivity) için buton
+        // Gömülü kadran ekranı
         Button btnOpenGaugeApp = findViewById(R.id.btnOpenGaugeApp);
         if (btnOpenGaugeApp != null) {
-            Intent gaugeIntent = new Intent();
-            gaugeIntent.setClassName(
-                    "com.drivehub.kadran",
-                    "com.drivehub.kadran.DashboardActivity"
-            );
-
-            boolean gaugeAvailable =
-                    getPackageManager().resolveActivity(gaugeIntent, 0) != null;
-
-            if (gaugeAvailable) {
-                btnOpenGaugeApp.setVisibility(View.VISIBLE);
-                btnOpenGaugeApp.setOnClickListener(v -> startActivity(gaugeIntent));
-            } else {
-                btnOpenGaugeApp.setVisibility(View.GONE);
-            }
+            btnOpenGaugeApp.setVisibility(View.VISIBLE);
+            btnOpenGaugeApp.setOnClickListener(v ->
+                    startActivity(new Intent(this, com.drivehub.kadran.DashboardActivity.class)));
         }
 
         // Servisi otomatik başlat

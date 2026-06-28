@@ -12,6 +12,13 @@
 -keep class com.drivehub.dort.telemetry.** { *; }
 -dontwarn com.drivehub.dort.telemetry.**
 
+# Gömülü kadran ekranı
+-keep class com.drivehub.kadran.** { *; }
+-keep class com.github.anastr.speedviewlib.** { *; }
+-keep class me.ibrahimsn.lib.** { *; }
+-dontwarn com.github.anastr.speedviewlib.**
+-dontwarn me.ibrahimsn.lib.**
+
 # AndroidX Core: yansıma ile yüklendiği için R8 silebiliyor (CoreComponentFactory)
 -keep class androidx.core.app.** { *; }
 -dontwarn androidx.core.app.**

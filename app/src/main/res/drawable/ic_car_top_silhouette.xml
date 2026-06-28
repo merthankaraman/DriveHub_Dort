@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="180dp"
+    android:viewportWidth="120"
+    android:viewportHeight="180">
+    <path
+        android:fillColor="@color/tire_car_body"
+        android:pathData="M 38,12 L 82,12 Q 90,12 90,20 L 90,160 Q 90,168 82,168 L 38,168 Q 30,168 30,160 L 30,20 Q 30,12 38,12 Z" />
+    <path
+        android:fillColor="@color/tire_car_wheel"
+        android:pathData="M 12,28 A 10,10 0 1,1 12,48 A 10,10 0 1,1 12,28 Z" />
+    <path
+        android:fillColor="@color/tire_car_wheel"
+        android:pathData="M 108,28 A 10,10 0 1,1 108,48 A 10,10 0 1,1 108,28 Z" />
+    <path
+        android:fillColor="@color/tire_car_wheel"
+        android:pathData="M 12,132 A 10,10 0 1,1 12,152 A 10,10 0 1,1 12,132 Z" />
+    <path
+        android:fillColor="@color/tire_car_wheel"
+        android:pathData="M 108,132 A 10,10 0 1,1 108,152 A 10,10 0 1,1 108,132 Z" />
+</vector>

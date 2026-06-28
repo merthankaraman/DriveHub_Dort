@@ -315,7 +315,7 @@
     <string name="btn_reset_lifetime">Sıfırla: Hayat boyu</string>
     <string name="btn_reset_profile_format">Sıfırla: %1$s</string>
 
-    <!-- Harici kadran uygulaması -->
+    <!-- Gömülü kadran ekranı -->
     <string name="btn_open_gauge_app">Kadranı Aç</string>
     <string name="consumption_reset_confirm_title">Sıfırlama onayı</string>
     <string name="consumption_reset_confirm_message">Bu verileri sıfırlamak istediğinden emin misin?</string>

@@ -19,4 +19,31 @@
     <color name="charging_header_btn_fill">#FFFFFF</color>
     <color name="charging_header_btn_stroke">#B6BEC8</color>
     <color name="charging_header_btn_text">#111827</color>
+
+    <!-- Kadran ekranı -->
+    <color name="screen_background">#F5F7FA</color>
+    <color name="accent_title">#1565C0</color>
+    <color name="text_primary">#111111</color>
+    <color name="button_secondary_bg">#DDE4EE</color>
+    <color name="button_secondary_text">#111111</color>
+    <color name="gauge_dial_back">#402C47</color>
+    <color name="gauge_text">#111111</color>
+    <color name="gauge_accent">#388BFD</color>
+    <color name="gauge_regen">#FF22C55E</color>
+    <color name="gauge_power_warn">#FFF97316</color>
+    <color name="gauge_power_high">#FFEF4444</color>
+    <color name="panel_bottom">#E5EBF5</color>
+    <color name="track_speed_big">#1565C0</color>
+    <color name="track_label">#57606A</color>
+    <color name="track_value">#111827</color>
+    <color name="track_gradient_start">#F0F4FA</color>
+    <color name="track_gradient_end">#DCE8F5</color>
+    <color name="track_rail_fill">#FFFFFF</color>
+    <color name="track_rail_stroke">#D0DAE8</color>
+    <color name="track_card_fill">#FFFFFF</color>
+    <color name="track_card_stroke">#C8D4E4</color>
+    <color name="tire_panel_bg">@color/track_card_fill</color>
+    <color name="tire_panel_grid">#4D57606A</color>
+    <color name="tire_car_body">@color/track_label</color>
+    <color name="tire_car_wheel">@color/gauge_regen</color>
 </resources>

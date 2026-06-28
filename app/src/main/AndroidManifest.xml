@@ -68,6 +68,14 @@
             android:screenOrientation="landscape"
             android:theme="@style/Theme.DriveHubDort" />
 
+        <!-- Gömülü kadran (eski com.drivehub.kadran APK) -->
+        <activity
+            android:name="com.drivehub.kadran.DashboardActivity"
+            android:exported="false"
+            android:label="@string/btn_open_gauge_app"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@style/Theme.DriveHub_Kadran" />
 
         <!-- Dış uygulamalardan motor sesini AÇMA Activity'si -->
         <activity
@@ -113,7 +121,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- Kadran (com.drivehub.kadran) telemetriyi bu provider ile okur; broadcast sistem UID uyarısı veriyordu -->
+        <!-- Telemetri: gömülü kadran ve dış istemciler ContentProvider ile okur -->
         <provider
             android:name=".telemetry.TelemetryProvider"
             android:authorities="com.drivehub.dort.telemetry"
