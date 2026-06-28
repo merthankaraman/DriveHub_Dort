@@ -746,7 +746,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Exhaust-pop toggle (hafızalı)
         if (mBtnExhaustPop != null) {
-            boolean popEnabled = prefsApp.getBoolean("exhaust_pop_enabled", true);
+            boolean popEnabled = prefsApp.getBoolean("exhaust_pop_enabled", false);
             mEngineSound.setExhaustPopEnabled(popEnabled);
             updateExhaustPopButtonText(popEnabled);
             mBtnExhaustPop.setOnClickListener(v -> {
@@ -2549,9 +2549,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void cycleSoundCharacter() {
         SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-        String current = prefs.getString("sound_character", SOUND_CHAR_SPORT);
+        String current = prefs.getString("sound_character", SOUND_CHAR_AUTO);
         // Eski versiyondan kalma "NORMAL" kaydı varsa, otomatik olarak SPORT'a eşitle.
-        if ("NORMAL".equals(current)) current = SOUND_CHAR_SPORT;
+        if ("NORMAL".equals(current)) current = SOUND_CHAR_AUTO;
         int idx = 0;
         for (int i = 0; i < SOUND_CHAR_CYCLE.length; i++) {
             if (SOUND_CHAR_CYCLE[i].equals(current)) { idx = (i + 1) % SOUND_CHAR_CYCLE.length; break; }

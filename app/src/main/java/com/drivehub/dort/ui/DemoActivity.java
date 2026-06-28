@@ -399,6 +399,8 @@ public class DemoActivity extends AppCompatActivity {
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f418), "BMS_CHRG_RMN_ST_TIME", 2046);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f41a), "BMS_CHRG_STTN_MCHNG_STA",0);
         appendValueInt(sb, MG4Hardware.readTrackSensorInt(0x2140f446), "CLSTR_ELEC_RNG",0);
+        appendValueFloat(sb, MG4Hardware.getSensorWheelAngleGlobal(), "Wheel angle");
+
 
         appendCpmPropScan(sb2);
         /*
