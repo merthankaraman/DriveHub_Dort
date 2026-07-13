@@ -135,13 +135,12 @@
                     android:padding="4dp">
 
                     <TextView
-                        android:id="@+id/tvVehiclePowerPerc"
+                        android:id="@+id/tvLiveSpeed"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="--"
-                        android:textColor="@color/track_value"
+                        android:textColor="@color/track_speed_big"
                         android:textSize="58sp"
-                        android:tag="track_val"
                         android:fontFamily="monospace"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -222,12 +221,13 @@
                     android:padding="4dp">
 
                     <TextView
-                        android:id="@+id/tvLiveSpeed"
+                        android:id="@+id/tvVehiclePowerPerc"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="--"
-                        android:textColor="@color/track_speed_big"
+                        android:textColor="@color/track_value"
                         android:textSize="58sp"
+                        android:tag="track_val"
                         android:fontFamily="monospace"
                         android:textStyle="bold" />
                 </LinearLayout>
