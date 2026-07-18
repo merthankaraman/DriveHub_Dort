@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.drivehub.dort.R;
+import com.drivehub.dort.hardware.MG4Hardware;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -64,5 +65,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         applyImmersive();
+        MG4Hardware.setTrackModeIpk(true);
     }
 }

@@ -458,6 +458,7 @@ public class MG4Hardware {
     // Tüketim / gösterge — MG4_BINDER_REFERENCE.md
     private static final int PROP_TOTAL_MILEAGE = 0x21401566;   //557847910;   // Toplam km (odometer); int
     private static final int PROP_GEAR         =  0x2140156e;   //557847918;    // Vites konumu (int); getCarGear
+    private static final int TRACK_MODE_IPK    =  0x2140a1a6;   //Sürücü ekranı g-metre
 
     // Katman 2 — Parcel ile doğrudan IVehicleSettingService (UID kısıtı olabilir); üstteki PROP_* ile aynı işlevler
     private static final String DESCRIPTOR_VEHICLE =
@@ -1448,6 +1449,13 @@ public class MG4Hardware {
     // -------------------------------------------------------------------------
     // Setter'lar
     // -------------------------------------------------------------------------
+
+    /** Sürücü ekranı g-metre (Track Mode IPK). 1=açık, 0=kapalı. */
+    public static boolean setTrackModeIpk(boolean enabled) {
+        int value = enabled ? 1 : 0;
+        if (sLogEnabled) Log.i(TAG, "setTrackModeIpk → " + value);
+        return setIntPropertyCPM(TRACK_MODE_IPK, AREA_GLOBAL, value);
+    }
 
     public static boolean setDriveMode(DriveMode mode) {
         boolean ret_val = false;
