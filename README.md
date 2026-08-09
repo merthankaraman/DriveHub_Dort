@@ -264,6 +264,14 @@ adb shell service call vehiclesetting 151 i32 16777216 i32 1 i32 3
 
 ---
 
+## 🙏 Teşekkürler
+
+OTA (GitHub üzerinden sürüm kontrolü, indirme ve SHA-256 doğrulama) kodu için
+[jamakr4](https://github.com/jamakr4) / [MG4-360-Camera-App](https://github.com/jamakr4/MG4-360-Camera-App)
+projesine teşekkürler. Bu kısımdaki akış o projeden uyarlanmıştır.
+
+---
+
 ## 📄 Lisans
 
 MIT License — Kişisel ve eğitim amaçlı kullanım serbesttir.

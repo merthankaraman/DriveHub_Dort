@@ -39,6 +39,7 @@ import com.drivehub.dort.hardware.MG4Hardware;
 import com.drivehub.dort.model.ChargingRecord;
 import com.drivehub.dort.model.DriveMode;
 import com.drivehub.dort.model.RegenLevel;
+import com.drivehub.dort.ota.OtaController;
 import com.drivehub.dort.service.MG4ControlService;
 import com.drivehub.dort.util.ChargingHistory;
 import com.drivehub.dort.util.ChargingSocPowerAccumulator;
@@ -169,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
     // Ana ekran
     private View mLayoutMain;
     private View mLayoutSettingsPanel;
+    private final OtaController mOtaController = new OtaController(this);
     private View mLayoutDriveRegenPanel;
     private View mLayoutSpeedTest;
     private View mLayoutSoundPanel;
@@ -890,6 +892,9 @@ public class MainActivity extends AppCompatActivity {
         mLayoutDriveRegenPanel = findViewById(R.id.layoutDriveRegenPanel);
         mLayoutSoundPanel = findViewById(R.id.layoutSoundPanel);
 
+        // GitHub OTA: açılışta sessiz kontrol
+        mOtaController.checkOnStartup();
+
         findViewById(R.id.btnSettings).setOnClickListener(v -> openSettingsPanel());
         View btnSettingsBack = findViewById(R.id.btnSettingsBack);
         if (btnSettingsBack != null) btnSettingsBack.setOnClickListener(v -> closeSettingsPanel());
@@ -1194,6 +1199,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        mOtaController.stop();
         super.onDestroy();
         mChargingHandler.removeCallbacks(mChargingRunnable);
         mConsumptionHandler.removeCallbacks(mConsumptionUiRunnable);
@@ -1218,6 +1224,7 @@ public class MainActivity extends AppCompatActivity {
         mLayoutSettingsPanel.setVisibility(View.VISIBLE);
         updateThemeButtons();
         updateLanguageButtons();
+        mOtaController.setup(mLayoutSettingsPanel);
     }
 
     private void closeSettingsPanel() {

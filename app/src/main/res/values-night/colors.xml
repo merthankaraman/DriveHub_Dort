@@ -42,4 +42,11 @@
     <color name="tire_panel_grid">#4D8B949E</color>
     <color name="tire_car_body">@color/track_label</color>
     <color name="tire_car_wheel">@color/gauge_regen</color>
+
+    <color name="settings_update_ok_bg">#1F5E9F3A</color>
+    <color name="settings_update_ok_text">#BDE99C</color>
+    <color name="settings_update_available_bg">#1FCC8B00</color>
+    <color name="settings_update_available_text">#FFD786</color>
+    <color name="settings_update_error_bg">#26A0A0A0</color>
+    <color name="settings_update_error_text">#D1D1D1</color>
 </resources>

@@ -1,5 +1,6 @@
 # Built application files
 *.apk
+*.sha256
 *.ap_
 *.aab
 

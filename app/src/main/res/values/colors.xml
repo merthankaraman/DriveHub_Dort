@@ -46,4 +46,12 @@
     <color name="tire_panel_grid">#4D57606A</color>
     <color name="tire_car_body">@color/track_label</color>
     <color name="tire_car_wheel">@color/gauge_regen</color>
+
+    <!-- OTA güncelleme durumu -->
+    <color name="settings_update_ok_bg">#1F5E9F3A</color>
+    <color name="settings_update_ok_text">#3D8B40</color>
+    <color name="settings_update_available_bg">#1FCC8B00</color>
+    <color name="settings_update_available_text">#B86E00</color>
+    <color name="settings_update_error_bg">#26A0A0A0</color>
+    <color name="settings_update_error_text">#6B7280</color>
 </resources>
