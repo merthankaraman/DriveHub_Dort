@@ -1260,7 +1260,7 @@ public class MG4ControlService extends Service {
                 updateNotification("OPD: Açık");
                 break;
             case "PEDAL_OFF":
-                MG4Hardware.setRegenLevel(RegenLevel.HIGH);
+                MG4Hardware.setOnePedal(false);
                 updateNotification("OPD: Kapalı");
                 break;
             case "HEAT_ON":

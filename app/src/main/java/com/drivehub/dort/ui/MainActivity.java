@@ -1311,8 +1311,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectRegen(RegenLevel level) {
-        // Tek pedal açıksa önce kapat, sonra regen seviyesi gönder
-        sendCommand("PEDAL_OFF");
         sendRegenLevel(level);
         highlightRegenButton(regenButton(level));
         mTvRegenCurrent.setText(getString(R.string.regen_active, level.label));

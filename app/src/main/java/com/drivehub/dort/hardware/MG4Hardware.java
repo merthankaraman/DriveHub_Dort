@@ -532,6 +532,7 @@ public class MG4Hardware {
     private static volatile boolean sVehicleReady       = false;
     private static volatile int sDriveModeCurrent = 0;
     private static volatile int sRegenLevelCurrent = 0;
+    private static volatile int sRegenLevelBeforeOPD = 2;
     private static volatile int sVehicleIgnition        = 0;
     /** Şarj başlangıcını persist etmek için (BMS'te set, getChargingDurationMs'te geri yükle). */
     private static Context sAppContext = null;
@@ -1465,34 +1466,29 @@ public class MG4Hardware {
         return ret_val;
     }
     public static boolean setOnePedal(boolean enabled) {
+        boolean ok;
         if (sLogEnabled) Log.i(TAG, "setOnePedal → " + (enabled ? "Açık" : "Kapalı"));
-        if (setIntPropertyCPM(PROP_ONE_PEDAL, AREA_GLOBAL, enabled ? 1 : 0)) return true;
-        return binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_ONE_PEDAL, enabled ? 1 : 0);
+        ok = setIntPropertyCPM(PROP_ONE_PEDAL, AREA_GLOBAL, enabled ? 1 : 0);
+        if (!enabled) {
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> MG4Hardware.setRegenLevel(RegenLevel.fromValue(sRegenLevelBeforeOPD)), 250);
+            if (sLogEnabled) Log.i(TAG, "setOnePedal → hatırlama");
+        }
+        return ok;
     }
-
     public static boolean setRegenLevel(RegenLevel level) {
         boolean ok;
-        if (sLogEnabled) Log.i(TAG, "setRegenLevel → " + level.label + " (" + level.value + ")");
         if (level != RegenLevel.ONE_PEDAL){
-            setOnePedal(false);
+            if (getRegenLevel() == 6){
+                if (sLogEnabled) Log.i(TAG, "setRegenLevel: OPD acık kapatiliyor");
+                setIntPropertyCPM(PROP_ONE_PEDAL, AREA_GLOBAL, 0);
+            }
             ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
-            if (!ok) ok = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_LEVEL, level.value);
         }
         else{
             ok = setOnePedal(true);
-            if (!ok) ok = setIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL, level.value);
-            if (!ok) ok = binderTransact(sVehicleBinder, DESCRIPTOR_VEHICLE, TX_SET_REGEN_LEVEL, level.value);
         }
 
         if (sLogEnabled) Log.i(TAG, "setRegenLevel: seviye=" + level.value + " CPM=" + ok);
-
-        // En son seçilen regen seviyesini her durumda (OK olsa da olmasa da) hatırla
-        /*if (sAppContext != null) {
-            sAppContext.getSharedPreferences("drivehub_dort", Context.MODE_PRIVATE)
-                    .edit()
-                    .putInt(com.drivehub.dort.service.MG4ControlService.PREF_LAST_REGEN_LEVEL, level.value)
-                    .apply();
-        }*/
         return ok;
     }
     public static boolean setSteeringHeat(boolean targetOn) {
@@ -1627,6 +1623,9 @@ public class MG4Hardware {
         v = getIntPropertyCPM(PROP_REGEN_LEVEL, AREA_GLOBAL);
         if (getOnePedal() == 1) {
             v = 6;
+        }
+        else{
+            sRegenLevelBeforeOPD = v;
         }
         return v;
     }
