@@ -86,3 +86,6 @@ logcat*.txt
 # Backup files
 *.bak
 *~
+tools/publish_github_release.bat
+tools/releases/*
+/tools/releases/.gitkeep
