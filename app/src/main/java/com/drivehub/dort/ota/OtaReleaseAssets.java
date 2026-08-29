@@ -140,6 +140,7 @@ final class OtaReleaseAssets {
         String lower = name.toLowerCase(Locale.US);
         int score = 0;
         if (lower.endsWith(".apk")) score += 10;
+        if (lower.contains("drivehub") || lower.contains("dort")) score += 6;
         if (lower.contains("release")) score += 5;
         if (lower.contains("platform")) score += 4;
         if (lower.contains("arm64")) score += 3;

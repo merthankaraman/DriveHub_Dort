@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.ProgressBar;
@@ -20,10 +21,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.File;
 import java.util.Locale;
 
 public final class OtaController {
 
+    private static final String TAG = "MG4_OTA";
     public static final String PREFS_NAME = "drivehub_dort";
     public static final String KEY_ALLOW_BETA_UPDATES = "allowBetaUpdates";
 
@@ -160,7 +163,7 @@ public final class OtaController {
                 activity,
                 activity.getString(R.string.ota_dialog_download_started_message, info.latestVersion),
                 () -> retryDownload(downloadId),
-                this::openDownloadsFolder
+                () -> installDownloadedApk(downloadId)
         );
         progressDialog = handle.dialog;
         progressDialog.setOnDismissListener(d -> stopProgressWatcher());
@@ -295,7 +298,27 @@ public final class OtaController {
             if (installButton != null) {
                 installButton.setVisibility(success ? View.VISIBLE : View.GONE);
             }
+            if (success) {
+                installDownloadedApk(downloadId);
+            }
         });
+    }
+
+    private void installDownloadedApk(long downloadId) {
+        try {
+            Uri apkUri = resolveDownloadedApkUri(downloadId);
+            OtaInstaller.install(activity, downloadId, apkUri);
+            File keep = OtaInstaller.resolveApkFilePublic(activity, downloadId, apkUri);
+            OtaCleanup.deleteOldApks(keep);
+        } catch (Exception e) {
+            Log.w(TAG, "install failed, opening downloads: " + e.getMessage());
+            OtaDialogs.showMessageDialog(
+                    activity,
+                    activity.getString(R.string.ota_dialog_install_failed_message,
+                            e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName())
+            );
+            openDownloadsFolder();
+        }
     }
 
     private void openDownloadsFolder() {

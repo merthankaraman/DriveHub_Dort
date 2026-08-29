@@ -420,7 +420,7 @@
     <string name="ota_progress_paused_reason">İndirme %1$d%%\'de durakladı (%2$s)</string>
     <string name="ota_progress_complete">İndirme tamam. Bütünlük doğrulanıyor…</string>
     <string name="ota_progress_verifying">İndirme bütünlüğü doğrulanıyor…</string>
-    <string name="ota_progress_verified">Doğrulama başarılı. Güncelleme İndirilenler klasöründe.</string>
+    <string name="ota_progress_verified">Doğrulama OK. Kurulum başlatılıyor…</string>
     <string name="ota_progress_integrity_failed">Doğrulama başarısız (%1$s).</string>
     <string name="ota_progress_failed">İndirme başarısız. Tekrar deneyebilirsiniz.</string>
     <string name="ota_progress_failed_reason">İndirme başarısız (%1$s).</string>
@@ -430,7 +430,10 @@
     <string name="ota_action_close">Kapat</string>
     <string name="ota_action_download_anyway">Yine de indir</string>
     <string name="ota_action_retry_download">Tekrar dene</string>
-    <string name="ota_action_install_update">İndirilenleri aç</string>
+    <string name="ota_action_install_update">Kur</string>
+    <string name="ota_dialog_install_failed_message">Kurulum başlatılamadı (%1$s). İndirilenler klasörüne bak.</string>
+    <string name="ota_install_success">Güncelleme kuruldu</string>
+    <string name="ota_install_failed_status">Kurulum başarısız: %1$s</string>
     <string name="ota_toast_checking">Güncelleme kontrol ediliyor…</string>
     <string name="ota_update_hint">Durum etiketine dokunarak yenileyin veya indirmeyi başlatın.</string>
     <string name="ota_update_section_loading">Sürüm bilgisi yükleniyor…</string>

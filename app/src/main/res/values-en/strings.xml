@@ -417,7 +417,7 @@
     <string name="ota_progress_paused_reason">Download paused at %1$d%% (%2$s)</string>
     <string name="ota_progress_complete">Download complete. Verifying package integrity…</string>
     <string name="ota_progress_verifying">Verifying download integrity…</string>
-    <string name="ota_progress_verified">Integrity check passed. The update is ready in Downloads.</string>
+    <string name="ota_progress_verified">Verified. Starting install…</string>
     <string name="ota_progress_integrity_failed">Integrity check failed (%1$s).</string>
     <string name="ota_progress_failed">Download failed. You can retry the OTA download.</string>
     <string name="ota_progress_failed_reason">Download failed (%1$s). You can retry the OTA download.</string>
@@ -427,7 +427,10 @@
     <string name="ota_action_close">Close</string>
     <string name="ota_action_download_anyway">Download anyway</string>
     <string name="ota_action_retry_download">Retry download</string>
-    <string name="ota_action_install_update">Open Downloads</string>
+    <string name="ota_action_install_update">Install</string>
+    <string name="ota_dialog_install_failed_message">Could not start install (%1$s). Check Downloads.</string>
+    <string name="ota_install_success">Update installed</string>
+    <string name="ota_install_failed_status">Install failed: %1$s</string>
     <string name="ota_toast_checking">Checking for updates…</string>
     <string name="ota_update_hint">Tap the update badge to refresh or start the download.</string>
     <string name="ota_update_section_loading">Loading release information…</string>

@@ -128,12 +128,13 @@ final class OtaUpdateManager {
                         : info.assetFileName
         );
         File targetFile = preparePublicDownloadFile(fileName);
+        OtaCleanup.deleteOldApks(targetFile);
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(info.downloadUrl))
                 .setTitle("DriveHub Dort Update")
                 .setDescription("Downloading version " + info.latestVersion)
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                .setDestinationUri(Uri.fromFile(targetFile))
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
                 .setAllowedOverMetered(true)
                 .setAllowedOverRoaming(true);
 
