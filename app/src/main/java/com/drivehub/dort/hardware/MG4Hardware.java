@@ -2192,17 +2192,18 @@ public class MG4Hardware {
     /** Araç şarjda mı? Önce PROP_CHG_STATUS (cache veya polling); yoksa AC/DC akım çıkarımı (uygulama yeniden başladıysa). */
     private static boolean isCharging() {
         Object val = sBmsCache.get(PROP_CHG_STATUS);
+        // 10 dc şarj, 1 ac şarj, 8 durdu, 5 bağlanıyor, 7 bağlandı şarj olmuyor
+        int st = val instanceof Number ? ((Number) val).intValue() : -1;
+        return (st == 1) || (st == 10);
+        /*
         float acA = getAcAmpGlobal();
         float dcA = getDcAmpGlobal();
         float dcV = getDcVoltGlobal();
 
-        // 10 dc şarj, 1 ac şarj, 8 durdu, 5 bağlanıyor, 7 bağlandı şarj olmuyor
-        int st = val instanceof Number ? ((Number) val).intValue() : -1;
-        if ((st == 1) || (st == 10)) return true;
         // Cache boş veya şarj değil: uygulama yeniden başladıysa callback henüz gelmemiş olabilir → AC/DC fallback
         if (!Float.isNaN(acA) && acA > 0.5f) return true;
         if (!Float.isNaN(dcA) && !Float.isNaN(dcV) && dcV > 200f && dcA <= -1f && sLastSpeedKmh == 0) return true;
-        return false;
+        return false;*/
     }
 
     /** BMS cache güncellendiğinde çağrılır; şarj ilk tespit edildiğinde başlangıç zamanını kaydedip persist eder. */
