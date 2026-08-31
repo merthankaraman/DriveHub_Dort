@@ -1803,10 +1803,10 @@ public class MG4Hardware {
         sVehicleACCPedalPos = getFloatPropertyCPM(PROP_SENSOR_ACC_PEDAL_POS, AREA_GLOBAL);
         sVehiclePowerPerc = getIntPropertyCPM(PROP_SENSOR_DRIVE_EFFICIENCY, AREA_GLOBAL);
 
-        sSensorAccelLateral = 0f;//getFloatPropertyCPM(PROP_SENSOR_ACCEL_LATERAL, AREA_GLOBAL);TODO
-        sSensorAccelPortrait = 0f;//getFloatPropertyCPM(PROP_SENSOR_ACCEL_PORTRAIT, AREA_GLOBAL);
-        sSensorBrakePedalPressure = 0;//getIntPropertyCPM(PROP_SENSOR_BRAKE_PEDAL_PRESSURE, AREA_GLOBAL);
-        sSensorWheelAngle = 0f;//getFloatPropertyCPM(PROP_SENSOR_WHEEL_ANGLE, AREA_GLOBAL);
+        sSensorAccelLateral = getFloatPropertyCPM(PROP_SENSOR_ACCEL_LATERAL, AREA_GLOBAL);
+        sSensorAccelPortrait = getFloatPropertyCPM(PROP_SENSOR_ACCEL_PORTRAIT, AREA_GLOBAL);
+        sSensorBrakePedalPressure = getIntPropertyCPM(PROP_SENSOR_BRAKE_PEDAL_PRESSURE, AREA_GLOBAL);
+        sSensorWheelAngle = getFloatPropertyCPM(PROP_SENSOR_WHEEL_ANGLE, AREA_GLOBAL);
         long tirePollNow = SystemClock.elapsedRealtime();
         if (sLastTireSensorsPollElapsedMs == 0L
                 || (tirePollNow - sLastTireSensorsPollElapsedMs) >= TIRE_SENSORS_POLL_INTERVAL_MS) {
