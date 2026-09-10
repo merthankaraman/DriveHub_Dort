@@ -1624,7 +1624,7 @@ public class MG4Hardware {
         if (getOnePedal() == 1) {
             v = 6;
         }
-        else{
+        if (v >= 0 && v <= 5){
             sRegenLevelBeforeOPD = v;
         }
         return v;
