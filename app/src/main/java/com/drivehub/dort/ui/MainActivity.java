@@ -140,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnGearWhine;
     private Button mBtnExhaustPop;
     private Button mBtnSubwave;
+    private Button mBtnNotifToneImprove;
     private Button mBtnSpeedTest;
     private SeekBar mSeekSoundVolume;
     private TextView mTvAlarmVolumeHint;
@@ -771,6 +772,20 @@ public class MainActivity extends AppCompatActivity {
                 mEngineSound.setSubwaveEnabled(next);
                 prefsApp.edit().putBoolean("subwave_enabled", next).apply();
                 updateSubwaveButtonText(next);
+            });
+        }
+
+        mBtnNotifToneImprove = findViewById(R.id.btnNotifToneImprove);
+        if (mBtnNotifToneImprove != null) {
+            boolean toneOn = prefsApp.getBoolean(EngineSoundManager.PREF_NOTIF_TONE_IMPROVE, true);
+            mEngineSound.setNotifToneImproveEnabled(toneOn);
+            updateNotifToneImproveButtonText(toneOn);
+            mBtnNotifToneImprove.setOnClickListener(v -> {
+                boolean current = mEngineSound.isNotifToneImproveEnabled();
+                boolean next = !current;
+                mEngineSound.setNotifToneImproveEnabled(next);
+                prefsApp.edit().putBoolean(EngineSoundManager.PREF_NOTIF_TONE_IMPROVE, next).apply();
+                updateNotifToneImproveButtonText(next);
             });
         }
 
@@ -2545,6 +2560,13 @@ public class MainActivity extends AppCompatActivity {
     private void updateSubwaveButtonText(boolean enabled) {
         if (mBtnSubwave == null) return;
         mBtnSubwave.setText(enabled ? getString(R.string.btn_subwave_on) : getString(R.string.btn_subwave_off));
+    }
+
+    private void updateNotifToneImproveButtonText(boolean enabled) {
+        if (mBtnNotifToneImprove == null) return;
+        mBtnNotifToneImprove.setText(enabled
+                ? getString(R.string.btn_notif_tone_improve_on)
+                : getString(R.string.btn_notif_tone_improve_off));
     }
 
     private void cycleSoundCharacter() {

@@ -247,6 +247,8 @@
     <string name="exhaust_pop_off">Egzoz patlaması: Kapalı</string>
     <string name="btn_subwave_on">Alt bas: Açık</string>
     <string name="btn_subwave_off">Alt bas: Kapalı</string>
+    <string name="btn_notif_tone_improve_on">Bildirim ses iyileştirme (deneysel): Açık</string>
+    <string name="btn_notif_tone_improve_off">Bildirim ses iyileştirme (deneysel): Kapalı</string>
     <string name="btn_idle_settings">Rölanti ayarları</string>
     <!-- Rölanti paneli -->
     <string name="idle_panel_title">Rölanti ayarları</string>

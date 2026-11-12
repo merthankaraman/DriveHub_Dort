@@ -248,6 +248,8 @@
     <string name="exhaust_pop_off">Exhaust pop: Off</string>
     <string name="btn_subwave_on">Sub bass: On</string>
     <string name="btn_subwave_off">Sub bass: Off</string>
+    <string name="btn_notif_tone_improve_on">Notification tone improve (experimental): On</string>
+    <string name="btn_notif_tone_improve_off">Notification tone improve (experimental): Off</string>
     <string name="btn_idle_settings">Idle settings</string>
     <!-- Idle panel -->
     <string name="idle_panel_title">Idle settings</string>
