@@ -14,8 +14,9 @@ android {
         applicationId "com.drivehub.dort"
         minSdk 28
         targetSdk 36
-        versionCode 3
-        versionName "0.23.1"
+        // Her GitHub/OTA sürümünde versionCode MUTLAKA artmalı (aynı code = kurulum reddi / "paket ayrıştırılamadı")
+        versionCode 4
+        versionName "0.23.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -27,12 +27,17 @@ set APK_OUT=%PROJECT_DIR%\app\build\outputs\apk\car\release\app-release-signed.a
 set PLATFORM_PK8=%SCRIPT_DIR%platform.pk8
 set PLATFORM_PEM=%SCRIPT_DIR%platform.x509.pem
 
-REM build.gradle icinden versionName oku
+REM build.gradle icinden versionName + versionCode oku
 set VERSION_NAME=unknown
+set VERSION_CODE=unknown
 for /f "tokens=2 delims== " %%v in ('findstr /R /C:"versionName" "%PROJECT_DIR%\app\build.gradle"') do (
     set VERSION_NAME=%%v
 )
+for /f "tokens=2 delims== " %%v in ('findstr /R /C:"versionCode" "%PROJECT_DIR%\app\build.gradle"') do (
+    set VERSION_CODE=%%v
+)
 set VERSION_NAME=%VERSION_NAME:"=%
+set VERSION_CODE=%VERSION_CODE: =%
 set APK_TOOLS_NAME=DriveHub_Dort_%VERSION_NAME%.apk
 set APK_TOOLS_PATH=%RELEASES_DIR%\%APK_TOOLS_NAME%
 set APK_HASH_PATH=%APK_TOOLS_PATH%.sha256
@@ -77,11 +82,14 @@ echo.
 echo ============================================================
 echo  MG4 APK Imzalama, Hash ve Kurma
 echo ============================================================
+echo  Surum      : %VERSION_NAME%  (versionCode %VERSION_CODE%)
 echo  Kaynak APK : %APK_IN%
 echo  Cikti  APK : %APK_OUT%
 echo  Releases   : %APK_TOOLS_PATH%
 echo  SHA-256    : %APK_HASH_PATH%
 echo  Yontem     : --key platform.pk8 --cert platform.x509.pem
+echo.
+echo  NOT: OTA icin her yayinda versionCode onceki surumden BUYUK olmali.
 echo.
 
 :: -------- İmzala --------

@@ -127,10 +127,29 @@ final class OtaInstaller {
         if (!context.getPackageName().equals(info.packageName)) {
             throw new IllegalStateException("APK package mismatch: " + info.packageName);
         }
+
+        long incomingCode = Build.VERSION.SDK_INT >= 28 ? info.getLongVersionCode() : info.versionCode;
+        long installedCode;
+        try {
+            PackageInfo installed = pm.getPackageInfo(context.getPackageName(), 0);
+            installedCode = Build.VERSION.SDK_INT >= 28
+                    ? installed.getLongVersionCode()
+                    : installed.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            installedCode = -1L;
+        }
+        // Aynı/ düşük versionCode: araçta sık "paket ayrıştırılamadı" gibi yanıltıcı hata verir.
+        if (installedCode >= 0L && incomingCode <= installedCode) {
+            throw new IllegalStateException(
+                    "versionCode artmali (gelen=" + incomingCode
+                            + ", yuklu=" + installedCode
+                            + ", name=" + info.versionName + ")");
+        }
+
         Log.i(TAG, "APK ok package=" + info.packageName
                 + " versionName=" + info.versionName
-                + " versionCode=" + (Build.VERSION.SDK_INT >= 28
-                ? info.getLongVersionCode() : info.versionCode));
+                + " versionCode=" + incomingCode
+                + " installedCode=" + installedCode);
     }
 
     private static void installWithSession(Context context, File apk) throws Exception {
