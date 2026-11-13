@@ -45,6 +45,11 @@ public class EngineSoundManager {
     // Medya yolu müzik yokken de açık kalsın diye sessiz AudioTrack + MediaSession
     private AudioTrack mMediaKeepAliveTrack;
     private MediaSession mMediaSession;
+    // STREAM_MUSIC seviyesi değişince motor sesinin birden patlamaması için yazılım telafisi
+    private float mMediaVolCompensateSmooth = 1f;
+    private static final float MEDIA_VOL_REF = 0.55f;   // bu medya seviyesinde slider ≈ 1:1
+    private static final float MEDIA_COMP_MIN = 0.22f;  // medya full iken en fazla bu kadar kıs
+    private static final float MEDIA_COMP_MAX = 1.20f;  // medya kısıkken aşırı boost yok
 
     private float mCurrentSpeedKmh = 0f;
     private float mSimulatedThrottle = 0f; // 0–1
@@ -613,8 +618,13 @@ public class EngineSoundManager {
         // Medya kanalında araç yolu çoğu zaman "aktif medya oynatıcı" olmadan açılmaz.
         // Sessiz keep-alive ile Spotify/SmartTube gibi USAGE_MEDIA yolunu müziksiz de uyandırırız.
         // Müzik focus'unu çalmıyoruz (diğer uygulamaları durdurmaz).
-        if (useMedia) startMediaRouteKeepAlive();
-        else stopMediaRouteKeepAlive();
+        if (useMedia) {
+            startMediaRouteKeepAlive();
+            mMediaVolCompensateSmooth = mediaVolumeCompensateFactor();
+        } else {
+            stopMediaRouteKeepAlive();
+            mMediaVolCompensateSmooth = 1f;
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             AudioAttributes attrs = new AudioAttributes.Builder()
@@ -714,11 +724,32 @@ public class EngineSoundManager {
             }, 2500); // İstop sesinin uzunluğuna göre bu süreyi (2.5 saniye) artırabilir/azaltabilirsin.
         }
         stopMediaRouteKeepAlive();
+        mMediaVolCompensateSmooth = 1f;
         mPopsRemaining = 0;
         mNextPopTime = 0;
 
         mTurboStreamId = -1; mFlutterSoundId = -1; mStartSoundId = -1; mStopSoundId = -1;
         mSubwaveStreamId = -1; mSubwaveSoundId = -1;
+    }
+
+    /**
+     * Medya stream seviyesi yüksekse uygulama gain'ini düşürür (ani patlama olmasın).
+     * Düşükse hafif yükseltir ama tavanı var. Bildirim kanalında 1.
+     */
+    private float mediaVolumeCompensateFactor() {
+        if (!mUsingMediaStream) return 1f;
+        try {
+            AudioManager am = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+            if (am == null) return 1f;
+            int max = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            if (max <= 0) return 1f;
+            int cur = Math.max(0, am.getStreamVolume(AudioManager.STREAM_MUSIC));
+            float frac = Math.max(0.08f, cur / (float) max);
+            float raw = MEDIA_VOL_REF / frac;
+            return Math.max(MEDIA_COMP_MIN, Math.min(MEDIA_COMP_MAX, raw));
+        } catch (Throwable ignored) {
+            return 1f;
+        }
     }
 
     /** Araç medya amfisini / mixer yolunu müzik çalmadan açar. Focus çalmaz. */
@@ -959,8 +990,15 @@ public class EngineSoundManager {
 
         float rpm = Math.max(mIdleRpm, Math.min(mCurrentRpm, mMaxRpm));
 
-        // FADE-IN ÇARPANI BURADA UYGULANIYOR!
-        float masterVol = Math.max(0f, Math.min(1.0f, mMasterVolume)) * startupFade;
+        // FADE-IN + (medya ise) araç medya seviyesine ters orantılı telafi
+        if (mUsingMediaStream) {
+            float targetComp = mediaVolumeCompensateFactor();
+            mMediaVolCompensateSmooth += (targetComp - mMediaVolCompensateSmooth) * 0.25f;
+        } else {
+            mMediaVolCompensateSmooth = 1f;
+        }
+        float masterVol = Math.max(0f, Math.min(1.0f, mMasterVolume)) * startupFade * mMediaVolCompensateSmooth;
+        masterVol = Math.max(0f, Math.min(1.0f, masterVol));
 
         float rpmRatio = (rpm - mIdleRpm) / (mMaxRpm - mIdleRpm);
         rpmRatio = Math.max(0f, Math.min(1f, rpmRatio));
