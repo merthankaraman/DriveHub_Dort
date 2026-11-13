@@ -140,7 +140,6 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnGearWhine;
     private Button mBtnExhaustPop;
     private Button mBtnSubwave;
-    private Button mBtnNotifToneImprove;
     private Button mBtnSpeedTest;
     private SeekBar mSeekSoundVolume;
     private TextView mTvAlarmVolumeHint;
@@ -772,20 +771,6 @@ public class MainActivity extends AppCompatActivity {
                 mEngineSound.setSubwaveEnabled(next);
                 prefsApp.edit().putBoolean("subwave_enabled", next).apply();
                 updateSubwaveButtonText(next);
-            });
-        }
-
-        mBtnNotifToneImprove = findViewById(R.id.btnNotifToneImprove);
-        if (mBtnNotifToneImprove != null) {
-            boolean toneOn = prefsApp.getBoolean(EngineSoundManager.PREF_NOTIF_TONE_IMPROVE, true);
-            mEngineSound.setNotifToneImproveEnabled(toneOn);
-            updateNotifToneImproveButtonText(toneOn);
-            mBtnNotifToneImprove.setOnClickListener(v -> {
-                boolean current = mEngineSound.isNotifToneImproveEnabled();
-                boolean next = !current;
-                mEngineSound.setNotifToneImproveEnabled(next);
-                prefsApp.edit().putBoolean(EngineSoundManager.PREF_NOTIF_TONE_IMPROVE, next).apply();
-                updateNotifToneImproveButtonText(next);
             });
         }
 
@@ -2368,21 +2353,38 @@ public class MainActivity extends AppCompatActivity {
         setupIdlePanelFromPrefs();
     }
 
-    /** Motor sesi STREAM_NOTIFICATION kullanır; araç bildirim sesi kısıksa ses de kısık çıkar. */
+    private boolean isMediaSoundSource() {
+        SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
+        return !"notification".equals(prefs.getString("sound_source", "media"));
+    }
+
+    private int currentSoundStreamType() {
+        return isMediaSoundSource() ? AudioManager.STREAM_MUSIC : AudioManager.STREAM_NOTIFICATION;
+    }
+
+    /** Motor sesi seçili stream'i kullanır; araç stream seviyesi kısıksa ses de kısık çıkar. */
     private void refreshAlarmVolumeHint() {
         if (mTvAlarmVolumeHint == null) return;
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am == null) {
-            mTvAlarmVolumeHint.setText(getString(R.string.notification_volume_okunamadi));
+            mTvAlarmVolumeHint.setText(isMediaSoundSource()
+                    ? getString(R.string.media_volume_okunamadi)
+                    : getString(R.string.notification_volume_okunamadi));
             return;
         }
-        int cur = am.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
-        int max = am.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
+        int stream = currentSoundStreamType();
+        int cur = am.getStreamVolume(stream);
+        int max = am.getStreamMaxVolume(stream);
         if (max <= 0) {
-            mTvAlarmVolumeHint.setText(getString(R.string.notification_volume_na));
+            mTvAlarmVolumeHint.setText(isMediaSoundSource()
+                    ? getString(R.string.media_volume_na)
+                    : getString(R.string.notification_volume_na));
             return;
         }
-        String msg = getString(R.string.notification_volume_format, cur, max);
+        String msg = getString(isMediaSoundSource()
+                        ? R.string.media_volume_format
+                        : R.string.notification_volume_format,
+                cur, max);
         if (cur >= max) {
             msg += getString(R.string.notification_volume_max_suffix);
         } else {
@@ -2393,17 +2395,23 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateSoundSourceButton(Button btn) {
         SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-        String source = prefs.getString("sound_source", "notification");
+        String source = prefs.getString("sound_source", "media");
         if ("media".equals(source)) {
             btn.setText(getString(R.string.sound_source_media));
         } else {
             btn.setText(getString(R.string.sound_source_notification));
         }
+        Button btnMax = findViewById(R.id.btnAlarmVolumeMax);
+        if (btnMax != null) {
+            btnMax.setText(isMediaSoundSource()
+                    ? getString(R.string.btn_max_volume_media)
+                    : getString(R.string.btn_max_volume));
+        }
     }
 
     private void toggleSoundSource() {
         SharedPreferences prefs = getSharedPreferences("drivehub_dort", MODE_PRIVATE);
-        String source = prefs.getString("sound_source", "notification");
+        String source = prefs.getString("sound_source", "media");
         String newSource = "media".equals(source) ? "notification" : "media";
         prefs.edit().putString("sound_source", newSource).apply();
 
@@ -2411,6 +2419,7 @@ public class MainActivity extends AppCompatActivity {
         if (btnAlarmSource != null) {
             updateSoundSourceButton(btnAlarmSource);
         }
+        refreshAlarmVolumeHint();
 
         // Kaynak değiştiyse aktif motor sesini yeniden başlat
         if (mEngineSound != null && mEngineSound.isPlaying()) {
@@ -2426,19 +2435,29 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, getString(R.string.toast_no_audio_service), Toast.LENGTH_SHORT).show();
             return;
         }
-        int max = am.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
+        int stream = currentSoundStreamType();
+        int max = am.getStreamMaxVolume(stream);
         if (max <= 0) {
-            Toast.makeText(this, getString(R.string.toast_volume_unsupported), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, isMediaSoundSource()
+                            ? getString(R.string.toast_media_volume_unsupported)
+                            : getString(R.string.toast_volume_unsupported),
+                    Toast.LENGTH_SHORT).show();
             return;
         }
         try {
-            am.setStreamVolume(AudioManager.STREAM_NOTIFICATION, max, 0);
-            int now = am.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
+            am.setStreamVolume(stream, max, 0);
+            int now = am.getStreamVolume(stream);
             refreshAlarmVolumeHint();
             if (now >= max) {
-                Toast.makeText(this, getString(R.string.toast_volume_max), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, isMediaSoundSource()
+                                ? getString(R.string.toast_media_volume_max)
+                                : getString(R.string.toast_volume_max),
+                        Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, getString(R.string.toast_volume_no_permission), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, isMediaSoundSource()
+                                ? getString(R.string.toast_media_volume_no_permission)
+                                : getString(R.string.toast_volume_no_permission),
+                        Toast.LENGTH_LONG).show();
             }
         } catch (SecurityException e) {
             Toast.makeText(this, getString(R.string.toast_permission_denied, e.getMessage()), Toast.LENGTH_LONG).show();
@@ -2560,13 +2579,6 @@ public class MainActivity extends AppCompatActivity {
     private void updateSubwaveButtonText(boolean enabled) {
         if (mBtnSubwave == null) return;
         mBtnSubwave.setText(enabled ? getString(R.string.btn_subwave_on) : getString(R.string.btn_subwave_off));
-    }
-
-    private void updateNotifToneImproveButtonText(boolean enabled) {
-        if (mBtnNotifToneImprove == null) return;
-        mBtnNotifToneImprove.setText(enabled
-                ? getString(R.string.btn_notif_tone_improve_on)
-                : getString(R.string.btn_notif_tone_improve_off));
     }
 
     private void cycleSoundCharacter() {

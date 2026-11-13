@@ -223,6 +223,7 @@
     <string name="sound_volume">Ses Seviyesi</string>
     <string name="notification_volume">Bildirim sesi (araç): --</string>
     <string name="btn_max_volume">Bildirim ses seviyesini Max yap</string>
+    <string name="btn_max_volume_media">Medya ses seviyesini Max yap</string>
     <string name="sound_source_notification">Kaynak: Bildirim</string>
     <string name="sound_source_media">Kaynak: Medya</string>
     <string name="sim_speed_label">Simüle hız: 0 km/h</string>
@@ -247,8 +248,6 @@
     <string name="exhaust_pop_off">Egzoz patlaması: Kapalı</string>
     <string name="btn_subwave_on">Alt bas: Açık</string>
     <string name="btn_subwave_off">Alt bas: Kapalı</string>
-    <string name="btn_notif_tone_improve_on">Bildirim ses iyileştirme (deneysel): Açık</string>
-    <string name="btn_notif_tone_improve_off">Bildirim ses iyileştirme (deneysel): Kapalı</string>
     <string name="btn_idle_settings">Rölanti ayarları</string>
     <!-- Rölanti paneli -->
     <string name="idle_panel_title">Rölanti ayarları</string>
@@ -269,9 +268,12 @@
     <string name="toast_heating_steering">Direksiyon: %s</string>
     <string name="toast_heating_seat">%s</string>
     <string name="toast_volume_max">Bildirim sesi maksimuma alındı</string>
+    <string name="toast_media_volume_max">Medya sesi maksimuma alındı</string>
     <string name="toast_volume_no_permission">Araç bildirim sesini değiştirmeye izin vermiyor olabilir</string>
+    <string name="toast_media_volume_no_permission">Araç medya sesini değiştirmeye izin vermiyor olabilir</string>
     <string name="toast_no_audio_service">Ses servisi yok</string>
     <string name="toast_volume_unsupported">Bildirim sesi desteklenmiyor</string>
+    <string name="toast_media_volume_unsupported">Medya sesi desteklenmiyor</string>
     <string name="toast_permission_denied">Yetki yok: %s</string>
     <string name="toast_error">Hata: %s</string>
 
@@ -283,6 +285,9 @@
     <string name="notification_volume_okunamadi">Bildirim sesi: okunamadı</string>
     <string name="notification_volume_na">Bildirim sesi: --</string>
     <string name="notification_volume_format">Bildirim sesi (araç): %d/%d</string>
+    <string name="media_volume_okunamadi">Medya sesi: okunamadı</string>
+    <string name="media_volume_na">Medya sesi: --</string>
+    <string name="media_volume_format">Medya sesi (araç): %d/%d</string>
     <string name="notification_volume_max_suffix"> — Maksimumda</string>
     <string name="notification_volume_hint_suffix"> — Araç ayarlarından artırın</string>
     <string name="heating_steering_off">Kapalı</string>

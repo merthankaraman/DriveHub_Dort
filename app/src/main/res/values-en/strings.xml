@@ -224,6 +224,7 @@
     <string name="sound_volume">Volume</string>
     <string name="notification_volume">Notification volume (vehicle): --</string>
     <string name="btn_max_volume">Set Notification volume to Max</string>
+    <string name="btn_max_volume_media">Set Media volume to Max</string>
     <string name="sound_source_notification">Source: Notification</string>
     <string name="sound_source_media">Source: Media</string>
     <string name="sim_speed_label">Simulated speed: 0 km/h</string>
@@ -248,8 +249,6 @@
     <string name="exhaust_pop_off">Exhaust pop: Off</string>
     <string name="btn_subwave_on">Sub bass: On</string>
     <string name="btn_subwave_off">Sub bass: Off</string>
-    <string name="btn_notif_tone_improve_on">Notification tone improve (experimental): On</string>
-    <string name="btn_notif_tone_improve_off">Notification tone improve (experimental): Off</string>
     <string name="btn_idle_settings">Idle settings</string>
     <!-- Idle panel -->
     <string name="idle_panel_title">Idle settings</string>
@@ -270,9 +269,12 @@
     <string name="toast_heating_steering">Steering: %s</string>
     <string name="toast_heating_seat">%s</string>
     <string name="toast_volume_max">Notification volume set to max</string>
+    <string name="toast_media_volume_max">Media volume set to max</string>
     <string name="toast_volume_no_permission">Vehicle may not allow changing notification volume</string>
+    <string name="toast_media_volume_no_permission">Vehicle may not allow changing media volume</string>
     <string name="toast_no_audio_service">No audio service</string>
     <string name="toast_volume_unsupported">Notification volume not supported</string>
+    <string name="toast_media_volume_unsupported">Media volume not supported</string>
     <string name="toast_permission_denied">Permission denied: %s</string>
     <string name="toast_error">Error: %s</string>
 
@@ -284,6 +286,9 @@
     <string name="notification_volume_okunamadi">Notification volume: read failed</string>
     <string name="notification_volume_na">Notification volume: --</string>
     <string name="notification_volume_format">Notification volume (vehicle): %d/%d</string>
+    <string name="media_volume_okunamadi">Media volume: read failed</string>
+    <string name="media_volume_na">Media volume: --</string>
+    <string name="media_volume_format">Media volume (vehicle): %d/%d</string>
     <string name="notification_volume_max_suffix"> — Max</string>
     <string name="notification_volume_hint_suffix"> — Increase in vehicle settings</string>
     <string name="heating_steering_off">Off</string>

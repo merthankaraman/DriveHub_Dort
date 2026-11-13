@@ -3,8 +3,12 @@ package com.drivehub.dort.audio;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioAttributes;
+import android.media.AudioFormat;
 import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.media.SoundPool;
+import android.media.session.MediaSession;
+import android.media.session.PlaybackState;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -37,15 +41,10 @@ public class EngineSoundManager {
     private int mLoadedSamplesCount = 0;
     private long mLastMixerUpdateTime = 0;
     private static final long MIXER_UPDATE_INTERVAL_MS = 16; // 60Hz güncelleme hızı
-    // SoundPool audio session ID vermediği için gerçek Equalizer bağlanamaz.
-    // Bildirim kanalı araçta genelde daha tiz route edildiği için mikserde soft telafi uygulanır.
     private boolean mUsingMediaStream = false;
-    /** Bildirim kanalı soft ton telafisi (deneysel). Varsayılan açık; sadece notification + bu flag ile uygulanır. */
-    public static final String PREF_NOTIF_TONE_IMPROVE = "notif_tone_improve_enabled";
-    private boolean mNotifToneImproveEnabled = true;
-    private static final float NOTIF_SUBWAVE_BOOST = 1.45f;
-    private static final float NOTIF_BRIGHT_CUT = 0.18f; // yüksek rpm'de motor katmanını hafif kıs
-    private static final float NOTIF_WHINE_CUT = 0.75f;
+    // Medya yolu müzik yokken de açık kalsın diye sessiz AudioTrack + MediaSession
+    private AudioTrack mMediaKeepAliveTrack;
+    private MediaSession mMediaSession;
 
     private float mCurrentSpeedKmh = 0f;
     private float mSimulatedThrottle = 0f; // 0–1
@@ -209,7 +208,6 @@ public class EngineSoundManager {
         applySoundCharacterFromString(prefs.getString("sound_character", "SPORT"));
         setMasterVolume(Math.max(0, Math.min(100, prefs.getInt("sound_master", 60))) / 100f);
         setMotorMaxPower(normalizeMotorPowerKw(prefs.getFloat(PREF_MOTOR_POWER_KW, DEFAULT_MOTOR_POWER_KW)));
-        setNotifToneImproveEnabled(prefs.getBoolean(PREF_NOTIF_TONE_IMPROVE, true));
     }
 
     public String getCurrentProfileName() { return mCurrentProfileLabel != null ? mCurrentProfileLabel : "Lotus Exige 240"; }
@@ -605,12 +603,18 @@ public class EngineSoundManager {
 
         int maxStreams = baseStreams + finalExtras + 5;
 
-        boolean useMedia = false;
+        boolean useMedia = true;
         try {
             SharedPreferences prefs = mContext.getSharedPreferences("drivehub_dort", Context.MODE_PRIVATE);
-            useMedia = "media".equals(prefs.getString("sound_source", "notification"));
+            useMedia = !"notification".equals(prefs.getString("sound_source", "media"));
         } catch (Throwable ignored) {}
         mUsingMediaStream = useMedia;
+
+        // Medya kanalında araç yolu çoğu zaman "aktif medya oynatıcı" olmadan açılmaz.
+        // Sessiz keep-alive ile Spotify/SmartTube gibi USAGE_MEDIA yolunu müziksiz de uyandırırız.
+        // Müzik focus'unu çalmıyoruz (diğer uygulamaları durdurmaz).
+        if (useMedia) startMediaRouteKeepAlive();
+        else stopMediaRouteKeepAlive();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             AudioAttributes attrs = new AudioAttributes.Builder()
@@ -709,11 +713,74 @@ public class EngineSoundManager {
                 }
             }, 2500); // İstop sesinin uzunluğuna göre bu süreyi (2.5 saniye) artırabilir/azaltabilirsin.
         }
+        stopMediaRouteKeepAlive();
         mPopsRemaining = 0;
         mNextPopTime = 0;
 
         mTurboStreamId = -1; mFlutterSoundId = -1; mStartSoundId = -1; mStopSoundId = -1;
         mSubwaveStreamId = -1; mSubwaveSoundId = -1;
+    }
+
+    /** Araç medya amfisini / mixer yolunu müzik çalmadan açar. Focus çalmaz. */
+    private void startMediaRouteKeepAlive() {
+        stopMediaRouteKeepAlive();
+        try {
+            AudioAttributes attrs = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build();
+            final int sampleRate = 48000;
+            final int frames = sampleRate / 5; // ~200ms sessizlik, loop
+            AudioTrack track = new AudioTrack.Builder()
+                    .setAudioAttributes(attrs)
+                    .setAudioFormat(new AudioFormat.Builder()
+                            .setSampleRate(sampleRate)
+                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                            .build())
+                    .setBufferSizeInBytes(frames * 2)
+                    .setTransferMode(AudioTrack.MODE_STATIC)
+                    .build();
+            short[] silence = new short[frames];
+            int written = track.write(silence, 0, silence.length);
+            if (written < 0) {
+                track.release();
+                Log.w(TAG, "media keep-alive write failed: " + written);
+                return;
+            }
+            track.setLoopPoints(0, frames, -1);
+            track.setVolume(0f);
+            track.play();
+            mMediaKeepAliveTrack = track;
+
+            MediaSession session = new MediaSession(mContext, "DriveHubDortEngine");
+            session.setActive(true);
+            session.setPlaybackState(new PlaybackState.Builder()
+                    .setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_STOP)
+                    .setState(PlaybackState.STATE_PLAYING, 0L, 1f)
+                    .build());
+            mMediaSession = session;
+        } catch (Throwable t) {
+            Log.w(TAG, "media keep-alive start failed", t);
+            stopMediaRouteKeepAlive();
+        }
+    }
+
+    private void stopMediaRouteKeepAlive() {
+        try {
+            if (mMediaKeepAliveTrack != null) {
+                try { mMediaKeepAliveTrack.stop(); } catch (Throwable ignored) {}
+                try { mMediaKeepAliveTrack.release(); } catch (Throwable ignored) {}
+                mMediaKeepAliveTrack = null;
+            }
+        } catch (Throwable ignored) {}
+        try {
+            if (mMediaSession != null) {
+                try { mMediaSession.setActive(false); } catch (Throwable ignored) {}
+                try { mMediaSession.release(); } catch (Throwable ignored) {}
+                mMediaSession = null;
+            }
+        } catch (Throwable ignored) {}
     }
 
     public void setSubwaveEnabled(boolean enabled) {
@@ -724,17 +791,8 @@ public class EngineSoundManager {
         return mSubwaveEnabled;
     }
 
-    public void setNotifToneImproveEnabled(boolean enabled) {
-        mNotifToneImproveEnabled = enabled;
-    }
-
-    public boolean isNotifToneImproveEnabled() {
-        return mNotifToneImproveEnabled;
-    }
-
-    /** Bildirim kaynağı + deneysel iyileştirme düğmesi birlikte açıksa soft telafi uygulanır. */
-    private boolean isNotifToneImproveActive() {
-        return !mUsingMediaStream && mNotifToneImproveEnabled;
+    public boolean isUsingMediaStream() {
+        return mUsingMediaStream;
     }
     public void onSpeedChanged(float speedKmh) {
         if (!mIsPlaying || mCurrentSamples == null || mLoadedSamplesCount < (mIsDualLayer ? mCurrentSamplesOn.length : mCurrentSamples.length)) return;
@@ -941,39 +999,29 @@ public class EngineSoundManager {
         if (mSubwaveStreamId != -1) {
             if (mSubwaveEnabled && mCurrentGear > 0) {
 
-                boolean toneImprove = isNotifToneImproveActive();
-                // Normal: agresif eğri. İyileştirme: daha lineer (eski tok hissi) + bas boost.
-                float subLoadFactor = toneImprove
-                        ? (0.40f + (mSimulatedThrottle * 0.60f))
-                        : (float) Math.pow(mSimulatedThrottle, 1.5f);
+                // 1. YÜK EĞRİSİ: Lineer değil, karesel (Exponential) artış.
+                // Gaza az basarken fısıldar, %70'den sonra "göğsü titretir".
+                float subLoadFactor = (float) Math.pow(mSimulatedThrottle, 1.5f);
 
                 // 2. RPM PENCERESİ: Bas her devirde aynı olmaz.
                 // Alt-orta devirlerde (torkun geldiği yer) pik yapar.
                 float rpmBellCurve = 1.0f - (Math.abs(rpmRatio - 0.35f) * 0.7f);
                 rpmBellCurve = Math.max(0.4f, rpmBellCurve); // Hiçbir zaman tamamen kaybolmasın
 
-                float subBoost = toneImprove ? NOTIF_SUBWAVE_BOOST : 1f;
-                float subVolume = masterVol * subLoadFactor * 1.8f * rpmBellCurve * subBoost;
+                float subVolume = masterVol * subLoadFactor * 1.8f * rpmBellCurve;
 
                 // 3. PİTCH (RESONANCE): Devir arttıkça çok tizleşmemeli.
-                // İyileştirmede pitch tavanını biraz daha alçakta tut (daha derin kalır).
-                float subPitch = toneImprove
-                        ? (0.50f + (rpmRatio * 0.35f))
-                        : (0.55f + (rpmRatio * 0.45f));
+                // Alt frekansı korumak için rpmRatio etkisini %40'a indirdik.
+                float subPitch = 0.55f + (rpmRatio * 0.45f);
 
                 // Boşta gaz verme (N-Rev) durumu için özel ayar
                 if (mCurrentSpeedKmh < 1.0f && mSimulatedThrottle > 0.05f) {
-                    subVolume = masterVol * 0.8f * subBoost;
+                    subVolume = masterVol * 0.8f;
                     subPitch = 0.5f + (rpmRatio * 0.3f);
                 }
 
                 mSoundPool.setVolume(mSubwaveStreamId, Math.min(1.0f, subVolume), Math.min(1.0f, subVolume));
                 mSoundPool.setRate(mSubwaveStreamId, subPitch);
-            } else if (mSubwaveEnabled && isNotifToneImproveActive() && mCurrentSpeedKmh < 1.0f) {
-                // Bildirim + iyileştirme: rölanti tokluğu
-                float idleSub = masterVol * mCurrentIdleVolumeScale * 0.7f * NOTIF_SUBWAVE_BOOST;
-                mSoundPool.setVolume(mSubwaveStreamId, Math.min(1.0f, idleSub), Math.min(1.0f, idleSub));
-                mSoundPool.setRate(mSubwaveStreamId, mIdlePitch * 0.55f);
             } else {
                 mSoundPool.setVolume(mSubwaveStreamId, 0f, 0f);
             }
@@ -1096,7 +1144,6 @@ public class EngineSoundManager {
                 if (i == 0) shapedVol *= mCurrentIdleVolumeScale;
 
                 float finalVolume = shapedVol * masterVol * loadVolumeFactor * modeVolumeBoost;
-                finalVolume *= notificationBrightAtten(rpmRatio);
                 finalVolume = Math.max(0.0f, Math.min(1.0f, finalVolume));
 
                 float pitch = Math.max(0.5f, Math.min(2.0f, (rpm / s.baseRpm) * loadPitchFactor));
@@ -1112,20 +1159,11 @@ public class EngineSoundManager {
 
         if (mGearWhineStreamId != -1 && mGearWhineEnabled) {
             float speedRatio = Math.max(0f, Math.min(1f, mCurrentSpeedKmh / mWhineMaxSpeed));
-            float whineVol = speedRatio * masterVol * mGearWhineMaxVol;
-            if (isNotifToneImproveActive()) whineVol *= NOTIF_WHINE_CUT;
-            mSoundPool.setVolume(mGearWhineStreamId, whineVol, whineVol);
+            mSoundPool.setVolume(mGearWhineStreamId, speedRatio * masterVol * mGearWhineMaxVol, speedRatio * masterVol * mGearWhineMaxVol);
             mSoundPool.setRate(mGearWhineStreamId, 0.5f + (speedRatio * 1.5f));
         } else if(!mGearWhineEnabled){
             mSoundPool.setVolume(mGearWhineStreamId, 0, 0);
         }
-    }
-
-    /** Bildirim + iyileştirme açıkken soft high-shelf kesimi (rpm yükseldikçe). */
-    private float notificationBrightAtten(float rpmRatio) {
-        if (!isNotifToneImproveActive()) return 1f;
-        float r = Math.max(0f, Math.min(1f, rpmRatio));
-        return 1f - (NOTIF_BRIGHT_CUT * r);
     }
 
     // Kadran uygulaması (com.drivehub.kadran): ContentProvider üzerinden okur. Servisteki 100ms task'tan, sadece ekran açıkken çağrılır.
@@ -1235,10 +1273,7 @@ public class EngineSoundManager {
 
             if (i == 0 && rpm < s.baseRpm) shapedVol *= mCurrentIdleVolumeScale;
 
-            float rpmRatioLocal = (mMaxRpm > mIdleRpm)
-                    ? Math.max(0f, Math.min(1f, (rpm - mIdleRpm) / (mMaxRpm - mIdleRpm)))
-                    : 0f;
-            float finalVolume = shapedVol * weightVol * notificationBrightAtten(rpmRatioLocal);
+            float finalVolume = shapedVol * weightVol;
             float pitch = rpm / s.baseRpm;
 
             if (isOnLayer) pitch *= (0.98f + (mSimulatedThrottle * 0.04f));
