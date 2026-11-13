@@ -15,8 +15,8 @@ android {
         minSdk 28
         targetSdk 36
         // Her GitHub/OTA sürümünde versionCode MUTLAKA artmalı (aynı code = kurulum reddi / "paket ayrıştırılamadı")
-        versionCode 4
-        versionName "0.23.2"
+        versionCode 5
+        versionName "0.23.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
